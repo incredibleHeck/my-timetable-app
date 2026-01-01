@@ -1,0 +1,5 @@
+{
+  "name": "local TT",
+  "description": "A structured timetable management application with class, teacher, and subject management features.",
+  "requestFramePermissions": []
+}

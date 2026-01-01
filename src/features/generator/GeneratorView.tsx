@@ -1,0 +1,398 @@
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import {
+  Play,
+  Users,
+  BookOpen,
+  Loader2,
+  Printer,
+  Recycle,
+  CheckCircle2,
+  Lock,
+  Unlock,
+  Move,
+  Repeat,
+  ArrowLeft,
+  FileSpreadsheet,
+  Square,
+} from "lucide-react";
+import { AppData, ViewState } from "../../types";
+import { Button } from "../../components/ui";
+import { ScheduleGrid } from "./components/ScheduleGrid";
+import { ConflictPanel } from "./components/ConflictPanel";
+import { exportScheduleToExcel } from "../../utils/excelExport";
+import { printAllSchedules } from "../../services/printService";
+
+interface ViewProps {
+  data: AppData;
+  onUpdate: (newData: AppData) => void;
+  onNavigate?: (view: ViewState) => void;
+}
+
+export const GeneratorView: React.FC<ViewProps> = ({
+  data,
+  onUpdate,
+  onNavigate,
+}) => {
+  const [mode, setMode] = useState<"CLASS" | "TEACHER">("CLASS");
+  const [activeId, setActiveId] = useState<string>("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editTool, setEditTool] = useState<"MOVE" | "SWAP">("MOVE");
+  const [stats, setStats] = useState<{
+    iterations: number;
+    duration: number;
+  } | null>(null);
+
+  // WORKER REF
+  // We keep a reference to the active worker so we can terminate it if needed
+  const workerRef = useRef<Worker | null>(null);
+
+  // --- SORTING HELPERS ---
+  const sortedClasses = useMemo(() => {
+    return [...data.classes].sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { numeric: true })
+    );
+  }, [data.classes]);
+
+  const sortedTeachers = useMemo(() => {
+    return [...data.teachers].sort((a, b) => a.name.localeCompare(b.name));
+  }, [data.teachers]);
+
+  // Initial Selection Logic
+  useEffect(() => {
+    if (mode === "CLASS") {
+      if (
+        !sortedClasses.some((c) => c.id === activeId) &&
+        sortedClasses.length > 0
+      ) {
+        setActiveId(sortedClasses[0].id);
+      }
+    } else {
+      if (
+        !sortedTeachers.some((t) => t.id === activeId) &&
+        sortedTeachers.length > 0
+      ) {
+        setActiveId(sortedTeachers[0].id);
+      }
+    }
+  }, [mode, sortedClasses, sortedTeachers, activeId]);
+
+  // --- WORKER CLEANUP ---
+  useEffect(() => {
+    return () => {
+      // If the user leaves the page while generating, kill the worker
+      if (workerRef.current) {
+        workerRef.current.terminate();
+      }
+    };
+  }, []);
+
+  // --- SOLVER LOGIC (ASYNC WORKER) ---
+  const handleGenerate = () => {
+    setIsGenerating(true);
+    setStats(null);
+
+    // 1. Initialize Worker
+    // Vite specific syntax for Web Workers
+    workerRef.current = new Worker(
+      new URL("../../services/scheduler/worker.ts", import.meta.url),
+      { type: "module" }
+    );
+
+    // 2. Send Data
+    workerRef.current.postMessage(data);
+
+    // 3. Listen for Results
+    workerRef.current.onmessage = (e) => {
+      const { type, payload } = e.data;
+
+      if (type === "success") {
+        console.log(
+          `Solver finished: ${
+            payload.iterations
+          } iterations in ${payload.duration.toFixed(0)}ms`
+        );
+
+        setStats({
+          iterations: payload.iterations,
+          duration: payload.duration,
+        });
+
+        onUpdate({
+          ...data,
+          schedule: payload.schedule,
+          conflicts: payload.conflicts,
+          lastGenerated: new Date().toISOString(),
+        });
+
+        terminateWorker();
+      } else if (type === "error") {
+        console.error("Worker error:", payload);
+        terminateWorker();
+        alert("An error occurred during generation.");
+      }
+    };
+
+    workerRef.current.onerror = (e) => {
+      console.error("Worker connection error:", e);
+      terminateWorker();
+    };
+  };
+
+  const handleStop = () => {
+    if (workerRef.current) {
+      workerRef.current.terminate();
+      console.log("Solver terminated by user.");
+    }
+    terminateWorker();
+  };
+
+  const terminateWorker = () => {
+    workerRef.current = null;
+    setIsGenerating(false);
+  };
+
+  const handleExcelExport = async () => {
+    await exportScheduleToExcel(data, mode);
+  };
+
+  const handlePrint = () => {
+    printAllSchedules(data, mode);
+  };
+
+  return (
+    <div className="flex flex-col h-[calc(100vh-80px)] p-6">
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 print:hidden">
+        {/* Header Controls */}
+        <div className="flex flex-col md:flex-row md:items-center gap-6">
+          <button
+            onClick={() => onNavigate && onNavigate("DASHBOARD")}
+            className="p-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-500"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <div>
+            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+              Auto-Scheduler
+              {data.lastGenerated && !isGenerating && (
+                <span className="text-[10px] font-normal text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                  Last run: {new Date(data.lastGenerated).toLocaleTimeString()}
+                </span>
+              )}
+            </h2>
+            <p className="text-xs text-slate-500 mt-1 flex gap-2">
+              v10.0 (Worker-Enabled)
+              {stats && (
+                <span className="text-emerald-600 font-medium">
+                  • {stats.iterations} iterations in{" "}
+                  {(stats.duration / 1000).toFixed(1)}s
+                </span>
+              )}
+            </p>
+          </div>
+          {/* Mode Switcher */}
+          <div className="flex bg-slate-200 p-1 rounded-lg">
+            <button
+              onClick={() => setMode("CLASS")}
+              disabled={isGenerating}
+              className={`px-4 py-2 text-xs font-bold rounded-md flex items-center gap-2 transition-all ${
+                mode === "CLASS"
+                  ? "bg-white text-slate-800 shadow-sm"
+                  : "text-slate-500"
+              }`}
+            >
+              <BookOpen size={14} /> Classes
+            </button>
+            <button
+              onClick={() => setMode("TEACHER")}
+              disabled={isGenerating}
+              className={`px-4 py-2 text-xs font-bold rounded-md flex items-center gap-2 transition-all ${
+                mode === "TEACHER"
+                  ? "bg-white text-slate-800 shadow-sm"
+                  : "text-slate-500"
+              }`}
+            >
+              <Users size={14} /> Teachers
+            </button>
+          </div>
+          {/* Edit Mode */}
+          <div className="flex items-center gap-2 pl-6 border-l border-slate-200">
+            <button
+              onClick={() => setIsEditMode(!isEditMode)}
+              disabled={isGenerating}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                isEditMode
+                  ? "bg-amber-50 text-amber-700 border-amber-200"
+                  : "bg-white text-slate-500 border-slate-200"
+              }`}
+            >
+              {isEditMode ? <Unlock size={14} /> : <Lock size={14} />}
+              {isEditMode ? "Editing Enabled" : "Read Only"}
+            </button>
+            {isEditMode && (
+              <div className="flex bg-slate-100 p-1 rounded-lg">
+                <button
+                  onClick={() => setEditTool("MOVE")}
+                  className={`p-1.5 rounded-md ${
+                    editTool === "MOVE"
+                      ? "bg-white text-blue-600 shadow-sm"
+                      : "text-slate-400"
+                  }`}
+                >
+                  <Move size={16} />
+                </button>
+                <button
+                  onClick={() => setEditTool("SWAP")}
+                  className={`p-1.5 rounded-md ${
+                    editTool === "SWAP"
+                      ? "bg-white text-emerald-600 shadow-sm"
+                      : "text-slate-400"
+                  }`}
+                >
+                  <Repeat size={16} />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          {isGenerating ? (
+            <Button
+              onClick={handleStop}
+              variant="danger"
+              size="md"
+              icon={<Square size={16} fill="currentColor" />}
+            >
+              Stop Solver
+            </Button>
+          ) : (
+            <Button
+              onClick={handleGenerate}
+              size="md"
+              icon={
+                data.lastGenerated ? <Recycle size={16} /> : <Play size={16} />
+              }
+            >
+              {data.lastGenerated ? "Regenerate" : "Generate Schedule"}
+            </Button>
+          )}
+
+          <Button
+            onClick={handleExcelExport}
+            disabled={isGenerating}
+            icon={<FileSpreadsheet size={16} />}
+          >
+            Export All
+          </Button>
+
+          <Button
+            onClick={handlePrint}
+            disabled={isGenerating}
+            icon={<Printer size={16} />}
+          >
+            Print All (PDF)
+          </Button>
+        </div>
+      </div>
+
+      {/* --- MAIN INTERACTIVE GRID --- */}
+      <div className="flex flex-1 overflow-hidden gap-4">
+        <div
+          className={`flex flex-1 overflow-hidden border border-slate-200 rounded-xl bg-white shadow-sm relative transition-opacity ${
+            isGenerating ? "opacity-60 pointer-events-none" : ""
+          }`}
+        >
+          {isGenerating && (
+            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm">
+              <Loader2 size={48} className="text-amber-500 animate-spin mb-4" />
+              <h3 className="text-lg font-bold text-slate-700">
+                Crunching Numbers...
+              </h3>
+              <p className="text-slate-500 text-sm">
+                Testing combinations in background...
+              </p>
+            </div>
+          )}
+
+          {/* Sidebar */}
+          <div className="w-56 border-r border-slate-200 bg-slate-50 overflow-y-auto shrink-0">
+            <div className="p-4 border-b border-slate-100 sticky top-0 bg-slate-50 z-10">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                Select {mode === "CLASS" ? "Group" : "Teacher"}
+              </span>
+            </div>
+            {mode === "CLASS"
+              ? sortedClasses.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => setActiveId(c.id)}
+                    className={`w-full text-left px-4 py-3 border-b border-slate-100 text-xs font-medium truncate flex items-center gap-3 ${
+                      activeId === c.id
+                        ? "bg-white border-l-4 border-l-amber-500"
+                        : "text-slate-500"
+                    }`}
+                  >
+                    <div
+                      className={`w-2 h-2 rounded-full ${
+                        activeId === c.id ? "bg-amber-500" : "bg-slate-300"
+                      }`}
+                    />
+                    <span className="truncate">{c.name}</span>
+                  </button>
+                ))
+              : sortedTeachers.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setActiveId(t.id)}
+                    className={`w-full text-left px-4 py-3 border-b border-slate-100 text-xs font-medium truncate flex items-center gap-3 ${
+                      activeId === t.id
+                        ? "bg-white border-l-4 border-l-amber-500"
+                        : "text-slate-500"
+                    }`}
+                  >
+                    <div
+                      className={`w-2 h-2 rounded-full ${
+                        activeId === t.id ? "bg-amber-500" : "bg-slate-300"
+                      }`}
+                    />
+                    <span className="truncate">{t.name}</span>
+                  </button>
+                ))}
+          </div>
+
+          {/* Grid Area */}
+          <div className="flex-1 overflow-auto p-6 bg-slate-50/30 custom-scrollbar">
+            <ScheduleGrid
+              data={data}
+              activeId={activeId}
+              mode={mode}
+              onUpdate={onUpdate}
+              editMode={isEditMode}
+              editTool={editTool}
+            />
+          </div>
+        </div>
+
+        {/* Conflict Panel */}
+        <div>
+          {!isGenerating && data.conflicts.length > 0 && (
+            <ConflictPanel conflicts={data.conflicts} />
+          )}
+          {!isGenerating &&
+            data.conflicts.length === 0 &&
+            data.lastGenerated && (
+              <div className="w-64 flex flex-col border border-emerald-100 bg-emerald-50/50 rounded-xl shadow-sm p-6 items-center text-center">
+                <CheckCircle2
+                  size={48}
+                  className="text-emerald-500 mb-4 bg-white p-2 rounded-full"
+                />
+                <h3 className="font-bold text-emerald-800">All Clear!</h3>
+              </div>
+            )}
+        </div>
+      </div>
+    </div>
+  );
+};

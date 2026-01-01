@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Timetable App</title>
+
+    <style>
+      /* --- GLOBAL PRINT STYLES --- */
+      @media print {
+        @page {
+          size: landscape;
+          margin: 5mm;
+        }
+
+        body {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+          background-color: white !important;
+          font-family: sans-serif;
+        }
+
+        /* HIDE UI ELEMENTS */
+        body > *:not(#root),
+        #root > *:not(.timetable-print-container),
+        nav,
+        button,
+        .no-print,
+        .sidebar,
+        .header,
+        .modal {
+          display: none !important;
+        }
+
+        /* RESET CONTAINER */
+        #root,
+        .timetable-print-container {
+          width: 100% !important;
+          height: auto !important;
+          overflow: visible !important;
+          position: static !important;
+          display: block !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+
+        /* SCALE TO FIT */
+        .timetable-print-container {
+          zoom: 75%;
+        }
+
+        /* MAKE BORDERS CRISP */
+        .border,
+        .border-l-4,
+        .border-b {
+          border-color: #94a3b8 !important;
+        }
+
+        /* FORCE BACKGROUND COLORS */
+        .bg-amber-50 {
+          background-color: #fff7ed !important;
+        }
+        .bg-red-50 {
+          background-color: #fef2f2 !important;
+        }
+        .bg-slate-100 {
+          background-color: #f1f5f9 !important;
+        }
+        .bg-white {
+          background-color: #ffffff !important;
+        }
+
+        /* Remove shadows for cleaner PDF */
+        * {
+          box-shadow: none !important;
+        }
+
+        /* Text adjustments */
+        body {
+          line-height: 1.4;
+          font-size: 11px;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+          margin: 0;
+          padding: 0;
+        }
+      }
+
+      /* Custom scrollbar */
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f5f9;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 text-gray-900 h-screen overflow-hidden">
+    <div id="root" class="h-full"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
