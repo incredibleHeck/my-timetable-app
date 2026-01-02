@@ -62,6 +62,10 @@ export interface Subject {
   // Room requirements
   preferredRoomIds?: string[]; // Specific rooms
   requiredRoomType?: string; // e.g. "Lab"
+
+  // NEW: Exam Configuration Defaults
+  examPaperCount?: number; // Default 1 if undefined
+  examPaperDurations?: number[]; // e.g. [120, 90] for Paper 1 & 2
 }
 
 export interface Teacher {
@@ -118,7 +122,7 @@ export interface ElectiveBlock {
   classId: string;
   subjectIds: string[]; // e.g. [Art_ID, Music_ID, Drama_ID]
   // Forced simultaneous scheduling
-  allowedPeriods?: { day: number; period: number }[]; 
+  allowedPeriods?: { day: number; period: number }[];
 }
 
 // ----------------------------------------------------------------------
@@ -160,15 +164,30 @@ export interface Conflict {
 // 5. EXAMS & DUTIES (NEW)
 // ----------------------------------------------------------------------
 
+export type ExamStatus = "DRAFT" | "PUBLISHED" | "COMPLETED";
+
 export interface ExamSession {
   id: string;
   subjectId: string;
   classIds: string[];
-  roomId: string;
-  invigilatorId?: string; // Teacher ID
-  date: string; // ISO Date
+
+  // Scheduling
+  date: string; // ISO Date YYYY-MM-DD
   startTime: string; // e.g. "09:00"
   duration: number; // minutes
+
+  // Resources
+  // Room is now optional to allow "Curriculum First" creation, then "Room Allocation" later
+  roomId?: string;
+  invigilatorId?: string; // Teacher ID
+
+  // Multi-Paper Support
+  paperNumber: number; // 1, 2, 3...
+  paperLabel?: string; // e.g. "Paper 1 (Theory)"
+
+  // State
+  status: ExamStatus;
+  locked?: boolean; // If true, Auto-Scheduler ignores this
 }
 
 export interface DutyLocation {
