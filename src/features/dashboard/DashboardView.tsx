@@ -13,6 +13,8 @@ import {
   Settings,
   Download,
   Upload,
+  FileText,
+  Shield,
 } from "lucide-react";
 import { AppData, ViewState } from "../../types";
 import { Card, Button, Badge } from "../../components/ui";
@@ -351,6 +353,18 @@ export const DashboardView: React.FC<ViewProps> = ({
               label="Global Rules"
               desc="Set periods, breaks, and lunches"
               onClick={() => onNavigate && onNavigate("CONFIG")}
+            />
+            <QuickAction
+              icon={<FileText size={18} />}
+              label="Exam Planning"
+              desc="Schedule school-wide assessments"
+              onClick={() => onNavigate && onNavigate("EXAMS")}
+            />
+            <QuickAction
+              icon={<Shield size={18} />}
+              label="Duty Roster"
+              desc="Assign supervision for breaks"
+              onClick={() => onNavigate && onNavigate("DUTY")}
             />
           </div>
 

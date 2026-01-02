@@ -61,6 +61,8 @@ src/
 │   ├── teachers/               # Faculty management (Skills, Workload, Availability).
 │   ├── rooms/                  # Physical Resource management.
 │   ├── classes/                # Student Group management (Curriculum, Custom Structures).
+│   ├── exams/                  # Assessment scheduling (NEW).
+│   ├── duty/                   # Supervision management (NEW).
 │   │
 │   └── generator/              # ⚡ The Powerhouse
 │       ├── GeneratorView.tsx   # Main UI for running the solver.
@@ -95,6 +97,9 @@ interface AppData {
   classes: ClassGroup[];    // Who learns + Curriculum + Custom Structure
   jointClasses: JointClass[]; // Horizontal linking
   electives: ElectiveBlock[]; // Vertical blocking (Option lines)
+  exams: ExamSession[];     // Academic assessments
+  dutyLocations: DutyLocation[]; // Supervision spots
+  dutyAssignments: DutyAssignment[]; // Teacher supervision roster
   schedule: ScheduleResult; // The solution: Map<ClassId, Day, Period, Slot>
   conflicts: Conflict[];    // Unsolved problems: List of unplaced lessons
   lastGenerated: string;    // Timestamp of last solver run

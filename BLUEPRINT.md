@@ -167,6 +167,8 @@ The application saves a snapshot of the entire state. This file is the "Project 
 - [x] **Structure Overrides:** Class-specific break/lunch times.
 - [x] **Interactive Dashboard:** Clickable KPI cards and specific health diagnostics.
 - [x] **Faculty Quick-Add:** Dynamic teacher creation/assignment from faculty views.
+- [x] **Exam Timetable:** Dedicated module for scheduling assessments with conflict detection.
+- [x] **Duty Roster:** Supervision management for breaks and lunch periods with availability checking.
 
 ### 5.3. Phase 3: Enterprise Features (Planned)
 - [ ] **User Accounts:** Cloud sync (requires backend).
