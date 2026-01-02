@@ -65,7 +65,8 @@ export const useDragAndDrop = (
     p: number,
     slot: ScheduleSlot
   ) => {
-    if (!isEnabled || mode !== "CLASS" || slot.isFixed) {
+    // FIX: Lock Elective Blocks to prevent desynchronization
+    if (!isEnabled || mode !== "CLASS" || slot.isFixed || slot.electiveBlockId) {
       e.preventDefault();
       return;
     }
@@ -80,6 +81,8 @@ export const useDragAndDrop = (
     if (!dragItem || !activeId || !isEnabled) return;
 
     const targetTeacherId = dragItem.slot.teacherId;
+    const targetRoomId = dragItem.slot.roomId; // Get Room ID
+
     const sourceDuration = getDuration(
       data.schedule,
       dragItem.classId,
@@ -166,33 +169,44 @@ export const useDragAndDrop = (
       }
     }
 
-    // 3. Teacher Check
-    let teacherBusy = false;
+    // 3. Teacher & Room Check
+    let conflict = false;
     for (const cls of data.classes) {
       if (cls.id === activeId) continue;
 
       const s1 = data.schedule[cls.id]?.[d]?.[p];
+      
+      // Check Teacher 1
       if (s1 && s1.teacherId === targetTeacherId) {
-        teacherBusy = true;
-        break;
+        conflict = true; break;
+      }
+      // Check Room 1
+      if (targetRoomId && s1 && s1.roomId === targetRoomId) {
+        conflict = true; break;
       }
 
       if (p2 !== null) {
         const s2 = data.schedule[cls.id]?.[d]?.[p2];
+        // Check Teacher 2
         if (s2 && s2.teacherId === targetTeacherId) {
-          teacherBusy = true;
-          break;
+          conflict = true; break;
+        }
+        // Check Room 2
+        if (targetRoomId && s2 && s2.roomId === targetRoomId) {
+           conflict = true; break;
         }
       }
     }
 
-    const teacher = data.teachers.find((t) => t.id === targetTeacherId);
-    if (teacher) {
-      if (teacher.constraints?.[d]?.[p]) teacherBusy = true;
-      if (p2 !== null && teacher.constraints?.[d]?.[p2]) teacherBusy = true;
+    if (!conflict) {
+        const teacher = data.teachers.find((t) => t.id === targetTeacherId);
+        if (teacher) {
+          if (teacher.constraints?.[d]?.[p]) conflict = true;
+          if (p2 !== null && teacher.constraints?.[d]?.[p2]) conflict = true;
+        }
     }
 
-    setIsValidDrop(!teacherBusy);
+    setIsValidDrop(!conflict);
     setDropTarget({ d, p });
   };
 

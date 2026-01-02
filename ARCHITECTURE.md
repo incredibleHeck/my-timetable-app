@@ -1,7 +1,7 @@
 # EduScheduler Pro — Architecture & Engineering Guide
 
-**Version:** 3.0 (Worker-Optimized)
-**Last Updated:** January 1, 2026
+**Version:** 4.0 (Advanced Resource Logic)
+**Last Updated:** January 2, 2026
 **Framework:** React 18 + Vite + TypeScript
 
 ---
@@ -47,8 +47,8 @@ src/
 ├── services/
 │   ├── scheduler/              # 🧠 The Brain (Optimization Engine)
 │   │   ├── worker.ts           # Web Worker entry point (runs in separate thread).
-│   │   ├── solver.ts           # Core greedy algorithm with backtracking capabilities.
-│   │   ├── heuristics.ts       # Scoring functions (weighted constraints).
+│   │   ├── solver.ts           # Core greedy algorithm with "Gang Scheduling" support.
+│   │   ├── heuristics.ts       # Scoring functions (weighted constraints & workload balance).
 │   │   ├── preparation.ts      # Data transformation (State -> AllocationUnits).
 │   │   └── validation.ts       # Constraint checking (Teacher overlaps, Room double-booking).
 │   │
@@ -57,14 +57,15 @@ src/
 ├── features/
 │   ├── dashboard/              # Landing view, health metrics, quick actions.
 │   ├── configuration/          # Global settings (Periods, Times, School Info).
-│   ├── subjects/               # Resource definitions (Subjects, Rooms/SingleResources).
-│   ├── teachers/               # Faculty management (Skills, Availability Constraints).
-│   ├── classes/                # Student Group management (Curriculum Matrix).
+│   ├── subjects/               # Resource definitions (Subjects, Room Requirements).
+│   ├── teachers/               # Faculty management (Skills, Workload, Availability).
+│   ├── rooms/                  # Physical Resource management.
+│   ├── classes/                # Student Group management (Curriculum, Custom Structures).
 │   │
 │   └── generator/              # ⚡ The Powerhouse
 │       ├── GeneratorView.tsx   # Main UI for running the solver.
 │       ├── components/
-│       │   ├── ScheduleGrid.tsx # The interactive timeline (Drag & Drop, Conflict Vis).
+│       │   ├── ScheduleGrid.tsx # Interactive timeline (Respects class-specific structures).
 │       │   └── DraggableSlot.tsx # The atomic lesson card.
 │       └── hooks/              # Complex UI logic (DnD state, worker communication).
 │
@@ -88,9 +89,12 @@ The application state is monolithic but compartmentalized within the `AppData` i
 ```typescript
 interface AppData {
   settings: Settings;       // Global rules (Period definitions, Breaks, Times)
-  subjects: Subject[];      // What is taught (Math, Science)
-  teachers: Teacher[];      // Who teaches (Name, Specialties, Constraints)
-  classes: ClassGroup[];    // Who learns (Name, Curriculum, Fixed Sessions)
+  subjects: Subject[];      // What is taught + Room Requirements
+  teachers: Teacher[];      // Who teaches + Constraints + Target Load
+  rooms: Room[];            // Physical spaces (NEW in v4.0)
+  classes: ClassGroup[];    // Who learns + Curriculum + Custom Structure
+  jointClasses: JointClass[]; // Horizontal linking
+  electives: ElectiveBlock[]; // Vertical blocking (Option lines)
   schedule: ScheduleResult; // The solution: Map<ClassId, Day, Period, Slot>
   conflicts: Conflict[];    // Unsolved problems: List of unplaced lessons
   lastGenerated: string;    // Timestamp of last solver run
@@ -111,8 +115,10 @@ interface ScheduleSlot {
   subjectId: string;
   teacherId: string;
   classId: string;
-  isFixed?: boolean; // True if this is the 2nd half of a double period
-  locked?: boolean;  // User-invoked lock (prevent solver from moving this)
+  roomId?: string;         // Explicit Room assignment
+  electiveBlockId?: string; // Links units scheduled simultaneously
+  isFixed?: boolean;       // True if this is the 2nd half of a double period
+  locked?: boolean;        // User-invoked lock
 }
 ```
 
@@ -130,13 +136,14 @@ The scheduler is not a generic CSP solver but a **domain-specific constructive h
 
 1.  **Ingestion:** The worker receives a copy of `AppData`.
 2.  **Transformation (`preparation.ts`):** 
-    - Converts abstract `Curriculum` (e.g., "Math: 5 periods/week") into concrete `AllocationUnit` objects (e.g., "Math Lesson 1", "Math Lesson 2").
-    - **Sorting/Prioritization:** Harder-to-place units are sorted first (Double periods > Constrained Teachers > Single Resources).
+    - Converts abstract `Curriculum` into concrete `AllocationUnit` objects.
+    - **Sorting/Prioritization:** Harder-to-place units are sorted first (Joint Classes > Double periods > Constrained Teachers > Room-specific subjects).
 3.  **Solver Loop (`solver.ts`):**
     - Iterates through `AllocationUnits`.
-    - For each unit, scans the grid (`[Day, Period]`) for valid slots.
-    - **Validation:** Checks 7+ constraints (Teacher avail, Class avail, Single Resource, Fatigue Limit, Spread).
-    - **Scoring (`heuristics.ts`):** If multiple slots are valid, picks the "best" one based on scores (e.g., prefer mornings for Core subjects).
+    - **Gang Scheduling:** Detects units belonging to `ElectiveBlocks` and schedules them simultaneously.
+    - **Structure Awareness:** Prioritizes Class-specific structure overrides (Breaks/Lunch) over Global settings.
+    - **Validation:** Checks 10+ constraints (Teacher avail, Class avail, Single Resource, Room Availability, Fatigue Limit, Daily Subject Limit, Sandwich Prevention).
+    - **Scoring (`heuristics.ts`):** Picks the "best" slot based on weights (Core morning bias, Teacher continuity, Workload balancing).
 4.  **Output:** Returns a new `schedule` object and a list of `conflicts`.
 
 ---
@@ -146,50 +153,30 @@ The scheduler is not a generic CSP solver but a **domain-specific constructive h
 ### 6.1. State Management Rules
 1.  **Top-Down Data Flow:** `App.tsx` holds the state. It passes `data` and `onUpdate` down to views.
 2.  **Immutable Updates:** Never mutate `AppData` directly.
-    ```typescript
-    // ❌ BAD
-    data.settings.schoolName = "New Name";
-
-    // ✅ GOOD
-    onUpdate({
-      ...data,
-      settings: { ...data.settings, schoolName: "New Name" }
-    });
-    ```
 
 ### 6.2. Component Design
-- **Container/Presenter Pattern:** 
-  - `*View.tsx` components act as Containers (connect to state/hooks).
-  - `components/*` act as Presenters (pure UI, receive props).
-- **Memoization:** Use `React.memo` for grid cells and `useMemo` for heavy derived statistics (Workload calculations).
+- **Structure Overrides:** Components like `ScheduleGrid` must use `useMemo` to select the correct timetable structure (Class vs Global) for rendering.
+- **Memoization:** Use `React.memo` for grid cells and `useMemo` for heavy derived statistics.
 
 ### 6.3. File System & Sanitization
 - Input data from JSON files is **never trusted**.
-- It passes through `sanitizeAppData` (in `src/utils/utils.ts`) which:
-  - Fills missing arrays (e.g., `electives: []`).
-  - Ensures `settings` object exists.
-  - Defaults missing configurations to safe values.
+- It passes through `sanitizeAppData` which ensures all mandatory arrays (rooms, electives, etc.) exist.
 
 ---
 
 ## 7. Operational Workflows
 
 ### 7.1. Adding a New Constraint
-1.  **Define:** Add the boolean flag/property to `Settings` or `Teacher` in `types/index.ts`.
-2.  **Input:** Add the toggle switch in the relevant View (e.g., `TeacherEditorModal.tsx`).
+1.  **Define:** Add the property to `types/index.ts`.
+2.  **Input:** Add the UI control in the relevant View.
 3.  **Logic:** Add a check in `src/services/scheduler/solver.ts` inside the slot validation loop.
-4.  **Validation:** Ensure `checkSlotValidity` in `schedulerValidation.ts` also respects this constraint (for Drag & Drop feedback).
-
-### 7.2. Creating a Release Build
-1.  Run `npm run build` to generate the `dist/` folder.
-2.  The build system runs `tsc` (TypeScript Compiler) first. **Zero type errors are allowed.**
-3.  Assets are minified and fingerprinted by Vite.
+4.  **Validation:** Ensure `checkSlotValidity` in `schedulerValidation.ts` and `useDragAndDrop.ts` also respect this constraint.
 
 ---
 
-## 8. Known Limitations (As of v3.0)
+## 8. Known Limitations (As of v4.0)
 
-1.  **Mobile Support:** The `ScheduleGrid` is optimized for Desktop. Mobile views are functional but cramped.
+1.  **Mobile Support:** The `ScheduleGrid` is optimized for Desktop.
 2.  **Multi-Week Schedules:** Currently supports a standard 5-day repeating cycle only.
 3.  **Undo/Redo:** Not implemented natively. Relies on manual "Save Profile" checkpoints.
 

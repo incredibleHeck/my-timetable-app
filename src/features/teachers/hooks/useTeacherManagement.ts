@@ -97,6 +97,38 @@ export const useTeacherManagement = (
     setTeacherToDelete(null);
   };
 
+  const quickAddTeacherToFaculty = (subjectId: string, name: string) => {
+    if (!name.trim()) return;
+
+    const existingTeacher = data.teachers.find(
+      (t) => t.name.toLowerCase() === name.toLowerCase()
+    );
+
+    let newTeachers = [...data.teachers];
+
+    if (existingTeacher) {
+      if (!existingTeacher.specialtyIds.includes(subjectId)) {
+        newTeachers = data.teachers.map((t) =>
+          t.id === existingTeacher.id
+            ? { ...t, specialtyIds: [...t.specialtyIds, subjectId] }
+            : t
+        );
+      }
+    } else {
+      // Create new teacher
+      const maxP = Math.max(data.settings.periodsPerDay, ...data.classes.map(c => c.periodCount || 0));
+      const newT: Teacher = {
+        id: generateId(),
+        name: name.trim(),
+        specialtyIds: [subjectId],
+        constraints: Array(5).fill(null).map(() => Array(maxP).fill(false)),
+      };
+      newTeachers.push(newT);
+    }
+
+    onUpdate({ ...data, teachers: newTeachers });
+  };
+
   return {
     // State
     activeTab,
@@ -123,5 +155,6 @@ export const useTeacherManagement = (
     duplicateTeacher,
     initiateDelete,
     confirmDelete,
+    quickAddTeacherToFaculty,
   };
 };

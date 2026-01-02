@@ -137,6 +137,7 @@ export const DEFAULT_DATA: AppData = {
   },
   subjects: [],
   teachers: [],
+  rooms: [],
   classes: [],
   jointClasses: [],
   electives: [],

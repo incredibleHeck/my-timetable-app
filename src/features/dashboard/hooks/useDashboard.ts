@@ -63,30 +63,43 @@ export const useDashboard = (
       action: string;
       view: ViewState;
     }[] = [];
-    const classesWithoutSubjects = data.classes.filter(
-      (c) => c.curriculum.length === 0
-    ).length;
-    if (classesWithoutSubjects > 0)
+
+    // 1. Classes with no subjects
+    const emptyClasses = data.classes.filter((c) => c.curriculum.length === 0);
+    if (emptyClasses.length > 0) {
+      const names = emptyClasses.slice(0, 3).map((c) => c.name);
+      let message = `Class ${names.join(", ")} ${
+        emptyClasses.length > 3 ? `and ${emptyClasses.length - 3} more ` : ""
+      } ${emptyClasses.length === 1 ? "has" : "have"} no curriculum.`;
+      
       issues.push({
         type: "error",
-        message: `${classesWithoutSubjects} classes have no subjects.`,
+        message,
         action: "Fix",
         view: "CLASSES",
       });
+    }
 
+    // 2. Unused teachers
     const unusedTeachers = data.teachers.filter(
       (t) =>
         !data.classes.some((c) =>
           c.curriculum.some((curr) => curr.assignedTeacherId === t.id)
         )
-    ).length;
-    if (unusedTeachers > 0 && data.classes.length > 0)
+    );
+    if (unusedTeachers.length > 0 && data.classes.length > 0) {
+      const names = unusedTeachers.slice(0, 3).map((t) => t.name);
+      let message = `Teacher ${names.join(", ")} ${
+        unusedTeachers.length > 3 ? `and ${unusedTeachers.length - 3} more ` : ""
+      } ${unusedTeachers.length === 1 ? "is" : "are"} currently unassigned.`;
+
       issues.push({
         type: "warning",
-        message: `${unusedTeachers} teachers unused.`,
+        message,
         action: "Assign",
         view: "CLASSES",
       });
+    }
 
     if (data.subjects.length === 0)
       issues.push({

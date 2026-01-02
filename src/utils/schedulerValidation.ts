@@ -28,13 +28,16 @@ export const checkSlotValidity = (
   }
 
   // Check Structure
-  const structureType = settings.dayStructure?.[targetPeriod]?.type;
+  const cls = classes.find((c) => c.id === classId);
+  const structure = cls?.structure || settings.dayStructure;
+  const structItem = structure?.[targetPeriod];
+  const structureType = typeof structItem === "string" ? structItem : structItem?.type;
+
   if (structureType && structureType !== "CLASS") {
     return { valid: false, message: `Period is ${structureType}` };
   }
 
   // 2. CLASS CHECKS
-  const cls = classes.find((c) => c.id === classId);
   if (cls?.fixedSessions?.[targetDay]?.[targetPeriod]) {
     const fixedLabel = cls.fixedSessions[targetDay][targetPeriod];
     return { valid: false, message: `Class Busy: ${fixedLabel}` };
@@ -60,12 +63,21 @@ export const checkSlotValidity = (
     }
   }
 
-  // 4. SWAP DETECTION
+  // 4. ROOM CHECKS (Simplified)
+  // Note: We don't have the "Subject" of the dragged item passed in here explicitly in current signature,
+  // but if we did, we could check preferred rooms.
+  // For now, we rely on the `useDragAndDrop` hook which performs more detailed room validation.
+  // However, we SHOULD check if the TARGET slot is a locked elective block.
+
   const targetSlot = schedule[classId]?.[targetDay]?.[targetPeriod];
   if (targetSlot) {
-    // FIX: Safely check for locked property
+     // FIX: Safely check for locked property
     if ((targetSlot as any).locked) {
       return { valid: false, message: "Target slot is Locked" };
+    }
+    // Prevent moving Elective Blocks manually for now (too complex to maintain consistency without solver)
+    if (targetSlot.electiveBlockId) {
+        return { valid: false, message: "Cannot move Elective Block manually" };
     }
     return { valid: true, isSwap: true, message: "Swap with existing lesson" };
   }

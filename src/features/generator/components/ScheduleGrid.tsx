@@ -37,21 +37,28 @@ export const ScheduleGrid: React.FC<Props> = ({
   const currentClass = classes.find((c) => c.id === activeId);
   const currentTeacher = teachers.find((t) => t.id === activeId);
 
+  // --- NEW: DYNAMIC STRUCTURE (Respects Class Overrides) ---
+  const currentStructure = useMemo(() => {
+    if (mode === "CLASS" && currentClass?.structure?.length) {
+      return currentClass.structure;
+    }
+    return settings.dayStructure;
+  }, [mode, currentClass, settings.dayStructure]);
+
   // --- DYNAMIC PERIOD CALCULATION (Preserved from your code) ---
   let periodsToRender = settings.periodsPerDay;
   if (mode === "CLASS" && currentClass) {
-    periodsToRender = currentClass.periodCount || settings.periodsPerDay;
+    periodsToRender = Math.max(
+      currentClass.periodCount || settings.periodsPerDay,
+      currentClass.structure?.length || 0
+    );
   } else if (mode === "TEACHER" && currentTeacher) {
-    let maxAssignedPeriod = settings.periodsPerDay - 1;
-    Object.values(schedule).forEach((classDays) => {
-      Object.values(classDays).forEach((periodMap) => {
-        Object.entries(periodMap).forEach(([pStr, slot]) => {
-          if ((slot as ScheduleSlot).teacherId === currentTeacher.id)
-            maxAssignedPeriod = Math.max(maxAssignedPeriod, parseInt(pStr));
-        });
-      });
-    });
-    periodsToRender = maxAssignedPeriod + 1;
+    // Show up to the maximum period defined in any class structure
+    const maxClassPeriod = Math.max(
+      settings.periodsPerDay,
+      ...classes.map((c) => Math.max(c.periodCount || 0, c.structure?.length || 0))
+    );
+    periodsToRender = maxClassPeriod;
   }
 
   // --- HELPERS ---
@@ -72,9 +79,14 @@ export const ScheduleGrid: React.FC<Props> = ({
   };
 
   const getPeriodLabel = (index: number) => {
-    const struct = settings.dayStructure?.[index];
-    if (struct && struct.type !== "CLASS") return struct.type; // BREAK or LUNCH
-    return `Period ${index + 1}`;
+    const item = currentStructure?.[index];
+    if (!item) return `Period ${index + 1}`;
+    
+    const type = typeof item === "string" ? item : item.type;
+    const label = typeof item === "string" ? item : item.label || item.type;
+
+    if (type !== "CLASS") return label; // BREAK or LUNCH
+    return label || `Period ${index + 1}`;
   };
 
   // --- INTERACTION ---
@@ -242,8 +254,11 @@ export const ScheduleGrid: React.FC<Props> = ({
             {/* Slots */}
             {Array.from({ length: periodsToRender }).map((_, pIdx) => {
               const { slot, classId } = getCellData(dIdx, pIdx);
-              const structType = settings.dayStructure?.[pIdx]?.type;
-              const isGlobalBreak = structType && structType !== "CLASS";
+              
+              // NEW: Get structure type for this specific slot (Respects Class Overrides)
+              const structItem = currentStructure?.[pIdx];
+              const structType = typeof structItem === "string" ? structItem : structItem?.type;
+              const isBreakSlot = structType && structType !== "CLASS";
 
               // Determine visual state
               let cellClass = "bg-slate-50/50 border-slate-100";
@@ -281,14 +296,7 @@ export const ScheduleGrid: React.FC<Props> = ({
               }
 
               // CONTENT RENDER
-              if (isGlobalBreak) {
-                content = (
-                  <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">
-                    {structType}
-                  </span>
-                );
-                isClickable = false;
-              } else if (slot) {
+              if (slot) {
                 const subject = subjects.find((s) => s.id === slot.subjectId);
                 const teacher = teachers.find((t) => t.id === slot.teacherId);
                 content = (
@@ -300,16 +308,27 @@ export const ScheduleGrid: React.FC<Props> = ({
                     onDragStart={() => {}} // Disabled native drag
                   />
                 );
+              } else if (isBreakSlot) {
+                content = (
+                  <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">
+                    {structType}
+                  </span>
+                );
+                isClickable = false;
               } else {
                 // Empty Slot
                 // Check if it's a fixed/reserved slot
                 const fixedLabel = data.settings.fixedOccasions?.[dIdx]?.[pIdx];
-                if (fixedLabel) {
+                // Also check class-specific fixed sessions if in CLASS mode
+                const classFixedLabel = mode === "CLASS" ? currentClass?.fixedSessions?.[dIdx]?.[pIdx] : null;
+                const finalFixed = classFixedLabel || fixedLabel;
+
+                if (finalFixed) {
                   let label = "Unavailable";
-                  if (typeof fixedLabel === "string") {
-                    label = fixedLabel;
-                  } else if (typeof fixedLabel === "object" && fixedLabel !== null && "name" in fixedLabel) {
-                    label = fixedLabel.name;
+                  if (typeof finalFixed === "string") {
+                    label = finalFixed;
+                  } else if (typeof finalFixed === "object" && finalFixed !== null && "name" in finalFixed) {
+                    label = finalFixed.name;
                   }
 
                   content = (

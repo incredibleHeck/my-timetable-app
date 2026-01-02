@@ -29,6 +29,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
   onSave,
 }) => {
   const [tName, setTName] = useState("");
+  const [tTargetLoad, setTTargetLoad] = useState("");
   const [tSpecialties, setTSpecialties] = useState<string[]>([]);
   const [tConstraints, setTConstraints] = useState<boolean[][]>([]);
 
@@ -52,6 +53,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setTName(editingTeacher?.name || "");
+      setTTargetLoad(editingTeacher?.targetLoad?.toString() || "");
       setTSpecialties(editingTeacher?.specialtyIds || []);
 
       // Initialize Constraint Matrix (Deep Copy & Resize safety)
@@ -80,6 +82,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
       name: tName,
       specialtyIds: tSpecialties,
       constraints: tConstraints,
+      targetLoad: parseInt(tTargetLoad) || undefined,
     };
     onSave(newT);
     onClose();
@@ -146,13 +149,22 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
     >
       <div className="space-y-6">
         <div className="flex gap-4">
-          <div className="flex-1">
+          <div className="flex-[2]">
             <Input
               label="Full Name"
               value={tName}
               onChange={(e) => setTName(e.target.value)}
               placeholder="e.g. John Doe"
               autoFocus
+            />
+          </div>
+          <div className="flex-1">
+            <Input
+              label="Target Load"
+              type="number"
+              value={tTargetLoad}
+              onChange={(e) => setTTargetLoad(e.target.value)}
+              placeholder="e.g. 20"
             />
           </div>
         </div>

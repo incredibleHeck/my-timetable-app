@@ -12,6 +12,11 @@ export interface AllocationUnit {
   teacherIds: string[];
   teacherNames: string[];
 
+  // Constraints
+  electiveBlockId?: string;
+  preferredRoomIds?: string[];
+  requiredRoomType?: string;
+
   // Smart Priority Score
   priority: number;
 }
@@ -28,4 +33,8 @@ export interface SchedulerState {
   // ADDED: Track usage of single-resource subjects
   // [subjectId][day][period] -> boolean (Is this subject already scheduled anywhere?)
   singleResourceUsage: Record<string, boolean[][]>;
+
+  // ADDED: Track room usage
+  // [roomId][day][period] -> boolean
+  roomOccupancy: Record<string, boolean[][]>;
 }

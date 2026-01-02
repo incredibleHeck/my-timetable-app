@@ -7,6 +7,7 @@ interface MetricCardProps {
   icon: React.ReactNode;
   color: "blue" | "emerald" | "violet" | "amber";
   subtext: string;
+  onClick?: () => void;
 }
 
 export const MetricCard: React.FC<MetricCardProps> = ({
@@ -15,6 +16,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   icon,
   color,
   subtext,
+  onClick,
 }) => {
   const colors = {
     blue: "bg-blue-50 text-blue-600 border-blue-100",
@@ -24,7 +26,10 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   };
 
   return (
-    <Card className="p-5 hover:shadow-lg transition-shadow border-slate-100">
+    <Card 
+      className={`p-5 hover:shadow-lg transition-all border-slate-100 active:scale-95 ${onClick ? 'cursor-pointer hover:-translate-y-1' : ''}`}
+      onClick={onClick}
+    >
       <div className="flex justify-between items-start mb-4">
         <div className={`p-3 rounded-xl ${colors[color]}`}>{icon}</div>
       </div>

@@ -155,15 +155,18 @@ The application saves a snapshot of the entire state. This file is the "Project 
 
 ## 5. Future Roadmap & Extension Points
 
-### 5.1. Phase 1: Complexity (Current)
+### 5.1. Phase 1: Complexity (Completed)
 - [x] Basic Conflict Resolution.
 - [x] Teacher Constraints.
 - [x] Double Periods.
 
-### 5.2. Phase 2: Advanced Constraints (Planned)
-- [ ] **Room Management:** Explicit Room resource allocation (beyond generic "Single Resource").
-- [ ] **Elective Blocks:** Scheduling "Option Lines" where multiple classes occur simultaneously (e.g., Art/Music/Drama).
-- [ ] **Teacher Workload Balancing:** Soft constraint to equalize free periods across the week.
+### 5.2. Phase 2: Advanced Resources & Logic (Completed)
+- [x] **Room Management:** Explicit Room resource allocation.
+- [x] **Elective Blocks:** Scheduling "Option Lines" via Gang Scheduling.
+- [x] **Teacher Workload Balancing:** Soft constraints to equalize load.
+- [x] **Structure Overrides:** Class-specific break/lunch times.
+- [x] **Interactive Dashboard:** Clickable KPI cards and specific health diagnostics.
+- [x] **Faculty Quick-Add:** Dynamic teacher creation/assignment from faculty views.
 
 ### 5.3. Phase 3: Enterprise Features (Planned)
 - [ ] **User Accounts:** Cloud sync (requires backend).

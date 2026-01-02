@@ -31,6 +31,21 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
 
   // Single Resource State
   const [isSingleResource, setIsSingleResource] = useState(false);
+  const [requiredRoomType, setRequiredRoomType] = useState("");
+  const [preferredRoomIds, setPreferredRoomIds] = useState<string[]>([]);
+
+  // Room Types (Mirrored from RoomsView for simplicity)
+  const ROOM_TYPES = [
+    { value: "", label: "Any Room Type" },
+    { value: "Classroom", label: "Standard Classroom" },
+    { value: "Lab", label: "Laboratory" },
+    { value: "Gym", label: "Gymnasium" },
+    { value: "Art Studio", label: "Art Studio" },
+    { value: "Music Room", label: "Music Room" },
+    { value: "Hall", label: "Assembly Hall" },
+    { value: "Computer Lab", label: "Computer Lab" },
+    { value: "Workshop", label: "Workshop" },
+  ];
 
   // Delete Modal State
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -66,6 +81,11 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
       .map((s) => s.color);
   }, [data.subjects, editingSubject]);
 
+  const availableRooms = useMemo(() => {
+    if (!requiredRoomType) return data.rooms || [];
+    return (data.rooms || []).filter(r => r.type === requiredRoomType);
+  }, [data.rooms, requiredRoomType]);
+
   const saveSubject = () => {
     if (!subjName) return;
     const newSubj: Subject = {
@@ -73,6 +93,8 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
       name: subjName,
       color: subjColor,
       isSingleResource: isSingleResource,
+      requiredRoomType: requiredRoomType || undefined,
+      preferredRoomIds: preferredRoomIds.length > 0 ? preferredRoomIds : undefined,
     };
 
     let newSubjects = [...data.subjects];
@@ -128,6 +150,8 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
       COLOR_PALETTE[0].hex;
     setSubjColor(subj?.color || defaultHex);
     setIsSingleResource(subj?.isSingleResource || false);
+    setRequiredRoomType(subj?.requiredRoomType || "");
+    setPreferredRoomIds(subj?.preferredRoomIds || []);
     setModalOpen(true);
   };
 
@@ -322,6 +346,57 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                 <strong>only one class</strong> in the entire school is
                 scheduled for this subject at any given time.
               </p>
+            </div>
+          </div>
+
+          {/* Room Requirements */}
+          <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-4">
+            <h4 className="text-sm font-bold text-slate-700 flex items-center gap-2">
+              <Users size={16} /> Room Allocation Rules
+            </h4>
+            
+            <div className="space-y-2">
+               <label className="block text-xs font-bold text-slate-500 uppercase">Required Room Type</label>
+               <select
+                 className="w-full rounded-md border-slate-300 text-sm p-2 focus:ring-amber-500 focus:border-amber-500"
+                 value={requiredRoomType}
+                 onChange={(e) => {
+                    setRequiredRoomType(e.target.value);
+                    setPreferredRoomIds([]); // Reset preferred on type change
+                 }}
+               >
+                 {ROOM_TYPES.map(opt => (
+                   <option key={opt.value} value={opt.value}>{opt.label}</option>
+                 ))}
+               </select>
+            </div>
+
+            <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-500 uppercase">
+                    Preferred Rooms {requiredRoomType && `(${requiredRoomType})`}
+                </label>
+                <div className="flex flex-wrap gap-2">
+                    {availableRooms.map(room => (
+                        <button
+                          key={room.id}
+                          onClick={() => setPreferredRoomIds(prev => 
+                             prev.includes(room.id) 
+                             ? prev.filter(id => id !== room.id)
+                             : [...prev, room.id]
+                          )}
+                          className={`px-3 py-1.5 rounded-md text-xs font-bold border transition-all ${
+                             preferredRoomIds.includes(room.id)
+                             ? "bg-slate-700 text-white border-slate-700 shadow-sm"
+                             : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+                          }`}
+                        >
+                           {room.name}
+                        </button>
+                    ))}
+                    {availableRooms.length === 0 && (
+                        <span className="text-xs text-slate-400 italic">No rooms available matching this type.</span>
+                    )}
+                </div>
             </div>
           </div>
 

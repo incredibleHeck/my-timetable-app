@@ -45,7 +45,15 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
     duplicateTeacher,
     initiateDelete,
     confirmDelete,
+    quickAddTeacherToFaculty,
   } = useTeacherManagement(data, onUpdate);
+
+  const handleQuickAdd = (subjectId: string) => {
+    const name = window.prompt("Enter Teacher Name to add to this Faculty:");
+    if (name) {
+      quickAddTeacherToFaculty(subjectId, name);
+    }
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto p-8">
@@ -263,9 +271,18 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                     <h3 className="font-bold text-slate-800 text-lg">
                       {subject.name} Faculty
                     </h3>
-                    <Badge className="bg-slate-100 text-slate-600">
-                      {facultyMembers.length} Staff
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-slate-100 text-slate-600">
+                        {facultyMembers.length} Staff
+                      </Badge>
+                      <button
+                        onClick={() => handleQuickAdd(subject.id)}
+                        className="p-1 rounded-full hover:bg-slate-100 text-slate-400 hover:text-amber-600 transition-colors"
+                        title="Quick Add Teacher"
+                      >
+                        <Plus size={16} />
+                      </button>
+                    </div>
                   </div>
                   <div className="p-4 bg-slate-50/50 flex-1">
                     {facultyMembers.length > 0 ? (

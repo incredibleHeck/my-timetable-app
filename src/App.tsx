@@ -8,10 +8,13 @@ import { FileService } from "./services/fileSystem";
 import { DashboardView } from "./features/dashboard/DashboardView";
 import { GlobalConfigView } from "./features/configuration/GlobalConfigView";
 import { SubjectsView } from "./features/subjects/SubjectsView";
+import { RoomsView } from "./features/rooms/RoomsView";
 import { TeachersView } from "./features/teachers/TeachersView";
 import { ClassesView } from "./features/classes/ClassesView";
 import { WorkloadView } from "./features/workload/WorkloadView";
 import { GeneratorView } from "./features/generator/GeneratorView";
+import { ExamsView } from "./features/exams/ExamsView";
+import { DutyView } from "./features/duty/DutyView";
 
 // UI
 import { Button, Modal, Input } from "./components/ui";
@@ -219,6 +222,12 @@ function App() {
                 onUpdate={updateActiveData}
               />
             )}
+            {view === "ROOMS" && (
+              <RoomsView
+                data={activeProfile.data}
+                onUpdate={updateActiveData}
+              />
+            )}
             {view === "TEACHERS" && (
               <TeachersView
                 data={activeProfile.data}
@@ -242,6 +251,18 @@ function App() {
                 data={activeProfile.data}
                 onUpdate={updateActiveData}
                 onNavigate={setView}
+              />
+            )}
+            {view === "EXAMS" && (
+              <ExamsView
+                data={activeProfile.data}
+                onUpdate={updateActiveData}
+              />
+            )}
+            {view === "DUTY" && (
+              <DutyView
+                data={activeProfile.data}
+                onUpdate={updateActiveData}
               />
             )}
           </div>

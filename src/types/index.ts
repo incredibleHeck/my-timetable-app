@@ -43,8 +43,15 @@ export interface Settings {
 }
 
 // ----------------------------------------------------------------------
-// 2. RESOURCES (SUBJECTS & TEACHERS)
+// 2. RESOURCES (SUBJECTS, TEACHERS & ROOMS)
 // ----------------------------------------------------------------------
+
+export interface Room {
+  id: string;
+  name: string;
+  capacity: number;
+  type: string; // e.g. "Lab", "Classroom", "Gym"
+}
 
 export interface Subject {
   id: string;
@@ -52,6 +59,9 @@ export interface Subject {
   color: string;
   // If true, this subject can only happen once globally per period
   isSingleResource?: boolean;
+  // Room requirements
+  preferredRoomIds?: string[]; // Specific rooms
+  requiredRoomType?: string; // e.g. "Lab"
 }
 
 export interface Teacher {
@@ -59,6 +69,7 @@ export interface Teacher {
   name: string;
   specialtyIds: string[];
   constraints: boolean[][]; // [day][period] true=blocked
+  targetLoad?: number; // Desired periods per week
 }
 
 // ----------------------------------------------------------------------
@@ -106,6 +117,8 @@ export interface ElectiveBlock {
   name: string; // e.g. "Arts Option Block"
   classId: string;
   subjectIds: string[]; // e.g. [Art_ID, Music_ID, Drama_ID]
+  // Forced simultaneous scheduling
+  allowedPeriods?: { day: number; period: number }[]; 
 }
 
 // ----------------------------------------------------------------------
@@ -116,9 +129,11 @@ export interface ScheduleSlot {
   subjectId: string;
   teacherId: string;
   classId: string;
+  roomId?: string; // Assigned Room
 
   isFixed?: boolean; // If true, this slot is the 2nd half of a double period
   locked?: boolean; // ADDED: For the Drag & Drop Lock feature
+  electiveBlockId?: string; // ADDED: Represents an Elective Block
 }
 
 // Map: ClassID -> DayIndex -> PeriodIndex -> Slot
@@ -142,16 +157,48 @@ export interface Conflict {
 }
 
 // ----------------------------------------------------------------------
-// 5. GLOBAL APP STATE
+// 5. EXAMS & DUTIES (NEW)
+// ----------------------------------------------------------------------
+
+export interface ExamSession {
+  id: string;
+  subjectId: string;
+  classIds: string[];
+  roomId: string;
+  invigilatorId?: string; // Teacher ID
+  date: string; // ISO Date
+  startTime: string; // e.g. "09:00"
+  duration: number; // minutes
+}
+
+export interface DutyLocation {
+  id: string;
+  name: string;
+}
+
+export interface DutyAssignment {
+  id: string;
+  locationId: string;
+  teacherId: string;
+  day: number;
+  period: number;
+}
+
+// ----------------------------------------------------------------------
+// 6. GLOBAL APP STATE
 // ----------------------------------------------------------------------
 
 export interface AppData {
   settings: Settings;
   subjects: Subject[];
   teachers: Teacher[];
+  rooms: Room[]; // NEW: Room Management
   classes: ClassGroup[];
   jointClasses: JointClass[];
   electives: ElectiveBlock[];
+  exams: ExamSession[]; // NEW
+  dutyLocations: DutyLocation[]; // NEW
+  dutyAssignments: DutyAssignment[]; // NEW
   schedule: ScheduleResult;
   conflicts: Conflict[];
   lastGenerated: string | null;
@@ -169,6 +216,9 @@ export type ViewState =
   | "CONFIG"
   | "SUBJECTS"
   | "TEACHERS"
+  | "ROOMS"
   | "CLASSES"
   | "WORKLOAD"
-  | "GENERATOR";
+  | "GENERATOR"
+  | "EXAMS"
+  | "DUTY";

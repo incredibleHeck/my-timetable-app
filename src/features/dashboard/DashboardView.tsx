@@ -191,6 +191,7 @@ export const DashboardView: React.FC<ViewProps> = ({
           icon={<Users size={20} />}
           color="blue"
           subtext={`${metrics.teacherCount} active`}
+          onClick={() => onNavigate && onNavigate("TEACHERS")}
         />
         <MetricCard
           label="Class Groups"
@@ -198,6 +199,7 @@ export const DashboardView: React.FC<ViewProps> = ({
           icon={<BookOpen size={20} />}
           color="emerald"
           subtext={`${metrics.classCount} classes`}
+          onClick={() => onNavigate && onNavigate("CLASSES")}
         />
         <MetricCard
           label="Subjects"
@@ -205,6 +207,7 @@ export const DashboardView: React.FC<ViewProps> = ({
           icon={<Layers size={20} />}
           color="violet"
           subtext="Active in curriculum"
+          onClick={() => onNavigate && onNavigate("SUBJECTS")}
         />
         <MetricCard
           label="Schedule Saturation"
@@ -212,6 +215,7 @@ export const DashboardView: React.FC<ViewProps> = ({
           icon={<Activity size={20} />}
           color="amber"
           subtext={`${metrics.filledSlots} slots filled`}
+          onClick={() => onNavigate && onNavigate("GENERATOR")}
         />
       </div>
 

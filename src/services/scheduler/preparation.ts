@@ -17,6 +17,17 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
     jc.classIds.forEach((cid) => jointUsageSet.add(`${jc.subjectId}|${cid}`));
   });
 
+  // 3. Pre-compute Elective Block Lookup
+  // Format: "classId|subjectId" -> electiveBlockId
+  const electiveLookup = new Map<string, string>();
+  if (data.electives) {
+    data.electives.forEach((eb) => {
+      eb.subjectIds.forEach((sid) => {
+        electiveLookup.set(`${eb.classId}|${sid}`, eb.id);
+      });
+    });
+  }
+
   // A. Process Joint Classes
   data.jointClasses.forEach((jc) => {
     // Get curriculum from the first class (Representative)
@@ -31,7 +42,8 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
     const teacherName = teacherId
       ? teacherMap.get(teacherId)?.name || "Unknown"
       : "Unassigned";
-    const subjectName = subjectMap.get(jc.subjectId)?.name || "Unknown";
+    const subject = subjectMap.get(jc.subjectId);
+    const subjectName = subject?.name || "Unknown";
     const classNames = jc.classIds.map(
       (cid) => classMap.get(cid)?.name || "Unknown"
     );
@@ -48,6 +60,8 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
         teacherIds: teacherId ? [teacherId] : [],
         teacherNames: [teacherName],
         priority: 0,
+        preferredRoomIds: subject?.preferredRoomIds,
+        requiredRoomType: subject?.requiredRoomType,
       };
       u.priority = calculatePriority(u, data.teachers);
       units.push(u);
@@ -65,6 +79,8 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
         teacherIds: teacherId ? [teacherId] : [],
         teacherNames: [teacherName],
         priority: 0,
+        preferredRoomIds: subject?.preferredRoomIds,
+        requiredRoomType: subject?.requiredRoomType,
       };
       u.priority = calculatePriority(u, data.teachers);
       units.push(u);
@@ -81,7 +97,10 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
       const teacherName = teacherId
         ? teacherMap.get(teacherId)?.name || "Unknown"
         : "Unassigned";
-      const subjectName = subjectMap.get(curr.subjectId)?.name || "Unknown";
+      const subject = subjectMap.get(curr.subjectId);
+      const subjectName = subject?.name || "Unknown";
+      
+      const electiveBlockId = electiveLookup.get(`${cls.id}|${curr.subjectId}`);
 
       // Create Double Periods
       for (let i = 0; i < curr.doubles; i++) {
@@ -95,6 +114,9 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
           teacherIds: teacherId ? [teacherId] : [],
           teacherNames: [teacherName],
           priority: 0,
+          electiveBlockId,
+          preferredRoomIds: subject?.preferredRoomIds,
+          requiredRoomType: subject?.requiredRoomType,
         };
         u.priority = calculatePriority(u, data.teachers);
         units.push(u);
@@ -112,6 +134,9 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
           teacherIds: teacherId ? [teacherId] : [],
           teacherNames: [teacherName],
           priority: 0,
+          electiveBlockId,
+          preferredRoomIds: subject?.preferredRoomIds,
+          requiredRoomType: subject?.requiredRoomType,
         };
         u.priority = calculatePriority(u, data.teachers);
         units.push(u);

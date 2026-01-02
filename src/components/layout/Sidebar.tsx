@@ -9,6 +9,9 @@ import {
   Library,
   Sliders,
   BarChart3,
+  Building2,
+  FileText,
+  Shield,
 } from "lucide-react";
 import { ViewState } from "../../types";
 import { FileService } from "../../services/fileSystem";
@@ -102,6 +105,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
           currentView={view}
           onClick={setView}
         />
+
+        <NavItem
+          id="ROOMS"
+          icon={<Building2 size={18} />}
+          label="Rooms"
+          currentView={view}
+          onClick={setView}
+        />
+
         <NavItem
           id="SUBJECTS"
           icon={<Library size={18} />}
@@ -142,6 +154,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
           id="GENERATOR"
           icon={<Zap size={18} />}
           label="Auto-Generator"
+          currentView={view}
+          onClick={setView}
+        />
+        <NavItem
+          id="EXAMS"
+          icon={<FileText size={18} />}
+          label="Exam Timetable"
+          currentView={view}
+          onClick={setView}
+        />
+        <NavItem
+          id="DUTY"
+          icon={<Shield size={18} />}
+          label="Duty Roster"
           currentView={view}
           onClick={setView}
         />
