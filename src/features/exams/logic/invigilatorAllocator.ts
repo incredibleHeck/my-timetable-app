@@ -1,4 +1,4 @@
-import { AppData, ExamSession, Teacher } from "../../../types";
+import { AppData, ExamSession } from "../../../types";
 import { generateId } from "../../../utils/utils";
 
 interface AllocationConfig {
@@ -17,22 +17,36 @@ const isOverlapping = (s1: number, e1: number, s2: number, e2: number) => {
   return s1 < e2 && e1 > s2;
 };
 
+// Helper: True random shuffle (Fisher-Yates)
+const shuffleArray = <T>(array: T[]): T[] => {
+  const result = [...array];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+};
+
 export const allocateInvigilators = (
   data: AppData,
   config: AllocationConfig
 ): ExamSession[] => {
-  const { teachers, settings, exams, classes } = data;
-  const newExams = [...exams];
+  const { teachers, settings, exams } = data;
+
+  // We will build a new list of exams
+  const resultExams: ExamSession[] = [];
 
   // 1. Prepare Load Tracker (to balance assignments)
   const teacherLoad: Record<string, number> = {};
   teachers.forEach((t) => (teacherLoad[t.id] = 0));
 
   // 2. Map HH:MM to Period Index for constraints
+  // Optimized: Create a lookup map if slots are static, but function is fine for small N
   const getPeriodIndex = (timeStr: string) => {
     const timeMins = parseTime(timeStr);
     let bestIdx = 0;
     let minDiff = Infinity;
+
     settings.timeSlots.forEach((slot, idx) => {
       const startMins = parseTime(slot.start);
       const diff = Math.abs(timeMins - startMins);
@@ -48,24 +62,54 @@ export const allocateInvigilators = (
   const uniqueDates = Array.from(new Set(exams.map((e) => e.date))).sort();
 
   uniqueDates.forEach((date) => {
-    const examsOnDate = newExams.filter((e) => e.date === date);
+    // Separate exams into Locked (Keep as is) and Unlocked (Re-assign)
+    const examsOnDate = exams.filter((e) => e.date === date);
+    const lockedExams = examsOnDate.filter((e) => e.locked);
+    const unlockedExams = examsOnDate.filter((e) => !e.locked);
+
+    // Push locked exams to result immediately
+    resultExams.push(...lockedExams);
+
+    // If no exams to schedule, skip
+    if (unlockedExams.length === 0) return;
+
+    // --- PRE-PROCESSING: Respect Locked Assignments ---
+    // We need to know who is already busy at what times due to locked exams
+    const busyTeachers: Record<string, { start: number; end: number }[]> = {};
+
+    lockedExams.forEach((exam) => {
+      const start = parseTime(exam.startTime);
+      const end = start + exam.duration;
+
+      (exam.invigilatorIds || []).forEach((tId) => {
+        if (!busyTeachers[tId]) busyTeachers[tId] = [];
+        busyTeachers[tId].push({ start, end });
+        teacherLoad[tId]++; // Count this towards their load
+      });
+    });
+
+    // --- MAIN ALLOCATION FOR UNLOCKED EXAMS ---
+
+    // Get unique classes involved in UNLOCKED exams
     const classesOnDate = Array.from(
-      new Set(examsOnDate.flatMap((e) => e.classIds))
+      new Set(unlockedExams.flatMap((e) => e.classIds))
     );
 
-    // Track which teachers are assigned to which class "Team" on this specific date
-    // classTeams[classId] = string[] (teacher IDs)
+    // Track assigned teams for this day to prevent conflicts between simultaneous exams
     const classTeams: Record<string, string[]> = {};
 
-    // Sort classes to randomize who gets first pick of teachers
-    const shuffledClasses = [...classesOnDate].sort(() => Math.random() - 0.5);
+    // Shuffle classes to ensure fairness
+    const shuffledClasses = shuffleArray(classesOnDate);
 
-    // STEP A: Assign MINIMUM teachers to every class team for this day
+    // STEP A: Assign MINIMUM teachers
     shuffledClasses.forEach((classId) => {
-      const classExams = examsOnDate.filter((e) => e.classIds.includes(classId));
+      const classExams = unlockedExams.filter((e) =>
+        e.classIds.includes(classId)
+      );
       if (classExams.length === 0) return;
 
-      // Determine all-day availability requirement for this class
+      // Determine required availability (Teacher must be free for ALL slots this class has today)
+      // Note: In reality, we might want per-slot assignment, but per-day consistency is often preferred.
       const daySlots = classExams.map((e) => {
         const start = parseTime(e.startTime);
         return {
@@ -77,23 +121,41 @@ export const allocateInvigilators = (
 
       const dateObj = new Date(date);
       let dayIdx = dateObj.getDay() - 1;
-      if (dayIdx < 0 || dayIdx > 4) dayIdx = 0;
+      if (dayIdx < 0 || dayIdx > 4) dayIdx = 0; // Normalize weekend/default
 
-      // Find teachers available for ALL exams this class writes today
+      // Filter Available Teachers
       const availableTeachers = teachers.filter((t) => {
-        // 1. Check constraints for all periods used today
-        const isBlockedAny = daySlots.some(
+        // 1. Check Constraint Matrix (Is teacher working today?)
+        const isBlockedBySettings = daySlots.some(
           (slot) => t.constraints?.[dayIdx]?.[slot.periodIdx] === true
         );
-        if (isBlockedAny) return false;
+        if (isBlockedBySettings) return false;
 
-        // 2. Check if already assigned to another class team that overlaps in time
-        const isConflict = Object.entries(classTeams).some(
+        // 2. Check Locked Exams (Is teacher already booked?)
+        if (busyTeachers[t.id]) {
+          const isBusyLocked = busyTeachers[t.id].some((busySlot) =>
+            daySlots.some((reqSlot) =>
+              isOverlapping(
+                busySlot.start,
+                busySlot.end,
+                reqSlot.start,
+                reqSlot.end
+              )
+            )
+          );
+          if (isBusyLocked) return false;
+        }
+
+        // 3. Check Dynamic Assignments (Is teacher assigned to another class concurrently?)
+        const isBusyDynamic = Object.entries(classTeams).some(
           ([otherClassId, teamIds]) => {
             if (!teamIds.includes(t.id)) return false;
-            const otherClassExams = examsOnDate.filter((e) =>
+
+            // Find when that other class is writing
+            const otherClassExams = unlockedExams.filter((e) =>
               e.classIds.includes(otherClassId)
             );
+
             return otherClassExams.some((oe) => {
               const oStart = parseTime(oe.startTime);
               const oEnd = oStart + oe.duration;
@@ -104,28 +166,32 @@ export const allocateInvigilators = (
           }
         );
 
-        return !isConflict;
+        return !isBusyDynamic;
       });
 
-      // Sort available teachers by overall workload (least busy first)
-      availableTeachers.sort((a, b) => teacherLoad[a.id] - teacherLoad[b.id]);
+      // Sort by Load (Ascending) then Shuffle for randomness among equals
+      const randomizedPool = shuffleArray(availableTeachers);
+      randomizedPool.sort((a, b) => teacherLoad[a.id] - teacherLoad[b.id]);
 
-      // Assign Min
-      const selectedIds = availableTeachers
+      // Assign Minimum
+      const selectedIds = randomizedPool
         .slice(0, config.minInvigilators)
         .map((t) => t.id);
-      
+
       classTeams[classId] = selectedIds;
       selectedIds.forEach((id) => teacherLoad[id]++);
     });
 
-    // STEP B: Distribute EXTRA teachers up to MAX if available (Workload filling)
+    // STEP B: Distribute EXTRA teachers (Workload Filling)
     if (config.maxInvigilators > config.minInvigilators) {
       shuffledClasses.forEach((classId) => {
         const currentTeam = classTeams[classId] || [];
         if (currentTeam.length >= config.maxInvigilators) return;
 
-        const classExams = examsOnDate.filter((e) => e.classIds.includes(classId));
+        // Recalculate slots (same as above)
+        const classExams = unlockedExams.filter((e) =>
+          e.classIds.includes(classId)
+        );
         const daySlots = classExams.map((e) => {
           const start = parseTime(e.startTime);
           return {
@@ -142,19 +208,34 @@ export const allocateInvigilators = (
         const extrasNeeded = config.maxInvigilators - currentTeam.length;
 
         const availableExtras = teachers.filter((t) => {
-          if (currentTeam.includes(t.id)) return false;
-          
-          // Availability check
-          const isBlockedAny = daySlots.some(
+          if (currentTeam.includes(t.id)) return false; // Already assigned
+
+          // 1. Settings Check
+          const isBlockedBySettings = daySlots.some(
             (slot) => t.constraints?.[dayIdx]?.[slot.periodIdx] === true
           );
-          if (isBlockedAny) return false;
+          if (isBlockedBySettings) return false;
 
-          // Conflict check
-          const isConflict = Object.entries(classTeams).some(
+          // 2. Locked Exams Check
+          if (busyTeachers[t.id]) {
+            const isBusyLocked = busyTeachers[t.id].some((busySlot) =>
+              daySlots.some((reqSlot) =>
+                isOverlapping(
+                  busySlot.start,
+                  busySlot.end,
+                  reqSlot.start,
+                  reqSlot.end
+                )
+              )
+            );
+            if (isBusyLocked) return false;
+          }
+
+          // 3. Dynamic Check
+          const isBusyDynamic = Object.entries(classTeams).some(
             ([otherClassId, teamIds]) => {
               if (!teamIds.includes(t.id)) return false;
-              const otherClassExams = examsOnDate.filter((e) =>
+              const otherClassExams = unlockedExams.filter((e) =>
                 e.classIds.includes(otherClassId)
               );
               return otherClassExams.some((oe) => {
@@ -166,46 +247,33 @@ export const allocateInvigilators = (
               });
             }
           );
-          return !isConflict;
+          return !isBusyDynamic;
         });
 
-        availableExtras.sort((a, b) => teacherLoad[a.id] - teacherLoad[b.id]);
-        
-        const extraIds = availableExtras.slice(0, extrasNeeded).map((t) => t.id);
+        const randomizedExtras = shuffleArray(availableExtras);
+        randomizedExtras.sort((a, b) => teacherLoad[a.id] - teacherLoad[b.id]);
+
+        const extraIds = randomizedExtras
+          .slice(0, extrasNeeded)
+          .map((t) => t.id);
         classTeams[classId] = [...currentTeam, ...extraIds];
         extraIds.forEach((id) => teacherLoad[id]++);
       });
     }
 
-    // STEP C: Apply Teams to Exam Sessions (FORK/SPLIT VERSION)
-    const resultSessions: ExamSession[] = [];
-    
-    // We need to iterate through the ORIGINAL sessions because we are replacing them
-    examsOnDate.forEach((originalExam) => {
-      if (originalExam.locked) {
-        resultSessions.push(originalExam);
-        return;
-      }
-
-      // Instead of one session with multiple classes, we create ONE session PER class.
-      // This ensures 10A and 10B have their own distinct invigilator teams in the roster.
+    // STEP C: Apply to Sessions (Fork/Split Logic)
+    // We iterate through unlocked exams and split them into per-class sessions
+    unlockedExams.forEach((originalExam) => {
       originalExam.classIds.forEach((cid) => {
-        resultSessions.push({
+        resultExams.push({
           ...originalExam,
-          id: generateId(), // Create a unique session per class
+          id: generateId(), // New ID for the split session
           classIds: [cid],
           invigilatorIds: classTeams[cid] || [],
         });
       });
     });
-
-    // Remove the old combined sessions and add the new split ones
-    const idsToRemove = examsOnDate.map(e => e.id);
-    const filteredList = newExams.filter(e => !idsToRemove.includes(e.id));
-    newExams.length = 0; // Clear array
-    newExams.push(...filteredList, ...resultSessions);
   });
 
-  return newExams;
+  return resultExams;
 };
-

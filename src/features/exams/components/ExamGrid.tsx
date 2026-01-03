@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { AppData, ExamSession } from "../../../types";
+import { AppData, ExamSession, Subject } from "../../../types";
 import {
   AlertTriangle,
   Clock,
@@ -14,26 +14,34 @@ import {
   useDraggable,
   useDroppable,
   DragEndEvent,
-  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
 } from "@dnd-kit/core";
 
-// --- HOOKS FOR DND COMPONENTS ---
+// --- COMPONENTS ---
 
-// 1. Draggable Exam Card Wrapper
+// 1. Draggable Exam Card (Renders a stack of sessions, with support for Intra-Column Split)
 const DraggableExamCard = ({
   exams,
   data,
+  activeId,
   checkConflicts,
   onEdit,
   isEditMode,
 }: {
   exams: ExamSession[];
   data: AppData;
+  activeId: string;
   checkConflicts: (exam: ExamSession) => string[];
   onEdit: (e: ExamSession) => void;
   isEditMode: boolean;
 }) => {
+  // We use the first exam in the stack as the "Anchor" for ID and Subject info
   const mainExam = exams[0];
+  const subject = data.subjects.find((s) => s.id === mainExam.subjectId);
+
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: mainExam.id,
     data: { type: "EXAM", exam: mainExam, allExams: exams },
@@ -41,346 +49,419 @@ const DraggableExamCard = ({
   });
 
   const { setNodeRef: setDropRef, isOver } = useDroppable({
-    id: mainExam.id,
+    id: `target-${mainExam.id}`,
     data: { type: "EXAM_TARGET", exam: mainExam, allExams: exams },
     disabled: !isEditMode,
   });
 
-  const subject = data.subjects.find((s) => s.id === mainExam.subjectId);
-
-  // Combine refs for swap capability
+  // Combine refs to allow this card to be both draggable AND a drop target (for swapping)
   const setRefs = (node: HTMLElement | null) => {
     setNodeRef(node);
     setDropRef(node);
   };
 
+  // Group exams by Paper Number for Split View
+  const paperGroups = useMemo(() => {
+    const groups: Record<number, ExamSession[]> = {};
+    exams.forEach((e) => {
+      const pNum = e.paperNumber || 1;
+      if (!groups[pNum]) groups[pNum] = [];
+      groups[pNum].push(e);
+    });
+    return groups;
+  }, [exams]);
+
+  const paperNumbers = Object.keys(paperGroups).map(Number).sort();
+  const isSplitView = paperNumbers.length > 1;
+
   if (isDragging) {
     return (
       <div
         ref={setRefs}
-        className="opacity-30 bg-slate-100 border-2 border-dashed border-slate-300 rounded-lg min-h-[140px]"
+        className="opacity-30 bg-slate-200 border-2 border-dashed border-slate-400 rounded-xl min-h-[100px] w-full"
       />
     );
   }
 
+  const renderExamStack = (stack: ExamSession[]) => {
+    return (
+      <div className="flex flex-col gap-1 h-full">
+        {stack.map((exam, index) => {
+          const conflicts = checkConflicts(exam);
+          const room = data.rooms.find((r) => r.id === exam.roomId);
+          const hasRoom = !!exam.roomId;
+
+          // Resolve Names
+          const invigilatorNames = (exam.invigilatorIds || [])
+            .map((id) => data.teachers.find((t) => t.id === id)?.name)
+            .filter(Boolean)
+            .join(", ");
+
+          const classNames = exam.classIds
+            .map((cid) => data.classes.find((c) => c.id === cid)?.name)
+            .join(", ");
+
+          // Only show Subject/Time header on the FIRST card in the stack to save space
+          const showHeader = index === 0;
+
+          return (
+            <div
+              key={exam.id}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(exam);
+              }}
+              className={`
+                relative flex-1 flex flex-col justify-center bg-white rounded-lg border-l-[4px] shadow-sm hover:shadow-md transition-all px-3 py-2 cursor-pointer
+                ${
+                  conflicts.length > 0
+                    ? "border-l-red-500 border-red-100 bg-red-50/30"
+                    : "border-slate-200"
+                }
+                ${!showHeader ? "mt-0.5 border-t border-slate-100" : ""}
+              `}
+              style={{
+                borderLeftColor:
+                  conflicts.length > 0 ? undefined : subject?.color,
+              }}
+            >
+              {/* Conflict Indicator */}
+              {conflicts.length > 0 && (
+                <div
+                  className="absolute -top-1.5 -left-2 bg-red-500 text-white rounded-full p-0.5 shadow-sm z-10 animate-pulse"
+                  title={conflicts.join("\n")}
+                >
+                  <AlertTriangle size={10} />
+                </div>
+              )}
+
+              {showHeader && (
+                <div className="flex justify-between items-start mb-1.5">
+                  <div className="flex flex-col">
+                    <div
+                      className="font-black text-slate-800 text-[13px] leading-tight uppercase truncate max-w-[140px]"
+                      title={subject?.name}
+                    >
+                      {subject?.name}
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-[9px] font-bold text-slate-500 bg-slate-100 px-1 rounded flex items-center gap-0.5">
+                        <Clock size={8} /> {exam.startTime}
+                      </span>
+                      <span
+                        className="text-[8px] font-black text-white px-1.5 py-0 rounded-sm uppercase"
+                        style={{ backgroundColor: subject?.color || "#94a3b8" }}
+                      >
+                        {exam.paperLabel || `P${exam.paperNumber}`}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Class & Details Row */}
+              <div className="flex flex-col gap-1">
+                {activeId === "ALL" && (
+                  <div className="text-[11px] font-bold text-slate-700 truncate">
+                    {classNames}
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between gap-2 border-t border-slate-50 pt-1">
+                  <div
+                    className={`flex items-center gap-1 text-[9px] font-bold truncate max-w-[45%] ${
+                      hasRoom ? "text-slate-500" : "text-amber-600"
+                    }`}
+                  >
+                    <MapPin size={9} /> {hasRoom ? room?.name : "NO ROOM"}
+                  </div>
+                  <div className="flex items-center gap-1 text-[9px] font-bold text-slate-400 truncate max-w-[50%]">
+                    <Users size={9} /> {invigilatorNames || "NO STAFF"}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
     <div
       ref={setRefs}
-      className={`relative group flex flex-col gap-1 h-full min-h-[140px] ${
-        isOver && isEditMode ? "ring-2 ring-amber-400 rounded-lg p-1 bg-amber-50" : ""
-      }`}
-      style={{ transform: isDragging ? "scale(1.05)" : "scale(1)" }}
+      className={`relative group flex flex-col gap-1 h-full w-full transition-all duration-200
+        ${
+          isOver && isEditMode
+            ? "ring-4 ring-amber-400 rounded-xl z-10 scale-[1.02] shadow-xl"
+            : ""
+        }
+      `}
     >
-      {/* Drag Handle (Unified for the slot) */}
+      {/* Drag Handle (Visible on hover in Edit Mode) */}
       {isEditMode && (
         <div
           {...listeners}
           {...attributes}
-          className="absolute top-2 right-2 cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-500 z-10 p-1"
+          className="absolute -top-2 -right-2 cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-700 z-30 p-1.5 bg-white border border-slate-200 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
         >
           <GripVertical size={14} />
         </div>
       )}
 
-      {exams.map((exam, index) => {
-        const conflicts = checkConflicts(exam);
-        const room = data.rooms.find((r) => r.id === exam.roomId);
-        const hasRoom = !!exam.roomId;
-
-        return (
-          <div
-            key={exam.id}
-            onClick={() => onEdit(exam)}
-            className={`
-              relative flex-1 flex flex-col justify-center bg-white rounded-lg border-l-4 shadow-sm hover:shadow-md transition-all px-3 py-2 cursor-pointer
-              ${
-                conflicts.length > 0
-                  ? "border-l-red-500 border-red-200 bg-red-50/10"
-                  : "border-slate-200"
-              }
-              ${exams.length > 1 && index === 0 ? "mb-0.5" : ""}
-            `}
-            style={{
-              borderLeftColor:
-                conflicts.length > 0 ? undefined : subject?.color,
-            }}
-          >
-            {/* Conflict Badge */}
-            {conflicts.length > 0 && (
-              <div className="absolute -top-1 -left-2 bg-red-500 text-white rounded-full p-0.5 shadow-sm z-10 animate-pulse">
-                <AlertTriangle size={10} />
+      {/* RENDER CONTENT: Split View or Standard Stack */}
+      {isSplitView ? (
+        <div className="grid grid-cols-2 gap-1 h-full">
+          {paperNumbers.map((pNum) => (
+            <div key={pNum} className="flex flex-col gap-0.5 min-w-0">
+              {/* Mini Header for Split View */}
+              <div className="text-[9px] font-bold text-slate-400 uppercase text-center bg-slate-50 rounded-t py-0.5">
+                Paper {pNum}
               </div>
-            )}
-
-            {/* Time Header */}
-            <div className="flex justify-between items-center mb-1 pr-4">
-              <div className="flex items-center gap-1 text-slate-500 bg-slate-50 px-1 py-0.5 rounded text-[9px] font-bold">
-                <Clock size={9} />
-                {exam.startTime}
-              </div>
-              <span className="text-[9px] font-mono text-slate-400 bg-slate-100 px-1 py-0.5 rounded border border-slate-200">
-                {exam.paperLabel || `P${exam.paperNumber}`}
-              </span>
+              {renderExamStack(paperGroups[pNum])}
             </div>
-
-            {/* Subject Info */}
-            <div className="">
-              <h4
-                className="font-bold text-slate-800 text-[13px] leading-tight truncate"
-                title={subject?.name}
-              >
-                {subject?.name || "Unknown Subject"}
-              </h4>
-            </div>
-
-            {/* Room Info */}
-            <div
-              className={`
-              flex items-center gap-1.5 text-[10px] font-medium mt-1 pt-1 border-t border-dashed
-              ${
-                hasRoom
-                  ? "text-slate-600 border-slate-100"
-                  : "text-amber-600 border-amber-100"
-              }
-            `}
-            >
-              <MapPin
-                size={10}
-                className={hasRoom ? "text-slate-400" : "text-amber-500"}
-              />
-              <span className="truncate">{hasRoom ? room?.name : "Assign Room"}</span>
-            </div>
-
-            {/* Invigilator Info (NEW) */}
-            <div className="flex items-center gap-1.5 text-[9px] font-medium text-slate-500 mt-0.5">
-              <Users size={9} className="text-slate-400" />
-              <span className="truncate">
-                {exam.invigilatorIds?.length 
-                  ? exam.invigilatorIds.map(id => data.teachers.find(t => t.id === id)?.name).join(", ")
-                  : "No Invigilators"}
-              </span>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
-
-// 2. Droppable Day Column Header
-const DroppableDayHeader = ({
-  date,
-  count,
-  isEditMode,
-}: {
-  date: string;
-  count: number;
-  isEditMode: boolean;
-}) => {
-  const { setNodeRef, isOver } = useDroppable({
-    id: `date-${date}`,
-    data: { type: "DATE_TARGET", date },
-    disabled: !isEditMode,
-  });
-
-  const formatDate = (dateStr: string) => {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString("en-GB", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-    });
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      className={`
-        flex items-center gap-3 border-b pb-2 transition-colors rounded px-2
-        ${isOver && isEditMode ? "bg-indigo-50 border-indigo-300" : "border-slate-200"}
-      `}
-    >
-      <div
-        className={`p-1.5 rounded-full ${
-          isOver && isEditMode
-            ? "bg-indigo-100 text-indigo-600"
-            : "bg-slate-100 text-slate-500"
-        }`}
-      >
-        <CalendarDays size={16} />
-      </div>
-      <div>
-        <h3
-          className={`text-lg font-bold ${
-            isOver && isEditMode ? "text-indigo-700" : "text-slate-800"
-          }`}
-        >
-          {formatDate(date)}
-        </h3>
-        {isOver && isEditMode && (
-          <span className="text-[10px] text-indigo-500 font-bold block">
-            Drop to move here
-          </span>
-        )}
-      </div>
-      {!isOver && (
-        <span className="text-xs font-medium text-slate-400 bg-slate-100 px-2 py-1 rounded-full ml-auto">
-          {count} Slots
-        </span>
+          ))}
+        </div>
+      ) : (
+        renderExamStack(exams)
       )}
     </div>
   );
 };
 
-// --- MAIN GRID COMPONENT ---
+// 3. Main component setup follows...
+
+// --- MAIN COMPONENT ---
 
 interface Props {
   data: AppData;
   exams: ExamSession[];
+  activeId?: string;
   onEdit: (exam: ExamSession) => void;
   checkConflicts: (exam: ExamSession) => string[];
   onSwap: (ids1: string | string[], ids2: string | string[]) => void;
-  onMoveDate: (id: string | string[], date: string) => void;
   isEditMode: boolean;
-  editTool: "MOVE" | "SWAP";
 }
 
 export const ExamGrid: React.FC<Props> = ({
   data,
   exams,
+  activeId = "ALL",
   onEdit,
   checkConflicts,
   onSwap,
-  onMoveDate,
   isEditMode,
-  editTool,
 }) => {
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
 
-  // Grouping Logic
-  const groupedExams = useMemo(() => {
-    const dateGroups: Record<string, ExamSession[]> = {};
-    exams.forEach((exam) => {
-      if (!dateGroups[exam.date]) dateGroups[exam.date] = [];
-      dateGroups[exam.date].push(exam);
-    });
+  // Configure sensors for drag activation distance (prevents accidental drags on click)
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
 
-    return Object.keys(dateGroups)
-      .sort()
-      .map((date) => {
-        const dateSessions = dateGroups[date].sort((a, b) =>
-          a.startTime.localeCompare(b.startTime)
-        );
-
-        // Group into "Slots" (Same subject and classes on the same day)
-        const slots: ExamSession[][] = [];
-        const processedIds = new Set<string>();
-
-        dateSessions.forEach((s) => {
-          if (processedIds.has(s.id)) return;
-
-          const key = `${s.subjectId}-${[...s.classIds].sort().join(",")}`;
-          const siblings = dateSessions.filter((other) => {
-            const otherKey = `${other.subjectId}-${[...other.classIds]
-              .sort()
-              .join(",")}`;
-            return otherKey === key;
-          });
-
-          slots.push(siblings);
-          siblings.forEach((sib) => processedIds.add(sib.id));
-        });
-
-        return { date, slots };
-      });
+  const uniqueDates = useMemo(() => {
+    return Array.from(new Set(exams.map((e) => e.date))).sort();
   }, [exams]);
 
-  // Handlers
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveDragId(event.active.id as string);
-  };
+  // Derived Session Times (Fallback)
+  const defaultTimes = ["09:00", "14:00"];
 
+  // --- DND HANDLERS ---
   const handleDragEnd = (event: DragEndEvent) => {
     setActiveDragId(null);
     const { active, over } = event;
-
     if (!over || !isEditMode) return;
 
-    const activeId = active.id as string;
-    const overId = over.id as string;
     const activeData = active.data.current;
     const overData = over.data.current;
 
-    // Case 1: Dropped onto another Exam Slot
-    if (activeId !== overId && overData?.type === "EXAM_TARGET") {
-      const activeSlotIds = activeData?.allExams.map((e: ExamSession) => e.id);
-      const overSlotIds = overData?.allExams.map((e: ExamSession) => e.id);
-      
-      if (editTool === 'SWAP') {
-        onSwap(activeSlotIds, overSlotIds);
-      } else {
-        // In 'MOVE' mode, dropping on another exam is not a valid action.
-        // You could add feedback here if desired.
-        return;
-      }
-    }
+    // Safety check
+    if (!activeData || !overData) return;
 
-    // Case 2: Dropped onto a Day Header (MOVE DATE)
-    // This action is only valid in 'MOVE' mode.
-    if (editTool === 'MOVE' && overData?.type === "DATE_TARGET") {
-      const newDate = overData.date;
-      const slotExams = activeData?.allExams as ExamSession[] | undefined;
+    const activeIds = activeData.allExams.map((e: ExamSession) => e.id);
 
-      if (slotExams && slotExams.length > 0 && slotExams[0].date !== newDate) {
-        const slotIds = slotExams.map(e => e.id);
-        onMoveDate(slotIds, newDate);
-      }
+    // ONLY HANDLE DROP ON ANOTHER EXAM (Swap)
+    if (overData.type === "EXAM_TARGET") {
+      const targetExam = overData.exam;
+      // Prevent self-drop
+      if (active.id === targetExam.id) return;
+
+      const overIds = overData.allExams.map((e: ExamSession) => e.id);
+      onSwap(activeIds, overIds);
     }
   };
 
   return (
-    <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="space-y-8 pb-20 select-none">
-        {groupedExams.map((group) => (
-          <div key={group.date} className="space-y-3">
-            {/* Droppable Header */}
-            <DroppableDayHeader
-              date={group.date}
-              count={group.slots.length}
-              isEditMode={isEditMode}
-            />
-
-            {/* Grid of Draggable Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-stretch">
-              {group.slots.map((slot) => (
-                <DraggableExamCard
-                  key={slot[0].id}
-                  exams={slot}
-                  data={data}
-                  checkConflicts={checkConflicts}
-                  onEdit={onEdit}
-                  isEditMode={isEditMode}
-                />
-              ))}
-
-              {/* Empty State placeholder for drop zones if needed */}
-              {group.slots.length === 0 && (
-                <div className="col-span-4 h-16 border-2 border-dashed border-slate-200 rounded-lg flex items-center justify-center text-slate-400 text-sm">
-                  Drag exams here
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={(e) => setActiveDragId(e.active.id as string)}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="h-full border border-slate-200 rounded-2xl overflow-hidden shadow-lg bg-white">
+        <table className="w-full border-collapse table-fixed">
+          <thead>
+            <tr className="bg-slate-900 text-white">
+              {/* Corner Header */}
+              <th className="p-4 border-r border-slate-800 text-left text-[11px] font-black text-slate-400 uppercase tracking-widest w-[140px] sticky left-0 z-40 bg-slate-900 shadow-md">
+                Date
+              </th>
+              {/* Session Headers */}
+              <th className="p-4 border-r border-slate-800 text-center min-w-[350px] sticky top-0 z-20 shadow-md">
+                <div className="flex flex-col gap-1">
+                  <span className="font-black text-sm uppercase tracking-widest">
+                    Subject 1
+                  </span>
                 </div>
-              )}
-            </div>
-          </div>
-        ))}
+              </th>
+              <th className="p-4 border-r border-slate-800 text-center min-w-[350px] sticky top-0 z-20 shadow-md">
+                <div className="flex flex-col gap-1">
+                  <span className="font-black text-sm uppercase tracking-widest">
+                    Subject 2
+                  </span>
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {uniqueDates.map((date) => {
+              const examsOnDate = exams.filter((e) => e.date === date);
+
+              // Sort exams by time
+              const sortedByTime = [...examsOnDate].sort((a, b) =>
+                a.startTime.localeCompare(b.startTime)
+              );
+
+              // GROUP BY SUBJECT and Assign to Columns sequentially (NOT time-bound)
+              const subjectGroups: Record<string, ExamSession[]> = {};
+              sortedByTime.forEach((e) => {
+                if (!subjectGroups[e.subjectId]) subjectGroups[e.subjectId] = [];
+                subjectGroups[e.subjectId].push(e);
+              });
+
+              // Sort subject groups by their EARLIEST exam's start time to maintain a logical order
+              const sortedSubjectGroups = Object.values(subjectGroups).sort((groupA, groupB) => {
+                const minA = groupA.reduce((min, e) => e.startTime < min ? e.startTime : min, "23:59");
+                const minB = groupB.reduce((min, e) => e.startTime < min ? e.startTime : min, "23:59");
+                return minA.localeCompare(minB);
+              });
+
+              // Column 1 = First Subject Group of the day
+              // Column 2 = Second Subject Group of the day (if it exists)
+              const session1Exams: ExamSession[] = sortedSubjectGroups[0] || [];
+              const session2Exams: ExamSession[] = sortedSubjectGroups[1] || [];
+
+              const defaultTimes = ["09:00", "14:00"];
+              const time1 = defaultTimes[0];
+              const time2 = defaultTimes[1];
+
+              // --- INTELLIGENT GROUPING LOGIC ---
+              // Groups exams into "Stacks" if they share Subject. 
+              // Now supports grouping multiple papers (P1, P2) for Split View.
+              const getSlots = (sessions: ExamSession[]) => {
+                const units: ExamSession[][] = [];
+                const processedIds = new Set<string>();
+
+                sessions.forEach((s) => {
+                  if (processedIds.has(s.id)) return;
+
+                  // Find siblings: Same Subject (regardless of Paper/Duration)
+                  const siblings = sessions.filter(
+                    (o) =>
+                      o.subjectId === s.subjectId &&
+                      !processedIds.has(o.id)
+                  );
+
+                  if (siblings.length > 0) {
+                    units.push(siblings);
+                    siblings.forEach((sib) => processedIds.add(sib.id));
+                  }
+                });
+                return units;
+              };
+
+              return (
+                <tr
+                  key={date}
+                  className="group border-b border-slate-100 min-h-[160px]"
+                >
+                  <td className="p-4 border-r border-slate-200 text-center w-[140px] sticky left-0 z-30 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] bg-slate-50">
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        {new Date(date).toLocaleDateString("en-GB", { weekday: "short" })}
+                      </span>
+                      <span className="text-2xl font-black text-slate-800">
+                        {new Date(date).toLocaleDateString("en-GB", { day: "numeric" })}
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-500 uppercase">
+                        {new Date(date).toLocaleDateString("en-GB", { month: "short" })}
+                      </span>
+                    </div>
+                  </td>
+
+                  {/* SESSION 1 */}
+                  <td className="p-3 border-r border-slate-100 align-top h-px bg-white hover:bg-slate-50/30">
+                    <div className="h-full w-full">
+                      <div className="flex flex-col h-full gap-3">
+                        {getSlots(session1Exams).map((slot) => (
+                          <DraggableExamCard
+                            key={slot[0].id}
+                            exams={slot}
+                            data={data}
+                            activeId={activeId}
+                            checkConflicts={checkConflicts}
+                            onEdit={onEdit}
+                            isEditMode={isEditMode}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </td>
+
+                  {/* SESSION 2 */}
+                  <td className="p-3 border-r border-slate-100 align-top h-px bg-white hover:bg-slate-50/30">
+                    <div className="h-full w-full">
+                      <div className="flex flex-col h-full gap-3">
+                        {getSlots(session2Exams).map((slot) => (
+                          <DraggableExamCard
+                            key={slot[0].id}
+                            exams={slot}
+                            data={data}
+                            activeId={activeId}
+                            checkConflicts={checkConflicts}
+                            onEdit={onEdit}
+                            isEditMode={isEditMode}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
 
-      {/* Drag Overlay (Visual Preview while dragging) */}
       <DragOverlay>
         {activeDragId ? (
-          <div className="bg-white p-3 rounded-lg shadow-xl border border-amber-400 w-64 rotate-3 opacity-90 cursor-grabbing">
-            <div className="font-bold text-slate-800">Moving Exam...</div>
-            <div className="text-xs text-slate-500">
-              Drop on another exam to swap
+          <div className="bg-white p-4 rounded-xl shadow-2xl border-2 border-amber-400 w-72 rotate-3 cursor-grabbing opacity-90 scale-105 pointer-events-none ring-4 ring-black/5">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-amber-100 text-amber-600 rounded-lg">
+                <CalendarDays size={20} />
+              </div>
+              <div className="flex flex-col">
+                <div className="font-black text-slate-800 text-sm uppercase">
+                  Rescheduling...
+                </div>
+                <div className="text-[10px] text-slate-500 font-bold">
+                  Release to drop
+                </div>
+              </div>
             </div>
           </div>
         ) : null}

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { AppData, ExamSession } from "../../../types";
 import { Modal, Button, Select, Input } from "../../../components/ui";
-import { Layers } from "lucide-react";
+import { Layers, Users, BookOpen, Clock } from "lucide-react";
+import { generateId } from "../../../utils/utils";
 
 interface Props {
   isOpen: boolean;
@@ -20,6 +21,7 @@ export const ExamManualModal: React.FC<Props> = ({
   editingExam,
   onSave,
 }) => {
+  // --- FORM STATE ---
   const [examSubjectId, setExamSubjectId] = useState("");
   const [examClassIds, setExamClassIds] = useState<string[]>([]);
   const [examDate, setExamDate] = useState("");
@@ -34,44 +36,48 @@ export const ExamManualModal: React.FC<Props> = ({
   const [hasTwoPapers, setHasTwoPapers] = useState(false);
   const [paper2StartTime, setPaper2StartTime] = useState("14:00");
 
+  // --- INITIALIZATION ---
   useEffect(() => {
     if (editingExam) {
+      // EDIT MODE
       setExamSubjectId(editingExam.subjectId);
-      
-      // Default to the classes already assigned to the exam
       setExamClassIds(editingExam.classIds);
-
       setExamDate(editingExam.date);
       setExamStartTime(editingExam.startTime);
       setExamDuration(editingExam.duration.toString());
       setExamInvigilatorIds(editingExam.invigilatorIds || []);
       setExamRoomId(editingExam.roomId || "");
-
       setPaperNumber(editingExam.paperNumber?.toString() || "1");
       setPaperLabel(
         editingExam.paperLabel || `Paper ${editingExam.paperNumber || 1}`
       );
 
-      // Check if there are other papers for this subject/date/class to set hasTwoPapers
-      const others = data.exams?.filter(
+      // Smart Detection: Does a "Paper 2" already exist for this group?
+      // We look for same Subject + Date + At least one overlapping class
+      const potentialPaper2 = data.exams?.find(
         (e) =>
           e.subjectId === editingExam.subjectId &&
           e.date === editingExam.date &&
           e.id !== editingExam.id &&
-          JSON.stringify(e.classIds.sort()) ===
-            JSON.stringify(editingExam.classIds.sort())
+          e.paperNumber === 2 &&
+          e.classIds.some((cid) => editingExam.classIds.includes(cid))
       );
 
-      if (others && others.length > 0) {
+      if (potentialPaper2) {
         setHasTwoPapers(true);
-        const p2 = others.find((o) => o.paperNumber === 2) || others[0];
-        setPaper2StartTime(p2.startTime);
+        setPaper2StartTime(potentialPaper2.startTime);
       } else {
-        setHasTwoPapers(false);
+        // Fallback: If current exam IS paper 2, maybe Paper 1 is the sibling?
+        // For now, simpler to just assume we are editing the primary record.
+        setHasTwoPapers(editingExam.paperNumber === 2);
       }
     } else {
+      // CREATE MODE
       setExamSubjectId(data.subjects[0]?.id || "");
-      setExamClassIds([]);
+
+      // If a specific class filter is active in the grid, auto-select it
+      setExamClassIds(activeId !== "ALL" ? [activeId] : []);
+
       setExamDate(new Date().toISOString().split("T")[0]);
       setExamStartTime("09:00");
       setPaper2StartTime("14:00");
@@ -82,60 +88,84 @@ export const ExamManualModal: React.FC<Props> = ({
       setPaperLabel("Paper 1");
       setHasTwoPapers(false);
     }
-  }, [editingExam, isOpen, data.subjects, data.exams]);
+  }, [editingExam, isOpen, data.subjects, data.exams, activeId]);
+
+  // --- HANDLERS ---
+
+  const handleClassToggle = (clsId: string) => {
+    setExamClassIds((prev) =>
+      prev.includes(clsId)
+        ? prev.filter((id) => id !== clsId)
+        : [...prev, clsId]
+    );
+  };
+
+  const handleInvigilatorToggle = (tId: string) => {
+    setExamInvigilatorIds((prev) =>
+      prev.includes(tId) ? prev.filter((id) => id !== tId) : [...prev, tId]
+    );
+  };
 
   const handleSave = () => {
-    if (!examSubjectId || !examDate) return;
-
-    const finalClassIds = examClassIds; // Just use what is selected in the UI
+    if (!examSubjectId || !examDate) {
+      alert("Please select a Subject and Date.");
+      return;
+    }
+    if (examClassIds.length === 0) {
+      alert("Please select at least one Class.");
+      return;
+    }
 
     const baseExam: ExamSession = {
-      id: editingExam ? editingExam.id : crypto.randomUUID(),
+      id: editingExam ? editingExam.id : generateId(),
       subjectId: examSubjectId,
-      classIds: finalClassIds,
+      classIds: examClassIds,
       date: examDate,
       startTime: examStartTime,
-      duration: parseInt(examDuration),
-      invigilatorIds: examInvigilatorIds, // UPDATED
+      duration: parseInt(examDuration) || 60,
+      invigilatorIds: examInvigilatorIds,
       roomId: examRoomId || undefined,
-      paperNumber: parseInt(paperNumber),
+      paperNumber: parseInt(paperNumber) || 1,
       paperLabel: paperLabel,
       status: editingExam ? editingExam.status : "DRAFT",
       locked: editingExam ? editingExam.locked : false,
     };
 
-    // LOGIC: If "Has Two Papers" is checked
     if (hasTwoPapers) {
-      // 1. Force current exam to be Paper 1
+      // 1. Prepare Paper 1
       const paper1 = {
         ...baseExam,
         paperNumber: 1,
         paperLabel: "Paper 1",
-        startTime: examStartTime,
+        startTime: examStartTime, // User-defined P1 time
       };
 
-      // 2. Create Paper 2 (On the SAME day, but different time)
+      // 2. Prepare Paper 2
       const paper2: ExamSession = {
         ...baseExam,
-        id: crypto.randomUUID(), // New ID
-        date: examDate, // SAME DATE
-        startTime: paper2StartTime, // SECOND TIME
+        id: generateId(), // Default to new ID
+        startTime: paper2StartTime, // User-defined P2 time
         paperNumber: 2,
         paperLabel: "Paper 2",
+        roomId: undefined, // Usually P2 room needs re-confirmation or same? Leaving blank is safer to avoid conflicts.
+        invigilatorIds: [], // Clear invigilators for P2 as they are likely different
       };
 
-      // Check if Paper 2 already exists in editing mode to avoid duplicates
+      // 3. Try to find existing Paper 2 ID to update instead of creating duplicate
       if (editingExam) {
         const existingP2 = data.exams?.find(
           (e) =>
             e.subjectId === paper1.subjectId &&
             e.date === paper1.date &&
             e.paperNumber === 2 &&
-            JSON.stringify(e.classIds.sort()) ===
-              JSON.stringify(paper1.classIds.sort())
+            // Matches any of the selected classes (Loose matching)
+            e.classIds.some((cid) => paper1.classIds.includes(cid))
         );
+
         if (existingP2) {
           paper2.id = existingP2.id;
+          // Optionally preserve existing P2 staff/room if not explicitly cleared
+          // paper2.invigilatorIds = existingP2.invigilatorIds;
         }
       }
 
@@ -147,6 +177,20 @@ export const ExamManualModal: React.FC<Props> = ({
     onClose();
   };
 
+  // Sorted Lists for UI
+  const sortedTeachers = useMemo(
+    () => [...data.teachers].sort((a, b) => a.name.localeCompare(b.name)),
+    [data.teachers]
+  );
+
+  const sortedClasses = useMemo(
+    () =>
+      [...data.classes].sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { numeric: true })
+      ),
+    [data.classes]
+  );
+
   return (
     <Modal
       isOpen={isOpen}
@@ -157,163 +201,192 @@ export const ExamManualModal: React.FC<Props> = ({
           <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>Save Exam</Button>
+          <Button onClick={handleSave}>
+            {editingExam ? "Save Changes" : "Create Exam"}
+          </Button>
         </div>
       }
     >
-      <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
-        {/* Subject & Paper Details */}
-        <div className="space-y-3 border-b border-slate-100 pb-4">
-          <Select
-            label="Subject"
-            value={examSubjectId}
-            onChange={(e) => setExamSubjectId(e.target.value)}
-            options={data.subjects.map((s) => ({ value: s.id, label: s.name }))}
-          />
-
-          <div className="bg-slate-50 p-3 rounded border border-slate-200">
-            <div className="flex items-center gap-2 mb-3">
-              <input
-                type="checkbox"
-                id="hasTwoPapers"
-                checked={hasTwoPapers}
-                onChange={(e) => setHasTwoPapers(e.target.checked)}
-                className="rounded border-slate-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
-              />
-              <label
-                htmlFor="hasTwoPapers"
-                className="text-sm font-medium text-slate-700 cursor-pointer flex items-center gap-2"
-              >
-                <Layers size={14} className="text-amber-500" />
-                Has Two Papers
-              </label>
-            </div>
-
-            {hasTwoPapers && (
-              <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-1 duration-200">
-                <Input
-                  label="Paper 1 Time"
-                  type="time"
-                  value={examStartTime}
-                  onChange={(e) => setExamStartTime(e.target.value)}
-                />
-                <Input
-                  label="Paper 2 Time"
-                  type="time"
-                  value={paper2StartTime}
-                  onChange={(e) => setPaper2StartTime(e.target.value)}
-                />
-              </div>
-            )}
+      <div className="space-y-5 max-h-[75vh] overflow-y-auto px-1 custom-scrollbar">
+        {/* SECTION 1: CORE DETAILS */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="md:col-span-2">
+            <Select
+              label="Subject"
+              value={examSubjectId}
+              onChange={(e) => setExamSubjectId(e.target.value)}
+              options={data.subjects.map((s) => ({
+                value: s.id,
+                label: s.name,
+              }))}
+            />
           </div>
-        </div>
 
-        {/* Date, Time, Duration, Resources... */}
-        <div className="grid grid-cols-2 gap-4">
           <Input
             label="Date"
             type="date"
             value={examDate}
             onChange={(e) => setExamDate(e.target.value)}
           />
-          {!hasTwoPapers && (
-            <Input
-              label="Start Time"
-              type="time"
-              value={examStartTime}
-              onChange={(e) => setExamStartTime(e.target.value)}
-            />
-          )}
-        </div>
-        <Input
-          label="Duration (min)"
-          type="number"
-          value={examDuration}
-          onChange={(e) => setExamDuration(e.target.value)}
-        />
 
-        <div className="space-y-3 pt-2">
-          <h4 className="text-xs font-bold text-slate-400 uppercase">
-            Participating Classes
+          <Input
+            label="Duration (minutes)"
+            type="number"
+            value={examDuration}
+            onChange={(e) => setExamDuration(e.target.value)}
+          />
+        </div>
+
+        {/* SECTION 2: PAPER CONFIGURATION */}
+        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
+              <Layers size={14} /> Session Configuration
+            </h4>
+            <label className="flex items-center gap-2 text-sm font-medium cursor-pointer text-slate-700">
+              <input
+                type="checkbox"
+                checked={hasTwoPapers}
+                onChange={(e) => setHasTwoPapers(e.target.checked)}
+                className="rounded text-amber-600 focus:ring-amber-500"
+              />
+              Schedule Two Papers
+            </label>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            {/* Paper 1 Config */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-400">
+                Paper 1 Start
+              </label>
+              <div className="flex items-center gap-2">
+                <Clock size={16} className="text-slate-400" />
+                <input
+                  type="time"
+                  value={examStartTime}
+                  onChange={(e) => setExamStartTime(e.target.value)}
+                  className="flex-1 text-sm border-slate-200 rounded-md shadow-sm"
+                />
+              </div>
+            </div>
+
+            {/* Paper 2 Config (Conditional) */}
+            {hasTwoPapers && (
+              <div className="space-y-2 animate-in fade-in">
+                <label className="text-xs font-bold text-slate-400">
+                  Paper 2 Start
+                </label>
+                <div className="flex items-center gap-2">
+                  <Clock size={16} className="text-amber-500" />
+                  <input
+                    type="time"
+                    value={paper2StartTime}
+                    onChange={(e) => setPaper2StartTime(e.target.value)}
+                    className="flex-1 text-sm border-amber-200 ring-1 ring-amber-100 rounded-md shadow-sm bg-amber-50/50"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* SECTION 3: CLASSES */}
+        <div>
+          <h4 className="text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-2">
+            <BookOpen size={14} /> Participating Classes
           </h4>
-          <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 border rounded bg-slate-50">
-            {data.classes.map((cls) => (
+          <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-3 border border-slate-200 rounded-lg bg-white shadow-sm">
+            {sortedClasses.map((cls) => (
               <label
                 key={cls.id}
-                className={`flex items-center gap-2 px-2 py-1 rounded border text-xs cursor-pointer select-none transition-colors ${
-                  examClassIds.includes(cls.id)
-                    ? "bg-amber-100 border-amber-300 text-amber-800"
-                    : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
-                }`}
+                className={`
+                  flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-medium cursor-pointer select-none transition-all border
+                  ${
+                    examClassIds.includes(cls.id)
+                      ? "bg-amber-50 border-amber-300 text-amber-800 shadow-sm"
+                      : "bg-slate-50 border-slate-100 text-slate-500 hover:bg-slate-100"
+                  }
+                `}
               >
                 <input
                   type="checkbox"
                   className="hidden"
                   checked={examClassIds.includes(cls.id)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setExamClassIds([...examClassIds, cls.id]);
-                    } else {
-                      setExamClassIds(examClassIds.filter((id) => id !== cls.id));
-                    }
-                  }}
+                  onChange={() => handleClassToggle(cls.id)}
+                />
+                <div
+                  className={`w-2 h-2 rounded-full ${
+                    examClassIds.includes(cls.id)
+                      ? "bg-amber-500"
+                      : "bg-slate-300"
+                  }`}
                 />
                 {cls.name}
               </label>
             ))}
           </div>
+          {examClassIds.length === 0 && (
+            <p className="text-[10px] text-red-500 mt-1 font-bold">
+              * Required
+            </p>
+          )}
         </div>
 
-        <div className="space-y-3 pt-2">
-          <h4 className="text-xs font-bold text-slate-400 uppercase">
-            Resources
-          </h4>
+        {/* SECTION 4: RESOURCES (Invigilators & Room) */}
+        <div className="grid grid-cols-1 gap-4 pt-2 border-t border-slate-100">
+          {/* Room Select */}
           <Select
-            label="Room"
+            label="Location / Room"
             value={examRoomId}
             onChange={(e) => setExamRoomId(e.target.value)}
             options={[
-              { value: "", label: "-- Allocate Later --" },
+              { value: "", label: "TBD - Allocate Later" },
               ...data.rooms.map((r) => ({ value: r.id, label: r.name })),
             ]}
           />
-          
+
+          {/* Invigilator Select */}
           <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase mb-2">
-              Select Invigilators
-            </label>
-            <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-3 border rounded-lg bg-slate-50">
-              {data.teachers
-                .sort((a, b) => a.name.localeCompare(b.name))
-                .map((t) => (
+            <div className="flex justify-between items-end mb-2">
+              <h4 className="text-xs font-bold text-slate-400 uppercase flex items-center gap-2">
+                <Users size={14} /> Invigilators
+              </h4>
+              <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                {examInvigilatorIds.length} Selected
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-2 border border-slate-200 rounded-lg bg-slate-50/50">
+              {sortedTeachers.map((t) => {
+                const isSelected = examInvigilatorIds.includes(t.id);
+                return (
                   <label
                     key={t.id}
-                    className={`flex items-center gap-2 px-2 py-1.5 rounded border text-xs cursor-pointer select-none transition-all ${
-                      examInvigilatorIds.includes(t.id)
-                        ? "bg-amber-100 border-amber-300 text-amber-800 font-bold"
-                        : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
-                    }`}
+                    className={`
+                        flex items-center gap-2 px-2 py-1.5 rounded border text-xs cursor-pointer select-none transition-all
+                        ${
+                          isSelected
+                            ? "bg-white border-amber-300 text-amber-900 shadow-sm ring-1 ring-amber-100"
+                            : "border-transparent hover:bg-white hover:border-slate-200 text-slate-600"
+                        }
+                      `}
                   >
                     <input
                       type="checkbox"
                       className="hidden"
-                      checked={examInvigilatorIds.includes(t.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setExamInvigilatorIds([...examInvigilatorIds, t.id]);
-                        } else {
-                          setExamInvigilatorIds(
-                            examInvigilatorIds.filter((id) => id !== t.id)
-                          );
-                        }
-                      }}
+                      checked={isSelected}
+                      onChange={() => handleInvigilatorToggle(t.id)}
                     />
-                    <div className={`w-2 h-2 rounded-full ${
-                      examInvigilatorIds.includes(t.id) ? "bg-amber-500" : "bg-slate-300"
-                    }`} />
-                    {t.name}
+                    <div
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        isSelected ? "bg-amber-500" : "bg-slate-300"
+                      }`}
+                    />
+                    <span className="truncate">{t.name}</span>
                   </label>
-                ))}
+                );
+              })}
             </div>
           </div>
         </div>
