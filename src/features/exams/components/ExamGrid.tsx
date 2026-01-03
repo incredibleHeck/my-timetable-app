@@ -78,14 +78,14 @@ const DraggableExamCard = ({
     return (
       <div
         ref={setRefs}
-        className="opacity-30 bg-slate-200 border-2 border-dashed border-slate-400 rounded-xl min-h-[100px] w-full"
+        className="opacity-30 bg-slate-200 border-2 border-dashed border-slate-400 rounded-xl min-h-[180px] w-full"
       />
     );
   }
 
   const renderExamStack = (stack: ExamSession[]) => {
     return (
-      <div className="flex flex-col gap-1 h-full">
+      <div className="flex flex-col gap-2 h-full">
         {stack.map((exam, index) => {
           const conflicts = checkConflicts(exam);
           const room = data.rooms.find((r) => r.id === exam.roomId);
@@ -112,71 +112,79 @@ const DraggableExamCard = ({
                 onEdit(exam);
               }}
               className={`
-                relative flex-1 flex flex-col justify-center bg-white rounded-lg border-l-[4px] shadow-sm hover:shadow-md transition-all px-3 py-2 cursor-pointer
+                relative flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all p-4 cursor-pointer group/card
                 ${
                   conflicts.length > 0
-                    ? "border-l-red-500 border-red-100 bg-red-50/30"
-                    : "border-slate-200"
+                    ? "ring-2 ring-red-500/20 bg-red-50/10"
+                    : ""
                 }
-                ${!showHeader ? "mt-0.5 border-t border-slate-100" : ""}
               `}
-              style={{
-                borderLeftColor:
-                  conflicts.length > 0 ? undefined : subject?.color,
-              }}
             >
+              {/* Subject Color Accent Bar */}
+              <div 
+                className="absolute top-0 left-0 w-full h-1.5 rounded-t-xl" 
+                style={{ backgroundColor: subject?.color || "#cbd5e1" }}
+              />
+
               {/* Conflict Indicator */}
               {conflicts.length > 0 && (
                 <div
-                  className="absolute -top-1.5 -left-2 bg-red-500 text-white rounded-full p-0.5 shadow-sm z-10 animate-pulse"
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg z-10 animate-bounce"
                   title={conflicts.join("\n")}
                 >
-                  <AlertTriangle size={10} />
+                  <AlertTriangle size={12} />
                 </div>
               )}
 
-              {showHeader && (
-                <div className="flex justify-between items-start mb-1.5">
-                  <div className="flex flex-col">
-                    <div
-                      className="font-black text-slate-800 text-[13px] leading-tight uppercase truncate max-w-[140px]"
-                      title={subject?.name}
-                    >
-                      {subject?.name}
-                    </div>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="text-[9px] font-bold text-slate-500 bg-slate-100 px-1 rounded flex items-center gap-0.5">
-                        <Clock size={8} /> {exam.startTime}
-                      </span>
-                      <span
-                        className="text-[8px] font-black text-white px-1.5 py-0 rounded-sm uppercase"
-                        style={{ backgroundColor: subject?.color || "#94a3b8" }}
+              <div className="flex flex-col h-full gap-3">
+                {showHeader && (
+                  <div className="flex justify-between items-start">
+                    <div className="flex flex-col gap-1">
+                      <div
+                        className="font-black text-slate-900 text-sm leading-tight uppercase tracking-tight"
+                        title={subject?.name}
                       >
-                        {exam.paperLabel || `P${exam.paperNumber}`}
-                      </span>
+                        {subject?.name}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-1 border border-slate-200">
+                          <Clock size={10} /> {exam.startTime}
+                        </span>
+                        <span
+                          className="text-[9px] font-black text-white px-2 py-0.5 rounded-full uppercase shadow-sm"
+                          style={{ backgroundColor: subject?.color || "#94a3b8" }}
+                        >
+                          {exam.paperLabel || `P${exam.paperNumber}`}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Class & Details Row */}
-              <div className="flex flex-col gap-1">
-                {activeId === "ALL" && (
-                  <div className="text-[11px] font-bold text-slate-700 truncate">
-                    {classNames}
                   </div>
                 )}
 
-                <div className="flex items-center justify-between gap-2 border-t border-slate-50 pt-1">
-                  <div
-                    className={`flex items-center gap-1 text-[9px] font-bold truncate max-w-[45%] ${
-                      hasRoom ? "text-slate-500" : "text-amber-600"
-                    }`}
-                  >
-                    <MapPin size={9} /> {hasRoom ? room?.name : "NO ROOM"}
-                  </div>
-                  <div className="flex items-center gap-1 text-[9px] font-bold text-slate-400 truncate max-w-[50%]">
-                    <Users size={9} /> {invigilatorNames || "NO STAFF"}
+                {/* Class & Details Row */}
+                <div className="flex flex-col gap-2 flex-1 justify-center">
+                  {activeId === "ALL" && (
+                    <div className="text-xs font-black text-slate-700 bg-amber-50 border border-amber-100 px-2 py-1 rounded-md text-center">
+                      {classNames}
+                    </div>
+                  )}
+
+                  <div className="space-y-1.5">
+                    <div
+                      className={`flex items-center gap-2 text-[10px] font-bold p-1.5 rounded-lg border transition-colors ${
+                        hasRoom 
+                          ? "text-slate-600 bg-slate-50 border-slate-100 group-hover/card:bg-white group-hover/card:border-slate-200" 
+                          : "text-amber-700 bg-amber-50 border-amber-200 animate-pulse"
+                      }`}
+                    >
+                      <MapPin size={11} className={hasRoom ? "text-slate-400" : "text-amber-500"} />
+                      <span className="truncate">{hasRoom ? room?.name : "ASSIGN ROOM"}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 p-1.5 rounded-lg bg-slate-50/50 border border-transparent group-hover/card:border-slate-100 group-hover/card:bg-white">
+                      <Users size={11} className="text-slate-400" />
+                      <span className="truncate">{invigilatorNames || "NO STAFF ASSIGNED"}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -193,7 +201,7 @@ const DraggableExamCard = ({
       className={`relative group flex flex-col gap-1 h-full w-full transition-all duration-200
         ${
           isOver && isEditMode
-            ? "ring-4 ring-amber-400 rounded-xl z-10 scale-[1.02] shadow-xl"
+            ? "ring-4 ring-amber-400 rounded-2xl z-10 scale-[1.02] shadow-2xl"
             : ""
         }
       `}
@@ -203,19 +211,19 @@ const DraggableExamCard = ({
         <div
           {...listeners}
           {...attributes}
-          className="absolute -top-2 -right-2 cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-700 z-30 p-1.5 bg-white border border-slate-200 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+          className="absolute -top-3 -right-3 cursor-grab active:cursor-grabbing text-amber-600 hover:text-amber-700 z-30 p-2 bg-white border-2 border-amber-100 rounded-full shadow-xl opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
         >
-          <GripVertical size={14} />
+          <GripVertical size={16} />
         </div>
       )}
 
       {/* RENDER CONTENT: Split View or Standard Stack */}
       {isSplitView ? (
-        <div className="grid grid-cols-2 gap-1 h-full">
+        <div className="grid grid-cols-2 gap-2 h-full">
           {paperNumbers.map((pNum) => (
-            <div key={pNum} className="flex flex-col gap-0.5 min-w-0">
+            <div key={pNum} className="flex flex-col gap-2 min-w-0">
               {/* Mini Header for Split View */}
-              <div className="text-[9px] font-bold text-slate-400 uppercase text-center bg-slate-50 rounded-t py-0.5">
+              <div className="text-[10px] font-black text-white uppercase text-center bg-slate-800 rounded-lg py-1 shadow-sm mb-1 tracking-wider">
                 Paper {pNum}
               </div>
               {renderExamStack(paperGroups[pNum])}
@@ -387,7 +395,7 @@ export const ExamGrid: React.FC<Props> = ({
               return (
                 <tr
                   key={date}
-                  className="group border-b border-slate-100 min-h-[160px]"
+                  className="group border-b border-slate-100 min-h-[220px]"
                 >
                   <td className="p-4 border-r border-slate-200 text-center w-[140px] sticky left-0 z-30 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] bg-slate-50">
                     <div className="flex flex-col items-center gap-0.5">
