@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Plus,
   Search,
@@ -13,6 +13,10 @@ import {
   Move,
   Repeat,
   ArrowLeft,
+  BookOpen,
+  Printer,
+  FileSpreadsheet,
+  Table,
 } from "lucide-react";
 import { AppData, ExamSession } from "../../types";
 import { Button, Input } from "../../components/ui";
@@ -20,11 +24,13 @@ import { Button, Input } from "../../components/ui";
 // Hooks
 import { useExamSchedule } from "./hooks/useExamSchedule";
 
-// Components
+// Import the Logic Engine
 import { ExamCard } from "./components/ExamCard";
 import { ExamGrid } from "./components/ExamGrid";
 import { ExamManualModal } from "./components/ExamManualModal";
 import { ExamSchoolAutoModal } from "./components/ExamSchoolAutoModal";
+import { InvigilatorRoster } from "./components/InvigilatorRoster";
+import { allocateInvigilators } from "./logic/invigilatorAllocator";
 
 interface ViewProps {
   data: AppData;
@@ -46,25 +52,50 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
     moveExamToDate,
   } = useExamSchedule(data, onUpdate);
 
+  // Replacement for bulkAddExams that clears first
+  const handleRegenerateExams = (newSessions: ExamSession[]) => {
+    // Simply overwrite the global state with the new sessions.
+    // This effectively "clears" the old ones and populates the new ones in one go.
+    onUpdate({ 
+      ...data, 
+      exams: newSessions 
+    });
+  };
+
   // 2. UI State
-  const [viewMode, setViewMode] = useState<"GRID" | "CARDS">("GRID");
-  const [activeClassId, setActiveClassId] = useState<string>("ALL");
+  const [viewMode, setViewMode] = useState<"GRID" | "CARDS" | "ROSTER">("GRID");
+  const [activeId, setActiveId] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [isEditMode, setIsEditMode] = useState(false);
-  const [editTool, setEditTool] = useState<"MOVE" | "SWAP">("MOVE"); // NEW
+  const [editTool, setEditTool] = useState<"MOVE" | "SWAP">("MOVE"); // RESTORED state
 
   // Modal States
   const [manualModalOpen, setManualModalOpen] = useState(false);
   const [autoModalOpen, setAutoModalOpen] = useState(false);
   const [editingExam, setEditingExam] = useState<ExamSession | null>(null);
 
+  // Invigilator Allocation State
+  const [minInv, setMinInv] = useState(2);
+  const [maxInv, setMaxInv] = useState(3);
+
+  // --- SORTING HELPERS ---
+  const sortedClasses = useMemo(() => {
+    return [...data.classes].sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { numeric: true })
+    );
+  }, [data.classes]);
+
+  const sortedTeachers = useMemo(() => {
+    return [...data.teachers].sort((a, b) => a.name.localeCompare(b.name));
+  }, [data.teachers]);
+
   // 3. Filtering Logic
   const filteredExams = useMemo(() => {
     let list = [...exams];
 
-    // Filter by Class
-    if (activeClassId !== "ALL") {
-      list = list.filter((e) => e.classIds.includes(activeClassId));
+    // Filter by Class (Only applies to GRID and CARDS)
+    if (viewMode !== "ROSTER" && activeId !== "ALL") {
+      list = list.filter((e) => e.classIds.includes(activeId));
     }
 
     // Filter by Search
@@ -72,17 +103,22 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
       const q = searchQuery.toLowerCase();
       list = list.filter((e) => {
         const subject = data.subjects.find((s) => s.id === e.subjectId);
-        const teacher = data.teachers.find((t) => t.id === e.invigilatorId);
+        // Check if ANY assigned invigilator matches the search
+        const hasMatchingTeacher = e.invigilatorIds?.some(id => {
+          const t = data.teachers.find(teacher => teacher.id === id);
+          return t?.name.toLowerCase().includes(q);
+        });
+
         return (
           subject?.name.toLowerCase().includes(q) ||
-          teacher?.name.toLowerCase().includes(q) ||
+          hasMatchingTeacher ||
           e.paperLabel?.toLowerCase().includes(q)
         );
       });
     }
 
     return list;
-  }, [exams, activeClassId, searchQuery, data.subjects, data.teachers]);
+  }, [exams, activeId, viewMode, searchQuery, data.subjects, data.teachers]);
 
   // 4. Handlers
   const handleSaveManual = (result: ExamSession | ExamSession[]) => {
@@ -115,93 +151,82 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
     }
   };
 
+  const handleExcelExport = () => {
+    alert("Excel export for exams not yet implemented.");
+  };
+
+  const handlePrint = () => {
+    alert("Print function for exams not yet implemented.");
+  };
+
+  const handleAutoAssignInvigilators = () => {
+    const updatedExams = allocateInvigilators(data, {
+      minInvigilators: minInv,
+      maxInvigilators: maxInv,
+    });
+    onUpdate({ ...data, exams: updatedExams });
+    alert("Invigilators assigned successfully!");
+  };
+
   return (
     <div className="flex h-full bg-slate-50">
-      {/* SIDEBAR: Class Filters */}
-      <div className="w-56 bg-white border-r border-slate-200 flex flex-col h-full shrink-0">
-        <div className="p-4 border-b border-slate-100 sticky top-0 bg-white z-10">
-          <h2 className="font-bold text-slate-800 flex items-center gap-2">
-            <Users size={18} className="text-amber-500" />
-            Exam Classes
-          </h2>
-        </div>
-        <div className="overflow-y-auto flex-1 p-2 space-y-1 custom-scrollbar">
-          {data.classes.map((cls) => (
-            <button
-              key={cls.id}
-              onClick={() => setActiveClassId(cls.id === activeClassId ? "ALL" : cls.id)}
-              className={`w-full text-left px-3 py-2 rounded-md text-xs font-medium transition-colors flex items-center gap-2 ${
-                activeClassId === cls.id
-                  ? "bg-amber-50 text-amber-800 border border-amber-200"
-                  : "text-slate-600 hover:bg-slate-50 border border-transparent"
-              }`}
-            >
-              <div
-                className={`w-2 h-2 rounded-full ${
-                  activeClassId === cls.id ? "bg-amber-500" : "bg-slate-300"
+      {/* SIDEBAR: Class Filters (Hidden in Roster view) */}
+      {viewMode !== "ROSTER" && (
+        <div className="w-56 bg-white border-r border-slate-200 flex flex-col h-full shrink-0">
+          <div className="p-4 border-b border-slate-100 sticky top-0 bg-white z-10">
+            <h2 className="font-bold text-slate-800 flex items-center gap-2">
+              <Users size={18} className="text-amber-500" />
+              Exam Classes
+            </h2>
+          </div>
+          <div className="overflow-y-auto flex-1 p-2 space-y-1 custom-scrollbar">
+            {sortedClasses.map((cls) => (
+              <button
+                key={cls.id}
+                onClick={() => setActiveId(cls.id === activeId ? "ALL" : cls.id)}
+                className={`w-full text-left px-3 py-2 rounded-md text-xs font-medium transition-colors flex items-center gap-2 ${
+                  activeId === cls.id
+                    ? "bg-amber-50 text-amber-800 border border-amber-200"
+                    : "text-slate-600 hover:bg-slate-50 border border-transparent"
                 }`}
-              />
-              {cls.name}
-            </button>
-          ))}
+              >
+                <div
+                  className={`w-2 h-2 rounded-full ${
+                    activeId === cls.id ? "bg-amber-500" : "bg-slate-300"
+                  }`}
+                />
+                {cls.name}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* MAIN CONTENT */}
       <div className="flex-1 flex flex-col h-full overflow-hidden">
+        {/* Toolbar */}
         {/* Toolbar */}
         <div className="bg-white border-b border-slate-200 p-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 flex-1">
             {/* Back Button */}
             <button
-              onClick={() => onNavigate && onNavigate("DASHBOARD")}
-              className="p-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-500 mr-2"
+              onClick={() => {
+                console.log("Navigating back to Dashboard");
+                if (onNavigate) onNavigate("DASHBOARD");
+              }}
+              className="p-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-500"
               title="Back to Dashboard"
             >
               <ArrowLeft size={20} />
             </button>
-
-            <div className="relative w-64">
-              <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                size={16}
-              />
-              <Input
-                placeholder="Search exams..."
-                className="pl-9 focus:ring-amber-500"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+            
+            <div>
+              <h2 className="text-xl font-bold text-slate-800">Exam Management</h2>
+              <p className="text-xs text-slate-500">Auto-schedule or manually coordinate academic assessments.</p>
             </div>
 
-            {/* View Toggles */}
-            <div className="flex bg-slate-100 p-1 rounded-md border border-slate-200">
-              <button
-                onClick={() => setViewMode("GRID")}
-                className={`p-1.5 rounded ${
-                  viewMode === "GRID"
-                    ? "bg-white shadow-sm text-amber-600"
-                    : "text-slate-400 hover:text-slate-600"
-                }`}
-                title="Grid View"
-              >
-                <LayoutGrid size={16} />
-              </button>
-              <button
-                onClick={() => setViewMode("CARDS")}
-                className={`p-1.5 rounded ${
-                  viewMode === "CARDS"
-                    ? "bg-white shadow-sm text-amber-600"
-                    : "text-slate-400 hover:text-slate-600"
-                }`}
-                title="List/Card View"
-              >
-                <List size={16} />
-              </button>
-            </div>
-
-            {/* Edit Mode Toggle (New) */}
-            <div className="flex items-center gap-2 pl-4 border-l border-slate-200">
+            {/* Edit Mode Toggles */}
+            <div className="flex items-center gap-2 pl-6 border-l border-slate-200 ml-6">
               <button
                 onClick={() => setIsEditMode(!isEditMode)}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
@@ -242,39 +267,111 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
                 </div>
               )}
             </div>
+
+            {/* NEW: View Toggles & Search (Restored) */}
+            <div className="flex items-center gap-4 ml-auto border-l border-slate-200 pl-6">
+              <div className="flex bg-slate-100 p-1 rounded-lg">
+                <button
+                  onClick={() => setViewMode("GRID")}
+                  className={`p-1.5 rounded ${
+                    viewMode === "GRID"
+                      ? "bg-white shadow-sm text-amber-600"
+                      : "text-slate-400 hover:text-slate-600"
+                  }`}
+                  title="Grid View"
+                >
+                  <LayoutGrid size={16} />
+                </button>
+                <button
+                  onClick={() => setViewMode("ROSTER")}
+                  className={`p-1.5 rounded ${
+                    viewMode === "ROSTER"
+                      ? "bg-white shadow-sm text-amber-600"
+                      : "text-slate-400 hover:text-slate-600"
+                  }`}
+                  title="Invigilator Roster"
+                >
+                  <Table size={16} />
+                </button>
+                <button
+                  onClick={() => setViewMode("CARDS")}
+                  className={`p-1.5 rounded ${
+                    viewMode === "CARDS"
+                      ? "bg-white shadow-sm text-amber-600"
+                      : "text-slate-400 hover:text-slate-600"
+                  }`}
+                  title="List View"
+                >
+                  <List size={16} />
+                </button>
+              </div>
+
+              <div className="relative w-48">
+                <Search
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+                  size={14}
+                />
+                <input
+                  placeholder="Search..."
+                  className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Clear Button */}
-            <Button
-              variant="secondary"
-              className="text-slate-400 hover:text-red-600 hover:bg-red-50"
-              onClick={handleClearAll}
-              title="Clear All Exams"
-            >
-              <Eraser size={18} />
-            </Button>
+            {/* Allocation Controls */}
+            <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-lg border mr-2">
+              <div className="px-2 py-1 text-[9px] font-bold text-slate-400 uppercase">Invig Range</div>
+              <div className="flex items-center gap-1">
+                <input 
+                  type="number" 
+                  value={minInv} 
+                  onChange={e => setMinInv(parseInt(e.target.value))}
+                  className="w-10 h-7 text-center text-xs font-bold rounded border border-slate-200"
+                  min="1"
+                />
+                <span className="text-slate-400 text-xs">-</span>
+                <input 
+                  type="number" 
+                  value={maxInv} 
+                  onChange={e => setMaxInv(parseInt(e.target.value))}
+                  className="w-10 h-7 text-center text-xs font-bold rounded border border-slate-200"
+                  min="1"
+                />
+              </div>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="h-7 text-[10px] px-2 bg-white hover:bg-amber-50 text-amber-700"
+                onClick={handleAutoAssignInvigilators}
+              >
+                Assign Staff
+              </Button>
+            </div>
 
-            {/* Auto-Generate Button */}
             <Button
-              variant="secondary"
-              className="gap-2 text-amber-700 border-amber-200 hover:bg-amber-50 hover:border-amber-300"
               onClick={() => setAutoModalOpen(true)}
+              size="md"
+              icon={<Wand2 size={16} />}
             >
-              <Wand2 size={16} />
-              Auto Schedule
+              Generate Exams
             </Button>
-
-            {/* Manual Add Button */}
             <Button
-              className="gap-2 bg-amber-500 hover:bg-amber-600 text-white border border-amber-600"
-              onClick={() => {
-                setEditingExam(null);
-                setManualModalOpen(true);
-              }}
+              onClick={handleExcelExport}
+              disabled={false}
+              icon={<FileSpreadsheet size={16} />}
             >
-              <Plus size={16} />
-              Add Exam
+              Export All
+            </Button>
+            <Button
+              onClick={handlePrint}
+              disabled={false}
+              icon={<Printer size={16} />}
+            >
+              Print All (PDF)
             </Button>
           </div>
         </div>
@@ -290,8 +387,14 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
               checkConflicts={(exam) => validateExam(exam, exams)}
               onSwap={swapExams}
               onMoveDate={moveExamToDate}
-              isEditMode={isEditMode} // PASS EDIT MODE
+              isEditMode={isEditMode}
+              editTool={editTool}
             />
+          )}
+
+          {/* ROSTER VIEW (Class vs Day) */}
+          {viewMode === "ROSTER" && (
+            <InvigilatorRoster data={data} exams={filteredExams} />
           )}
 
           {/* CARD VIEW (Kanban/List) */}
@@ -302,9 +405,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
                   key={exam.id}
                   exam={exam}
                   subject={data.subjects.find((s) => s.id === exam.subjectId)}
-                  teacher={data.teachers.find(
-                    (t) => t.id === exam.invigilatorId
-                  )}
+                  teachers={data.teachers}
                   room={data.rooms.find((r) => r.id === exam.roomId)}
                   classes={data.classes}
                   conflicts={validateExam(exam, exams)}
@@ -338,7 +439,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
         isOpen={manualModalOpen}
         onClose={() => setManualModalOpen(false)}
         data={data}
-        activeClassId={activeClassId}
+        activeId={activeId}
         editingExam={editingExam}
         onSave={handleSaveManual}
       />
@@ -347,7 +448,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
         isOpen={autoModalOpen}
         onClose={() => setAutoModalOpen(false)}
         data={data}
-        onSave={bulkAddExams}
+        onSave={handleRegenerateExams}
       />
     </div>
   );

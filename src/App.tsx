@@ -257,6 +257,7 @@ function App() {
               <ExamsView
                 data={activeProfile.data}
                 onUpdate={updateActiveData}
+                onNavigate={setView}
               />
             )}
             {view === "DUTY" && (

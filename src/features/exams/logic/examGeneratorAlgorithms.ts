@@ -1,4 +1,5 @@
 import { AppData, ExamSession, Subject, ClassGroup } from "../../../types";
+import { generateId } from "../../../utils/utils";
 
 export type ScheduleMode = "UNIFORM" | "RANDOM";
 
@@ -39,6 +40,8 @@ export const generateExams = (
   data: AppData,
   config: GeneratorConfig
 ): ExamSession[] => {
+  if (!config.subjects || config.subjects.length === 0) return [];
+  
   const newSessions: ExamSession[] = [];
   const GLOBAL_MAX_DAYS = 60;
   const startMin = parseTime(config.startTime);
@@ -50,7 +53,7 @@ export const generateExams = (
   > = {};
   data.classes.forEach((c) => (classSchedules[c.id] = []));
 
-  const maxPapers = Math.max(...config.subjects.map((c) => c.papers));
+  const maxPapers = Math.max(0, ...config.subjects.map((c) => c.papers));
   const baseDate = new Date(config.startDate);
 
   // LOOP THROUGH PAPERS (1, then 2...)
@@ -210,7 +213,7 @@ const attemptSchedule = (
           const timeStr = formatTime(attemptTime);
 
           sessions.push({
-            id: crypto.randomUUID(),
+            id: generateId(),
             subjectId: subject.id,
             classIds: groupClassIds,
             date: dateStr,

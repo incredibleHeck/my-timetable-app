@@ -6,6 +6,7 @@ import {
   MapPin,
   GripVertical,
   CalendarDays,
+  Users,
 } from "lucide-react";
 import {
   DndContext,
@@ -149,6 +150,16 @@ const DraggableExamCard = ({
               />
               <span className="truncate">{hasRoom ? room?.name : "Assign Room"}</span>
             </div>
+
+            {/* Invigilator Info (NEW) */}
+            <div className="flex items-center gap-1.5 text-[9px] font-medium text-slate-500 mt-0.5">
+              <Users size={9} className="text-slate-400" />
+              <span className="truncate">
+                {exam.invigilatorIds?.length 
+                  ? exam.invigilatorIds.map(id => data.teachers.find(t => t.id === id)?.name).join(", ")
+                  : "No Invigilators"}
+              </span>
+            </div>
           </div>
         );
       })}
@@ -231,6 +242,7 @@ interface Props {
   onSwap: (ids1: string | string[], ids2: string | string[]) => void;
   onMoveDate: (id: string | string[], date: string) => void;
   isEditMode: boolean;
+  editTool: "MOVE" | "SWAP";
 }
 
 export const ExamGrid: React.FC<Props> = ({
@@ -241,6 +253,7 @@ export const ExamGrid: React.FC<Props> = ({
   onSwap,
   onMoveDate,
   isEditMode,
+  editTool,
 }) => {
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
 
@@ -298,18 +311,23 @@ export const ExamGrid: React.FC<Props> = ({
     const activeData = active.data.current;
     const overData = over.data.current;
 
-    // Case 1: Dropped onto another Exam Slot (SWAP)
+    // Case 1: Dropped onto another Exam Slot
     if (activeId !== overId && overData?.type === "EXAM_TARGET") {
       const activeSlotIds = activeData?.allExams.map((e: ExamSession) => e.id);
       const overSlotIds = overData?.allExams.map((e: ExamSession) => e.id);
       
-      if (confirm("Swap these exam slots?")) {
+      if (editTool === 'SWAP') {
         onSwap(activeSlotIds, overSlotIds);
+      } else {
+        // In 'MOVE' mode, dropping on another exam is not a valid action.
+        // You could add feedback here if desired.
+        return;
       }
     }
 
     // Case 2: Dropped onto a Day Header (MOVE DATE)
-    if (overData?.type === "DATE_TARGET") {
+    // This action is only valid in 'MOVE' mode.
+    if (editTool === 'MOVE' && overData?.type === "DATE_TARGET") {
       const newDate = overData.date;
       const slotExams = activeData?.allExams as ExamSession[] | undefined;
 

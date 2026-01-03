@@ -89,6 +89,14 @@ export const GeneratorView: React.FC<ViewProps> = ({
 
   // --- SOLVER LOGIC (ASYNC WORKER) ---
   const handleGenerate = () => {
+    // 0. Clean up existing timetable
+    onUpdate({
+      ...data,
+      schedule: {},
+      conflicts: [],
+      lastGenerated: null,
+    });
+
     setIsGenerating(true);
     setStats(null);
 

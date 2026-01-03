@@ -7,7 +7,7 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   data: AppData;
-  activeClassId: string;
+  activeId: string;
   editingExam: ExamSession | null;
   onSave: (exam: ExamSession | ExamSession[]) => void;
 }
@@ -16,7 +16,7 @@ export const ExamManualModal: React.FC<Props> = ({
   isOpen,
   onClose,
   data,
-  activeClassId,
+  activeId,
   editingExam,
   onSave,
 }) => {
@@ -25,7 +25,7 @@ export const ExamManualModal: React.FC<Props> = ({
   const [examDate, setExamDate] = useState("");
   const [examStartTime, setExamStartTime] = useState("09:00");
   const [examDuration, setExamDuration] = useState("120");
-  const [examInvigilatorId, setExamInvigilatorId] = useState("");
+  const [examInvigilatorIds, setExamInvigilatorIds] = useState<string[]>([]);
   const [examRoomId, setExamRoomId] = useState("");
 
   // Multi-Paper Fields
@@ -38,19 +38,13 @@ export const ExamManualModal: React.FC<Props> = ({
     if (editingExam) {
       setExamSubjectId(editingExam.subjectId);
       
-      // SCOPE LOGIC: If a specific class is selected in the view, 
-      // default the modal to ONLY that class (forcing a split on save).
-      // Otherwise, load all classes from the exam.
-      if (activeClassId !== "ALL" && editingExam.classIds.includes(activeClassId)) {
-        setExamClassIds([activeClassId]);
-      } else {
-        setExamClassIds(editingExam.classIds);
-      }
+      // Default to the classes already assigned to the exam
+      setExamClassIds(editingExam.classIds);
 
       setExamDate(editingExam.date);
       setExamStartTime(editingExam.startTime);
       setExamDuration(editingExam.duration.toString());
-      setExamInvigilatorId(editingExam.invigilatorId || "");
+      setExamInvigilatorIds(editingExam.invigilatorIds || []);
       setExamRoomId(editingExam.roomId || "");
 
       setPaperNumber(editingExam.paperNumber?.toString() || "1");
@@ -77,18 +71,18 @@ export const ExamManualModal: React.FC<Props> = ({
       }
     } else {
       setExamSubjectId(data.subjects[0]?.id || "");
-      setExamClassIds(activeClassId !== "ALL" ? [activeClassId] : []);
+      setExamClassIds([]);
       setExamDate(new Date().toISOString().split("T")[0]);
       setExamStartTime("09:00");
       setPaper2StartTime("14:00");
       setExamDuration("120");
-      setExamInvigilatorId("");
+      setExamInvigilatorIds([]);
       setExamRoomId("");
       setPaperNumber("1");
       setPaperLabel("Paper 1");
       setHasTwoPapers(false);
     }
-  }, [editingExam, isOpen, activeClassId, data.subjects, data.exams]);
+  }, [editingExam, isOpen, data.subjects, data.exams]);
 
   const handleSave = () => {
     if (!examSubjectId || !examDate) return;
@@ -102,7 +96,7 @@ export const ExamManualModal: React.FC<Props> = ({
       date: examDate,
       startTime: examStartTime,
       duration: parseInt(examDuration),
-      invigilatorId: examInvigilatorId || undefined,
+      invigilatorIds: examInvigilatorIds, // UPDATED
       roomId: examRoomId || undefined,
       paperNumber: parseInt(paperNumber),
       paperLabel: paperLabel,
@@ -283,15 +277,45 @@ export const ExamManualModal: React.FC<Props> = ({
               ...data.rooms.map((r) => ({ value: r.id, label: r.name })),
             ]}
           />
-          <Select
-            label="Invigilator"
-            value={examInvigilatorId}
-            onChange={(e) => setExamInvigilatorId(e.target.value)}
-            options={[
-              { value: "", label: "-- Unassigned --" },
-              ...data.teachers.map((t) => ({ value: t.id, label: t.name })),
-            ]}
-          />
+          
+          <div>
+            <label className="block text-xs font-bold text-slate-400 uppercase mb-2">
+              Select Invigilators
+            </label>
+            <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-3 border rounded-lg bg-slate-50">
+              {data.teachers
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map((t) => (
+                  <label
+                    key={t.id}
+                    className={`flex items-center gap-2 px-2 py-1.5 rounded border text-xs cursor-pointer select-none transition-all ${
+                      examInvigilatorIds.includes(t.id)
+                        ? "bg-amber-100 border-amber-300 text-amber-800 font-bold"
+                        : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      className="hidden"
+                      checked={examInvigilatorIds.includes(t.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setExamInvigilatorIds([...examInvigilatorIds, t.id]);
+                        } else {
+                          setExamInvigilatorIds(
+                            examInvigilatorIds.filter((id) => id !== t.id)
+                          );
+                        }
+                      }}
+                    />
+                    <div className={`w-2 h-2 rounded-full ${
+                      examInvigilatorIds.includes(t.id) ? "bg-amber-500" : "bg-slate-300"
+                    }`} />
+                    {t.name}
+                  </label>
+                ))}
+            </div>
+          </div>
         </div>
       </div>
     </Modal>

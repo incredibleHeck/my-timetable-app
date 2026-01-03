@@ -22,7 +22,7 @@ import { Card } from "../../../components/ui";
 interface Props {
   exam: ExamSession;
   subject?: Subject;
-  teacher?: Teacher;
+  teachers: Teacher[]; // CHANGED: Pass all teachers to look up multiple IDs
   room?: Room;
   classes: ClassGroup[];
   conflicts: string[];
@@ -33,7 +33,7 @@ interface Props {
 export const ExamCard: React.FC<Props> = ({
   exam,
   subject,
-  teacher,
+  teachers,
   room,
   classes,
   conflicts,
@@ -47,6 +47,12 @@ export const ExamCard: React.FC<Props> = ({
     .join(", ");
 
   const isLocked = exam.locked;
+
+  // Resolve invigilator names
+  const invigilatorNames = (exam.invigilatorIds || [])
+    .map(id => teachers.find(t => t.id === id)?.name)
+    .filter(Boolean)
+    .join(", ");
 
   return (
     <Card
@@ -130,17 +136,17 @@ export const ExamCard: React.FC<Props> = ({
         </div>
 
         {/* Invigilator Assignment */}
-        <div className="flex items-center gap-2 col-span-2">
+        <div className="flex items-start gap-2 col-span-2">
           <Users
             size={14}
-            className={exam.invigilatorId ? "text-slate-400" : "text-amber-400"}
+            className={invigilatorNames ? "text-slate-400 mt-0.5" : "text-amber-400 mt-0.5"}
           />
           <span
-            className={`truncate ${
-              !teacher ? "text-amber-600 italic" : "text-slate-600"
+            className={`text-[11px] leading-tight ${
+              !invigilatorNames ? "text-amber-600 italic" : "text-slate-600 font-medium"
             }`}
           >
-            {teacher?.name || "Unassigned Invigilator"}
+            {invigilatorNames || "Unassigned Invigilators"}
           </span>
         </div>
 

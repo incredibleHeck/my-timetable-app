@@ -39,7 +39,6 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
     teacherToDelete,
     filteredTeachers,
     sortedSubjects,
-    sortedClasses,
     openModal,
     handleSaveTeacher,
     duplicateTeacher,

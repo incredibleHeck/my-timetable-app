@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AppData, ExamSession, Subject } from "../../../types";
 import { Modal, Button, Input } from "../../../components/ui";
 import {
@@ -37,6 +37,24 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
     Record<string, SubjectConfig>
   >({});
   const [mode, setMode] = useState<ScheduleMode>("UNIFORM");
+
+  // Auto-populate examinable subjects
+  useEffect(() => {
+    if (isOpen) {
+      const initialConfigs: Record<string, SubjectConfig> = {};
+      data.subjects.forEach(s => {
+        // Default to examinable if not explicitly false
+        if (s.isExaminable !== false) {
+          initialConfigs[s.id] = {
+            id: s.id,
+            papers: s.examPaperCount || 1,
+            duration: 120,
+          };
+        }
+      });
+      setSelectedConfigs(initialConfigs);
+    }
+  }, [isOpen, data.subjects]);
 
   // Settings
   const [startDate, setStartDate] = useState(

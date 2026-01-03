@@ -10,6 +10,7 @@ import {
   Palette,
   Gem,
   Info,
+  FileText,
 } from "lucide-react";
 import { AppData, Subject } from "../../types";
 import { Button, Modal, Input } from "../../components/ui";
@@ -31,6 +32,7 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
 
   // Single Resource State
   const [isSingleResource, setIsSingleResource] = useState(false);
+  const [isExaminable, setIsExaminable] = useState(true);
   const [requiredRoomType, setRequiredRoomType] = useState("");
   const [preferredRoomIds, setPreferredRoomIds] = useState<string[]>([]);
 
@@ -87,6 +89,7 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
       name: subjName,
       color: subjColor,
       isSingleResource: isSingleResource,
+      isExaminable: isExaminable,
       requiredRoomType: requiredRoomType || undefined,
       preferredRoomIds: preferredRoomIds.length > 0 ? preferredRoomIds : undefined,
     };
@@ -144,6 +147,7 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
       COLOR_PALETTE[0].hex;
     setSubjColor(subj?.color || defaultHex);
     setIsSingleResource(subj?.isSingleResource || false);
+    setIsExaminable(subj?.isExaminable !== undefined ? subj.isExaminable : true);
     setRequiredRoomType(subj?.requiredRoomType || "");
     setPreferredRoomIds(subj?.preferredRoomIds || []);
     setModalOpen(true);
@@ -185,6 +189,14 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                     title="Single Resource"
                   >
                     <Gem size={10} className="text-purple-600" />
+                  </div>
+                )}
+                {subj.isExaminable !== false && (
+                  <div
+                    className={`absolute top-1 ${subj.isSingleResource ? 'right-6' : 'right-1'} bg-white/90 rounded-full p-0.5 shadow-sm`}
+                    title="Examinable"
+                  >
+                    <FileText size={10} className="text-amber-600" />
                   </div>
                 )}
               </div>
@@ -339,6 +351,46 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                 Lab, Science Lab). The scheduler will ensure{" "}
                 <strong>only one class</strong> in the entire school is
                 scheduled for this subject at any given time.
+              </p>
+            </div>
+          </div>
+
+          {/* Examinable Toggle */}
+          <div
+            className={`flex items-start gap-3 p-4 rounded-xl border transition-colors cursor-pointer ${
+              isExaminable
+                ? "bg-amber-50 border-amber-200"
+                : "bg-white border-slate-200 hover:border-slate-300"
+            }`}
+            onClick={() => setIsExaminable(!isExaminable)}
+          >
+            <div
+              className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors ${
+                isExaminable
+                  ? "bg-amber-600 border-amber-600"
+                  : "bg-white border-slate-300"
+              }`}
+            >
+              {isExaminable && <Check size={14} className="text-white" />}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4
+                  className={`text-sm font-bold ${
+                    isExaminable ? "text-amber-800" : "text-slate-700"
+                  }`}
+                >
+                  Examinable Subject
+                </h4>
+                <FileText
+                  size={14}
+                  className={
+                    isExaminable ? "text-amber-600" : "text-slate-400"
+                  }
+                />
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                If enabled, this subject will be automatically selected for inclusion when auto-generating the exam timetable.
               </p>
             </div>
           </div>

@@ -59,6 +59,7 @@ export interface Subject {
   color: string;
   // If true, this subject can only happen once globally per period
   isSingleResource?: boolean;
+  isExaminable?: boolean; // NEW: If true, this subject is included in exam generation by default
   // Room requirements
   preferredRoomIds?: string[]; // Specific rooms
   requiredRoomType?: string; // e.g. "Lab"
@@ -179,7 +180,7 @@ export interface ExamSession {
   // Resources
   // Room is now optional to allow "Curriculum First" creation, then "Room Allocation" later
   roomId?: string;
-  invigilatorId?: string; // Teacher ID
+  invigilatorIds?: string[]; // CHANGED: Support for multiple teachers per session
 
   // Multi-Paper Support
   paperNumber: number; // 1, 2, 3...
