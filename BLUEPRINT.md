@@ -1,7 +1,7 @@
 # EduScheduler Pro — System Blueprint & Specifications
 
-**Status:** Active Development
-**Target:** Robust, client-side academic scheduling system.
+**Status:** Production Ready (Version 5.1)
+**Target:** Robust, school-wide resource & assessment management.
 
 ---
 
@@ -10,170 +10,78 @@
 ```mermaid
 graph TD
     User((User))
-    Browser[Web Browser / Electron Shell]
+    Browser[Web Browser / Tauri Shell]
     
-    subgraph "EduScheduler Pro (Client-Side)"
-        App[App Orchestrator]
-        Store[Local Storage / File System]
-        
-        subgraph "UI Layer"
-            Dash[Dashboard View]
-            Config[Configuration View]
-            InputViews[Data Entry Views]
-            GenView[Generator View]
-        end
-        
-        subgraph "Logic Layer"
-            Validator[Data Validator]
-            Exporter[Excel/PDF Service]
-        end
-        
-        subgraph "Compute Layer (Worker)"
-            Solver[Heuristic Solver]
-        end
-    end
-
+            subgraph "EduScheduler Pro (Client-Side)"
+                App[App Orchestrator]
+                Store[FileService (Web/Tauri)]
+                
+                subgraph "UI Layer (React)"
+                    Dash[Dashboard View]
+                    InputViews[Data Entry]
+                    GenView[Timetable Generator]
+                    WorkView[Workload Analysis]
+                    ExamView[Exam Module]
+                    DutyView[Duty Roster]
+                end
+                
+                subgraph "Logic Layer"
+                    Solver[Constructive Heuristic Solver]
+                    ExamGen[Exam Sequential Scheduler]
+                    Exporter[ExcelJS Service]
+                end
+            end
     User --> Browser
     Browser --> App
     App --> Store
     App --> UI Layer
     
-    InputViews --> Validator
-    GenView --> Solver
-    GenView --> Exporter
+    UI Layer --> Solver
+    UI Layer --> ExamGen
+    UI Layer --> Exporter
     
-    Solver --> App : Returns Schedule/Conflicts
+    Solver --> App : Return Schedule
 ```
 
 ---
 
 ## 2. Functional Blueprint
 
-### 2.1. Data Management Module
-**Goal:** Define the academic constraints and resources.
+### 2.1. Resource Management
+- **Subjects:** Define examinable status, paper counts, and room requirements.
+- **Teachers:** Manage availability, faculty assignments, and duty workload.
+- **Classes:** Define unique curriculum and override global school structures.
+- **Rooms:** Physical resource allocation.
 
-- **Global Config:** 
-  - Defines the "Skeleton" of the day (e.g., 8 periods, Break after P2, Lunch after P5).
-  - Defines the "Timeline" (Start/End times for each slot).
-- **Resources:**
-  - **Subjects:** Abstract definitions (Color, Name). Property `isSingleResource` ensures unique global usage (e.g., "Chemistry Lab").
-  - **Teachers:** The primary constraint resource. Can be "Blocked" for specific periods (Part-time staff).
-  - **Classes:** The primary output target. Each class has a unique "Curriculum" (Requirement Matrix).
-
-### 2.2. The Generator Module (The "Solver")
-**Goal:** Place $N$ curriculum items into $T \times P$ slots (Days $\times$ Periods) with zero collisions.
-
-**Algorithm Blueprint:**
-1.  **Input:** Deep clone of `AppData`.
-2.  **Pre-Processing:** 
-    - Flatten all Class Curriculums into a single list of `AllocationUnit`s.
-    - **Score & Sort:** Assign difficulty scores.
-        - `Double Period` = +10 difficulty (Needs 2 contiguous slots).
-        - `Teacher Availability < 50%` = +20 difficulty.
-        - `Single Resource Subject` = +15 difficulty.
-    - Sort list Descending (Hardest first).
-3.  **Greedy Allocation:**
-    - For `Unit U` in `List`:
-        - Iterate `Days D` (0..4) -> `Periods P` (0..N):
-            - **Hard Constraints Check:**
-                - Is `Slot(D, P)` type == "CLASS"?
-                - Is `Teacher` free at `(D, P)`?
-                - Is `Class` free at `(D, P)`?
-                - If `SingleResource`, is it used globally at `(D, P)`?
-                - If `DoublePeriod`, is `(D, P+1)` also valid?
-            - **Soft Constraints (Scoring):**
-                - Prefer Mornings for Core Subjects? (+Score)
-                - Avoid Teacher gaps? (+Score)
-                - Avoid 3 consecutive single lessons of same subject? (+Score)
-        - Pick Best Slot.
-        - Update State (`OccupancyGrids`).
-4.  **Failure Handling:**
-    - If no slot found, push to `Conflicts` array.
-5.  **Output:** Return Result to Main Thread.
-
-### 2.3. Interactive Adjustment Module
-**Goal:** Allow humans to refine the AI's output.
-
-- **Visual Interface:** `ScheduleGrid`.
-- **Drag & Drop Logic:**
-  - **Source:** User clicks a slot (Green Highlight).
-  - **Target:** User hovers another slot.
-  - **Validation:** Real-time `checkSlotValidity()` runs.
-    - If Target is Empty: Check move validity.
-    - If Target is Full: Check **SWAP** validity (Can Slot A go to B AND Slot B go to A?).
-  - **Action:** User clicks Target.
-    - State updates instantly.
-    - "Lock" icon appears (Future: Prevent solver from moving this).
+### 2.2. Scheduling Engines
+- **Class Timetable:** greedy allocation with complex constraints (fatigue, daily limits).
+- **Exam Timetable:** Bulk cohort scheduling, staggered slots, rest gap calculation.
+- **Duty Roster:** Smart stationing during breaks based on teaching free-time.
 
 ---
 
-## 3. Data Schema Specifications
+## 5. Roadmap
 
-### 3.1. Persistence Format (`.json`)
-The application saves a snapshot of the entire state. This file is the "Project File".
-
-| Field | Type | Description |
-| :--- | :--- | :--- |
-| `version` | string | Schema version (implicit). |
-| `settings` | Object | The global configuration. |
-| `teachers` | Array | List of teacher objects + constraints. |
-| `classes` | Array | List of class objects + curriculum + fixed sessions. |
-| `schedule` | Map | The solved grid. **Critical:** This is sparse. Empty slots are `undefined`. |
-
-**Sanitization Policy:**
-- When loading, any missing top-level key (e.g., `electives`) MUST be injected as empty array `[]`.
-- `settings.fixedOccasions` must be normalized (handle strings vs objects).
-
----
-
-## 4. UI/UX Specifications
-
-### 4.1. Dashboard
-- **KPI Cards:** Total Teachers, Classes, Saturation % (How full is the schedule?).
-- **Health Check:** "Red/Yellow/Green" status.
-    - Red: Missing Subjects, 0 Periods defined.
-    - Yellow: Unused teachers.
-    - Green: Ready to generate.
-
-### 4.2. Generator View
-- **Split Screen:** Sidebar (Class List) | Main Content (Grid).
-- **Grid Layout:** 
-    - **X-Axis:** Periods (Header).
-    - **Y-Axis:** Days (Rows).
-    - **Cells:** Interactive components.
-- **Visual Feedback:**
-    - **Colors:** Derived from Subject color.
-    - **Opacity:** Used for "Fixed/Locked" slots.
-    - **Borders:** Dashed = Dragging. Solid = Placed.
-
-### 4.3. Print Layouts
-- **Technique:** CSS `@media print`.
-- **Behavior:** Hides sidebar, buttons, and decorative backgrounds.
-- **Format:** Forces Landscape. Scales grid to fit A4/Letter.
-
----
-
-## 5. Future Roadmap & Extension Points
-
-### 5.1. Phase 1: Complexity (Completed)
+### 5.1. Phase 1: Foundations (Completed)
 - [x] Basic Conflict Resolution.
-- [x] Teacher Constraints.
-- [x] Double Periods.
+- [x] Teacher Constraints & Double Periods.
 
 ### 5.2. Phase 2: Advanced Resources & Logic (Completed)
-- [x] **Room Management:** Explicit Room resource allocation.
-- [x] **Elective Blocks:** Scheduling "Option Lines" via Gang Scheduling.
-- [x] **Teacher Workload Balancing:** Soft constraints to equalize load.
+- [x] **Room Management:** Physical space allocation.
+- [x] **Elective Blocks:** Horizontal/Vertical "Gang Scheduling".
 - [x] **Structure Overrides:** Class-specific break/lunch times.
-- [x] **Interactive Dashboard:** Clickable KPI cards and specific health diagnostics.
-- [x] **Faculty Quick-Add:** Dynamic teacher creation/assignment from faculty views.
-- [x] **Exam Timetable:** Dedicated module for scheduling assessments with conflict detection.
-- [x] **Duty Roster:** Supervision management for breaks and lunch periods with availability checking.
+- [x] **Faculty Quick-Add:** Dynamic creation from faculty cards.
 
-### 5.3. Phase 3: Enterprise Features (Planned)
-- [ ] **User Accounts:** Cloud sync (requires backend).
-- [ ] **Publishing:** Generate a public "View Only" URL for students.
-- [ ] **Versioning:** Native Undo/Redo stack in memory.
+### 5.3. Phase 3: School-Wide Operations (Completed)
+- [x] **Exam Timetable:** Cohort-synced assessment scheduler.
+- [x] **Duty Roster:** Supervision management for non-teaching periods.
+- [x] **Interactive Dashboard:** specific diagnostics and navigation shortcuts.
+- [x] **Workload Analysis:** Faculty utilization reporting and capacity planning.
+
+### 5.4. Phase 4: Enterprise & Polish (Planned)
+- [ ] **Multi-Week Cycles:** Support for A/B week schedules.
+- [ ] **Native Undo/Redo:** Versioning stack in local state.
+- [ ] **Cloud Sync:** Optional backend integration for cross-device access.
 
 ---
 

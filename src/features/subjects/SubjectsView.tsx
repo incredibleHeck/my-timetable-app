@@ -66,14 +66,8 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
 
   // Smart Sort
   const sortedSubjects = useMemo(() => {
-    return [...data.subjects].sort((a, b) => {
-      const usageA = getSubjectUsage(a.id);
-      const usageB = getSubjectUsage(b.id);
-      const totalA = usageA.classCount + usageA.teacherCount;
-      const totalB = usageB.classCount + usageB.teacherCount;
-      return totalB - totalA;
-    });
-  }, [data.subjects, data.classes, data.teachers]);
+    return [...data.subjects].sort((a, b) => a.name.localeCompare(b.name));
+  }, [data.subjects]);
 
   const usedColors = useMemo(() => {
     return data.subjects

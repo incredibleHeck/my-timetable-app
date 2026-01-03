@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { AppData, Teacher } from "../../types";
 import { Button, Modal, Badge } from "../../components/ui";
-import { TeacherEditorModal } from "./TeacherEditorModal";
+import { TeacherEditorModal } from "./components/TeacherEditorModal";
 import { useTeacherManagement } from "./hooks/useTeacherManagement";
 
 interface ViewProps {
@@ -95,16 +95,6 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
           }`}
         >
           <Library size={16} /> Faculties
-        </button>
-        <button
-          onClick={() => setActiveTab("CLASSES")}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${
-            activeTab === "CLASSES"
-              ? "border-amber-500 text-amber-600"
-              : "border-transparent text-slate-500 hover:text-slate-700"
-          }`}
-        >
-          <BookOpen size={16} /> Class Assignments
         </button>
       </div>
 
@@ -309,85 +299,6 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                       <div className="h-full flex flex-col items-center justify-center text-slate-400 text-xs italic py-8">
                         <Users size={24} className="mb-2 opacity-50" />
                         No teachers assigned.
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* --- TAB 3: CLASS ASSIGNMENTS --- */}
-      {activeTab === "CLASSES" && (
-        <div className="animate-in slide-in-from-right-4">
-          <div className="mb-6 bg-purple-50 border border-purple-100 p-4 rounded-xl text-purple-800 text-sm">
-            <span className="font-bold block mb-1">Class Assignments</span>
-            Teachers displayed here are actively assigned to teach a subject for
-            the specific class.
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {sortedClasses.map((cls) => {
-              const assignments = cls.curriculum
-                .filter((c) => c.assignedTeacherId && c.periodsPerWeek > 0)
-                .map((c) => ({
-                  teacher: data.teachers.find(
-                    (t) => t.id === c.assignedTeacherId
-                  ),
-                  subject: data.subjects.find((s) => s.id === c.subjectId),
-                  periods: c.periodsPerWeek,
-                }))
-                .filter((x) => x.teacher && x.subject)
-                .sort((a, b) =>
-                  (a.teacher?.name || "").localeCompare(b.teacher?.name || "")
-                );
-
-              return (
-                <div
-                  key={cls.id}
-                  className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col"
-                >
-                  <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-                    <div>
-                      <h3 className="font-bold text-slate-800">{cls.name}</h3>
-                      <p className="text-[10px] text-slate-500 uppercase tracking-wide">
-                        {assignments.length} Teachers Assigned
-                      </p>
-                    </div>
-                    <div className="w-8 h-8 rounded bg-white border border-slate-200 flex items-center justify-center font-bold text-slate-400 text-xs">
-                      {cls.name.substring(0, 2).toUpperCase()}
-                    </div>
-                  </div>
-                  <div className="divide-y divide-slate-50">
-                    {assignments.length > 0 ? (
-                      assignments.map((item, idx) => (
-                        <div
-                          key={idx}
-                          className="p-3 flex items-center justify-between hover:bg-slate-50 transition-colors"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div
-                              className="w-1.5 h-8 rounded-full"
-                              style={{ backgroundColor: item.subject?.color }}
-                            ></div>
-                            <div>
-                              <p className="text-xs font-bold text-slate-700">
-                                {item.teacher?.name}
-                              </p>
-                              <p className="text-[10px] text-slate-500">
-                                {item.subject?.name}
-                              </p>
-                            </div>
-                          </div>
-                          <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
-                            {item.periods} pds
-                          </span>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="p-6 text-center text-xs text-slate-400 italic">
-                        No teachers assigned yet.
                       </div>
                     )}
                   </div>

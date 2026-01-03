@@ -71,7 +71,7 @@ function App() {
     profiles.find((p) => p.id === activeProfileId) ||
     profiles[0] ||
     DEFAULT_PROFILE;
-  const isFullScreen = view === "GENERATOR";
+  const isFullScreen = view === "GENERATOR" || view === "EXAMS";
 
   // --- ACTIONS ---
   const updateActiveData = (newData: AppData) => {

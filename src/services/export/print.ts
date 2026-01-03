@@ -1,4 +1,4 @@
-import { AppData, ScheduleSlot } from "../types";
+import { AppData, ScheduleSlot } from "../../types";
 
 export const printAllSchedules = (data: AppData, mode: "CLASS" | "TEACHER") => {
   const { settings, schedule, classes, teachers, subjects } = data;

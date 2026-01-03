@@ -1,7 +1,7 @@
 import ExcelJS from "exceljs";
 import FileSaver from "file-saver";
-import { AppData, ScheduleSlot } from "../types";
-import { DAYS } from "./constants";
+import { AppData, ScheduleSlot } from "../../types";
+import { DAYS } from "../../utils/constants";
 
 const { saveAs } = FileSaver;
 

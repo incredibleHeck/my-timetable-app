@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { AppData, ViewState } from "../../../types";
 import { FileService } from "../../../services/fileSystem";
-import { sanitizeAppData } from "../../../utils/utils";
+import { sanitizeAppData } from "../../../services/fileSystem/sanitization";
 
 export const useDashboard = (
   data: AppData,

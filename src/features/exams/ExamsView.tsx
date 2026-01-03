@@ -8,6 +8,11 @@ import {
   Wand2,
   Users,
   Eraser,
+  Lock,
+  Unlock,
+  Move,
+  Repeat,
+  ArrowLeft,
 } from "lucide-react";
 import { AppData, ExamSession } from "../../types";
 import { Button, Input } from "../../components/ui";
@@ -24,9 +29,10 @@ import { ExamSchoolAutoModal } from "./components/ExamSchoolAutoModal";
 interface ViewProps {
   data: AppData;
   onUpdate: (newData: AppData) => void;
+  onNavigate?: (view: any) => void;
 }
 
-export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
+export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) => {
   const {
     exams,
     addExam,
@@ -44,6 +50,8 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
   const [viewMode, setViewMode] = useState<"GRID" | "CARDS">("GRID");
   const [activeClassId, setActiveClassId] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editTool, setEditTool] = useState<"MOVE" | "SWAP">("MOVE"); // NEW
 
   // Modal States
   const [manualModalOpen, setManualModalOpen] = useState(false);
@@ -110,34 +118,29 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
   return (
     <div className="flex h-full bg-slate-50">
       {/* SIDEBAR: Class Filters */}
-      <div className="w-64 bg-white border-r border-slate-200 flex flex-col h-full">
-        <div className="p-4 border-b border-slate-100">
+      <div className="w-56 bg-white border-r border-slate-200 flex flex-col h-full shrink-0">
+        <div className="p-4 border-b border-slate-100 sticky top-0 bg-white z-10">
           <h2 className="font-bold text-slate-800 flex items-center gap-2">
             <Users size={18} className="text-amber-500" />
             Exam Classes
           </h2>
         </div>
-        <div className="overflow-y-auto flex-1 p-2 space-y-1">
-          <button
-            onClick={() => setActiveClassId("ALL")}
-            className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-              activeClassId === "ALL"
-                ? "bg-amber-50 text-amber-800 border border-amber-200"
-                : "text-slate-600 hover:bg-slate-50"
-            }`}
-          >
-            All Classes
-          </button>
+        <div className="overflow-y-auto flex-1 p-2 space-y-1 custom-scrollbar">
           {data.classes.map((cls) => (
             <button
               key={cls.id}
-              onClick={() => setActiveClassId(cls.id)}
-              className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+              onClick={() => setActiveClassId(cls.id === activeClassId ? "ALL" : cls.id)}
+              className={`w-full text-left px-3 py-2 rounded-md text-xs font-medium transition-colors flex items-center gap-2 ${
                 activeClassId === cls.id
-                  ? "bg-amber-50 text-amber-800 border border-amber-200 font-medium"
-                  : "text-slate-600 hover:bg-slate-50"
+                  ? "bg-amber-50 text-amber-800 border border-amber-200"
+                  : "text-slate-600 hover:bg-slate-50 border border-transparent"
               }`}
             >
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  activeClassId === cls.id ? "bg-amber-500" : "bg-slate-300"
+                }`}
+              />
               {cls.name}
             </button>
           ))}
@@ -149,6 +152,15 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
         {/* Toolbar */}
         <div className="bg-white border-b border-slate-200 p-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 flex-1">
+            {/* Back Button */}
+            <button
+              onClick={() => onNavigate && onNavigate("DASHBOARD")}
+              className="p-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-500 mr-2"
+              title="Back to Dashboard"
+            >
+              <ArrowLeft size={20} />
+            </button>
+
             <div className="relative w-64">
               <Search
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
@@ -186,6 +198,49 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
               >
                 <List size={16} />
               </button>
+            </div>
+
+            {/* Edit Mode Toggle (New) */}
+            <div className="flex items-center gap-2 pl-4 border-l border-slate-200">
+              <button
+                onClick={() => setIsEditMode(!isEditMode)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                  isEditMode
+                    ? "bg-amber-50 text-amber-700 border-amber-200 shadow-sm"
+                    : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
+                }`}
+                title={isEditMode ? "Disable Drag & Drop" : "Enable Drag & Drop"}
+              >
+                {isEditMode ? <Unlock size={14} /> : <Lock size={14} />}
+                {isEditMode ? "Editing Enabled" : "Read Only"}
+              </button>
+              
+              {isEditMode && (
+                <div className="flex bg-slate-100 p-1 rounded-lg">
+                  <button
+                    onClick={() => setEditTool("MOVE")}
+                    className={`p-1.5 rounded-md ${
+                      editTool === "MOVE"
+                        ? "bg-white text-blue-600 shadow-sm"
+                        : "text-slate-400"
+                    }`}
+                    title="Move Mode"
+                  >
+                    <Move size={16} />
+                  </button>
+                  <button
+                    onClick={() => setEditTool("SWAP")}
+                    className={`p-1.5 rounded-md ${
+                      editTool === "SWAP"
+                        ? "bg-white text-emerald-600 shadow-sm"
+                        : "text-slate-400"
+                    }`}
+                    title="Swap Mode"
+                  >
+                    <Repeat size={16} />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -233,8 +288,9 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
               exams={filteredExams}
               onEdit={handleEditClick}
               checkConflicts={(exam) => validateExam(exam, exams)}
-              onSwap={swapExams} // NEW: Interactive Prop
-              onMoveDate={moveExamToDate} // NEW: Interactive Prop
+              onSwap={swapExams}
+              onMoveDate={moveExamToDate}
+              isEditMode={isEditMode} // PASS EDIT MODE
             />
           )}
 

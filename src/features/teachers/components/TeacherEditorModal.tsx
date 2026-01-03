@@ -8,10 +8,10 @@ import {
   Coffee,
   Utensils,
 } from "lucide-react";
-import { AppData, Teacher } from "../../types";
-import { Button, Modal, Input } from "../../components/ui";
-import { DAYS } from "../../utils/constants";
-import { generateId } from "../../utils/utils";
+import { AppData, Teacher } from "../../../types";
+import { Button, Modal, Input } from "../../../components/ui";
+import { DAYS } from "../../../utils/constants";
+import { generateId } from "../../../utils/utils";
 
 interface TeacherEditorModalProps {
   isOpen: boolean;

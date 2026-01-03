@@ -19,8 +19,8 @@ import { AppData, ViewState } from "../../types";
 import { Button } from "../../components/ui";
 import { ScheduleGrid } from "./components/ScheduleGrid";
 import { ConflictPanel } from "./components/ConflictPanel";
-import { exportScheduleToExcel } from "../../utils/excelExport";
-import { printAllSchedules } from "../../services/printService";
+import { exportScheduleToExcel } from "../../services/export/excel";
+import { printAllSchedules } from "../../services/export/print";
 
 interface ViewProps {
   data: AppData;

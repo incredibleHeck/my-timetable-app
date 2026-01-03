@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { School, Coffee, Utensils, Minus, Plus } from "lucide-react";
-import { AppData, ClassGroup, PeriodType, CurriculumItem } from "../../types";
-import { Button, Modal, Input, Select } from "../../components/ui";
-import { generateId } from "../../utils/utils";
-import { DAYS } from "../../utils/constants";
+import { AppData, ClassGroup, PeriodType, CurriculumItem } from "../../../types";
+import { Button, Modal, Input, Select } from "../../../components/ui";
+import { generateId } from "../../../utils/utils";
+import { DAYS } from "../../../utils/constants";
 
 interface ClassEditorModalProps {
   isOpen: boolean;

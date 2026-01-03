@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Lock, Move, ArrowRightLeft, AlertCircle } from "lucide-react";
 import { AppData, ScheduleSlot } from "../../../types";
 import { DAYS } from "../../../utils/constants";
-import { checkSlotValidity } from "../../../utils/schedulerValidation";
+import { checkSlotValidity } from "../../../services/scheduler/validation";
 import { DraggableSlot } from "./DraggableSlot";
 
 interface Props {
@@ -297,17 +297,50 @@ export const ScheduleGrid: React.FC<Props> = ({
 
               // CONTENT RENDER
               if (slot) {
-                const subject = subjects.find((s) => s.id === slot.subjectId);
-                const teacher = teachers.find((t) => t.id === slot.teacherId);
-                content = (
-                  <DraggableSlot
-                    slot={slot}
-                    subject={subject}
-                    teacher={teacher}
-                    isDragging={false} // We handle drag visual via parent class
-                    onDragStart={() => {}} // Disabled native drag
-                  />
-                );
+                // CHECK FOR ELECTIVE BLOCK (Split Cell)
+                if (slot.electiveBlockId) {
+                   const block = data.electives?.find(e => e.id === slot.electiveBlockId);
+                   const blockSubjects = block?.subjectIds.map(sid => subjects.find(s => s.id === sid)).filter(Boolean) || [];
+                   
+                   content = (
+                     <div className="flex flex-col h-full w-full">
+                       {blockSubjects.map((subj, idx) => (
+                         <div 
+                           key={subj?.id || idx} 
+                           className={`flex-1 flex items-center px-2 text-[9px] font-bold truncate relative ${
+                             idx < blockSubjects.length - 1 ? "border-b border-slate-200" : ""
+                           }`}
+                           style={{ backgroundColor: `${subj?.color}15`, color: subj?.color }} // Very light tint
+                         >
+                            <div className="w-1.5 h-1.5 rounded-full mr-1 shrink-0" style={{ backgroundColor: subj?.color }}></div>
+                            <span className="truncate">{subj?.name}</span>
+                         </div>
+                       ))}
+                       {blockSubjects.length === 0 && (
+                         <div className="flex-1 flex items-center justify-center text-[9px] text-slate-400 italic">
+                           Unknown Elective
+                         </div>
+                       )}
+                     </div>
+                   );
+                   // Override container styles for split view
+                   cellClass = "bg-white border-slate-200 p-0 overflow-hidden hover:shadow-md transition-shadow";
+                   isClickable = false; // Disable individual drag for whole blocks for now (complex)
+                } 
+                else {
+                  // STANDARD SLOT
+                  const subject = subjects.find((s) => s.id === slot.subjectId);
+                  const teacher = teachers.find((t) => t.id === slot.teacherId);
+                  content = (
+                    <DraggableSlot
+                      slot={slot}
+                      subject={subject}
+                      teacher={teacher}
+                      isDragging={false} // We handle drag visual via parent class
+                      onDragStart={() => {}} // Disabled native drag
+                    />
+                  );
+                }
               } else if (isBreakSlot) {
                 content = (
                   <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">

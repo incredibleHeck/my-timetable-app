@@ -6,9 +6,7 @@ export const useTeacherManagement = (
   data: AppData,
   onUpdate: (d: AppData) => void
 ) => {
-  const [activeTab, setActiveTab] = useState<"LIST" | "FACULTIES" | "CLASSES">(
-    "LIST"
-  );
+  const [activeTab, setActiveTab] = useState<"LIST" | "FACULTIES">("LIST");
 
   // Search / Filter State
   const [nameFilter, setNameFilter] = useState("");
@@ -42,12 +40,6 @@ export const useTeacherManagement = (
   const sortedSubjects = useMemo(() => {
     return [...data.subjects].sort((a, b) => a.name.localeCompare(b.name));
   }, [data.subjects]);
-
-  const sortedClasses = useMemo(() => {
-    return [...data.classes].sort((a, b) =>
-      a.name.localeCompare(b.name, undefined, { numeric: true })
-    );
-  }, [data.classes]);
 
   // --- ACTIONS ---
   const openModal = (teacher?: Teacher) => {
@@ -147,7 +139,6 @@ export const useTeacherManagement = (
     // Data
     filteredTeachers,
     sortedSubjects,
-    sortedClasses,
 
     // Actions
     openModal,

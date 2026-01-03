@@ -1,5 +1,5 @@
-import { AppData } from "../types";
-import { sanitizeAppData } from "../utils/utils";
+import { AppData } from "../../types";
+import { sanitizeAppData } from "./sanitization";
 
 // --- TAURI TYPES (Desktop Wrapper) ---
 declare global {

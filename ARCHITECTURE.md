@@ -1,20 +1,20 @@
 # EduScheduler Pro — Architecture & Engineering Guide
 
-**Version:** 4.0 (Advanced Resource Logic)
-**Last Updated:** January 2, 2026
+**Version:** 5.1 (Full School Management Suite)
+**Last Updated:** January 3, 2026
 **Framework:** React 18 + Vite + TypeScript
 
 ---
 
 ## 1. Executive Summary
 
-**EduScheduler Pro** is a high-performance, client-side resource scheduling application designed for educational institutions. It solves the complex constraint satisfaction problem (CSP) of school timetabling using a **constructive heuristic algorithm** running in a dedicated Web Worker.
+**EduScheduler Pro** is a high-performance, client-side resource scheduling application designed for educational institutions. It solves the complex constraint satisfaction problem (CSP) of school timetabling and exam coordination using a **constructive heuristic algorithm** running in a dedicated Web Worker.
 
 The architecture emphasizes:
 1.  **Zero-Backend:** Full functionality offline via LocalStorage and File System Access (JSON).
 2.  **Type Safety:** Strict TypeScript interfaces acting as the single source of truth.
 3.  **Performance:** Heavy computational tasks (scheduling) offloaded to background threads.
-4.  **Immutability:** Centralized state management with functional update patterns.
+4.  **Feature-First Design:** Domain logic is encapsulated within feature modules for high cohesion.
 
 ---
 
@@ -24,132 +24,83 @@ The architecture emphasizes:
 | :--- | :--- | :--- |
 | **Runtime** | Vite (Rollup) | Instant HMR, optimized production builds, ES modules. |
 | **Framework** | React 18.2 | Concurrent rendering features, efficient DOM reconciliation. |
-| **Language** | TypeScript 5+ | Strict typing prevents 90% of runtime errors in complex data models. |
-| **Styling** | Tailwind CSS 3.4 | Utility-first, consistently designed UI system with minimal CSS bundle size. |
-| **Icons** | Lucide React | Consistent, lightweight SVG icons. |
-| **Persistence** | LocalStorage + File API | Privacy-first, local-only data ownership. |
-| **Export** | ExcelJS | Native `.xlsx` generation for administrative use. |
-| **Printing** | react-to-print | High-fidelity browser-based PDF generation. |
+| **Language** | TypeScript 5+ | Strict typing for complex resource relationship models. |
+| **Styling** | Tailwind CSS 3.4 | Utility-first UI system with consistent design tokens. |
+| **Persistence** | LocalStorage + File API | Local-only data ownership. `FileService` abstracts Web (Blob) vs Desktop (Tauri FS). |
+| **Export** | ExcelJS | Professional `.xlsx` generation for administrative use. |
 
 ---
 
-## 3. Directory Structure & Domain Logic
+## 3. Directory Structure
 
-The codebase is organized by **features** rather than technical layers, keeping related logic (UI, hooks, types) collocated.
+The project follows a **Feature-Driven** architecture.
 
 ```text
 src/
-├── App.tsx                     # 👑 Root Orchestrator: Manages Profiles, Persistence, and Routing.
-├── main.tsx                    # Entry point (Tailwind import, ReactDOM mount).
-├── types/
-│   └── index.ts                # 📜 THE CONTRACT. All core interfaces (AppData, ScheduleSlot, etc.).
+├── App.tsx                     # 👑 Root: Orchestrates state, profiles, and routing.
+├── main.tsx                    # Entry point.
+├── types/                      # Domain interfaces and shared types.
 │
-├── services/
-│   ├── scheduler/              # 🧠 The Brain (Optimization Engine)
-│   │   ├── worker.ts           # Web Worker entry point (runs in separate thread).
-│   │   ├── solver.ts           # Core greedy algorithm with "Gang Scheduling" support.
-│   │   ├── heuristics.ts       # Scoring functions (weighted constraints & workload balance).
-│   │   ├── preparation.ts      # Data transformation (State -> AllocationUnits).
-│   │   └── validation.ts       # Constraint checking (Teacher overlaps, Room double-booking).
-│   │
-│   └── fileSystem.ts           # I/O Service (Save/Load JSON, sanitization, legacy migration).
-│
-├── features/
+├── features/                   # Encapsulated Business Domains
 │   ├── dashboard/              # Landing view, health metrics, quick actions.
-│   ├── configuration/          # Global settings (Periods, Times, School Info).
-│   ├── subjects/               # Resource definitions (Subjects, Room Requirements).
-│   ├── teachers/               # Faculty management (Skills, Workload, Availability).
-│   ├── rooms/                  # Physical Resource management.
-│   ├── classes/                # Student Group management (Curriculum, Custom Structures).
-│   ├── exams/                  # Assessment scheduling (NEW).
-│   ├── duty/                   # Supervision management (NEW).
-│   │
-│   └── generator/              # ⚡ The Powerhouse
-│       ├── GeneratorView.tsx   # Main UI for running the solver.
-│       ├── components/
-│       │   ├── ScheduleGrid.tsx # Interactive timeline (Respects class-specific structures).
-│       │   └── DraggableSlot.tsx # The atomic lesson card.
-│       └── hooks/              # Complex UI logic (DnD state, worker communication).
+│   ├── configuration/          # Global school rules (Periods, Structure).
+│   ├── subjects/               # Subject library and room requirements.
+│   ├── teachers/               # Faculty directory and availability.
+│   ├── classes/                # Student groups and curriculum.
+│   ├── rooms/                  # Physical resource management.
+│   ├── generator/              # ⚡ Timetable Auto-Solver & Interactive Grid.
+│   ├── exams/                  # 📝 Exam Timetable & Bulk Scheduler.
+│   ├── duty/                   # 🛡️ Break/Lunch Supervision Roster.
+│   └── workload/               # 📊 Faculty Capacity & Utilization Analysis.
 │
-├── components/                 # Shared "Dumb" UI Components
-│   ├── layout/                 # Sidebar, Header.
-│   └── ui/                     # Button, Card, Input, Modal, Badge (Atomic Design).
+├── services/                   # Business Logic & Singletons
+│   ├── scheduler/              # Heuristic engine (Solver, Preparation, Types).
+│   ├── export/                 # Excel and PDF generation services.
+│   └── fileSystem/             # Persistence and I/O handlers.
 │
-└── utils/
-    ├── constants.ts            # Configuration defaults, Color palettes.
-    └── utils.ts                # Helpers: ID generation, Deep cloning, Sanitization.
+├── components/                 # Atomic UI Components
+│   ├── layout/                 # Sidebar, Header, Page Shells.
+│   └── ui/                     # Buttons, Modals, Inputs (Generic).
+│
+└── utils/                      # Low-level helpers and constants.
 ```
 
 ---
 
-## 4. Core Data Architecture
+## 4. Core Data Architecture (`AppData`)
 
-The application state is monolithic but compartmentalized within the `AppData` interface. This ensures simplified serialization/deserialization for save/load operations.
+The application state is managed as a single immutable tree, allowing for easy serialization and reliable persistence.
 
-### 4.1. The Data Tree (`AppData`)
+### 4.1. Entity Relationships
 
 ```typescript
 interface AppData {
-  settings: Settings;       // Global rules (Period definitions, Breaks, Times)
-  subjects: Subject[];      // What is taught + Room Requirements
-  teachers: Teacher[];      // Who teaches + Constraints + Target Load
-  rooms: Room[];            // Physical spaces (NEW in v4.0)
-  classes: ClassGroup[];    // Who learns + Curriculum + Custom Structure
-  jointClasses: JointClass[]; // Horizontal linking
-  electives: ElectiveBlock[]; // Vertical blocking (Option lines)
-  exams: ExamSession[];     // Academic assessments
-  dutyLocations: DutyLocation[]; // Supervision spots
-  dutyAssignments: DutyAssignment[]; // Teacher supervision roster
-  schedule: ScheduleResult; // The solution: Map<ClassId, Day, Period, Slot>
-  conflicts: Conflict[];    // Unsolved problems: List of unplaced lessons
-  lastGenerated: string;    // Timestamp of last solver run
-}
-```
-
-### 4.2. The Schedule Matrix (`ScheduleResult`)
-
-The schedule is stored as a nested hash map for O(1) lookups during rendering and collision detection.
-
-```typescript
-// Structure:
-// schedule[ClassID][DayIndex][PeriodIndex] = Slot
-
-type ScheduleResult = Record<string, Record<number, Record<number, ScheduleSlot>>>;
-
-interface ScheduleSlot {
-  subjectId: string;
-  teacherId: string;
-  classId: string;
-  roomId?: string;         // Explicit Room assignment
-  electiveBlockId?: string; // Links units scheduled simultaneously
-  isFixed?: boolean;       // True if this is the 2nd half of a double period
-  locked?: boolean;        // User-invoked lock
+  settings: Settings;       // Global rules & structure
+  subjects: Subject[];      // Exam paper counts, durations, room requirements
+  teachers: Teacher[];      // Blocked periods, target load
+  rooms: Room[];            // Capacity and type (Lab, Classroom, etc.)
+  classes: ClassGroup[];    // Curriculum items, custom structure overrides
+  jointClasses: JointClass[]; // Merged classes for specific subjects
+  electives: ElectiveBlock[]; // Parallel option blocks
+  exams: ExamSession[];     // Sequential or staggered assessments
+  dutyLocations: DutyLocation[]; // Supervision zones (Playground, Hall, etc.)
+  dutyAssignments: DutyAssignment[];  // Supervision during break/lunch periods
+  schedule: ScheduleResult; // The generated 5-day cycle timetable
 }
 ```
 
 ---
 
-## 5. The Scheduler Engine (Architecture Deep Dive)
+## 5. The Scheduling Engines
 
-The scheduler is not a generic CSP solver but a **domain-specific constructive heuristic solver**.
+### 5.1. Class Timetable Solver
+- **Mode:** Constructive heuristic.
+- **Backbackground Thread:** Dedicated Web Worker prevents UI blockage.
+- **Constraints:** Teacher fatigue, subject daily limits (max 2), room collision, elective "Gang Scheduling", sandwich/gap prevention.
 
-### 5.1. Threading Model
-- **Main Thread:** Handles UI, React updates, and Drag & Drop interactions.
-- **Worker Thread (`worker.ts`):** Runs the heavy `generateSchedule` loop. This prevents UI freezing even during 10,000+ iteration runs.
-
-### 5.2. The Algorithm Pipeline
-
-1.  **Ingestion:** The worker receives a copy of `AppData`.
-2.  **Transformation (`preparation.ts`):** 
-    - Converts abstract `Curriculum` into concrete `AllocationUnit` objects.
-    - **Sorting/Prioritization:** Harder-to-place units are sorted first (Joint Classes > Double periods > Constrained Teachers > Room-specific subjects).
-3.  **Solver Loop (`solver.ts`):**
-    - Iterates through `AllocationUnits`.
-    - **Gang Scheduling:** Detects units belonging to `ElectiveBlocks` and schedules them simultaneously.
-    - **Structure Awareness:** Prioritizes Class-specific structure overrides (Breaks/Lunch) over Global settings.
-    - **Validation:** Checks 10+ constraints (Teacher avail, Class avail, Single Resource, Room Availability, Fatigue Limit, Daily Subject Limit, Sandwich Prevention).
-    - **Scoring (`heuristics.ts`):** Picks the "best" slot based on weights (Core morning bias, Teacher continuity, Workload balancing).
-4.  **Output:** Returns a new `schedule` object and a list of `conflicts`.
+### 5.2. Exam Auto-Scheduler
+- **Mode:** Sequential placement with conflict lookahead.
+- **Logic:** Groups class cohorts together for school-wide subjects. Handles rest gaps between papers and skips weekends automatically.
 
 ---
 
@@ -160,29 +111,18 @@ The scheduler is not a generic CSP solver but a **domain-specific constructive h
 2.  **Immutable Updates:** Never mutate `AppData` directly.
 
 ### 6.2. Component Design
-- **Structure Overrides:** Components like `ScheduleGrid` must use `useMemo` to select the correct timetable structure (Class vs Global) for rendering.
-- **Memoization:** Use `React.memo` for grid cells and `useMemo` for heavy derived statistics.
+- **Structure Overrides:** Components like `ScheduleGrid` and `schedulerValidation` must select the correct timetable structure (Class-specific vs Global) based on context.
+- **Memoization:** Rigorous use of `React.memo` and `useMemo` for performance in large grids.
 
-### 6.3. File System & Sanitization
-- Input data from JSON files is **never trusted**.
-- It passes through `sanitizeAppData` which ensures all mandatory arrays (rooms, electives, etc.) exist.
-
----
-
-## 7. Operational Workflows
-
-### 7.1. Adding a New Constraint
-1.  **Define:** Add the property to `types/index.ts`.
-2.  **Input:** Add the UI control in the relevant View.
-3.  **Logic:** Add a check in `src/services/scheduler/solver.ts` inside the slot validation loop.
-4.  **Validation:** Ensure `checkSlotValidity` in `schedulerValidation.ts` and `useDragAndDrop.ts` also respect this constraint.
+### 6.3. File System & Persistence
+- JSON project files include a sanitized snapshot of the entire `AppData`.
+- Automatic migration logic in `utils.ts` ensures legacy files remain compatible with new schema versions.
 
 ---
 
-## 8. Known Limitations (As of v4.0)
+## 7. Known Limitations (As of v5.0)
 
-1.  **Mobile Support:** The `ScheduleGrid` is optimized for Desktop.
-2.  **Multi-Week Schedules:** Currently supports a standard 5-day repeating cycle only.
-3.  **Undo/Redo:** Not implemented natively. Relies on manual "Save Profile" checkpoints.
+1.  **Mobile Optimization:** Complex grid views (Timetable, Duty Roster) require a Desktop viewport for full functionality.
+2.  **Historical Records:** System focuses on the current active schedule; archiving requires manual profile saving.
 
 ---

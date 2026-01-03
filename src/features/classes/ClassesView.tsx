@@ -12,8 +12,9 @@ import {
 import { AppData, ClassGroup, JointClass, ElectiveBlock } from "../../types";
 import { Button, Modal } from "../../components/ui";
 import { generateId } from "../../utils/utils";
-import { ClassEditorModal } from "./ClassEditorModal";
-import { JointClassModal, ElectiveBlockModal } from "./GroupModals";
+import { ClassEditorModal } from "./components/ClassEditorModal";
+import { JointClassModal, ElectiveBlockModal } from "./components/GroupModals";
+import { ClassAssignmentsPanel } from "./components/ClassAssignmentsPanel";
 
 interface ViewProps {
   data: AppData;
@@ -21,7 +22,7 @@ interface ViewProps {
 }
 
 export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
-  const [activeTab, setActiveTab] = useState<"LIST" | "LINKED" | "ELECTIVES">(
+  const [activeTab, setActiveTab] = useState<"LIST" | "LINKED" | "ELECTIVES" | "ASSIGNMENTS">(
     "LIST"
   );
 
@@ -212,6 +213,16 @@ export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
           }`}
         >
           Elective Blocks
+        </button>
+        <button
+          onClick={() => setActiveTab("ASSIGNMENTS")}
+          className={`px-4 py-2 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${
+            activeTab === "ASSIGNMENTS"
+              ? "border-amber-500 text-amber-600"
+              : "border-transparent text-slate-500 hover:text-slate-700"
+          }`}
+        >
+          Assignments
         </button>
       </div>
 
@@ -426,6 +437,11 @@ export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
             ))}
           </div>
         </div>
+      )}
+
+      {/* --- TAB 5: ASSIGNMENTS --- */}
+      {activeTab === "ASSIGNMENTS" && (
+        <ClassAssignmentsPanel data={data} onUpdate={onUpdate} />
       )}
 
       {/* --- MODALS --- */}

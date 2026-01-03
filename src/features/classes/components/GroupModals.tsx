@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { JointClass, ElectiveBlock, Subject, ClassGroup } from "../../types";
-import { Button, Modal, Input, Select } from "../../components/ui";
-import { generateId } from "../../utils/utils";
+import { JointClass, ElectiveBlock, Subject, ClassGroup } from "../../../types";
+import { Button, Modal, Input, Select } from "../../../components/ui";
+import { generateId } from "../../../utils/utils";
 
 interface JointClassModalProps {
   isOpen: boolean;
