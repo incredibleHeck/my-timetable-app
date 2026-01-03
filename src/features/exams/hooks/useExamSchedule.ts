@@ -155,29 +155,27 @@ export const useExamSchedule = (
   // Helper: Find all IDs in the same "Stream Block" at a specific time
   const getStreamAlignedIds = (
     targetIds: string[],
-    date: string,
-    startTime: string
+    date: string
   ) => {
     const allProjectClasses = dataRef.current.classes; // Safe Ref access
 
-    // Identify levels affected by the target exams
+    // Identify levels AND subjects affected by the target exams
+    const targets = exams.filter(e => targetIds.includes(e.id));
+    const affectedSubjects = new Set(targets.map(e => e.subjectId));
     const affectedLevels = new Set(
       allProjectClasses
         .filter((c) =>
-          exams.some(
-            (e) => targetIds.includes(e.id) && e.classIds.includes(c.id)
-          )
+          targets.some((e) => e.classIds.includes(c.id))
         )
         .map((c) => c.level || c.id)
-        .filter(Boolean)
     );
 
-    // Find all exams at that slot belonging to those levels
+    // Find all exams at that date belonging to those subjects AND those levels
     return exams
       .filter(
         (e) =>
           e.date === date &&
-          e.startTime === startTime &&
+          affectedSubjects.has(e.subjectId) &&
           e.classIds.some((cid) => {
             const cls = allProjectClasses.find((c) => c.id === cid);
             return cls && affectedLevels.has(cls.level || cls.id);
@@ -195,9 +193,9 @@ export const useExamSchedule = (
 
     if (!e1 || !e2) return;
 
-    // 1. Identify all exams in both "Stream Slots" (e.g., all Form 1s at 9am, all Form 2s at 2pm)
-    const slot1Ids = getStreamAlignedIds(group1Ids, e1.date, e1.startTime);
-    const slot2Ids = getStreamAlignedIds(group2Ids, e2.date, e2.startTime);
+    // 1. Identify all exams in both "Stream Slots" (e.g., all Form 1s Math, all Form 2s Physics)
+    const slot1Ids = getStreamAlignedIds(group1Ids, e1.date);
+    const slot2Ids = getStreamAlignedIds(group2Ids, e2.date);
 
     // 2. Define Contexts to Swap
     // Note: We deliberately swap invigilatorIds to keep them anchored to the Slot (Grid Cell).
@@ -237,8 +235,7 @@ export const useExamSchedule = (
     // Move whole stream block
     const alignedIds = getStreamAlignedIds(
       targetIds,
-      firstExam.date,
-      firstExam.startTime
+      firstExam.date
     );
 
     const newExams = exams.map((e) =>
@@ -255,8 +252,7 @@ export const useExamSchedule = (
     // Move whole stream block
     const alignedIds = getStreamAlignedIds(
       ids,
-      firstExam.date,
-      firstExam.startTime
+      firstExam.date
     );
 
     const newExams = exams.map((e) => {
