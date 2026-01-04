@@ -23,7 +23,7 @@ const getContrastColor = (hex?: string) => {
 const formatDuration = (mins: number) => {
   const h = Math.floor(mins / 60);
   const m = mins % 60;
-  return `${h}h ${m.toString().padStart(2, '0')}m`;
+  return `${h}h ${m.toString().padStart(2, "0")}m`;
 };
 
 // --- EXCEL EXPORT ---
@@ -40,15 +40,15 @@ export const exportExamsToExcel = async (data: AppData) => {
     return match ? match[1] : cls.name;
   };
 
-  const levelGroups: Record<string, { ids: string[], names: string[] }> = {};
-  classes.forEach(cls => {
+  const levelGroups: Record<string, { ids: string[]; names: string[] }> = {};
+  classes.forEach((cls) => {
     const lvl = getStreamLevel(cls);
     if (!levelGroups[lvl]) levelGroups[lvl] = { ids: [], names: [] };
     levelGroups[lvl].ids.push(cls.id);
     levelGroups[lvl].names.push(cls.name);
   });
 
-  const sortedLevels = Object.keys(levelGroups).sort((a, b) => 
+  const sortedLevels = Object.keys(levelGroups).sort((a, b) =>
     a.localeCompare(b, undefined, { numeric: true })
   );
 
@@ -56,17 +56,17 @@ export const exportExamsToExcel = async (data: AppData) => {
   sortedLevels.forEach((level) => {
     const group = levelGroups[level];
     // Find all exams belonging to ANY class in this level
-    const allLevelExams = exams.filter((e) => 
-      e.classIds.some(cid => group.ids.includes(cid))
+    const allLevelExams = exams.filter((e) =>
+      e.classIds.some((cid) => group.ids.includes(cid))
     );
 
     if (allLevelExams.length === 0) return;
 
-    // DEDUPLICATE: Multi-stream classes write the same exams. 
+    // DEDUPLICATE: Multi-stream classes write the same exams.
     // We only want to show each unique Subject+Paper+Time once per cohort sheet.
     const levelExams: ExamSession[] = [];
     const seen = new Set<string>();
-    allLevelExams.forEach(e => {
+    allLevelExams.forEach((e) => {
       const key = `${e.subjectId}-${e.paperNumber}-${e.date}-${e.startTime}`;
       if (!seen.has(key)) {
         levelExams.push(e);
@@ -81,11 +81,18 @@ export const exportExamsToExcel = async (data: AppData) => {
     // Page Setup for A4
     sheet.pageSetup = {
       paperSize: 9, // A4
-      orientation: 'portrait',
+      orientation: "portrait",
       fitToPage: true,
       fitToHeight: 1,
       fitToWidth: 1,
-      margins: { left: 0.5, right: 0.5, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3 }
+      margins: {
+        left: 0.5,
+        right: 0.5,
+        top: 0.5,
+        bottom: 0.5,
+        header: 0.3,
+        footer: 0.3,
+      },
     };
 
     // Define Columns
@@ -101,7 +108,8 @@ export const exportExamsToExcel = async (data: AppData) => {
     schoolRow.height = 35;
     sheet.mergeCells(1, 1, 1, 3);
     const schoolCell = schoolRow.getCell(1);
-    schoolCell.value = settings.schoolName?.toUpperCase() || "SCHOOL EXAM TIMETABLE";
+    schoolCell.value =
+      settings.schoolName?.toUpperCase() || "SCHOOL EXAM TIMETABLE";
     schoolCell.font = { bold: true, size: 20, color: { argb: "FF0F172A" } };
     schoolCell.alignment = { horizontal: "center", vertical: "middle" };
 
@@ -118,9 +126,15 @@ export const exportExamsToExcel = async (data: AppData) => {
     const metaRow = sheet.getRow(3);
     metaRow.height = 20;
     sheet.mergeCells(3, 1, 3, 3);
-    metaRow.getCell(1).value = `Academic Year: ${settings.academicYear || ""} | Generated: ${new Date().toLocaleDateString()}`;
+    metaRow.getCell(1).value = `Academic Year: ${
+      settings.academicYear || ""
+    } | Generated: ${new Date().toLocaleDateString()}`;
     metaRow.getCell(1).alignment = { horizontal: "center" };
-    metaRow.getCell(1).font = { italic: true, size: 10, color: { argb: "FF94A3B8" } };
+    metaRow.getCell(1).font = {
+      italic: true,
+      size: 10,
+      color: { argb: "FF94A3B8" },
+    };
 
     // --- TABLE HEADERS ---
     const tableHeaderRow = sheet.getRow(5);
@@ -128,18 +142,24 @@ export const exportExamsToExcel = async (data: AppData) => {
     ["Date", "Subject Session 1", "Subject Session 2"].forEach((text, i) => {
       const cell = tableHeaderRow.getCell(i + 1);
       cell.value = text;
-      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0F172A" } };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF0F172A" },
+      };
       cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 12 };
       cell.alignment = { horizontal: "center", vertical: "middle" };
-      cell.border = { 
-        top: { style: 'thin' }, left: { style: 'thin' }, 
-        bottom: { style: 'thin' }, right: { style: 'thin' } 
+      cell.border = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
       };
     });
 
     // --- DATA ROWS ---
     const dateGroups: Record<string, ExamSession[]> = {};
-    levelExams.forEach(e => {
+    levelExams.forEach((e) => {
       if (!dateGroups[e.date]) dateGroups[e.date] = [];
       dateGroups[e.date].push(e);
     });
@@ -147,20 +167,30 @@ export const exportExamsToExcel = async (data: AppData) => {
     const uniqueDates = Object.keys(dateGroups).sort();
     let currentRowIdx = 6;
 
-    uniqueDates.forEach(date => {
-      const examsOnDate = dateGroups[date].sort((a, b) => a.startTime.localeCompare(b.startTime));
-      
+    uniqueDates.forEach((date) => {
+      const examsOnDate = dateGroups[date].sort((a, b) =>
+        a.startTime.localeCompare(b.startTime)
+      );
+
       const subjectGroups: Record<string, ExamSession[]> = {};
-      examsOnDate.forEach(e => {
+      examsOnDate.forEach((e) => {
         if (!subjectGroups[e.subjectId]) subjectGroups[e.subjectId] = [];
         subjectGroups[e.subjectId].push(e);
       });
 
-      const sortedSubjectGroups = Object.values(subjectGroups).sort((ga, gb) => {
-        const ma = ga.reduce((min, e) => e.startTime < min ? e.startTime : min, "23:59");
-        const mb = gb.reduce((min, e) => e.startTime < min ? e.startTime : min, "23:59");
-        return ma.localeCompare(mb);
-      });
+      const sortedSubjectGroups = Object.values(subjectGroups).sort(
+        (ga, gb) => {
+          const ma = ga.reduce(
+            (min, e) => (e.startTime < min ? e.startTime : min),
+            "23:59"
+          );
+          const mb = gb.reduce(
+            (min, e) => (e.startTime < min ? e.startTime : min),
+            "23:59"
+          );
+          return ma.localeCompare(mb);
+        }
+      );
 
       const s1Exams = sortedSubjectGroups[0] || [];
       const s2Exams = sortedSubjectGroups[1] || [];
@@ -168,47 +198,79 @@ export const exportExamsToExcel = async (data: AppData) => {
       const formatCellText = (group: ExamSession[]) => {
         if (group.length === 0) return "";
         // Only show paper labels if this subject group has multiple distinct papers (e.g. P1 and P2)
-        const showPaper = new Set(group.map(e => e.paperNumber)).size > 1;
-        return group.map(e => {
-          const sub = subjects.find(s => s.id === e.subjectId);
-          const paper = showPaper ? ` (${e.paperLabel || `P${e.paperNumber}`})` : "";
-          return `${sub?.name || "???"}${paper}\n${e.startTime} (${formatDuration(e.duration)})`;
-        }).join("\n---\n");
+        const showPaper = new Set(group.map((e) => e.paperNumber)).size > 1;
+        return group
+          .map((e) => {
+            const sub = subjects.find((s) => s.id === e.subjectId);
+            const paper = showPaper
+              ? ` (${e.paperLabel || `P${e.paperNumber}`})`
+              : "";
+            return `${sub?.name || "???"}${paper}\n${
+              e.startTime
+            } (${formatDuration(e.duration)})`;
+          })
+          .join("\n---\n");
       };
 
       const row = sheet.getRow(currentRowIdx);
       row.height = 70;
-      
+
       const dCell = row.getCell(1);
-      dCell.value = new Date(date).toLocaleDateString("en-GB", { weekday: 'short', day: 'numeric', month: 'short' });
-      dCell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+      dCell.value = new Date(date).toLocaleDateString("en-GB", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+      });
+      dCell.alignment = {
+        vertical: "middle",
+        horizontal: "center",
+        wrapText: true,
+      };
       dCell.font = { bold: true };
 
       const s1Cell = row.getCell(2);
       s1Cell.value = formatCellText(s1Exams);
-      s1Cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+      s1Cell.alignment = {
+        vertical: "middle",
+        horizontal: "center",
+        wrapText: true,
+      };
 
       const s2Cell = row.getCell(3);
       s2Cell.value = formatCellText(s2Exams);
-      s2Cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+      s2Cell.alignment = {
+        vertical: "middle",
+        horizontal: "center",
+        wrapText: true,
+      };
 
       // Apply Colors
       [s1Exams, s2Exams].forEach((grp, i) => {
         if (grp.length > 0) {
-          const sub = subjects.find(s => s.id === grp[0].subjectId);
+          const sub = subjects.find((s) => s.id === grp[0].subjectId);
           if (sub?.color) {
             const cell = row.getCell(i + 2);
-            cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: hexToArgb(sub.color) } };
-            cell.font = { color: { argb: getContrastColor(sub.color) }, bold: true, size: 11 };
+            cell.fill = {
+              type: "pattern",
+              pattern: "solid",
+              fgColor: { argb: hexToArgb(sub.color) },
+            };
+            cell.font = {
+              color: { argb: getContrastColor(sub.color) },
+              bold: true,
+              size: 11,
+            };
           }
         }
       });
 
       // Borders
-      row.eachCell({ includeEmpty: true }, cell => {
+      row.eachCell({ includeEmpty: true }, (cell) => {
         cell.border = {
-          top: { style: 'thin' }, left: { style: 'thin' },
-          bottom: { style: 'thin' }, right: { style: 'thin' }
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" },
         };
       });
 
@@ -218,8 +280,13 @@ export const exportExamsToExcel = async (data: AppData) => {
     // Add Footer
     const footerRow = sheet.getRow(currentRowIdx + 1);
     sheet.mergeCells(currentRowIdx + 1, 1, currentRowIdx + 1, 3);
-    footerRow.getCell(1).value = "PLEASE BE AT THE EXAM VENUE 30 MINUTES BEFORE START TIME";
-    footerRow.getCell(1).font = { bold: true, size: 10, color: { argb: "FFEF4444" } };
+    footerRow.getCell(1).value =
+      "PLEASE BE AT THE EXAM VENUE 30 MINUTES BEFORE START TIME";
+    footerRow.getCell(1).font = {
+      bold: true,
+      size: 10,
+      color: { argb: "FFEF4444" },
+    };
     footerRow.getCell(1).alignment = { horizontal: "center" };
   });
 
@@ -237,15 +304,15 @@ export const exportExamsToPDF = (data: AppData) => {
     return match ? match[1] : cls.name;
   };
 
-  const levelGroups: Record<string, { ids: string[], names: string[] }> = {};
-  classes.forEach(cls => {
+  const levelGroups: Record<string, { ids: string[]; names: string[] }> = {};
+  classes.forEach((cls) => {
     const lvl = getStreamLevel(cls);
     if (!levelGroups[lvl]) levelGroups[lvl] = { ids: [], names: [] };
     levelGroups[lvl].ids.push(cls.id);
     levelGroups[lvl].names.push(cls.name);
   });
 
-  const sortedLevels = Object.keys(levelGroups).sort((a, b) => 
+  const sortedLevels = Object.keys(levelGroups).sort((a, b) =>
     a.localeCompare(b, undefined, { numeric: true })
   );
 
@@ -278,16 +345,16 @@ export const exportExamsToPDF = (data: AppData) => {
 
   sortedLevels.forEach((level, idx) => {
     const group = levelGroups[level];
-    const allLevelExams = exams.filter((e) => 
-      e.classIds.some(cid => group.ids.includes(cid))
+    const allLevelExams = exams.filter((e) =>
+      e.classIds.some((cid) => group.ids.includes(cid))
     );
 
     if (allLevelExams.length === 0) return;
 
-    // DEDUPLICATE: Multi-stream classes write the same exams. 
+    // DEDUPLICATE: Multi-stream classes write the same exams.
     const levelExams: ExamSession[] = [];
     const seen = new Set<string>();
-    allLevelExams.forEach(e => {
+    allLevelExams.forEach((e) => {
       const key = `${e.subjectId}-${e.paperNumber}-${e.date}-${e.startTime}`;
       if (!seen.has(key)) {
         levelExams.push(e);
@@ -297,7 +364,7 @@ export const exportExamsToPDF = (data: AppData) => {
 
     const classDisplayName = group.names.join(" & ");
     const dateGroups: Record<string, ExamSession[]> = {};
-    levelExams.forEach(e => {
+    levelExams.forEach((e) => {
       if (!dateGroups[e.date]) dateGroups[e.date] = [];
       dateGroups[e.date].push(e);
     });
@@ -312,28 +379,38 @@ export const exportExamsToPDF = (data: AppData) => {
         <table>
           <thead>
             <tr>
-              <th style="width: 120px;">Date</th>
-              <th>Subject 1</th>
-              <th>Subject 2</th>
+              <th style="width: 120px;">Exam Date</th>
+              <th>Session 1 (Morning)</th>
+              <th>Session 2 (Afternoon)</th>
             </tr>
           </thead>
           <tbody>
     `;
 
-    uniqueDates.forEach(date => {
-      const examsOnDate = dateGroups[date].sort((a, b) => a.startTime.localeCompare(b.startTime));
-      
+    uniqueDates.forEach((date) => {
+      const examsOnDate = dateGroups[date].sort((a, b) =>
+        a.startTime.localeCompare(b.startTime)
+      );
+
       const subjectGroups: Record<string, ExamSession[]> = {};
-      examsOnDate.forEach(e => {
+      examsOnDate.forEach((e) => {
         if (!subjectGroups[e.subjectId]) subjectGroups[e.subjectId] = [];
         subjectGroups[e.subjectId].push(e);
       });
 
-      const sortedSubjectGroups = Object.values(subjectGroups).sort((ga, gb) => {
-        const ma = ga.reduce((min, e) => e.startTime < min ? e.startTime : min, "23:59");
-        const mb = gb.reduce((min, e) => e.startTime < min ? e.startTime : min, "23:59");
-        return ma.localeCompare(mb);
-      });
+      const sortedSubjectGroups = Object.values(subjectGroups).sort(
+        (ga, gb) => {
+          const ma = ga.reduce(
+            (min, e) => (e.startTime < min ? e.startTime : min),
+            "23:59"
+          );
+          const mb = gb.reduce(
+            (min, e) => (e.startTime < min ? e.startTime : min),
+            "23:59"
+          );
+          return ma.localeCompare(mb);
+        }
+      );
 
       const s1Exams = sortedSubjectGroups[0] || [];
       const s2Exams = sortedSubjectGroups[1] || [];
@@ -341,24 +418,38 @@ export const exportExamsToPDF = (data: AppData) => {
       const renderSubject = (group: ExamSession[]) => {
         if (group.length === 0) return "";
         // Only show paper labels if this subject group has multiple distinct papers (e.g. P1 and P2)
-        const showPaper = new Set(group.map(e => e.paperNumber)).size > 1;
+        const showPaper = new Set(group.map((e) => e.paperNumber)).size > 1;
 
-        return group.map(e => {
-          const sub = subjectMap.get(e.subjectId);
-          const paperLabel = showPaper ? `<div>${e.paperLabel || `P${e.paperNumber}`}</div>` : "";
-          return `
-            <div class="exam-box" style="background-color: ${sub?.color || '#f1f5f9'}20; border-left: 5px solid ${sub?.color || '#cbd5e1'}">
-              <div class="subject-title" style="color: ${sub?.color || '#0f172a'}">${sub?.name || "Unknown"}</div>
+        return group
+          .map((e) => {
+            const sub = subjectMap.get(e.subjectId);
+            const paperLabel = showPaper
+              ? `<div>${e.paperLabel || `P${e.paperNumber}`}</div>`
+              : "";
+            return `
+            <div class="exam-box" style="background-color: ${
+              sub?.color || "#f1f5f9"
+            }20; border-left: 5px solid ${sub?.color || "#cbd5e1"}">
+              <div class="subject-title" style="color: ${
+                sub?.color || "#0f172a"
+              }">${sub?.name || "Unknown"}</div>
               <div class="meta-line">${paperLabel}</div>
-              <div class="meta-line" style="color: #64748b;">${e.startTime} (${formatDuration(e.duration)})</div>
+              <div class="meta-line" style="color: #64748b;">${
+                e.startTime
+              } (${formatDuration(e.duration)})</div>
             </div>
           `;
-        }).join("");
+          })
+          .join("");
       };
 
       html += `
         <tr>
-          <td class="date-cell">${new Date(date).toLocaleDateString("en-GB", { weekday: 'short', day: 'numeric', month: 'short' })}</td>
+          <td class="date-cell">${new Date(date).toLocaleDateString("en-GB", {
+            weekday: "short",
+            day: "numeric",
+            month: "short",
+          })}</td>
           <td>${renderSubject(s1Exams)}</td>
           <td>${renderSubject(s2Exams)}</td>
         </tr>
@@ -392,7 +483,10 @@ export const exportExamsToPDF = (data: AppData) => {
 
 // --- INVIGILATOR ROSTER EXPORTS (STAFF VERSION) ---
 
-export const exportInvigilatorsToExcel = async (data: AppData, currentExams?: ExamSession[]) => {
+export const exportInvigilatorsToExcel = async (
+  data: AppData,
+  currentExams?: ExamSession[]
+) => {
   const { teachers, classes } = data;
   const exams = currentExams || data.exams; // Use state exams if provided
   const workbook = new ExcelJS.Workbook();
@@ -403,30 +497,87 @@ export const exportInvigilatorsToExcel = async (data: AppData, currentExams?: Ex
   worksheet.pageSetup = {
     // @ts-ignore
     paperSize: 8, // A3
-    orientation: 'landscape',
+    orientation: "landscape",
     fitToPage: true,
     fitToHeight: 1,
     fitToWidth: 1,
-    margins: { left: 0.3, right: 0.3, top: 0.3, bottom: 0.3, header: 0, footer: 0 }
+    margins: {
+      left: 0.3,
+      right: 0.3,
+      top: 0.3,
+      bottom: 0.3,
+      header: 0,
+      footer: 0,
+    },
   };
 
   const uniqueDates = Array.from(new Set(exams.map((e) => e.date))).sort();
-  const sortedClasses = [...classes].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  const sortedClasses = [...classes].sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, { numeric: true })
+  );
 
-  // Columns: Class, then Dates
+  // --- HEADERS ---
+  const totalCols = uniqueDates.length + 1;
+
+  // School Name
+  worksheet.mergeCells(1, 1, 1, totalCols);
+  const schoolRow = worksheet.getRow(1);
+  schoolRow.height = 35;
+  const schoolCell = schoolRow.getCell(1);
+  schoolCell.value = data.settings.schoolName?.toUpperCase() || "SCHOOL NAME";
+  schoolCell.font = { bold: true, size: 22 };
+  schoolCell.alignment = { horizontal: "center", vertical: "middle" };
+
+  // Title
+  worksheet.mergeCells(2, 1, 2, totalCols);
+  const titleRow = worksheet.getRow(2);
+  titleRow.height = 25;
+  const titleCell = titleRow.getCell(1);
+  titleCell.value = "INVIGILATION ROSTER";
+  titleCell.font = { bold: true, size: 16, color: { argb: "FF475569" } };
+  titleCell.alignment = { horizontal: "center", vertical: "middle" };
+
+  // Meta
+  worksheet.mergeCells(3, 1, 3, totalCols);
+  const metaCell = worksheet.getRow(3).getCell(1);
+  metaCell.value = `Academic Year: ${
+    data.settings.academicYear || ""
+  } | Generated: ${new Date().toLocaleDateString()}`;
+  metaCell.font = { italic: true, size: 11, color: { argb: "FF94A3B8" } };
+  metaCell.alignment = { horizontal: "center" };
+
+  // Define Column Keys and Widths (Starting Row 5)
+  // Note: We don't set 'header' here because it would overwrite Row 1
   const columns = [{ header: "Class / Date", key: "className", width: 25 }];
   uniqueDates.forEach((date) => {
     columns.push({
-      header: new Date(date).toLocaleDateString("en-GB", { weekday: 'short', day: 'numeric', month: 'short' }),
+      header: new Date(date).toLocaleDateString("en-GB", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+      }),
       key: date,
       width: 30,
     });
   });
-  worksheet.columns = columns;
+  
+  // Set keys and widths without triggering automatic header row writing
+  worksheet.columns = columns.map(c => ({ key: c.key, width: c.width }));
 
-  // Header Style
-  worksheet.getRow(1).eachCell((cell) => {
-    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0F172A" } };
+  // WRITE HEADERS EXPLICITLY TO ROW 5
+  const headerRow = worksheet.getRow(5);
+  headerRow.height = 30;
+  columns.forEach((col, i) => {
+    headerRow.getCell(i + 1).value = col.header;
+  });
+
+  // Header Style (Row 5)
+  headerRow.eachCell((cell) => {
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF0F172A" },
+    };
     cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 12 };
     cell.alignment = { horizontal: "center", vertical: "middle" };
   });
@@ -435,22 +586,30 @@ export const exportInvigilatorsToExcel = async (data: AppData, currentExams?: Ex
   sortedClasses.forEach((cls) => {
     const rowData: any = { className: cls.name };
     uniqueDates.forEach((date) => {
-      const cellExams = exams.filter(e => e.date === date && e.classIds.includes(cls.id));
-      const staff = cellExams.flatMap(e => e.invigilatorIds || [])
-        .map(id => teachers.find(t => t.id === id)?.name)
+      const cellExams = exams.filter(
+        (e) => e.date === date && e.classIds.includes(cls.id)
+      );
+      const staff = cellExams
+        .flatMap((e) => e.invigilatorIds || [])
+        .map((id) => teachers.find((t) => t.id === id)?.name)
         .filter(Boolean);
-      
+
       rowData[date] = Array.from(new Set(staff)).join("\n");
     });
     const row = worksheet.addRow(rowData);
-    row.height = 60; // Increased for vertical stacking
-    row.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
-    
-    // Border for all cells in row
-    row.eachCell({ includeEmpty: true }, cell => {
+    row.height = 60;
+    row.alignment = {
+      vertical: "middle",
+      horizontal: "center",
+      wrapText: true,
+    };
+
+    row.eachCell({ includeEmpty: true }, (cell) => {
       cell.border = {
-        top: { style: 'thin' }, left: { style: 'thin' },
-        bottom: { style: 'thin' }, right: { style: 'thin' }
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
       };
     });
   });
@@ -459,11 +618,16 @@ export const exportInvigilatorsToExcel = async (data: AppData, currentExams?: Ex
   saveAs(new Blob([buffer]), "Invigilation_Master_Roster_A3.xlsx");
 };
 
-export const exportInvigilatorsToPDF = (data: AppData, currentExams?: ExamSession[]) => {
+export const exportInvigilatorsToPDF = (
+  data: AppData,
+  currentExams?: ExamSession[]
+) => {
   const { teachers, classes, settings } = data;
   const exams = currentExams || data.exams;
   const uniqueDates = Array.from(new Set(exams.map((e) => e.date))).sort();
-  const sortedClasses = [...classes].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  const sortedClasses = [...classes].sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, { numeric: true })
+  );
 
   let html = `
     <!DOCTYPE html>
@@ -489,21 +653,32 @@ export const exportInvigilatorsToPDF = (data: AppData, currentExams?: ExamSessio
         <thead>
           <tr>
             <th class="class-col">Class / Date</th>
-            ${uniqueDates.map(d => `<th>${new Date(d).toLocaleDateString("en-GB", { weekday: 'short', day: 'numeric', month: 'short' })}</th>`).join("")}
+            ${uniqueDates.map(d => `
+              <th>
+                <div style="font-size: 10px; color: #94a3b8; margin-bottom: 2px;">${new Date(d).toLocaleDateString("en-GB", { weekday: 'short' }).toUpperCase()}</div>
+                <div style="font-size: 14px;">${new Date(d).toLocaleDateString("en-GB", { day: 'numeric', month: 'short' })}</div>
+              </th>
+            `).join("")}
           </tr>
         </thead>
         <tbody>
   `;
 
-  sortedClasses.forEach(cls => {
+  sortedClasses.forEach((cls) => {
     html += `<tr><td class="class-col">${cls.name}</td>`;
-    uniqueDates.forEach(date => {
-      const cellExams = exams.filter(e => e.date === date && e.classIds.includes(cls.id));
-      const staff = Array.from(new Set(cellExams.flatMap(e => e.invigilatorIds || [])))
-        .map(id => teachers.find(t => t.id === id)?.name)
+    uniqueDates.forEach((date) => {
+      const cellExams = exams.filter(
+        (e) => e.date === date && e.classIds.includes(cls.id)
+      );
+      const staff = Array.from(
+        new Set(cellExams.flatMap((e) => e.invigilatorIds || []))
+      )
+        .map((id) => teachers.find((t) => t.id === id)?.name)
         .filter(Boolean);
 
-      html += `<td>${staff.map(s => `<span class="staff-tag">${s}</span>`).join("")}</td>`;
+      html += `<td>${staff
+        .map((s) => `<span class="staff-tag">${s}</span>`)
+        .join("")}</td>`;
     });
     html += `</tr>`;
   });
@@ -514,6 +689,9 @@ export const exportInvigilatorsToPDF = (data: AppData, currentExams?: ExamSessio
   if (printWindow) {
     printWindow.document.write(html);
     printWindow.document.close();
-    setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 500);
   }
 };

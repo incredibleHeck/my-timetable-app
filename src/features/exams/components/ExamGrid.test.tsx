@@ -8,7 +8,6 @@ import { AppData, ExamSession } from "../../../types";
 const mockOnEdit = vi.fn();
 const mockCheckConflicts = vi.fn(() => []);
 const mockOnSwap = vi.fn();
-const mockOnMoveDate = vi.fn();
 const mockOnMoveToSlot = vi.fn();
 
 const mockData: AppData = {
@@ -16,7 +15,9 @@ const mockData: AppData = {
   classes: [{ id: "c1", name: "Class 10A", curriculum: [], level: "10" }],
   teachers: [],
   rooms: [],
-  settings: {} as any,
+  settings: {
+    timeSlots: [{ start: "09:00", end: "11:00" }, { start: "14:00", end: "16:00" }]
+  } as any,
   jointClasses: [],
   electives: [],
   exams: [],
@@ -29,14 +30,12 @@ const mockData: AppData = {
 
 describe("ExamGrid", () => {
   it("should render a split view for subjects with multiple papers in the same session", () => {
-    // ARRANGE: Create two exam sessions for the same subject but different papers,
-    // scheduled at the exact same date and time.
     const multiPaperExams: ExamSession[] = [
       {
         id: "e1-p1",
         subjectId: "sub1",
         classIds: ["c1"],
-        date: "2024-08-05", // Monday
+        date: "2024-08-05",
         startTime: "09:00",
         duration: 120,
         paperNumber: 1,
@@ -47,7 +46,7 @@ describe("ExamGrid", () => {
         id: "e1-p2",
         subjectId: "sub1",
         classIds: ["c1"],
-        date: "2024-08-05", // Monday
+        date: "2024-08-05",
         startTime: "09:00",
         duration: 90,
         paperNumber: 2,
@@ -56,7 +55,6 @@ describe("ExamGrid", () => {
       },
     ];
 
-    // ACT: Render the ExamGrid with the multi-paper exams
     render(
       <ExamGrid
         data={mockData}
@@ -64,29 +62,22 @@ describe("ExamGrid", () => {
         onEdit={mockOnEdit}
         checkConflicts={mockCheckConflicts}
         onSwap={mockOnSwap}
-        onMoveDate={mockOnMoveDate}
         onMoveToSlot={mockOnMoveToSlot}
         isEditMode={false}
-        editTool="MOVE"
       />
     );
 
-    // ASSERT: Check for the split-view headers that DraggableExamCard should render
-    // We use `getAllByText` because the paper number can appear in multiple places (header, card body).
-    // The presence of at least one of each confirms the split view logic is active.
     const paper1Elements = screen.getAllByText(/Paper 1/i);
     const paper2Elements = screen.getAllByText(/Paper 2/i);
 
     expect(paper1Elements.length).toBeGreaterThan(0);
     expect(paper2Elements.length).toBeGreaterThan(0);
 
-    // Check that the subject name appears (as the main header for the block)
     const subjectNameElements = screen.getAllByText(/mathematics/i);
     expect(subjectNameElements.length).toBeGreaterThan(0);
   });
 
-  it("should group staggered exams (different times, same morning) into split view", () => {
-    // ARRANGE: P1 at 09:00, P2 at 09:30. Both should be in "Morning" column.
+  it("should group staggered exams into split view", () => {
     const staggeredExams: ExamSession[] = [
       {
         id: "e2-p1",
@@ -104,7 +95,7 @@ describe("ExamGrid", () => {
         subjectId: "sub1",
         classIds: ["c1"],
         date: "2024-08-06",
-        startTime: "09:30", // Staggered start
+        startTime: "09:30",
         duration: 90,
         paperNumber: 2,
         paperLabel: "Paper 2",
@@ -119,84 +110,76 @@ describe("ExamGrid", () => {
         onEdit={mockOnEdit}
         checkConflicts={mockCheckConflicts}
         onSwap={mockOnSwap}
-        onMoveDate={mockOnMoveDate}
         onMoveToSlot={mockOnMoveToSlot}
         isEditMode={false}
-        editTool="MOVE"
       />
     );
 
-    // If they are grouped, we see split headers "Paper 1" and "Paper 2".
-    // If they were NOT grouped (bug behavior), one would be in col 1 and one in col 2,
-    // potentially appearing as separate cards.
-    // However, our `DraggableExamCard` logic ONLY triggers split view if `getSlots` groups them.
-    // So if we see "Paper 1" mini-header (from DraggableExamCard split logic), it means they were grouped.
-
-    // The mini-header is: <div ...>Paper 1</div>
-    // The regular label is: <span ...>Paper 1</span>
-    
     const paper1Elements = screen.getAllByText(/Paper 1/i);
     const paper2Elements = screen.getAllByText(/Paper 2/i);
 
-    // We expect at least 2 instances if split view is active (Header + Badge)
-    // If NOT split view, we only see 1 instance (Badge only)
     expect(paper1Elements.length).toBeGreaterThanOrEqual(2);
     expect(paper2Elements.length).toBeGreaterThanOrEqual(2);
   });
 
-  it("should group wide-spanning exams (Morning & Afternoon) into the same column based on anchor time", () => {
-    // ARRANGE: P1 at 09:00 (Morning), P2 at 14:00 (Afternoon).
-    // Previously, these would split across columns.
-    // Now, P2 should be pulled into Session 1 because P1 anchors the subject to Morning.
-    const spanningExams: ExamSession[] = [
+  it("should render Subject 1 and Subject 2 headers", () => {
+    render(
+      <ExamGrid
+        data={mockData}
+        exams={[]}
+        onEdit={mockOnEdit}
+        checkConflicts={mockCheckConflicts}
+        onSwap={mockOnSwap}
+        onMoveToSlot={mockOnMoveToSlot}
+        isEditMode={false}
+      />
+    );
+
+    expect(screen.getByText("Subject 1")).toBeInTheDocument();
+    expect(screen.getByText("Subject 2")).toBeInTheDocument();
+  });
+
+  it("should have droppable empty cells in edit mode", () => {
+    const exams: ExamSession[] = [
       {
-        id: "e3-p1",
+        id: "e1",
         subjectId: "sub1",
         classIds: ["c1"],
-        date: "2024-08-07",
+        date: "2024-08-05",
         startTime: "09:00",
         duration: 120,
         paperNumber: 1,
         paperLabel: "Paper 1",
         status: "DRAFT",
-      },
-      {
-        id: "e3-p2",
-        subjectId: "sub1",
-        classIds: ["c1"],
-        date: "2024-08-07",
-        startTime: "14:00", // Afternoon time
-        duration: 90,
-        paperNumber: 2,
-        paperLabel: "Paper 2",
-        status: "DRAFT",
-      },
+      }
     ];
 
-    render(
+    const { container } = render(
       <ExamGrid
         data={mockData}
-        exams={spanningExams}
+        exams={exams}
         onEdit={mockOnEdit}
         checkConflicts={mockCheckConflicts}
         onSwap={mockOnSwap}
-        onMoveDate={mockOnMoveDate}
         onMoveToSlot={mockOnMoveToSlot}
-        isEditMode={false}
-        editTool="MOVE"
+        isEditMode={true}
       />
     );
 
-    // 1. Check Headers
-    expect(screen.getByText("Subject 1")).toBeInTheDocument();
-    expect(screen.getByText("Subject 2")).toBeInTheDocument();
-
-    // 2. Check Grouping (Split View)
-    // If grouped, we see the split headers.
-    const paper1Elements = screen.getAllByText(/Paper 1/i);
-    const paper2Elements = screen.getAllByText(/Paper 2/i);
-
-    expect(paper1Elements.length).toBeGreaterThanOrEqual(2);
-    expect(paper2Elements.length).toBeGreaterThanOrEqual(2);
+    // In our implementation, empty cells in Edit Mode get specific CSS classes:
+    // bg-white hover:bg-slate-50/30 (if not dragging over)
+    // We can check if the cells are rendered using DroppableGridCell by checking for the 'td' elements
+    // that are empty.
+    
+    const cells = container.querySelectorAll('td');
+    // There should be 1 date cell and 2 session cells per row.
+    // Our mock has one date populated.
+    
+    // We are looking for the td that represents Session 2 (Subject 2) which should be empty.
+    const emptyCell = Array.from(cells).find(td => td.textContent?.trim() === "" || td.textContent?.trim() === "—");
+    
+    expect(emptyCell).toBeDefined();
+    // Since DroppableGridCell wraps the content in a div with h-full w-full
+    expect(emptyCell?.querySelector('div.h-full.w-full')).toBeInTheDocument();
   });
 });

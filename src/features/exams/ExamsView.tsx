@@ -162,6 +162,22 @@ export const ExamsView: React.FC<ViewProps> = ({
     setManualModalOpen(true);
   };
 
+  const handleCellClick = (date: string, time: string) => {
+    // Create a skeleton exam session to pre-populate the modal
+    const skeleton: any = {
+      id: "", // Empty ID signals "New"
+      date,
+      startTime: time,
+      classIds: activeId !== "ALL" ? [activeId] : [],
+      subjectId: data.subjects[0]?.id || "",
+      duration: 120,
+      paperNumber: 1,
+      status: "DRAFT"
+    };
+    setEditingExam(skeleton);
+    setManualModalOpen(true);
+  };
+
   const handleClearAll = () => {
     if (
       confirm(
@@ -420,8 +436,10 @@ export const ExamsView: React.FC<ViewProps> = ({
                 exams={filteredExams}
                 activeId={activeId}
                 onEdit={handleEditClick}
+                onAddCell={handleCellClick}
                 checkConflicts={(exam) => validateExam(exam, exams)}
                 onSwap={swapExams}
+                onMoveToSlot={moveExamToSlot}
                 isEditMode={isEditMode}
               />
             </div>

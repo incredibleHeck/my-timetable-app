@@ -77,11 +77,15 @@ export const InvigilatorRoster: React.FC<Props> = ({ data, exams }) => {
               {uniqueDates.map((date) => (
                 <th
                   key={date}
-                  className="p-3 border-b border-r border-slate-200 text-center text-[10px] font-bold text-slate-600 uppercase tracking-wider min-w-[140px]"
+                  className="p-3 border-b border-r border-slate-200 text-center bg-slate-50 min-w-[140px]"
                 >
                   <div className="flex flex-col items-center">
-                    <Calendar size={12} className="mb-1 text-slate-400" />
-                    {formatDate(date)}
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
+                      {new Date(date).toLocaleDateString("en-GB", { weekday: 'short' })}
+                    </span>
+                    <span className="text-sm font-black text-slate-800 leading-none">
+                      {new Date(date).toLocaleDateString("en-GB", { day: 'numeric', month: 'short' })}
+                    </span>
                   </div>
                 </th>
               ))}

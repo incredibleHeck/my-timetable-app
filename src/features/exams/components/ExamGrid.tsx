@@ -121,8 +121,8 @@ const DraggableExamCard = ({
               `}
             >
               {/* Subject Color Accent Bar */}
-              <div 
-                className="absolute top-0 left-0 w-full h-1.5 rounded-t-xl" 
+              <div
+                className="absolute top-0 left-0 w-full h-1.5 rounded-t-xl"
                 style={{ backgroundColor: subject?.color || "#cbd5e1" }}
               />
 
@@ -144,7 +144,9 @@ const DraggableExamCard = ({
                         {isSplitView && (
                           <span
                             className="text-[9px] font-black text-white px-2 py-0.5 rounded-full uppercase shadow-sm"
-                            style={{ backgroundColor: subject?.color || "#94a3b8" }}
+                            style={{
+                              backgroundColor: subject?.color || "#94a3b8",
+                            }}
                           >
                             {exam.paperLabel || `P${exam.paperNumber}`}
                           </span>
@@ -165,7 +167,9 @@ const DraggableExamCard = ({
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-2 text-[13px] font-bold text-slate-500 p-1.5 rounded-lg bg-slate-50/50 border border-transparent group-hover/card:border-slate-100 group-hover/card:bg-white">
                       <Users size={11} className="text-slate-400" />
-                      <span className="truncate">{invigilatorNames || "NO STAFF ASSIGNED"}</span>
+                      <span className="truncate">
+                        {invigilatorNames || "NO STAFF ASSIGNED"}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -219,6 +223,44 @@ const DraggableExamCard = ({
   );
 };
 
+// 2. Droppable Grid Cell
+const DroppableGridCell = ({
+  date,
+  startTime,
+  children,
+  isEditMode,
+  onClick,
+}: {
+  date: string;
+  startTime: string;
+  children: React.ReactNode;
+  isEditMode: boolean;
+  onClick?: () => void;
+}) => {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `cell-${date}-${startTime}`,
+    data: { type: "CELL_TARGET", date, startTime },
+    disabled: !isEditMode,
+  });
+
+  return (
+    <td
+      ref={setNodeRef}
+      onClick={onClick}
+      className={`p-3 border-r border-slate-100 align-top h-px transition-all duration-200
+        ${
+          isOver && isEditMode
+            ? "bg-emerald-50 ring-inset ring-2 ring-emerald-300"
+            : "bg-white hover:bg-slate-50/30"
+        }
+        ${!children ? "cursor-pointer" : ""}
+      `}
+    >
+      <div className="h-full w-full">{children}</div>
+    </td>
+  );
+};
+
 // 3. Main component setup follows...
 
 // --- MAIN COMPONENT ---
@@ -228,8 +270,10 @@ interface Props {
   exams: ExamSession[];
   activeId?: string;
   onEdit: (exam: ExamSession) => void;
+  onAddCell?: (date: string, time: string) => void;
   checkConflicts: (exam: ExamSession) => string[];
   onSwap: (ids1: string | string[], ids2: string | string[]) => void;
+  onMoveToSlot: (ids: string[], date: string, startTime: string) => void;
   isEditMode: boolean;
 }
 
@@ -238,8 +282,10 @@ export const ExamGrid: React.FC<Props> = ({
   exams,
   activeId = "ALL",
   onEdit,
+  onAddCell,
   checkConflicts,
   onSwap,
+  onMoveToSlot,
   isEditMode,
 }) => {
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
@@ -274,7 +320,7 @@ export const ExamGrid: React.FC<Props> = ({
 
     const activeIds = activeData.allExams.map((e: ExamSession) => e.id);
 
-    // ONLY HANDLE DROP ON ANOTHER EXAM (Swap)
+    // ONLY HANDLE DROP ON ANOTHER EXAM (Swap) OR EMPTY CELL (Move)
     if (overData.type === "EXAM_TARGET") {
       const targetExam = overData.exam;
       // Prevent self-drop
@@ -282,6 +328,8 @@ export const ExamGrid: React.FC<Props> = ({
 
       const overIds = overData.allExams.map((e: ExamSession) => e.id);
       onSwap(activeIds, overIds);
+    } else if (overData.type === "CELL_TARGET") {
+      onMoveToSlot(activeIds, overData.date, overData.startTime);
     }
   };
 
@@ -298,7 +346,7 @@ export const ExamGrid: React.FC<Props> = ({
             <tr className="bg-slate-900 text-white">
               {/* Corner Header */}
               <th className="p-4 border-r border-slate-800 text-left text-[11px] font-black text-slate-400 uppercase tracking-widest w-[140px] sticky left-0 z-40 bg-slate-900 shadow-md">
-                Date
+                Date / Day
               </th>
               {/* Session Headers */}
               <th className="p-4 border-r border-slate-800 text-center min-w-[350px] sticky top-0 z-20 shadow-md">
@@ -329,16 +377,25 @@ export const ExamGrid: React.FC<Props> = ({
               // GROUP BY SUBJECT and Assign to Columns sequentially (NOT time-bound)
               const subjectGroups: Record<string, ExamSession[]> = {};
               sortedByTime.forEach((e) => {
-                if (!subjectGroups[e.subjectId]) subjectGroups[e.subjectId] = [];
+                if (!subjectGroups[e.subjectId])
+                  subjectGroups[e.subjectId] = [];
                 subjectGroups[e.subjectId].push(e);
               });
 
               // Sort subject groups by their EARLIEST exam's start time to maintain a logical order
-              const sortedSubjectGroups = Object.values(subjectGroups).sort((groupA, groupB) => {
-                const minA = groupA.reduce((min, e) => e.startTime < min ? e.startTime : min, "23:59");
-                const minB = groupB.reduce((min, e) => e.startTime < min ? e.startTime : min, "23:59");
-                return minA.localeCompare(minB);
-              });
+              const sortedSubjectGroups = Object.values(subjectGroups).sort(
+                (groupA, groupB) => {
+                  const minA = groupA.reduce(
+                    (min, e) => (e.startTime < min ? e.startTime : min),
+                    "23:59"
+                  );
+                  const minB = groupB.reduce(
+                    (min, e) => (e.startTime < min ? e.startTime : min),
+                    "23:59"
+                  );
+                  return minA.localeCompare(minB);
+                }
+              );
 
               // Column 1 = First Subject Group of the day
               // Column 2 = Second Subject Group of the day (if it exists)
@@ -350,7 +407,7 @@ export const ExamGrid: React.FC<Props> = ({
               const time2 = defaultTimes[1];
 
               // --- INTELLIGENT GROUPING LOGIC ---
-              // Groups exams into "Stacks" if they share Subject. 
+              // Groups exams into "Stacks" if they share Subject.
               // Now supports grouping multiple papers (P1, P2) for Split View.
               const getSlots = (sessions: ExamSession[]) => {
                 const units: ExamSession[][] = [];
@@ -362,8 +419,7 @@ export const ExamGrid: React.FC<Props> = ({
                   // Find siblings: Same Subject (regardless of Paper/Duration)
                   const siblings = sessions.filter(
                     (o) =>
-                      o.subjectId === s.subjectId &&
-                      !processedIds.has(o.id)
+                      o.subjectId === s.subjectId && !processedIds.has(o.id)
                   );
 
                   if (siblings.length > 0) {
@@ -382,54 +438,70 @@ export const ExamGrid: React.FC<Props> = ({
                   <td className="p-4 border-r border-slate-200 text-center w-[140px] sticky left-0 z-30 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] bg-slate-50">
                     <div className="flex flex-col items-center gap-0.5">
                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                        {new Date(date).toLocaleDateString("en-GB", { weekday: "short" })}
+                        {new Date(date).toLocaleDateString("en-GB", {
+                          weekday: "short",
+                        })}
                       </span>
                       <span className="text-2xl font-black text-slate-800">
-                        {new Date(date).toLocaleDateString("en-GB", { day: "numeric" })}
+                        {new Date(date).toLocaleDateString("en-GB", {
+                          day: "numeric",
+                        })}
                       </span>
                       <span className="text-[10px] font-bold text-slate-500 uppercase">
-                        {new Date(date).toLocaleDateString("en-GB", { month: "short" })}
+                        {new Date(date).toLocaleDateString("en-GB", {
+                          month: "short",
+                        })}
                       </span>
                     </div>
                   </td>
 
                   {/* SESSION 1 */}
-                  <td className="p-3 border-r border-slate-100 align-top h-px bg-white hover:bg-slate-50/30">
-                    <div className="h-full w-full">
-                      <div className="flex flex-col h-full gap-3">
-                        {getSlots(session1Exams).map((slot) => (
-                          <DraggableExamCard
-                            key={slot[0].id}
-                            exams={slot}
-                            data={data}
-                            activeId={activeId}
-                            checkConflicts={checkConflicts}
-                            onEdit={onEdit}
-                            isEditMode={isEditMode}
-                          />
-                        ))}
-                      </div>
+                  <DroppableGridCell
+                    date={date}
+                    startTime={time1}
+                    isEditMode={isEditMode}
+                    onClick={() =>
+                      !session1Exams.length && onAddCell?.(date, time1)
+                    }
+                  >
+                    <div className="flex flex-col h-full gap-3">
+                      {getSlots(session1Exams).map((slot) => (
+                        <DraggableExamCard
+                          key={slot[0].id}
+                          exams={slot}
+                          data={data}
+                          activeId={activeId}
+                          checkConflicts={checkConflicts}
+                          onEdit={onEdit}
+                          isEditMode={isEditMode}
+                        />
+                      ))}
                     </div>
-                  </td>
+                  </DroppableGridCell>
 
                   {/* SESSION 2 */}
-                  <td className="p-3 border-r border-slate-100 align-top h-px bg-white hover:bg-slate-50/30">
-                    <div className="h-full w-full">
-                      <div className="flex flex-col h-full gap-3">
-                        {getSlots(session2Exams).map((slot) => (
-                          <DraggableExamCard
-                            key={slot[0].id}
-                            exams={slot}
-                            data={data}
-                            activeId={activeId}
-                            checkConflicts={checkConflicts}
-                            onEdit={onEdit}
-                            isEditMode={isEditMode}
-                          />
-                        ))}
-                      </div>
+                  <DroppableGridCell
+                    date={date}
+                    startTime={time2}
+                    isEditMode={isEditMode}
+                    onClick={() =>
+                      !session2Exams.length && onAddCell?.(date, time2)
+                    }
+                  >
+                    <div className="flex flex-col h-full gap-3">
+                      {getSlots(session2Exams).map((slot) => (
+                        <DraggableExamCard
+                          key={slot[0].id}
+                          exams={slot}
+                          data={data}
+                          activeId={activeId}
+                          checkConflicts={checkConflicts}
+                          onEdit={onEdit}
+                          isEditMode={isEditMode}
+                        />
+                      ))}
                     </div>
-                  </td>
+                  </DroppableGridCell>
                 </tr>
               );
             })}
