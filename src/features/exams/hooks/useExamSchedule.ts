@@ -18,6 +18,17 @@ export const useExamSchedule = (
     dataRef.current = initialData;
   }, [initialData]);
 
+  // --- HELPERS ---
+  const getStreamLevel = useCallback((classId: string) => {
+    const allProjectClasses = dataRef.current.classes;
+    const cls = allProjectClasses.find((c) => c.id === classId);
+    if (!cls) return classId;
+    if (cls.level) return cls.level;
+    // Smart parsing: Extract digits (e.g., "10A" -> "10", "Grade 1" -> "1")
+    const match = cls.name.match(/(\d+)/);
+    return match ? match[1] : cls.name;
+  }, []);
+
   // --- VALIDATION ---
   const validateExam = useCallback(
     (exam: ExamSession, currentExams: ExamSession[]): string[] => {
@@ -87,16 +98,12 @@ export const useExamSchedule = (
 
     // Helper: Expand class IDs to include all classes in the same stream/level
     const getFullStreamClassIds = (ids: string[]) => {
-      const levels = new Set(
-        allProjectClasses
-          .filter((c) => ids.includes(c.id))
-          .map((c) => c.level)
-          .filter(Boolean)
-      );
-      if (levels.size === 0) return ids;
+      const targetLevels = new Set(ids.map(id => getStreamLevel(id)));
+      
       const siblings = allProjectClasses
-        .filter((c) => levels.has(c.level))
+        .filter((c) => targetLevels.has(getStreamLevel(c.id)))
         .map((c) => c.id);
+        
       return Array.from(new Set([...ids, ...siblings]));
     };
 
@@ -167,7 +174,7 @@ export const useExamSchedule = (
         .filter((c) =>
           targets.some((e) => e.classIds.includes(c.id))
         )
-        .map((c) => c.level || c.id)
+        .map((c) => getStreamLevel(c.id))
     );
 
     // Find all exams at that date belonging to those subjects AND those levels
@@ -177,8 +184,7 @@ export const useExamSchedule = (
           e.date === date &&
           affectedSubjects.has(e.subjectId) &&
           e.classIds.some((cid) => {
-            const cls = allProjectClasses.find((c) => c.id === cid);
-            return cls && affectedLevels.has(cls.level || cls.id);
+            return affectedLevels.has(getStreamLevel(cid));
           })
       )
       .map((e) => e.id);
@@ -193,32 +199,69 @@ export const useExamSchedule = (
 
     if (!e1 || !e2) return;
 
-    // 1. Identify all exams in both "Stream Slots" (e.g., all Form 1s Math, all Form 2s Physics)
+    // 1. Identify all exams in both "Stream Slots"
     const slot1Ids = getStreamAlignedIds(group1Ids, e1.date);
     const slot2Ids = getStreamAlignedIds(group2Ids, e2.date);
 
-    // 2. Define Contexts to Swap
-    // Note: We deliberately swap invigilatorIds to keep them anchored to the Slot (Grid Cell).
-    const context1 = {
-      date: e1.date,
-      startTime: e1.startTime,
-      roomId: e1.roomId,
-      invigilatorIds: e1.invigilatorIds || [],
+    const slot1Exams = exams.filter(e => slot1Ids.includes(e.id));
+    const slot2Exams = exams.filter(e => slot2Ids.includes(e.id));
+
+    // 2. Define a map of updates to perform a "Paired Swap"
+    const updates: Record<string, Partial<ExamSession>> = {};
+
+    // Helper to find "Matching" exam in the other group (by class level/name)
+    const findMatch = (exam: ExamSession, searchGroup: ExamSession[]) => {
+      // Priority 1: Same Classes AND Same Paper Number
+      const exact = searchGroup.find(other => 
+        other.paperNumber === exam.paperNumber &&
+        other.classIds.some(cid => exam.classIds.includes(cid))
+      );
+      if (exact) return exact;
+
+      // Priority 2: Same Classes (regardless of paper)
+      const classMatch = searchGroup.find(other => 
+        other.classIds.some(cid => exam.classIds.includes(cid))
+      );
+      if (classMatch) return classMatch;
+
+      // Priority 3: Same Paper Number
+      const paperMatch = searchGroup.find(other => other.paperNumber === exam.paperNumber);
+      if (paperMatch) return paperMatch;
+
+      // Fallback: Use the first one in the group
+      return searchGroup[0];
     };
-    const context2 = {
-      date: e2.date,
-      startTime: e2.startTime,
-      roomId: e2.roomId,
-      invigilatorIds: e2.invigilatorIds || [],
-    };
+
+    // MAP UPDATES FOR GROUP 1 -> Takes Group 2's Slots
+    slot1Exams.forEach(ex1 => {
+      const target = findMatch(ex1, slot2Exams);
+      if (target) {
+        updates[ex1.id] = {
+          date: target.date,
+          startTime: target.startTime,
+          roomId: target.roomId,
+          invigilatorIds: target.invigilatorIds || []
+        };
+      }
+    });
+
+    // MAP UPDATES FOR GROUP 2 -> Takes Group 1's Slots
+    slot2Exams.forEach(ex2 => {
+      const target = findMatch(ex2, slot1Exams);
+      if (target) {
+        updates[ex2.id] = {
+          date: target.date,
+          startTime: target.startTime,
+          roomId: target.roomId,
+          invigilatorIds: target.invigilatorIds || []
+        };
+      }
+    });
 
     // 3. Commit Swap
     const newExams = exams.map((e) => {
-      if (slot1Ids.includes(e.id)) {
-        return { ...e, ...context2 }; // Inherit target slot's Invigilators
-      }
-      if (slot2Ids.includes(e.id)) {
-        return { ...e, ...context1 }; // Inherit target slot's Invigilators
+      if (updates[e.id]) {
+        return { ...e, ...updates[e.id] };
       }
       return e;
     });

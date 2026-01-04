@@ -120,21 +120,6 @@ export const ExamCard: React.FC<Props> = ({
           </span>
         </div>
 
-        {/* Room Assignment */}
-        <div className="flex items-center gap-2 col-span-2">
-          <MapPin
-            size={14}
-            className={exam.roomId ? "text-slate-400" : "text-amber-400"}
-          />
-          {exam.roomId && room ? (
-            <span className="text-slate-700 font-medium">{room.name}</span>
-          ) : (
-            <span className="text-amber-600 font-medium italic">
-              No Room Assigned
-            </span>
-          )}
-        </div>
-
         {/* Invigilator Assignment */}
         <div className="flex items-start gap-2 col-span-2">
           <Users

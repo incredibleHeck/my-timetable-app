@@ -126,16 +126,6 @@ const DraggableExamCard = ({
                 style={{ backgroundColor: subject?.color || "#cbd5e1" }}
               />
 
-              {/* Conflict Indicator */}
-              {conflicts.length > 0 && (
-                <div
-                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg z-10 animate-bounce"
-                  title={conflicts.join("\n")}
-                >
-                  <AlertTriangle size={12} />
-                </div>
-              )}
-
               <div className="flex flex-col h-full gap-3">
                 {showHeader && (
                   <div className="flex justify-between items-start">
@@ -170,18 +160,7 @@ const DraggableExamCard = ({
                   )}
 
                   <div className="space-y-1.5">
-                    <div
-                      className={`flex items-center gap-2 text-[10px] font-bold p-1.5 rounded-lg border transition-colors ${
-                        hasRoom 
-                          ? "text-slate-600 bg-slate-50 border-slate-100 group-hover/card:bg-white group-hover/card:border-slate-200" 
-                          : "text-amber-700 bg-amber-50 border-amber-200 animate-pulse"
-                      }`}
-                    >
-                      <MapPin size={11} className={hasRoom ? "text-slate-400" : "text-amber-500"} />
-                      <span className="truncate">{hasRoom ? room?.name : "ASSIGN ROOM"}</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 p-1.5 rounded-lg bg-slate-50/50 border border-transparent group-hover/card:border-slate-100 group-hover/card:bg-white">
+                    <div className="flex items-center gap-2 text-[13px] font-bold text-slate-500 p-1.5 rounded-lg bg-slate-50/50 border border-transparent group-hover/card:border-slate-100 group-hover/card:bg-white">
                       <Users size={11} className="text-slate-400" />
                       <span className="truncate">{invigilatorNames || "NO STAFF ASSIGNED"}</span>
                     </div>

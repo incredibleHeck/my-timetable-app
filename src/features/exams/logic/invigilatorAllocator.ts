@@ -31,7 +31,7 @@ export const allocateInvigilators = (
   data: AppData,
   config: AllocationConfig
 ): ExamSession[] => {
-  const { teachers, settings, exams } = data;
+  const { teachers, settings, exams, classes } = data;
 
   // We will build a new list of exams
   const resultExams: ExamSession[] = [];
@@ -40,8 +40,34 @@ export const allocateInvigilators = (
   const teacherLoad: Record<string, number> = {};
   teachers.forEach((t) => (teacherLoad[t.id] = 0));
 
-  // 2. Map HH:MM to Period Index for constraints
-  // Optimized: Create a lookup map if slots are static, but function is fine for small N
+  // 2. Prepare Weekly Stream Tracker (No duplicate levels per teacher per week)
+  // Maps TeacherID -> Set of Stream Levels (e.g. "10", "11")
+  const teacherWeeklyStreams: Record<string, Set<string>> = {};
+  teachers.forEach(t => (teacherWeeklyStreams[t.id] = new Set()));
+
+  // Helper to resolve stream level safely (Groups 1A, 1B as "1")
+  const getStreamLevel = (classId: string) => {
+    const cls = classes.find((c) => c.id === classId);
+    if (!cls) return classId;
+    if (cls.level) return cls.level;
+
+    // Smart parsing: Extract digits or base prefix (e.g., "10A" -> "10", "Grade 1" -> "1")
+    const match = cls.name.match(/(\d+)/);
+    return match ? match[1] : cls.name;
+  };
+
+  // Pre-populate trackers with locked exams across the WHOLE week
+  exams.filter(e => e.locked).forEach(ex => {
+    (ex.invigilatorIds || []).forEach(tId => {
+      teacherLoad[tId]++;
+      ex.classIds.forEach(cid => {
+        const lvl = getStreamLevel(cid);
+        if (teacherWeeklyStreams[tId]) teacherWeeklyStreams[tId].add(lvl);
+      });
+    });
+  });
+
+  // 3. Map HH:MM to Period Index for constraints
   const getPeriodIndex = (timeStr: string) => {
     const timeMins = parseTime(timeStr);
     let bestIdx = 0;
@@ -58,7 +84,7 @@ export const allocateInvigilators = (
     return bestIdx;
   };
 
-  // 3. Process assignments Date by Date
+  // 4. Process assignments Date by Date
   const uniqueDates = Array.from(new Set(exams.map((e) => e.date))).sort();
 
   uniqueDates.forEach((date) => {
@@ -73,8 +99,7 @@ export const allocateInvigilators = (
     // If no exams to schedule, skip
     if (unlockedExams.length === 0) return;
 
-    // --- PRE-PROCESSING: Respect Locked Assignments ---
-    // We need to know who is already busy at what times due to locked exams
+    // --- PRE-PROCESSING: Respect Locked Assignments for overlapping check ---
     const busyTeachers: Record<string, { start: number; end: number }[]> = {};
 
     lockedExams.forEach((exam) => {
@@ -84,7 +109,6 @@ export const allocateInvigilators = (
       (exam.invigilatorIds || []).forEach((tId) => {
         if (!busyTeachers[tId]) busyTeachers[tId] = [];
         busyTeachers[tId].push({ start, end });
-        teacherLoad[tId]++; // Count this towards their load
       });
     });
 
@@ -103,13 +127,12 @@ export const allocateInvigilators = (
 
     // STEP A: Assign MINIMUM teachers
     shuffledClasses.forEach((classId) => {
+      const classLevel = getStreamLevel(classId);
       const classExams = unlockedExams.filter((e) =>
         e.classIds.includes(classId)
       );
       if (classExams.length === 0) return;
 
-      // Determine required availability (Teacher must be free for ALL slots this class has today)
-      // Note: In reality, we might want per-slot assignment, but per-day consistency is often preferred.
       const daySlots = classExams.map((e) => {
         const start = parseTime(e.startTime);
         return {
@@ -125,13 +148,16 @@ export const allocateInvigilators = (
 
       // Filter Available Teachers
       const availableTeachers = teachers.filter((t) => {
-        // 1. Check Constraint Matrix (Is teacher working today?)
+        // 1. Weekly Stream Restriction: Has teacher invigilated this level already this week?
+        if (teacherWeeklyStreams[t.id].has(classLevel)) return false;
+
+        // 2. Check Constraint Matrix (Is teacher working today?)
         const isBlockedBySettings = daySlots.some(
           (slot) => t.constraints?.[dayIdx]?.[slot.periodIdx] === true
         );
         if (isBlockedBySettings) return false;
 
-        // 2. Check Locked Exams (Is teacher already booked?)
+        // 3. Check Locked Exams (Is teacher already booked at this time?)
         if (busyTeachers[t.id]) {
           const isBusyLocked = busyTeachers[t.id].some((busySlot) =>
             daySlots.some((reqSlot) =>
@@ -146,16 +172,13 @@ export const allocateInvigilators = (
           if (isBusyLocked) return false;
         }
 
-        // 3. Check Dynamic Assignments (Is teacher assigned to another class concurrently?)
+        // 4. Check Dynamic Assignments (Concurrent exams)
         const isBusyDynamic = Object.entries(classTeams).some(
           ([otherClassId, teamIds]) => {
             if (!teamIds.includes(t.id)) return false;
-
-            // Find when that other class is writing
             const otherClassExams = unlockedExams.filter((e) =>
               e.classIds.includes(otherClassId)
             );
-
             return otherClassExams.some((oe) => {
               const oStart = parseTime(oe.startTime);
               const oEnd = oStart + oe.duration;
@@ -179,16 +202,19 @@ export const allocateInvigilators = (
         .map((t) => t.id);
 
       classTeams[classId] = selectedIds;
-      selectedIds.forEach((id) => teacherLoad[id]++);
+      selectedIds.forEach((id) => {
+        teacherLoad[id]++;
+        teacherWeeklyStreams[id].add(classLevel);
+      });
     });
 
     // STEP B: Distribute EXTRA teachers (Workload Filling)
     if (config.maxInvigilators > config.minInvigilators) {
       shuffledClasses.forEach((classId) => {
+        const classLevel = getStreamLevel(classId);
         const currentTeam = classTeams[classId] || [];
         if (currentTeam.length >= config.maxInvigilators) return;
 
-        // Recalculate slots (same as above)
         const classExams = unlockedExams.filter((e) =>
           e.classIds.includes(classId)
         );
@@ -210,13 +236,16 @@ export const allocateInvigilators = (
         const availableExtras = teachers.filter((t) => {
           if (currentTeam.includes(t.id)) return false; // Already assigned
 
-          // 1. Settings Check
+          // 1. Weekly Stream Restriction
+          if (teacherWeeklyStreams[t.id].has(classLevel)) return false;
+
+          // 2. Settings Check
           const isBlockedBySettings = daySlots.some(
             (slot) => t.constraints?.[dayIdx]?.[slot.periodIdx] === true
           );
           if (isBlockedBySettings) return false;
 
-          // 2. Locked Exams Check
+          // 3. Locked Exams Check
           if (busyTeachers[t.id]) {
             const isBusyLocked = busyTeachers[t.id].some((busySlot) =>
               daySlots.some((reqSlot) =>
@@ -231,7 +260,7 @@ export const allocateInvigilators = (
             if (isBusyLocked) return false;
           }
 
-          // 3. Dynamic Check
+          // 4. Dynamic Check
           const isBusyDynamic = Object.entries(classTeams).some(
             ([otherClassId, teamIds]) => {
               if (!teamIds.includes(t.id)) return false;
@@ -256,18 +285,21 @@ export const allocateInvigilators = (
         const extraIds = randomizedExtras
           .slice(0, extrasNeeded)
           .map((t) => t.id);
+        
         classTeams[classId] = [...currentTeam, ...extraIds];
-        extraIds.forEach((id) => teacherLoad[id]++);
+        extraIds.forEach((id) => {
+          teacherLoad[id]++;
+          teacherWeeklyStreams[id].add(classLevel);
+        });
       });
     }
 
     // STEP C: Apply to Sessions (Fork/Split Logic)
-    // We iterate through unlocked exams and split them into per-class sessions
     unlockedExams.forEach((originalExam) => {
       originalExam.classIds.forEach((cid) => {
         resultExams.push({
           ...originalExam,
-          id: generateId(), // New ID for the split session
+          id: generateId(),
           classIds: [cid],
           invigilatorIds: classTeams[cid] || [],
         });
