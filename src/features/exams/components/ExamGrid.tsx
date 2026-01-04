@@ -140,12 +140,15 @@ const DraggableExamCard = ({
                         <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-1 border border-slate-200">
                           <Clock size={10} /> {exam.startTime}
                         </span>
-                        <span
-                          className="text-[9px] font-black text-white px-2 py-0.5 rounded-full uppercase shadow-sm"
-                          style={{ backgroundColor: subject?.color || "#94a3b8" }}
-                        >
-                          {exam.paperLabel || `P${exam.paperNumber}`}
-                        </span>
+                        {/* Only show paper label if it's a multi-paper subject (Split View is active) */}
+                        {isSplitView && (
+                          <span
+                            className="text-[9px] font-black text-white px-2 py-0.5 rounded-full uppercase shadow-sm"
+                            style={{ backgroundColor: subject?.color || "#94a3b8" }}
+                          >
+                            {exam.paperLabel || `P${exam.paperNumber}`}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>

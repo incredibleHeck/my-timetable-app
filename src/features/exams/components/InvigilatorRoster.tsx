@@ -103,11 +103,11 @@ export const InvigilatorRoster: React.FC<Props> = ({ data, exams }) => {
                       }`}
                     >
                       {names ? (
-                        <div className="flex flex-wrap justify-center gap-1">
+                        <div className="flex flex-col items-center gap-1">
                           {names.map((name, idx) => (
                             <span
                               key={idx}
-                              className="px-2 py-1 bg-amber-50 text-amber-700 border border-amber-100 rounded text-[10px] font-bold shadow-sm"
+                              className="px-2 py-1 bg-amber-50 text-amber-700 border border-amber-100 rounded text-[10px] font-bold shadow-sm w-full"
                             >
                               {name}
                             </span>

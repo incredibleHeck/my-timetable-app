@@ -4,6 +4,7 @@ import { generateId } from "../../../utils/utils";
 interface AllocationConfig {
   minInvigilators: number;
   maxInvigilators: number;
+  excludedTeacherIds?: string[];
 }
 
 // Helper: Parse HH:MM to minutes
@@ -148,6 +149,9 @@ export const allocateInvigilators = (
 
       // Filter Available Teachers
       const availableTeachers = teachers.filter((t) => {
+        // 0. Exclusion Check: Is teacher manually excluded from invigilation?
+        if (config.excludedTeacherIds?.includes(t.id)) return false;
+
         // 1. Weekly Stream Restriction: Has teacher invigilated this level already this week?
         if (teacherWeeklyStreams[t.id].has(classLevel)) return false;
 
@@ -235,6 +239,9 @@ export const allocateInvigilators = (
 
         const availableExtras = teachers.filter((t) => {
           if (currentTeam.includes(t.id)) return false; // Already assigned
+
+          // 0. Exclusion Check
+          if (config.excludedTeacherIds?.includes(t.id)) return false;
 
           // 1. Weekly Stream Restriction
           if (teacherWeeklyStreams[t.id].has(classLevel)) return false;

@@ -30,9 +30,16 @@ import { ExamGrid } from "./components/ExamGrid";
 import { ExamManualModal } from "./components/ExamManualModal";
 import { ExamSchoolAutoModal } from "./components/ExamSchoolAutoModal";
 import { InvigilatorRoster } from "./components/InvigilatorRoster";
+import { InvigilatorExclusionModal } from "./components/InvigilatorExclusionModal";
 
 // Logic
 import { allocateInvigilators } from "./logic/invigilatorAllocator";
+import { 
+  exportExamsToExcel, 
+  exportExamsToPDF,
+  exportInvigilatorsToExcel,
+  exportInvigilatorsToPDF
+} from "../../services/export/exams";
 
 interface ViewProps {
   data: AppData;
@@ -70,6 +77,7 @@ export const ExamsView: React.FC<ViewProps> = ({
   // Modal States
   const [manualModalOpen, setManualModalOpen] = useState(false);
   const [autoModalOpen, setAutoModalOpen] = useState(false);
+  const [exclusionModalOpen, setExclusionModalOpen] = useState(false);
   const [editingExam, setEditingExam] = useState<ExamSession | null>(null);
 
   // Invigilator Allocation State
@@ -169,22 +177,19 @@ export const ExamsView: React.FC<ViewProps> = ({
       alert("No exams to assign staff to. Please schedule exams first.");
       return;
     }
+    setExclusionModalOpen(true);
+  };
 
-    if (
-      !confirm(
-        `This will assign staff (Min: ${minInv}, Max: ${maxInv}) to all exams. \n\nNote: Combined classes may be split into individual sessions to ensure correct staff allocation.\n\nContinue?`
-      )
-    ) {
-      return;
-    }
-
+  const handleConfirmAllocation = (excludedIds: string[]) => {
     try {
       const updatedExams = allocateInvigilators(data, {
         minInvigilators: minInv,
         maxInvigilators: maxInv,
+        excludedTeacherIds: excludedIds,
       });
 
       onUpdate({ ...data, exams: updatedExams });
+      setExclusionModalOpen(false);
       alert(
         `Success! Staff assigned. Exam count is now: ${updatedExams.length}`
       );
@@ -194,11 +199,22 @@ export const ExamsView: React.FC<ViewProps> = ({
     }
   };
 
-  // Placeholders
-  const handleExcelExport = () =>
-    alert("Excel export for exams not yet implemented.");
-  const handlePrint = () =>
-    alert("Print function for exams not yet implemented.");
+  // Handlers
+  const handleExcelExport = () => {
+    if (viewMode === "ROSTER") {
+      exportInvigilatorsToExcel(data, exams);
+    } else {
+      exportExamsToExcel(data);
+    }
+  };
+
+  const handlePrint = () => {
+    if (viewMode === "ROSTER") {
+      exportInvigilatorsToPDF(data, exams);
+    } else {
+      exportExamsToPDF(data);
+    }
+  };
 
   return (
     <div className="flex flex-col h-full bg-slate-50 overflow-hidden p-6">
@@ -467,6 +483,13 @@ export const ExamsView: React.FC<ViewProps> = ({
         onClose={() => setAutoModalOpen(false)}
         data={data}
         onSave={handleRegenerateExams}
+      />
+
+      <InvigilatorExclusionModal
+        isOpen={exclusionModalOpen}
+        onClose={() => setExclusionModalOpen(false)}
+        data={data}
+        onConfirm={handleConfirmAllocation}
       />
     </div>
   );
