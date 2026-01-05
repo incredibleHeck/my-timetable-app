@@ -144,6 +144,7 @@ export const DEFAULT_DATA: AppData = {
   exams: [],
   dutyLocations: [],
   dutyAssignments: [],
+  dutyRosters: [], // ADDED
   schedule: {},
   conflicts: [],
   lastGenerated: null,

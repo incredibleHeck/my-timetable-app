@@ -71,7 +71,7 @@ function App() {
     profiles.find((p) => p.id === activeProfileId) ||
     profiles[0] ||
     DEFAULT_PROFILE;
-  const isFullScreen = view === "GENERATOR" || view === "EXAMS";
+  const isFullScreen = view === "GENERATOR" || view === "EXAMS" || view === "DUTY";
 
   // --- ACTIONS ---
   const updateActiveData = (newData: AppData) => {
@@ -264,6 +264,7 @@ function App() {
               <DutyView
                 data={activeProfile.data}
                 onUpdate={updateActiveData}
+                onNavigate={setView}
               />
             )}
           </div>

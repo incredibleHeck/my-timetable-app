@@ -200,8 +200,22 @@ export interface DutyAssignment {
   id: string;
   locationId: string;
   teacherId: string;
+  classId?: string; // Optional: Assign duty to a specific class break
   day: number;
   period: number;
+}
+
+export interface DutyRoster {
+  id: string;
+  name: string;
+  type: "DAILY" | "WEEKLY";
+  // Independent Storage
+  dailyAssignments: DutyAssignment[];
+  weeklyAssignments: DutyAssignment[];
+  // Independent Parameters
+  dailyParams: { min: number; max: number };
+  weeklyParams: { min: number; max: number; weeks: number };
+  createdAt: string;
 }
 
 // ----------------------------------------------------------------------
@@ -218,7 +232,8 @@ export interface AppData {
   electives: ElectiveBlock[];
   exams: ExamSession[]; // NEW
   dutyLocations: DutyLocation[]; // NEW
-  dutyAssignments: DutyAssignment[]; // NEW
+  dutyAssignments: DutyAssignment[]; // LEGACY - to be migrated
+  dutyRosters?: DutyRoster[]; // NEW: Support for multiple rosters
   schedule: ScheduleResult;
   conflicts: Conflict[];
   lastGenerated: string | null;
