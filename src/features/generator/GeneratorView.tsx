@@ -9,13 +9,12 @@ import {
   CheckCircle2,
   Lock,
   Unlock,
-  Move,
   Repeat,
   ArrowLeft,
   FileSpreadsheet,
   Square,
 } from "lucide-react";
-import { AppData, ViewState } from "../../types";
+import { AppData, ViewState, Conflict } from "../../types";
 import { Button } from "../../components/ui";
 import { ScheduleGrid } from "./components/ScheduleGrid";
 import { ConflictPanel } from "./components/ConflictPanel";
@@ -37,11 +36,21 @@ export const GeneratorView: React.FC<ViewProps> = ({
   const [activeId, setActiveId] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [editTool, setEditTool] = useState<"MOVE" | "SWAP">("MOVE");
+  const [hoverConflict, setHoverConflict] = useState<Conflict | null>(null);
   const [stats, setStats] = useState<{
     iterations: number;
     duration: number;
   } | null>(null);
+
+  // Auto-hide conflict message after 6 seconds
+  useEffect(() => {
+    if (hoverConflict) {
+      const timer = setTimeout(() => {
+        setHoverConflict(null);
+      }, 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [hoverConflict]);
 
   // WORKER REF
   // We keep a reference to the active worker so we can terminate it if needed
@@ -238,30 +247,6 @@ export const GeneratorView: React.FC<ViewProps> = ({
               {isEditMode ? <Unlock size={14} /> : <Lock size={14} />}
               {isEditMode ? "Editing Enabled" : "Read Only"}
             </button>
-            {isEditMode && (
-              <div className="flex bg-slate-100 p-1 rounded-lg">
-                <button
-                  onClick={() => setEditTool("MOVE")}
-                  className={`p-1.5 rounded-md ${
-                    editTool === "MOVE"
-                      ? "bg-white text-blue-600 shadow-sm"
-                      : "text-slate-400"
-                  }`}
-                >
-                  <Move size={16} />
-                </button>
-                <button
-                  onClick={() => setEditTool("SWAP")}
-                  className={`p-1.5 rounded-md ${
-                    editTool === "SWAP"
-                      ? "bg-white text-emerald-600 shadow-sm"
-                      : "text-slate-400"
-                  }`}
-                >
-                  <Repeat size={16} />
-                </button>
-              </div>
-            )}
           </div>
         </div>
 
@@ -378,18 +363,36 @@ export const GeneratorView: React.FC<ViewProps> = ({
               mode={mode}
               onUpdate={onUpdate}
               editMode={isEditMode}
-              editTool={editTool}
+              setHoverConflict={setHoverConflict}
             />
           </div>
         </div>
 
         {/* Conflict Panel */}
         <div>
+          {/* LIVE VALIDATION ERROR */}
+          {hoverConflict && (
+             <div className="w-64 mb-4 border border-red-200 bg-red-50 rounded-xl shadow-sm p-4 animate-pulse">
+                <h4 className="font-bold text-red-800 mb-1 text-sm flex items-center gap-2">
+                  <Lock size={14} /> Invalid Move
+                </h4>
+                <p className="text-xs text-red-600 font-medium">
+                  {hoverConflict.reason}
+                </p>
+                <div className="mt-2 pt-2 border-t border-red-100 flex flex-col gap-1">
+                   <span className="text-[10px] text-red-400">
+                     Target: {hoverConflict.className || "Unknown"}
+                   </span>
+                </div>
+             </div>
+          )}
+
           {!isGenerating && data.conflicts.length > 0 && (
             <ConflictPanel conflicts={data.conflicts} />
           )}
           {!isGenerating &&
             data.conflicts.length === 0 &&
+            !hoverConflict &&
             data.lastGenerated && (
               <div className="w-64 flex flex-col border border-emerald-100 bg-emerald-50/50 rounded-xl shadow-sm p-6 items-center text-center">
                 <CheckCircle2

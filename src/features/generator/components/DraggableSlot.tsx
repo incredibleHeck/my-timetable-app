@@ -1,23 +1,43 @@
 import React, { memo } from "react";
-import { Users, Move, Lock } from "lucide-react";
-import { ScheduleSlot, Subject, Teacher } from "../../../types";
+import { useDraggable } from "@dnd-kit/core";
+import { Users, Repeat, Lock, BookOpen } from "lucide-react";
+import { ScheduleSlot, Subject, Teacher, ClassGroup } from "../../../types";
 
 interface Props {
   slot: ScheduleSlot;
+  day: number;
+  period: number;
   subject?: Subject;
   teacher?: Teacher;
-  isDragging: boolean;
-  onDragStart: (e: React.DragEvent) => void;
+  classGroup?: ClassGroup;
+  mode: "CLASS" | "TEACHER";
+  disabled?: boolean;
 }
 
 // Wrapped in memo for performance (prevents unnecessary re-renders in large grids)
 export const DraggableSlot: React.FC<Props> = memo(
-  ({ slot, subject, teacher, isDragging, onDragStart }) => {
+  ({ slot, day, period, subject, teacher, classGroup, mode, disabled }) => {
+    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+      id: `slot-${day}-${period}`,
+      data: { slot, day, period, classGroup, teacher }, // Pass all context data
+      disabled: disabled || slot.isFixed,
+    });
+
+    const style = transform ? {
+      transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+      zIndex: 999, // Ensure it's above everything while dragging
+    } : undefined;
+
     return (
       <div
-        draggable={!slot.isFixed}
-        onDragStart={onDragStart}
-        className={`relative group border-l-4 shadow-sm rounded-r-md p-2 flex flex-col justify-center w-full h-full transition-all bg-white overflow-hidden print:border print:border-slate-300 
+        ref={setNodeRef}
+        {...listeners}
+        {...attributes}
+        style={{ 
+          ...style, 
+          borderLeftColor: subject?.color || "#cbd5e1" 
+        }}
+        className={`relative group border-l-4 shadow-sm rounded-r-md p-2 flex flex-col justify-center w-full h-full transition-shadow bg-white overflow-hidden print:border print:border-slate-300 touch-none
          ${
            slot.isFixed
              ? "opacity-90 cursor-not-allowed bg-slate-50"
@@ -25,11 +45,10 @@ export const DraggableSlot: React.FC<Props> = memo(
          } 
          ${
            isDragging
-             ? "opacity-50 scale-95 border-dashed border-slate-400"
+             ? "opacity-50 z-50 shadow-xl ring-2 ring-blue-400 rotate-2 scale-105" // Enhanced visual feedback
              : ""
          }
       `}
-        style={{ borderLeftColor: subject?.color || "#cbd5e1" }}
       >
         {/* Background tint */}
         <div
@@ -41,14 +60,22 @@ export const DraggableSlot: React.FC<Props> = memo(
           {subject?.name}
         </div>
 
-        <div className="text-[10px] text-slate-500 truncate mt-1 flex items-center gap-1 relative z-10">
-          <Users size={10} /> {teacher?.name || "Unassigned"}
+        <div className="text-[13px] text-slate-500 truncate mt-1 flex items-center gap-1 relative z-10">
+          {mode === "CLASS" ? (
+            <>
+              <Users size={10} /> {teacher?.name || "Unassigned"}
+            </>
+          ) : (
+            <>
+              <BookOpen size={10} /> {classGroup?.name || "Unknown Class"}
+            </>
+          )}
         </div>
 
         {/* Icons for Interaction Status */}
         {!slot.isFixed ? (
-          <div className="absolute top-1 right-1 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Move size={10} />
+          <div className="absolute top-1 right-1 text-slate-400 opacity-50 group-hover:opacity-100 transition-opacity">
+            <Repeat size={10} />
           </div>
         ) : (
           <div className="absolute top-1 right-1 text-slate-300 opacity-50">
@@ -61,3 +88,4 @@ export const DraggableSlot: React.FC<Props> = memo(
 );
 
 DraggableSlot.displayName = "DraggableSlot";
+

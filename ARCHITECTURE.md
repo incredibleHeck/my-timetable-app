@@ -1,20 +1,20 @@
 # EduScheduler Pro — Architecture & Engineering Guide
 
-**Version:** 5.5 (Enterprise Assessment & Sync Edition)
-**Last Updated:** January 3, 2026
+**Version:** 10.0 (Worker-Enabled Multi-Tenant Edition)
+**Last Updated:** January 5, 2026
 **Framework:** React 18 + Vite + TypeScript
 
 ---
 
 ## 1. Executive Summary
 
-**EduScheduler Pro** is a high-performance, client-side resource scheduling application. It handles the complex coordination of school timetables and examination periods using specialized heuristic engines.
+**EduScheduler Pro** is a high-performance, client-side resource scheduling suite. It manages class timetables, examination periods, and supervision rosters using specialized heuristic engines.
 
 The architecture emphasizes:
-1.  **Zero-Backend:** Local-first data ownership via File System Access and LocalStorage.
-2.  **Concurrency:** Background Web Workers for the class timetable solver.
-3.  **Synchronized State:** Logic-driven propagation of changes across parallel class streams.
-4.  **Resource Anchoring:** Separating "What" (Subjects) from "Who" (Invigilators) during rescheduling to maintain staffing consistency.
+1.  **Multi-Tenancy (Profiles):** Profile-based state management allowing users to maintain multiple academic terms or draft scenarios in a single session.
+2.  **Background Optimization:** High-complexity class scheduling is offloaded to Web Workers, enabling iterative solving without UI blocking.
+3.  **Local-First & Desktop-Ready:** Hybrid File System API supporting both browser-based downloads and native OS dialogs via Tauri.
+4.  **Resource Bottleneck Heuristics:** Prioritizing "Restricted Resources" (staff with low availability or joint classes) to ensure jar-filling efficiency.
 
 ---
 
@@ -22,73 +22,66 @@ The architecture emphasizes:
 
 ```text
 src/
-├── App.tsx                     # 👑 Root: State orchestration & full-screen view management.
-├── types/                      # Single source of truth for domain interfaces.
-│
+├── App.tsx                     # 👑 Root: Profile orchestration, View routing, & Auto-save.
+├── types/                      # Single source of truth for domain interfaces (AppData, Slot).
 ├── features/                   # Feature-Encapsulated Domains
-│   ├── generator/              # ⚡ Timetable Solver (Heuristics + Web Worker).
-│   ├── exams/                  # 📝 Exam Coordination Suite.
-│   │   ├── components/         # Master Table Grid, Roster, & Exclusion Modals.
-│   │   ├── logic/              # 🧠 Allocation algorithms & Stream-Sync engines.
-│   │   └── hooks/              # CRUD & DND state management (Forking logic).
-│   ├── duty/                   # 🛡️ Supervision Roster.
-│   └── workload/               # 📊 Faculty Capacity Analysis.
-│
-├── services/                   # Cross-cutting concerns (File IO, Export).
-│   └── export/                 # 📄 Excel/PDF Engine (Context-aware).
-├── components/ui/              # Atomic Design System components.
-└── utils/                      # ID generation and math helpers.
+│   ├── generator/              # ⚡ Timetable Solver: Worker integration & Swap/Move tools.
+│   ├── exams/                  # 📝 Exam Coordination: Uniform vs Random strategies.
+│   ├── duty/                   # 🛡️ Supervision: Daily/Weekly rotation rosters.
+│   ├── workload/               # 📊 Capacity Analysis: Real availability vs Assigned load.
+│   ├── teachers/               # 👥 Faculty: Availability matrices & specialty linking.
+│   └── classes/                # 🏫 Curriculum: Joint classes & Vertical elective blocks.
+├── services/                   # Cross-cutting concerns.
+│   ├── scheduler/              # 🧠 Core Solver: Heuristics, Validation, & Preparation.
+│   ├── export/                 # 📄 Pro Document Engine: Context-aware Excel/PDF output.
+│   └── fileSystem/             # 💾 Persistence: Sanitization & Platform-specific IO.
+└── components/ui/              # Atomic Design System (Modals, Buttons, Inputs).
 ```
 
 ---
 
 ## 3. Core Data Architecture
 
-### 3.1. Entity Relationships
+### 3.1. Profile State Wrapper
+The application wraps `AppData` in a `Profile` object. This allows for switching contexts (e.g., from "Semester 1" to "Summer School") without data collision. All updates are deep-cloned and debounced to `localStorage`.
 
-```typescript
-interface ExamSession {
-  id: string;
-  subjectId: string;
-  classIds: string[];       // Support for multi-stream synchronization
-  date: string;
-  startTime: string;        // Sequence determines Subject 1/2 column placement
-  duration: number;         // Exported as "Xh XXm"
-  invigilatorIds?: string[]; // Staff assigned to the slot
-  paperNumber: number;      // Supports intra-column horizontal splitting
-  status: ExamStatus;
-  locked: boolean;          // Prevents auto-allocator from overwriting
-}
-```
+### 3.2. Scheduling Entities
+- **JointClass:** Links multiple classes to a single teacher/subject slot (Horizontal sync).
+- **ElectiveBlock:** Links multiple subjects to a single class slot (Vertical gang scheduling).
+- **ScheduleSlot:** The atomic unit of the timetable, supporting "locked" states and elective identification.
 
 ---
 
 ## 4. Specialized Scheduling Engines
 
-### 4.1. The Invigilator Allocator (Enhanced)
-- **One Stream Per Week Rule:** Maintains a `teacherWeeklyStreams` set. Teachers cannot be assigned to the same class level (stream) more than once in an exam week to ensure variety and fairness.
-- **Availability Management:** Integrated `InvigilatorExclusionModal` allows manual removal of staff from the candidate pool before generation.
-- **Team-per-Day Logic:** Ensures consistency in staffing while respecting availability constraints.
+### 4.1. The Timetable Solver (v10)
+- **Preparation:** Curriculums are decomposed into `AllocationUnits` (Singles/Doubles).
+- **Heuristics:** Units are scored based on teacher bottleneck severity (+50 per blocked slot) and joint class complexity (+10,000).
+- **Iteration:** The Web Worker runs a 3-second optimization loop, generating hundreds of candidates and committing only the version with the minimum conflict count.
 
-### 4.2. Multi-Stream Sync Engine (Refined)
-- **Smart Stream Grouping:** Uses regex-based parsing to identify parallel cohorts (e.g., "1A" and "1B" are grouped as Level "1").
-- **Subject Integrity:** Swapping a subject on the grid automatically synchronizes all parallel streams.
-- **Paired Swap Logic:** During swaps, specific resources (Rooms/Staff) are preserved for each individual stream to prevent resource collapsing.
+### 4.2. Exam Generator Algorithms
+- **Uniform (Cohort) Mode:** All classes in a level write simultaneously.
+- **Random (Staggered) Mode:** Maximizes slot density by staggering papers, with optional "Stream Sync" to keep parallel classes (e.g., 10A/10B) aligned.
+- **Invigilator Allocator:** Respects a "One Stream Per Week" rule to ensure staff rotate across different student cohorts fairly.
+
+### 4.3. Duty Rotation Engine
+- Supports **Daily** (5-day) and **Weekly** (Multi-week) rotations.
+- Uses a "Cycle-Fair" algorithm that resets staff availability only when the entire eligible pool has been exhausted.
 
 ---
 
 ## 5. Interaction & Presentation
 
-### 5.1. Sequential Grid Layout
-- **Time-Decoupled Columns:** The grid uses **Subject 1** and **Subject 2** columns. Placement is determined by the sequence of subjects on a day, not a rigid time cutoff.
-- **Intra-Column Split:** Multi-paper subjects (P1, P2) are rendered side-by-side within a single subject column to maximize space.
-- **Contextual UI:** Redundant class labels are automatically hidden when a specific class filter is active in the sidebar.
+### 5.1. The Smart Grid
+- **Dynamic Structure:** Grids automatically adjust to class-specific overrides (e.g., Year 7 having extra periods or different break times).
+- **Interaction Tools:** Supports both a "Selection-based" Move/Swap tool and native Drag-and-Drop.
+- **Conflict Feedback:** Real-time validation checks for teacher availability, room capacity, and daily subject limits.
 
 ---
 
 ## 6. Export Systems
 
 ### 6.1. Professional Document Generator
-- **Context-Aware Exports:** Buttons detect `viewMode`. Grid view exports student-ready timetables; Roster view exports staff-ready master sheets.
-- **Print Optimization:** Student copies are optimized for **A4 Portrait** (No staff names, fit-to-page). Staff rosters are optimized for **A3 Landscape** (Stacked names, full detail).
-- **Security:** Invigilator names are strictly omitted from student-facing exports to maintain assessment confidentiality.
+- **A4/A3 Optimization:** Automatically switches between Portrait A4 (Student Timetables) and Landscape A3 (Master Staff Rosters).
+- **Data Security:** Strict masking of invigilator names on student-facing exports.
+- **Formatting:** Converts minutes to "Xh XXm" strings and applies contrast-aware color coding.

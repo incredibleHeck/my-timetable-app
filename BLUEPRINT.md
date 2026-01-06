@@ -1,57 +1,62 @@
 # EduScheduler Pro — System Blueprint & Specifications
 
-**Status:** Production Ready (Version 5.5)
-**Target:** Robust, school-wide resource & assessment management.
+**Status:** Production Ready (Version 10.0)
+**Target:** High-capacity resource planning and assessment logistics.
 
 ---
 
 ## 1. Functional Blueprint
 
 ### 1.1. Resource Management
-- **Subjects:** Manage paper counts and auto-hide "Paper 1" tags for single-paper subjects.
-- **Teachers:** Manage exclusions and weekly stream rotation rules.
-- **Classes:** Intelligent stream grouping (e.g., 1A & 1B) for unified scheduling.
+- **Smart Faculty:** Track specialties and complex availability constraints (e.g., "Mornings Only").
+- **Room Dynamics:** Manage capacities and types (Labs, Gyms, Classrooms) with automated assignment.
+- **Curriculum Control:** Configure doubles vs. singles and assign staff with specialty matching.
 
-### 1.2. Exam Management Module (Grid Layout)
-- **Sequential Columns:** Grid displays **Subject 1** and **Subject 2** columns based on start-time sequence.
-- **Intra-Column Split:** 50/50 vertical split for multi-paper subjects (P1 on Left, P2 on Right) within a single cell.
-- **Subject Integrity:** Automated synchronization of swaps and updates across all parallel class streams.
-- **Visual Polish:** Spacious cards with top-accent color bars and clean metadata stacks.
+### 1.2. Automated Timetable Generation
+- **Worker-Backed Solving:** Background heuristic solver prevents UI freezing.
+- **Constraint Compliance:** Enforces fatigue guards, daily subject limits, and single-resource rules.
+- **Advanced Grouping:** Handles horizontal links (Joint Classes) and vertical blocks (Electives) natively.
 
-### 1.3. Automated Invigilator Allocation
-- **Staff Rotation:** "One Stream Per Week" rule prevents teachers from supervising the same cohort multiple times.
-- **Exclusion Workflow:** Manual staff removal modal before auto-assignment runs.
-- **Workload Fairness:** Balanced random distribution based on least-busy faculty heuristics.
+### 1.3. Exam Coordination Suite
+- **Generation Strategies:** Choose between "Uniform" (Level-wide) and "Random" (Staggered) scheduling.
+- **Invigilation Roster:** Intelligent staff allocation with cohort rotation and exclusion controls.
+- **Intra-Column Split:** Optimized grid rendering for multi-paper subjects (P1/P2 side-by-side).
 
-### 1.4. Contextual Export Engine
-- **Student Copy (A4):** Multi-sheet Excel/PDF optimized for A4 portrait. Deduped shared subjects, hidden staff names, and "Xh XXm" duration formatting.
-- **Staff Roster (A3):** Master grid of Class vs. Date. Optimized for A3 landscape with vertical teacher name stacking.
-
----
-
-## 2. Roadmap
-
-### 2.1. Phase 4: Interaction & Polish (Completed)
-- [x] **Smart Stacking:** Vertical stacking of teacher names in roster views.
-- [x] **Staff Rotation Rules:** Weekly stream limitation logic.
-- [x] **Resource Anchoring:** Decoupling subjects from staff during swaps.
-- [x] **Professional Headers:** Official school branding on all exports.
-
-### 2.2. Phase 5: Future Enterprise (Planned)
-- [ ] **Multi-Week Cycles:** Support for A/B week rotation.
-- [ ] **Native Undo/Redo:** Versioning stack in local state.
-- [ ] **Cloud Sync:** Optional backend integration for cross-device access.
+### 1.4. Duty & Supervision
+- **Multi-Roster Support:** Maintain separate rosters for Recess, Lunch, or Special Events.
+- **Fair Rotation:** Cycle-based generator ensures no staff member is unfairly burdened.
+- **Interactive Swaps:** Manual override tools with staff availability validation.
 
 ---
 
-## 3. Engineering Standards
+## 2. Technical Standards
 
-### State Commitment Rules
-1.  **Paired Matching:** Swaps must preserve individual resource contexts for parallel streams.
-2.  **Immutability:** State updates use deep-copied snapshots via `onUpdate`.
-3.  **Security:** Student-facing exports must never leak invigilator assignments.
+### 2.1. Reliability & Integrity
+- **Sanitized Imports:** All incoming JSON data is validated against core interfaces to prevent state corruption.
+- **Persistent Profiles:** Local-first architecture with auto-save and manual backup/restore.
+- **Conflict Reporting:** Real-time feedback loop detailing the "Reason" and "Severity" of scheduling failures.
+
+### 2.2. User Experience (UX)
+- **Fluid Grids:** CSS Grid-powered schedules that adapt to custom period counts (4 to 15 blocks).
+- **Tool-Context:** Headers and sidebars adapt to active views, providing relevant quick actions.
+- **Visual Color Mapping:** High-contrast palette for distinct subject identification.
 
 ---
 
-**Blueprint Version:** 5.5  
-**Ref:** `ARCHITECTURE.md` for technical implementation details.
+## 3. Roadmap & Progress
+
+### 3.1. Completed Milestones (Phase 4 & 5)
+- [x] **Web Worker Solver:** Iterative background optimization.
+- [x] **Multi-Tenant Profiles:** Switchable schedule contexts.
+- [x] **Advanced Duty System:** Multiple rotations and multi-week support.
+- [x] **Room Allocation:** Type-based resource requirements.
+
+### 3.2. Future Enterprise (Next Steps)
+- [ ] **A/B Week Cycles:** Support for fortnightly timetable rotations.
+- [ ] **Cloud Workspace:** Optional encrypted cloud sync for administrative teams.
+- [ ] **Audit Logs:** Track change history within a specific profile session.
+
+---
+
+**Blueprint Version:** 10.0  
+**Ref:** `ARCHITECTURE.md` for technical design patterns and system internals.
