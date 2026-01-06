@@ -22,9 +22,9 @@ interface ViewProps {
 }
 
 export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
-  const [activeTab, setActiveTab] = useState<"LIST" | "LINKED" | "ELECTIVES" | "ASSIGNMENTS">(
-    "LIST"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "LIST" | "LINKED" | "ELECTIVES" | "ASSIGNMENTS"
+  >("LIST");
 
   // Modals State
   const [modalOpen, setModalOpen] = useState(false);
@@ -195,6 +195,16 @@ export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
           Class List
         </button>
         <button
+          onClick={() => setActiveTab("ASSIGNMENTS")}
+          className={`px-4 py-2 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${
+            activeTab === "ASSIGNMENTS"
+              ? "border-amber-500 text-amber-600"
+              : "border-transparent text-slate-500 hover:text-slate-700"
+          }`}
+        >
+          Assignments
+        </button>
+        <button
           onClick={() => setActiveTab("LINKED")}
           className={`px-4 py-2 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${
             activeTab === "LINKED"
@@ -213,16 +223,6 @@ export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
           }`}
         >
           Elective Blocks
-        </button>
-        <button
-          onClick={() => setActiveTab("ASSIGNMENTS")}
-          className={`px-4 py-2 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${
-            activeTab === "ASSIGNMENTS"
-              ? "border-amber-500 text-amber-600"
-              : "border-transparent text-slate-500 hover:text-slate-700"
-          }`}
-        >
-          Assignments
         </button>
       </div>
 

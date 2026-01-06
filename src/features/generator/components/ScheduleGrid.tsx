@@ -249,10 +249,12 @@ export const ScheduleGrid: React.FC<Props> = ({
   // --- DYNAMIC PERIOD CALCULATION ---
   let periodsToRender = settings.periodsPerDay;
   if (mode === "CLASS" && currentClass) {
-    periodsToRender = Math.max(
-      currentClass.periodCount || settings.periodsPerDay,
-      currentClass.structure?.length || 0
-    );
+    // If structure is defined, strictly use its length.
+    if (currentClass.structure?.length) {
+       periodsToRender = currentClass.structure.length;
+    } else {
+       periodsToRender = currentClass.periodCount || settings.periodsPerDay;
+    }
   } else if (mode === "TEACHER" && currentTeacher) {
     const maxClassPeriod = Math.max(
       settings.periodsPerDay,
@@ -279,13 +281,28 @@ export const ScheduleGrid: React.FC<Props> = ({
 
   const getPeriodLabel = (index: number) => {
     const item = currentStructure?.[index];
-    if (!item) return `Period ${index + 1}`;
-    
-    const type = typeof item === "string" ? item : item.type;
-    const label = typeof item === "string" ? item : item.label || item.type;
+    const type = typeof item === "string" ? item : item?.type;
+    // If not defined, default to CLASS
+    const effectiveType = type || "CLASS"; 
 
-    if (type !== "CLASS") return label; // BREAK or LUNCH
-    return label || `Period ${index + 1}`;
+    if (effectiveType !== "CLASS") {
+        const label = typeof item === "string" ? item : item?.label || item?.type;
+        return label || "Break";
+    }
+
+    // Calculate sequential period number (skipping non-class slots)
+    let classCount = 0;
+    const limit = index;
+    for (let i = 0; i <= limit; i++) {
+        const pItem = currentStructure?.[i];
+        const pType = typeof pItem === "string" ? pItem : pItem?.type;
+        const pEffective = pType || "CLASS";
+        if (pEffective === "CLASS") {
+            classCount++;
+        }
+    }
+
+    return `Period ${classCount}`;
   };
 
   const handleDragOver = (event: any) => {

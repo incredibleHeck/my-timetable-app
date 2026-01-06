@@ -310,7 +310,7 @@ export const GeneratorView: React.FC<ViewProps> = ({
           )}
 
           {/* Sidebar */}
-          <div className="w-56 border-r border-slate-200 bg-slate-50 overflow-y-auto shrink-0">
+          <div className="w-44 border-r border-slate-200 bg-slate-50 overflow-y-auto shrink-0">
             <div className="p-4 border-b border-slate-100 sticky top-0 bg-slate-50 z-10">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                 Select {mode === "CLASS" ? "Group" : "Teacher"}
@@ -369,40 +369,30 @@ export const GeneratorView: React.FC<ViewProps> = ({
         </div>
 
         {/* Conflict Panel */}
-        <div>
-          {/* LIVE VALIDATION ERROR */}
-          {hoverConflict && (
-             <div className="w-64 mb-4 border border-red-200 bg-red-50 rounded-xl shadow-sm p-4 animate-pulse">
-                <h4 className="font-bold text-red-800 mb-1 text-sm flex items-center gap-2">
-                  <Lock size={14} /> Invalid Move
-                </h4>
-                <p className="text-xs text-red-600 font-medium">
-                  {hoverConflict.reason}
-                </p>
-                <div className="mt-2 pt-2 border-t border-red-100 flex flex-col gap-1">
-                   <span className="text-[10px] text-red-400">
-                     Target: {hoverConflict.className || "Unknown"}
-                   </span>
-                </div>
-             </div>
-          )}
-
-          {!isGenerating && data.conflicts.length > 0 && (
-            <ConflictPanel conflicts={data.conflicts} />
-          )}
-          {!isGenerating &&
-            data.conflicts.length === 0 &&
-            !hoverConflict &&
-            data.lastGenerated && (
-              <div className="w-64 flex flex-col border border-emerald-100 bg-emerald-50/50 rounded-xl shadow-sm p-6 items-center text-center">
-                <CheckCircle2
-                  size={48}
-                  className="text-emerald-500 mb-4 bg-white p-2 rounded-full"
-                />
-                <h3 className="font-bold text-emerald-800">All Clear!</h3>
+        {(hoverConflict || (!isGenerating && data.conflicts.length > 0)) && (
+          <div>
+            {/* LIVE VALIDATION ERROR */}
+            {hoverConflict && (
+              <div className="w-64 mb-4 border border-red-200 bg-red-50 rounded-xl shadow-sm p-4 animate-pulse">
+                  <h4 className="font-bold text-red-800 mb-1 text-sm flex items-center gap-2">
+                    <Lock size={14} /> Invalid Move
+                  </h4>
+                  <p className="text-xs text-red-600 font-medium leading-relaxed">
+                    {hoverConflict.reason}
+                  </p>
+                  <div className="mt-2 pt-2 border-t border-red-100 flex flex-col gap-1">
+                    <span className="text-[10px] text-red-400">
+                      Target: {hoverConflict.className || "Unknown"}
+                    </span>
+                  </div>
               </div>
             )}
-        </div>
+
+            {!isGenerating && data.conflicts.length > 0 && (
+              <ConflictPanel conflicts={data.conflicts} />
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -48,58 +48,115 @@ const generateSheet = (
   const safeName = entityName.replace(/[\\/?*[\]]/g, "").substring(0, 30);
   const worksheet = workbook.addWorksheet(safeName);
 
-  let maxPeriods = data.settings.periodsPerDay;
-  if (mode === "CLASS") {
-    const c = data.classes.find((x) => x.id === entityId);
-    if (c && c.periodCount) maxPeriods = c.periodCount;
+  // --- PAGE SETUP FOR A4 LANDSCAPE ---
+  worksheet.pageSetup = {
+    paperSize: 9, // A4
+    orientation: "landscape",
+    fitToPage: true,
+    fitToHeight: 1,
+    fitToWidth: 1,
+    margins: {
+      left: 0.5, right: 0.5,
+      top: 0.5, bottom: 0.5,
+      header: 0.3, footer: 0.3
+    }
+  };
+
+  const { settings, schedule, classes, teachers, subjects } = data;
+  const currentClass = classes.find((c) => c.id === entityId);
+  
+  // Dynamic Structure
+  const currentStructure = (mode === "CLASS" && currentClass?.structure?.length)
+    ? currentClass.structure
+    : settings.dayStructure;
+
+  // Periods calculation
+  let maxPeriods = settings.periodsPerDay;
+  if (mode === "CLASS" && currentClass) {
+      maxPeriods = currentClass.structure?.length || currentClass.periodCount || settings.periodsPerDay;
   }
 
+  // Helper for sequential numbering
+  const getLabel = (index: number) => {
+    const item = currentStructure?.[index];
+    const type = typeof item === "string" ? item : item?.type;
+    const effectiveType = type || "CLASS"; 
+
+    if (effectiveType !== "CLASS") {
+        const label = typeof item === "string" ? item : item?.label || item?.type;
+        return label?.toUpperCase() || "BREAK";
+    }
+
+    let classCount = 0;
+    for (let i = 0; i <= index; i++) {
+        const pItem = currentStructure?.[i];
+        const pType = typeof pItem === "string" ? pItem : pItem?.type;
+        if ((pType || "CLASS") === "CLASS") classCount++;
+    }
+    return `PERIOD ${classCount}`;
+  };
+
+  // TITLE ROW
+  const titleRow = worksheet.getRow(1);
+  titleRow.height = 40;
+  const titleCell = titleRow.getCell(1);
+  titleCell.value = `${settings.schoolName || "Timetable"} - ${mode === "CLASS" ? "Class" : "Teacher"}: ${entityName}`;
+  titleCell.font = { bold: true, size: 16, color: { argb: "FF0F172A" } };
+  titleCell.alignment = { vertical: "middle", horizontal: "left" };
+  worksheet.mergeCells(1, 1, 1, maxPeriods + 1);
+
   // HEADER ROW
-  const headerRow = worksheet.getRow(1);
-  headerRow.height = 30;
+  const headerRow = worksheet.getRow(2);
+  headerRow.height = 35;
 
   const firstCell = headerRow.getCell(1);
-  firstCell.value = "Day / Period";
+  firstCell.value = "DAY / PERIOD";
   firstCell.fill = {
     type: "pattern",
     pattern: "solid",
     fgColor: { argb: "FF0F172A" },
   };
-  firstCell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 12 };
+  firstCell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
   firstCell.alignment = { vertical: "middle", horizontal: "center" };
+  firstCell.border = { 
+    right: { style: "medium", color: { argb: "FFFFFFFF" } },
+    bottom: { style: "medium", color: { argb: "FF0F172A" } }
+  };
 
   for (let p = 0; p < maxPeriods; p++) {
     const cell = headerRow.getCell(p + 2);
-    const timeSlot = data.settings.timeSlots[p] || {
-      start: `${p + 1}`,
-      end: "",
-    };
-    cell.value = `${timeSlot.start}\n${timeSlot.end}`;
+    const timeSlot = settings.timeSlots[p];
+    const label = getLabel(p);
+    
+    cell.value = timeSlot ? `${label}\n(${timeSlot.start}-${timeSlot.end})` : label;
     cell.alignment = {
       vertical: "middle",
       horizontal: "center",
       wrapText: true,
     };
-    cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 10 };
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 9 };
     cell.fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "FF1E293B" },
+      fgColor: { argb: "FF334155" },
     };
-    cell.border = { right: { style: "thin", color: { argb: "FF334155" } } };
-    worksheet.getColumn(p + 2).width = 20;
+    cell.border = { 
+        right: { style: "thin", color: { argb: "FF475569" } },
+        bottom: { style: "medium", color: { argb: "FF0F172A" } }
+    };
+    worksheet.getColumn(p + 2).width = 22;
   }
-  worksheet.getColumn(1).width = 15;
+  worksheet.getColumn(1).width = 18;
 
   const merges: { r: number; c: number; c2: number }[] = [];
 
   for (let d = 0; d < 5; d++) {
-    const row = worksheet.getRow(d + 2);
-    row.height = 50;
+    const row = worksheet.getRow(d + 3);
+    row.height = 65;
 
     const dayCell = row.getCell(1);
     dayCell.value = DAYS[d];
-    dayCell.font = { bold: true, size: 12, color: { argb: "FF0F172A" } };
+    dayCell.font = { bold: true, size: 11, color: { argb: "FF0F172A" } };
     dayCell.alignment = { vertical: "middle", horizontal: "center" };
     dayCell.fill = {
       type: "pattern",
@@ -108,54 +165,56 @@ const generateSheet = (
     };
     dayCell.border = {
       bottom: { style: "thin", color: { argb: "FFCBD5E1" } },
-      right: { style: "medium" },
+      right: { style: "medium", color: { argb: "FF0F172A" } },
     };
 
     for (let p = 0; p < maxPeriods; p++) {
       const cell = row.getCell(p + 2);
-      const struct = data.settings.dayStructure[p];
-      const isGlobalBreak = struct && struct.type !== "CLASS";
+      const struct = currentStructure?.[p];
+      const isBreak = struct && (typeof struct === "string" ? struct : struct.type) !== "CLASS";
 
-      let hasLesson = false;
       let isReserved = false;
       let isBlocked = false;
+      let hasLesson = false;
       let slot: ScheduleSlot | null = null;
       let cellColor = "";
       let cellText = "";
       let duration = 1;
+      let isSpecialSubject = false;
 
       if (mode === "CLASS") {
-        slot = data.schedule[entityId]?.[d]?.[p] ?? null;
+        slot = schedule[entityId]?.[d]?.[p] ?? null;
         if (slot) {
-          const prevSlot = p > 0 ? data.schedule[entityId]?.[d]?.[p - 1] : null;
-          const isTail =
-            slot.isFixed && prevSlot && prevSlot.subjectId === slot.subjectId;
+          const prevSlot = p > 0 ? schedule[entityId]?.[d]?.[p - 1] : null;
+          const isTail = slot.isFixed && prevSlot && prevSlot.subjectId === slot.subjectId;
           if (!isTail) {
             hasLesson = true;
-            const subj = data.subjects.find((s) => s.id === slot!.subjectId);
-            const tchr = data.teachers.find((t) => t.id === slot!.teacherId);
-            cellText = `${subj?.name || "Subject"}\n${
-              tchr?.name || "Unassigned"
-            }`;
+            const subj = subjects.find((s) => s.id === slot!.subjectId);
+            const tchr = teachers.find((t) => t.id === slot!.teacherId);
+            cellText = `${subj?.name || "Subject"}\n${tchr?.name || "Unassigned"}`;
             cellColor = subj?.color || "#cbd5e1";
             duration = getDuration(data, entityId, d, p);
+            
+            // Special Subject Styling (Worship, Assembly, etc.)
+            const subLower = (subj?.name || "").toLowerCase();
+            if (slot.locked || subLower.includes("worship") || subLower.includes("assembly") || subLower.includes("club") || subLower.includes("meeting")) {
+                isSpecialSubject = true;
+            }
           }
         } else {
-          const cls = data.classes.find((c) => c.id === entityId);
-          const reserved =
-            cls?.fixedSessions?.[d]?.[p] ||
-            data.settings.fixedOccasions[d]?.[p];
-          if (reserved) {
-            cellText = typeof reserved === "string" ? reserved : "RESERVED";
-            isReserved = true;
-          }
+            // Check Class & Global Fixed Sessions
+            const reserved = currentClass?.fixedSessions?.[d]?.[p] || settings.fixedOccasions?.[d]?.[p];
+            if (reserved) {
+                cellText = typeof reserved === "string" ? reserved : (typeof reserved === "object" && reserved !== null && 'name' in reserved ? (reserved as any).name : "RESERVED");
+                isReserved = true;
+            }
         }
       } else {
         // TEACHER MODE
         let foundClass = null;
         let foundSlot: ScheduleSlot | null = null;
-        for (const c of data.classes) {
-          const s = data.schedule[c.id]?.[d]?.[p] ?? null;
+        for (const c of classes) {
+          const s = schedule[c.id]?.[d]?.[p] ?? null;
           if (s && s.teacherId === entityId) {
             foundSlot = s;
             foundClass = c;
@@ -163,22 +222,23 @@ const generateSheet = (
           }
         }
         if (foundSlot && foundClass) {
-          const prevS =
-            p > 0 ? data.schedule[foundClass.id]?.[d]?.[p - 1] ?? null : null;
-          const isTail =
-            foundSlot.isFixed &&
-            prevS &&
-            prevS.subjectId === foundSlot.subjectId;
+          const prevS = p > 0 ? schedule[foundClass.id]?.[d]?.[p - 1] ?? null : null;
+          const isTail = foundSlot.isFixed && prevS && prevS.subjectId === foundSlot.subjectId;
           if (!isTail) {
             hasLesson = true;
             slot = foundSlot;
-            const subj = data.subjects.find((s) => s.id === slot!.subjectId);
+            const subj = subjects.find((s) => s.id === slot!.subjectId);
             cellText = `${foundClass.name}\n${subj?.name}`;
             cellColor = subj?.color || "#cbd5e1";
             duration = getDuration(data, foundClass.id, d, p);
+
+            const subLower = (subj?.name || "").toLowerCase();
+            if (slot.locked || subLower.includes("worship") || subLower.includes("assembly") || subLower.includes("club") || subLower.includes("meeting")) {
+                isSpecialSubject = true;
+            }
           }
         } else {
-          const t = data.teachers.find((x) => x.id === entityId);
+          const t = teachers.find((x) => x.id === entityId);
           if (t?.constraints?.[d]?.[p]) {
             cellText = "BLOCKED";
             isBlocked = true;
@@ -186,41 +246,48 @@ const generateSheet = (
         }
       }
 
-      cell.alignment = {
-        vertical: "middle",
-        horizontal: "center",
-        wrapText: true,
-      };
+      cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
       cell.border = {
-        top: { style: "thin", color: { argb: "FFE2E8F0" } },
-        left: { style: "thin", color: { argb: "FFE2E8F0" } },
-        bottom: { style: "thin", color: { argb: "FFE2E8F0" } },
-        right: { style: "thin", color: { argb: "FFE2E8F0" } },
+        top: { style: "thin", color: { argb: "FFCBD5E1" } },
+        left: { style: "thin", color: { argb: "FFCBD5E1" } },
+        bottom: { style: "thin", color: { argb: "FFCBD5E1" } },
+        right: { style: "thin", color: { argb: "FFCBD5E1" } },
       };
 
       if (hasLesson) {
         cell.value = cellText;
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: hexToArgb(cellColor) },
-        };
-        cell.font = {
-          color: { argb: getContrastColor(cellColor) },
-          bold: true,
-        };
-        if (duration === 2) merges.push({ r: d + 2, c: p + 2, c2: p + 3 });
+        if (isSpecialSubject) {
+            cell.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: "FF0F172A" },
+            };
+            cell.font = { color: { argb: "FFFBBF24" }, bold: true, size: 10 };
+        } else {
+            cell.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: hexToArgb(cellColor) },
+            };
+            cell.font = {
+                color: { argb: getContrastColor(cellColor) },
+                bold: true,
+                size: 10
+            };
+        }
+        if (duration === 2) merges.push({ r: d + 3, c: p + 2, c2: p + 3 });
       } else if (isReserved || isBlocked) {
         cell.value = cellText;
-        cell.font = { bold: true, color: { argb: "FFFBBF24" }, size: 10 };
+        cell.font = { bold: true, color: { argb: "FFFBBF24" }, size: 9 };
         cell.fill = {
           type: "pattern",
           pattern: "solid",
           fgColor: { argb: "FF1E293B" },
         };
-      } else if (isGlobalBreak) {
-        cell.value = struct.type === "LUNCH" ? "LUNCH" : "BREAK";
-        cell.font = { bold: true, color: { argb: "FF94A3B8" }, size: 10 };
+      } else if (isBreak) {
+        const breakType = (typeof struct === "string" ? struct : struct?.type) || "BREAK";
+        cell.value = breakType.toUpperCase();
+        cell.font = { bold: true, color: { argb: "FF64748B" }, size: 9 };
         cell.fill = {
           type: "pattern",
           pattern: "solid",
@@ -231,9 +298,7 @@ const generateSheet = (
   }
 
   merges.forEach(({ r, c, c2 }) => {
-    try {
-      worksheet.mergeCells(r, c, r, c2);
-    } catch (e) {}
+    try { worksheet.mergeCells(r, c, r, c2); } catch (e) {}
   });
 };
 

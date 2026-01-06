@@ -1,13 +1,25 @@
-import { AppData, ScheduleSlot } from "../../types";
+import { AppData, ScheduleSlot, Subject, Teacher, ClassGroup } from "../../types";
 
+// --- HELPER: GET DURATION ---
+const getDuration = (data: any, classId: string, d: number, p: number): number => {
+  const slot = data.schedule[classId]?.[d]?.[p];
+  if (!slot) return 1;
+  const nextSlot = data.schedule[classId]?.[d]?.[p + 1];
+  if (nextSlot && nextSlot.isFixed && nextSlot.subjectId === slot.subjectId) {
+    return 2;
+  }
+  return 1;
+};
+
+// --- MAIN EXPORT FUNCTION ---
 export const printAllSchedules = (data: AppData, mode: "CLASS" | "TEACHER") => {
   const { settings, schedule, classes, teachers, subjects } = data;
   const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
   // --- 1. OPTIMIZATION: Create Maps (Fast Lookups) ---
-  const subjectMap = new Map(subjects.map((s) => [s.id, s]));
-  const teacherMap = new Map(teachers.map((t) => [t.id, t]));
-  const classMap = new Map(classes.map((c) => [c.id, c]));
+  const subjectMap = new Map<string, Subject>(subjects.map((s: Subject) => [s.id, s]));
+  const teacherMap = new Map<string, Teacher>(teachers.map((t: Teacher) => [t.id, t]));
+  const classMap = new Map<string, ClassGroup>(classes.map((c: ClassGroup) => [c.id, c]));
 
   // --- 2. PREPARATION: Sort Entities ---
   const entities =
@@ -17,38 +29,16 @@ export const printAllSchedules = (data: AppData, mode: "CLASS" | "TEACHER") => {
         )
       : [...teachers].sort((a, b) => a.name.localeCompare(b.name));
 
-  const periods = Array.from({ length: settings.periodsPerDay }, (_, i) => i);
-
-  // --- 3. HELPER: Get Slot Data ---
-  const getSlot = (
-    entityId: string,
-    dayIndex: number,
-    periodIndex: number
-  ): ScheduleSlot | undefined => {
-    if (mode === "CLASS") {
-      return schedule[entityId]?.[dayIndex]?.[periodIndex];
-    } else {
-      // Reverse lookup for teachers
-      for (const classId of Object.keys(schedule)) {
-        const slot = schedule[classId]?.[dayIndex]?.[periodIndex];
-        if (slot && slot.teacherId === entityId) {
-          return slot;
-        }
-      }
-      return undefined;
-    }
-  };
-
-  // --- 4. BUILD HTML ---
+  // --- 3. BUILD HTML ---
   let htmlContent = `
     <!DOCTYPE html>
     <html>
     <head>
       <title>${settings.schoolName || "Schedule Export"}</title>
       <style>
-        @page { size: landscape; margin: 10mm; }
+        @page { size: A4 landscape; margin: 5mm; }
         body { 
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+          font-family: 'Inter', 'Segoe UI', sans-serif; 
           margin: 0; padding: 0; 
           color: #0f172a; 
           -webkit-print-color-adjust: exact !important;
@@ -58,58 +48,61 @@ export const printAllSchedules = (data: AppData, mode: "CLASS" | "TEACHER") => {
         
         /* LAYOUT */
         .schedule-container {
-          width: 100%; height: 98vh;
+          width: 297mm; height: 210mm;
           display: flex; flex-direction: column;
-          background-color: white; padding: 20px; box-sizing: border-box;
+          background-color: white; padding: 10mm; box-sizing: border-box;
+          page-break-inside: avoid;
         }
 
         /* HEADER */
         .header {
-          text-align: center; margin-bottom: 20px;
-          border-bottom: 4px solid #1e293b; padding-bottom: 16px;
+          display: flex; justify-content: space-between; align-items: flex-end;
+          margin-bottom: 10px; border-bottom: 2px solid #0f172a; padding-bottom: 8px;
         }
-        .header h1 {
-          font-size: 24px; fontWeight: 900; text-transform: uppercase;
-          letter-spacing: 2px; margin-bottom: 5px; margin-top: 0;
+        .header-left h1 {
+          font-size: 20px; font-weight: 800; text-transform: uppercase;
+          margin: 0; color: #0f172a;
         }
-        .header h2 {
-          font-size: 18px; font-weight: bold; color: #475569; margin: 5px 0;
-        }
-        .header .meta { font-size: 12px; color: #64748b; margin-top: 8px; }
+        .header-right { text-align: right; }
+        .header-right h2 { font-size: 16px; margin: 0; color: #334155; }
 
         /* TABLE */
-        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; border: 2px solid #0f172a; }
         
         th {
-          border: 2px solid #1e293b; padding: 8px;
-          background-color: #f1f5f9; font-weight: bold; font-size: 11px;
-          text-transform: uppercase; color: #0f172a;
+          border: 1px solid #0f172a; padding: 4px;
+          background-color: #f1f5f9; font-weight: bold; font-size: 10px;
+          color: #0f172a; height: 30px;
         }
 
         .day-label {
-          border: 2px solid #1e293b; padding: 8px;
-          background-color: #e2e8f0; font-weight: bold; font-size: 12px;
-          text-transform: uppercase; text-align: center; vertical-align: middle;
-          width: 60px;
+          border: 1px solid #0f172a; padding: 4px;
+          background-color: #f1f5f9; font-weight: bold; font-size: 11px;
+          text-transform: uppercase; text-align: center; width: 45px;
         }
 
         td {
-          border: 1px solid #cbd5e1; padding: 4px;
-          vertical-align: top; font-size: 10px; text-align: center;
-          height: 55px; /* Reduced height for rectangular look */
+          border: 1px solid #94a3b8; padding: 2px;
+          vertical-align: middle; font-size: 10px; text-align: center;
+          height: 60px; overflow: hidden;
         }
 
-        .cell-content {
-          display: flex; flex-direction: column; gap: 2px;
-          height: 100%; justifyContent: center; width: 100%;
+        .lesson-cell {
+          height: 100%; display: flex; flex-direction: column; justify-content: center;
+          border-radius: 4px; padding: 2px;
         }
+        .subj-name { font-weight: 800; font-size: 11px; line-height: 1.1; margin-bottom: 2px; }
+        .detail-name { font-size: 9px; color: #475569; font-weight: 500; }
 
-        .subject-text { font-weight: bold; font-size: 11px; }
-        .detail-text { font-size: 9px; }
+        .break-cell {
+          background-color: #f8fafc; color: #94a3b8; 
+          font-weight: bold; font-size: 9px; text-transform: uppercase;
+          letter-spacing: 1px;
+        }
 
         .footer {
-          margin-top: auto; padding-top: 12px; border-top: 1px solid #e2e8f0;
-          display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8;
+          margin-top: 5px; display: flex; justify-content: space-between; 
+          font-size: 9px; color: #64748b; font-style: italic;
         }
       </style>
     </head>
@@ -117,138 +110,172 @@ export const printAllSchedules = (data: AppData, mode: "CLASS" | "TEACHER") => {
   `;
 
   entities.forEach((entity, index) => {
+    // Determine Structure for this entity
+    const currentClass = mode === "CLASS" ? (entity as ClassGroup) : null;
+    const currentStructure = currentClass?.structure?.length
+        ? currentClass.structure
+        : settings.dayStructure;
+    
+    const maxPeriods = currentClass
+        ? (currentClass.structure?.length || currentClass.periodCount || settings.periodsPerDay)
+        : settings.periodsPerDay;
+
+    const periods = Array.from({ length: maxPeriods }, (_, i) => i);
+
+    // Helper for sequential numbering
+    const getPeriodLabel = (pIdx: number) => {
+        const item = currentStructure?.[pIdx];
+        const type = typeof item === "string" ? item : item?.type;
+        const effectiveType = type || "CLASS"; 
+
+        if (effectiveType !== "CLASS") {
+            const label = typeof item === "string" ? item : item?.label || item?.type;
+            return label?.toUpperCase() || "BREAK";
+        }
+
+        let classCount = 0;
+        for (let i = 0; i <= pIdx; i++) {
+            const pItem = currentStructure?.[i];
+            const pType = typeof pItem === "string" ? pItem : pItem?.type;
+            if ((pType || "CLASS") === "CLASS") classCount++;
+        }
+        return `P${classCount}`;
+    };
+
     htmlContent += `
       <div class="schedule-container">
         <div class="header">
-          <h1>${settings.schoolName || "School Timetable"}</h1>
-          <h2>${mode === "CLASS" ? "Class Group" : "Faculty Member"}: 
-            <span style="color: #0f172a">${entity.name}</span>
-          </h2>
-          <div class="meta">
-            Generated: ${new Date().toLocaleDateString()}
+          <div class="header-left">
+            <h1>${settings.schoolName || "SCHOOL TIMETABLE"}</h1>
+          </div>
+          <div class="header-right">
+            <h2>${mode === "CLASS" ? "Class" : "Teacher"}: ${entity.name}</h2>
           </div>
         </div>
         
         <table>
           <thead>
             <tr>
-              <th>Day</th>
-              ${periods
-                .map((p) => {
-                  const timeLabel =
-                    settings.timeSlots?.[p]?.start || `P${p + 1}`;
-                  return `<th><div>P${
-                    p + 1
-                  }</div><div style="font-weight:normal; font-size:9px">${timeLabel}</div></th>`;
-                })
-                .join("")}
+              <th style="width: 45px;">DAY</th>
+              ${periods.map((p) => {
+                  const timeLabel = settings.timeSlots?.[p] 
+                    ? `<div style="font-weight:normal; font-size:8px;">${settings.timeSlots[p].start}-${settings.timeSlots[p].end}</div>`
+                    : "";
+                  return `<th>${getPeriodLabel(p)}${timeLabel}</th>`;
+              }).join("")}
             </tr>
           </thead>
           <tbody>
     `;
 
-    days.forEach((day, dayIndex) => {
-      htmlContent += `<tr>
-        <td class="day-label">${day.substring(0, 3)}</td>`;
+    days.forEach((day, dIdx) => {
+      htmlContent += `<tr><td class="day-label">${day.substring(0, 3)}</td>`;
 
-      periods.forEach((periodIndex) => {
-        // --- LOGIC START ---
+      for (let pIdx = 0; pIdx < maxPeriods; pIdx++) {
+        const struct = currentStructure?.[pIdx];
+        const type = typeof struct === "string" ? struct : struct?.type;
+        const isBreak = type && type !== "CLASS";
 
-        // 1. Check Global Structure (Break/Lunch)
-        const struct = settings.dayStructure?.[periodIndex];
-        const isLunch = struct?.type === "LUNCH";
-        const isBreak = struct?.type === "BREAK";
-
-        // 2. Check Global Fixed Occasions
-        const globalFixed = settings.fixedOccasions?.[dayIndex]?.[periodIndex];
-
-        let inlineStyle = "";
-        let content = "";
-
-        if (isLunch) {
-          // Yellow Background / Brown Text
-          inlineStyle =
-            "background-color: #FCD34D; color: #78350F; font-weight: bold;";
-          content = "LUNCH";
-        } else if (isBreak) {
-          // Yellow Background / Brown Text
-          inlineStyle =
-            "background-color: #FCD34D; color: #78350F; font-weight: bold;";
-          content = "BREAK";
-        } else if (globalFixed) {
-          // GLOBAL FIXED - DARK SLATE BG / AMBER TEXT (No Lock Icon)
-          inlineStyle =
-            "background-color: #0f172a !important; color: #fbbf24 !important; border: 1px solid #0f172a;";
-
-          const fixedLabel =
-            typeof globalFixed === "string" ? globalFixed : "Whole School";
-
-          content = `
-            <div class="cell-content">
-               <span style="font-size:12px; font-weight:bold;">${fixedLabel}</span>
-               <span style="opacity:0.9; font-size:10px;">Event</span>
-            </div>
-          `;
-        } else {
-          // 3. Check Schedule Slot
-          const slot = getSlot(entity.id, dayIndex, periodIndex);
-
-          if (slot) {
-            const subject = subjectMap.get(slot.subjectId);
-            const subName = subject?.name || slot.subjectId;
-            const subNameLower = subName.toLowerCase();
-            const subColor = subject?.color || "#cbd5e1";
-
-            let detailName = "Unknown";
-            if (mode === "CLASS") {
-              detailName = teacherMap.get(slot.teacherId)?.name || "Unassigned";
-            } else {
-              detailName = classMap.get(slot.classId)?.name || "Unknown Class";
-            }
-
-            // --- FIXED SLOT CHECK ---
-            // @ts-ignore
-            const isLocked = !!slot.locked;
-            const isFixedName =
-              subNameLower.includes("worship") ||
-              subNameLower.includes("club") ||
-              subNameLower.includes("assembly") ||
-              subNameLower.includes("meeting");
-
-            if (isLocked || isFixedName) {
-              // FORCE DARK SLATE BG / AMBER TEXT INLINE (No Lock Icon)
-              inlineStyle = `
-                  background-color: #0f172a !important; 
-                  color: #fbbf24 !important; 
-                  border: 1px solid #0f172a;
-                `;
-              content = `
-                  <div class="cell-content">
-                    <span style="font-size:12px; font-weight:bold;">${subName}</span>
-                    <span style="opacity:0.9; font-size:10px;">${detailName}</span>
-                  </div>
-                `;
-            } else {
-              // REGULAR LESSON
-              inlineStyle = `background-color: ${subColor}20;`; // Light background
-              content = `
-                  <div class="cell-content" style="align-items: flex-start; padding-left: 4px;">
-                     <div style="border-left: 3px solid ${subColor}; padding-left: 4px;">
-                       <div class="subject-text" style="color: #1e293b;">${subName}</div>
-                       <div class="detail-text" style="color: #475569;">${detailName}</div>
-                     </div>
-                  </div>
-                `;
-            }
-          } else {
-            // Empty Slot
-            content = "<span style='color:#cbd5e1'>—</span>";
-          }
+        if (isBreak) {
+          htmlContent += `<td class="break-cell">${(typeof struct === "string" ? struct : struct?.label || type).toUpperCase()}</td>`;
+          continue;
         }
 
-        htmlContent += `<td style="${inlineStyle}">${content}</td>`;
-      });
+        // 1. Check Fixed Sessions (Reserved Slots)
+        const globalFixed = settings.fixedOccasions?.[dIdx]?.[pIdx];
+        const classFixed = currentClass?.fixedSessions?.[dIdx]?.[pIdx];
+        const fixedOccasion = classFixed || globalFixed;
 
+        if (fixedOccasion) {
+            const label = typeof fixedOccasion === "string" ? fixedOccasion : (typeof fixedOccasion === "object" && fixedOccasion !== null && 'name' in fixedOccasion ? (fixedOccasion as any).name : "RESERVED");
+            htmlContent += `
+                <td style="background-color: #1e293b; color: #fbbf24; font-weight: bold; font-size: 10px; border: 1px solid #0f172a;">
+                    <div class="lesson-cell">
+                        <div class="subj-name" style="color: #fbbf24;">${label}</div>
+                        <div class="detail-name" style="color: #94a3b8;">OCCASION</div>
+                    </div>
+                </td>
+            `;
+            continue;
+        }
+
+        // 2. Check Teacher Blocked (for Teacher mode)
+        if (mode === "TEACHER") {
+            const teacher = teachers.find((t: Teacher) => t.id === entity.id);
+            if (teacher?.constraints?.[dIdx]?.[pIdx]) {
+                htmlContent += `
+                    <td style="background-color: #1e293b; color: #fbbf24; font-weight: bold; font-size: 10px; border: 1px solid #0f172a;">
+                        <div class="lesson-cell">
+                            <div class="subj-name" style="color: #fbbf24;">BLOCKED</div>
+                            <div class="detail-name" style="color: #94a3b8;">UNAVAILABLE</div>
+                        </div>
+                    </td>
+                `;
+                continue;
+            }
+        }
+
+        // Check for double periods to skip "fixed" tails
+        let slot = null;
+        let classId = mode === "CLASS" ? entity.id : "";
+        
+        if (mode === "CLASS") {
+            slot = schedule[entity.id]?.[dIdx]?.[pIdx];
+        } else {
+            for (const c of classes) {
+                const s = schedule[c.id]?.[dIdx]?.[pIdx];
+                if (s && s.teacherId === entity.id) {
+                    slot = s; classId = c.id; break;
+                }
+            }
+        }
+
+        if (slot?.isFixed) {
+            // Check if this is a tail of a double from previous period
+            const prevP = pIdx > 0 ? (mode === "CLASS" ? schedule[entity.id]?.[dIdx]?.[pIdx-1] : null) : null;
+            // Note: Simplification for teacher mode tail check might be needed if complex
+            if (prevP && prevP.subjectId === slot.subjectId) continue; 
+        }
+
+        const duration = slot ? getDuration(data, classId || entity.id, dIdx, pIdx) : 1;
+        const colspan = duration > 1 ? `colspan="${duration}"` : "";
+        
+        let content = "—";
+        let style = "";
+
+        if (slot) {
+            const subject = subjectMap.get(slot.subjectId);
+            const subName = subject?.name || "Subject";
+            const subColor = subject?.color || "#cbd5e1";
+            const detailName = mode === "CLASS" 
+                ? (teacherMap.get(slot.teacherId)?.name || "Staff")
+                : (classMap.get(classId)?.name || "Class");
+            
+            const subLower = subName.toLowerCase();
+            const isSpecial = slot.locked || subLower.includes("worship") || subLower.includes("assembly") || subLower.includes("club") || subLower.includes("meeting");
+
+            if (isSpecial) {
+                style = `background-color: #0f172a; color: #fbbf24; border: 1px solid #0f172a;`;
+                content = `
+                    <div class="lesson-cell">
+                        <div class="subj-name" style="color: #fbbf24;">${subName}</div>
+                        <div class="detail-name" style="color: #94a3b8;">${detailName}</div>
+                    </div>
+                `;
+            } else {
+                style = `background-color: ${subColor}15; border-left: 4px solid ${subColor};`;
+                content = `
+                    <div class="lesson-cell">
+                        <div class="subj-name">${subName}</div>
+                        <div class="detail-name">${detailName}</div>
+                    </div>
+                `;
+            }
+            if (duration > 1) pIdx += (duration - 1); // Skip next period cell
+        }
+
+        htmlContent += `<td ${colspan} style="${style}">${content}</td>`;
+      }
       htmlContent += `</tr>`;
     });
 
@@ -257,8 +284,8 @@ export const printAllSchedules = (data: AppData, mode: "CLASS" | "TEACHER") => {
         </table>
         
         <div class="footer">
-          <span>EduScheduler Pro</span>
-          <span>Page ${index + 1} of ${entities.length}</span>
+          <span>Generated by EduScheduler Pro • ${new Date().toLocaleDateString()}</span>
+          <span>${entity.name} • Page ${index + 1} of ${entities.length}</span>
         </div>
       </div>
       <div class="page-break"></div>
@@ -277,7 +304,5 @@ export const printAllSchedules = (data: AppData, mode: "CLASS" | "TEACHER") => {
       printWindow.print();
       printWindow.close();
     }, 500);
-  } else {
-    alert("Pop-up blocked. Please allow pop-ups to print the schedule.");
   }
 };
