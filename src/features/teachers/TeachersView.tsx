@@ -243,7 +243,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
             Teachers are automatically grouped here based on the subjects they
             are set to teach.
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {sortedSubjects.map((subject) => {
               const facultyMembers = data.teachers
                 .filter((t) => t.specialtyIds.includes(subject.id))
@@ -251,52 +251,49 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
               return (
                 <div
                   key={subject.id}
-                  className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full"
+                  className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col sm:flex-row min-h-[100px]"
                 >
                   <div
-                    className="p-4 border-b border-slate-100 flex items-center justify-between"
+                    className="p-4 bg-slate-50 border-b sm:border-b-0 sm:border-r border-slate-200 flex justify-between items-center sm:flex-col sm:justify-center sm:w-36 shrink-0"
                     style={{ borderTop: `4px solid ${subject.color}` }}
                   >
-                    <h3 className="font-bold text-slate-800 text-lg">
-                      {subject.name} Faculty
-                    </h3>
-                    <div className="flex items-center gap-2">
-                      <Badge className="bg-slate-100 text-slate-600">
-                        {facultyMembers.length} Staff
-                      </Badge>
-                      <button
-                        onClick={() => handleQuickAdd(subject.id)}
-                        className="p-1 rounded-full hover:bg-slate-100 text-slate-400 hover:text-amber-600 transition-colors"
-                        title="Quick Add Teacher"
-                      >
-                        <Plus size={16} />
-                      </button>
+                    <div className="sm:text-center">
+                        <h3 className="font-bold text-slate-800 text-sm">
+                        {subject.name}
+                        </h3>
+                        <p className="text-[9px] text-slate-500 uppercase tracking-wide">
+                            {facultyMembers.length} Staff
+                        </p>
                     </div>
+                    <button
+                        onClick={() => handleQuickAdd(subject.id)}
+                        className="p-1 rounded-full hover:bg-white text-slate-400 hover:text-amber-600 transition-colors mt-2 hidden sm:block"
+                        title="Quick Add Teacher"
+                    >
+                        <Plus size={16} />
+                    </button>
                   </div>
-                  <div className="p-4 bg-slate-50/50 flex-1">
+                  <div className="p-3 flex flex-wrap gap-2 items-center flex-1">
                     {facultyMembers.length > 0 ? (
-                      <div className="space-y-2">
-                        {facultyMembers.map((t) => (
+                        facultyMembers.map((t) => (
                           <div
                             key={t.id}
-                            className="flex items-center gap-3 bg-white p-2 rounded border border-slate-100 shadow-sm"
+                            className="flex items-center gap-2 p-1.5 bg-white rounded-lg border border-slate-100 hover:border-amber-200 transition-all shadow-sm group"
                           >
-                            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500">
+                            <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">
                               {t.name
                                 .split(" ")
                                 .map((n) => n[0])
                                 .join("")
                                 .substring(0, 2)}
                             </div>
-                            <span className="text-sm font-medium text-slate-700">
+                            <span className="text-xs font-medium text-slate-700 whitespace-nowrap">
                               {t.name}
                             </span>
                           </div>
-                        ))}
-                      </div>
+                        ))
                     ) : (
-                      <div className="h-full flex flex-col items-center justify-center text-slate-400 text-xs italic py-8">
-                        <Users size={24} className="mb-2 opacity-50" />
+                      <div className="w-full py-2 text-center text-[10px] text-slate-400 italic">
                         No teachers assigned.
                       </div>
                     )}

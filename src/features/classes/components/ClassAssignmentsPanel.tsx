@@ -156,7 +156,7 @@ export const ClassAssignmentsPanel: React.FC<Props> = ({ data, onUpdate }) => {
             <Badge className="bg-slate-100 text-slate-600">{data.classes.length} Classes</Badge>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {sortedClasses.map((cls) => {
             const assignments = cls.curriculum
                 .filter((c) => c.assignedTeacherId && c.periodsPerWeek > 0)
@@ -173,48 +173,46 @@ export const ClassAssignmentsPanel: React.FC<Props> = ({ data, onUpdate }) => {
             return (
                 <div
                 key={cls.id}
-                className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col"
+                className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col sm:flex-row"
                 >
-                <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-                    <div>
-                    <h3 className="font-bold text-slate-800">{cls.name}</h3>
-                    <p className="text-[10px] text-slate-500 uppercase tracking-wide">
-                        {assignments.length} Teachers Assigned
-                    </p>
+                <div className="p-4 bg-slate-50 border-b sm:border-b-0 sm:border-r border-slate-200 flex justify-between items-center sm:flex-col sm:justify-center sm:w-28 shrink-0">
+                    <div className="sm:text-center">
+                        <h3 className="font-bold text-slate-800 text-sm">{cls.name}</h3>
+                        <p className="text-[9px] text-slate-500 uppercase tracking-wide">
+                            {assignments.length} Staff
+                        </p>
                     </div>
-                    <div className="w-8 h-8 rounded bg-white border border-slate-200 flex items-center justify-center font-bold text-slate-400 text-xs">
-                    {cls.name.substring(0, 2).toUpperCase()}
+                    <div className="w-7 h-7 rounded-full bg-white border border-slate-200 flex items-center justify-center font-bold text-slate-400 text-[10px] mt-2 hidden sm:flex">
+                        {cls.name.substring(0, 2).toUpperCase()}
                     </div>
                 </div>
-                <div className="divide-y divide-slate-50">
+                <div className="p-3 flex flex-wrap gap-2 items-center flex-1">
                     {assignments.length > 0 ? (
                     assignments.map((item, idx) => (
                         <div
                         key={idx}
-                        className="p-3 flex items-center justify-between hover:bg-slate-50 transition-colors"
+                        className="flex items-center gap-2 p-1.5 bg-white rounded-lg border border-slate-100 hover:border-amber-200 transition-all shadow-sm group"
                         >
-                        <div className="flex items-center gap-3">
                             <div
-                            className="w-1.5 h-8 rounded-full"
+                            className="w-1 h-5 rounded-full"
                             style={{ backgroundColor: item.subject?.color }}
                             ></div>
                             <div>
-                            <p className="text-xs font-bold text-slate-700">
-                                {item.teacher?.name}
-                            </p>
-                            <p className="text-[10px] text-slate-500">
-                                {item.subject?.name}
-                            </p>
+                                <p className="text-[10px] font-bold text-slate-700 whitespace-nowrap">
+                                    {item.teacher?.name}
+                                </p>
+                                <p className="text-[9px] text-slate-500 whitespace-nowrap">
+                                    {item.subject?.name}
+                                </p>
                             </div>
-                        </div>
-                        <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
-                            {item.periods} pds
-                        </span>
+                            <span className="text-[9px] font-medium text-slate-400 bg-slate-50 px-1 rounded ml-1">
+                                {item.periods}p
+                            </span>
                         </div>
                     ))
                     ) : (
-                    <div className="p-6 text-center text-xs text-slate-400 italic">
-                        No teachers assigned yet.
+                    <div className="w-full py-2 text-center text-[10px] text-slate-400 italic">
+                        No teachers assigned.
                     </div>
                     )}
                 </div>
