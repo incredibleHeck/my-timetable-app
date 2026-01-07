@@ -1,31 +1,19 @@
 import { AppData } from "../../types";
 import { sanitizeAppData } from "./sanitization";
+import * as NativeAdapter from "./nativeAdapter";
 
-// --- TAURI TYPES (Desktop Wrapper) ---
-declare global {
-  interface Window {
-    __TAURI__?: {
-      dialog: {
-        save(options?: any): Promise<string | null>;
-        open(options?: any): Promise<string | string[] | null>;
-      };
-      fs: {
-        writeTextFile(path: string, contents: string): Promise<void>;
-        readTextFile(path: string): Promise<string>;
-      };
-    };
-  }
-}
+// Helper to detect Tauri environment (v1 or v2)
+const isTauriEnv = () => {
+  return typeof window !== "undefined" && (!!(window as any).__TAURI__ || !!(window as any).__TAURI_INTERNALS__);
+};
 
 export const FileService = {
   get isTauri(): boolean {
-    return typeof window !== "undefined" && !!window.__TAURI__;
+    return isTauriEnv();
   },
 
   /**
    * Saves the current project state.
-   * - Desktop: Opens Native Save Dialog.
-   * - Web: Triggers "Download" of .json file.
    */
   async saveProject(
     data: AppData,
@@ -38,56 +26,39 @@ export const FileService = {
 
     if (this.isTauri) {
       try {
-        const savePath = await window.__TAURI__!.dialog.save({
+        const savePath = await NativeAdapter.saveDialog({
           defaultPath: defaultName,
           filters: [{ name: "JSON Schedule", extensions: ["json"] }],
         });
 
         if (savePath) {
-          await window.__TAURI__!.fs.writeTextFile(savePath, content);
+          await NativeAdapter.writeFile(savePath, content);
           return { success: true, path: savePath };
         }
-        return { success: false }; // User cancelled
+        return { success: false };
       } catch (e) {
         console.error("Tauri Save Error:", e);
         return { success: false };
       }
     } else {
-      // --- WEB FALLBACK ---
-      try {
-        const blob = new Blob([content], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = defaultName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        return { success: true };
-      } catch (e) {
-        console.error("Web Save Error:", e);
-        return { success: false };
-      }
+      return this.webDownload(content, defaultName, "application/json");
     }
   },
 
   /**
-   * Loads a project file.
-   * - Desktop: Opens Native Open Dialog.
-   * - Web: Returns null (Web must use <input type="file"> and call parseJsonFile).
+   * Loads a project file using native dialog.
    */
   async loadProjectNative(): Promise<{ data: AppData | null; path: string }> {
     if (!this.isTauri) return { data: null, path: "" };
 
     try {
-      const selected = await window.__TAURI__!.dialog.open({
+      const selected = await NativeAdapter.openDialog({
         multiple: false,
         filters: [{ name: "JSON Schedule", extensions: ["json"] }],
       });
 
       if (selected && typeof selected === "string") {
-        const content = await window.__TAURI__!.fs.readTextFile(selected);
+        const content = await NativeAdapter.readFile(selected);
         const raw = JSON.parse(content);
         return { data: sanitizeAppData(raw), path: selected };
       }
@@ -95,6 +66,57 @@ export const FileService = {
     } catch (e) {
       console.error("Tauri Open Error:", e);
       return { data: null, path: "" };
+    }
+  },
+
+  /**
+   * Generic export saver (Excel, PDF, etc.)
+   */
+  async saveExport(
+    blob: Blob,
+    defaultName: string,
+    extension: string
+  ): Promise<{ success: boolean; path?: string }> {
+    if (this.isTauri) {
+      try {
+        const savePath = await NativeAdapter.saveDialog({
+          defaultPath: defaultName,
+          filters: [{ name: `${extension.toUpperCase()} File`, extensions: [extension] }],
+        });
+
+        if (savePath) {
+          const arrayBuffer = await blob.arrayBuffer();
+          await NativeAdapter.writeBinaryFile(savePath, new Uint8Array(arrayBuffer));
+          return { success: true, path: savePath };
+        }
+        return { success: false };
+      } catch (e) {
+        console.error("Tauri Export Error:", e);
+        return { success: false };
+      }
+    } else {
+      return this.webDownload(blob, defaultName, blob.type);
+    }
+  },
+
+  /**
+   * Web download helper
+   */
+  async webDownload(content: string | Blob, filename: string, mimeType: string) {
+    try {
+      const blob = typeof content === "string" ? new Blob([content], { type: mimeType }) : content;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      return { success: true };
+    } catch (e) {
+      console.error("Web Download Error:", e);
+      return { success: false };
     }
   },
 

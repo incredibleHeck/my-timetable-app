@@ -1,9 +1,7 @@
 import ExcelJS from "exceljs";
-import FileSaver from "file-saver";
 import { AppData, ScheduleSlot } from "../../types";
 import { DAYS } from "../../utils/constants";
-
-const { saveAs } = FileSaver;
+import { FileService } from "../fileSystem";
 
 // --- HELPERS ---
 const hexToArgb = (hex?: string) => {
@@ -332,5 +330,6 @@ export const exportScheduleToExcel = async (
   const blob = new Blob([buffer], {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
-  saveAs(blob, fileName);
+  
+  await FileService.saveExport(blob, fileName, "xlsx");
 };

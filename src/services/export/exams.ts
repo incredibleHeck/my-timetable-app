@@ -1,8 +1,6 @@
 import ExcelJS from "exceljs";
-import FileSaver from "file-saver";
 import { AppData, ExamSession } from "../../types";
-
-const { saveAs } = FileSaver;
+import { FileService } from "../fileSystem";
 
 // --- HELPERS ---
 const hexToArgb = (hex?: string) => {
@@ -291,7 +289,7 @@ export const exportExamsToExcel = async (data: AppData) => {
   });
 
   const buffer = await workbook.xlsx.writeBuffer();
-  saveAs(new Blob([buffer]), "School_Exam_Timetables_A4.xlsx");
+  await FileService.saveExport(new Blob([buffer]), "School_Exam_Timetables_A4.xlsx", "xlsx");
 };
 
 // --- PDF (PRINT) EXPORT ---
@@ -615,7 +613,7 @@ export const exportInvigilatorsToExcel = async (
   });
 
   const buffer = await workbook.xlsx.writeBuffer();
-  saveAs(new Blob([buffer]), "Invigilation_Master_Roster_A3.xlsx");
+  await FileService.saveExport(new Blob([buffer]), "Invigilation_Master_Roster_A3.xlsx", "xlsx");
 };
 
 export const exportInvigilatorsToPDF = (

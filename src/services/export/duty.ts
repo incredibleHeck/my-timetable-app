@@ -1,9 +1,7 @@
 import ExcelJS from "exceljs";
-import FileSaver from "file-saver";
 import { AppData, DutyRoster } from "../../types";
 import { DAYS } from "../../utils/constants";
-
-const { saveAs } = FileSaver;
+import { FileService } from "../fileSystem";
 
 export const exportDutyToExcel = async (data: AppData, roster: DutyRoster) => {
   const workbook = new ExcelJS.Workbook();
@@ -71,7 +69,7 @@ export const exportDutyToExcel = async (data: AppData, roster: DutyRoster) => {
   const buffer = await workbook.xlsx.writeBuffer();
   const fileName = `${roster.name.replace(/\s+/g, "_")}_Export.xlsx`;
   const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-  saveAs(blob, fileName);
+  await FileService.saveExport(blob, fileName, "xlsx");
 };
 
 export const printDutyRoster = (data: AppData, roster: DutyRoster) => {
