@@ -6,8 +6,8 @@ import { Profile, ViewState } from "../../types";
 
 interface HeaderProps {
   view: ViewState;
-  activeProfile: Profile;
-  profiles: Profile[];
+  activeProfile: { id: string; name: string };
+  profiles: { id: string; name: string }[];
   autoSaveStatus: "SAVED" | "SAVING";
   onSwitchProfile: (id: string) => void;
   onCreateProfile: () => void;

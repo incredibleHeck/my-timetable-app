@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
-import { AppData, Profile, ViewState } from "./types";
-import { DEFAULT_DATA, DEFAULT_PROFILE, STORAGE_KEY } from "./utils/constants";
-import { generateId } from "./utils/utils";
+import React, { useState } from "react";
+import { AppData, ViewState } from "./types";
+import { DEFAULT_DATA } from "./utils/constants";
 import { FileService } from "./services/fileSystem";
+import { useProfile } from "./contexts/ProfileContext";
 
 // Views
 import { DashboardView } from "./features/dashboard/DashboardView";
@@ -20,97 +20,39 @@ import { DutyView } from "./features/duty/DutyView";
 import { Button, Modal, Input } from "./components/ui";
 import { Sidebar } from "./components/layout/Sidebar";
 import { Header } from "./components/layout/Header";
-
-const loadState = (): Profile[] => {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    // Explicitly check for "undefined" string to avoid SyntaxError
-    if (!saved || saved === "undefined") return [DEFAULT_PROFILE];
-    return JSON.parse(saved);
-  } catch (e) {
-    console.error("Failed to load state", e);
-    return [DEFAULT_PROFILE];
-  }
-};
-
-const saveState = (profiles: Profile[]) => {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(profiles));
-    return true;
-  } catch (e) {
-    return false;
-  }
-};
+import { ProfileWizard } from "./features/configuration/components/ProfileWizard";
 
 function App() {
-  // --- STATE ---
-  const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [activeProfileId, setActiveProfileId] = useState<string>("");
-  const [view, setView] = useState<ViewState>("DASHBOARD");
+  // --- CONTEXT ---
+  const { 
+    profiles, 
+    activeProfile, 
+    isLoading, 
+    isSaving,
+    createNewProfile, 
+    switchProfile, 
+    updateActiveProfile 
+  } = useProfile();
 
-  // Persistence & File System
-  const [autoSaveStatus, setAutoSaveStatus] = useState<"SAVED" | "SAVING">(
-    "SAVED"
-  );
+  // --- LOCAL STATE ---
+  const [view, setView] = useState<ViewState>("DASHBOARD");
   const [activeFilePath, setActiveFilePath] = useState<string | null>(null);
-  const saveTimeoutRef = useRef<number | null>(null);
 
   // Modals
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [newProfileName, setNewProfileName] = useState("");
-
-  // --- INIT ---
-  useEffect(() => {
-    const loaded = loadState();
-    setProfiles(loaded);
-    if (loaded.length > 0) setActiveProfileId(loaded[0].id);
-  }, []);
 
   // --- DERIVED STATE ---
-  const activeProfile =
-    profiles.find((p) => p.id === activeProfileId) ||
-    profiles[0] ||
-    DEFAULT_PROFILE;
   const isFullScreen = view === "GENERATOR" || view === "EXAMS" || view === "DUTY";
+  const autoSaveStatus = isSaving ? "SAVING" : "SAVED";
 
   // --- ACTIONS ---
   const updateActiveData = (newData: AppData) => {
-    setAutoSaveStatus("SAVING");
-
-    setProfiles((prev) => {
-      const updated = prev.map((p) =>
-        p.id === activeProfileId ? { ...p, data: newData } : p
-      );
-
-      // Debounce Save to LocalStorage
-      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-      saveTimeoutRef.current = setTimeout(() => {
-        saveState(updated);
-        setAutoSaveStatus("SAVED");
-      }, 1000) as unknown as number;
-
-      return updated;
-    });
-  };
-
-  const handleCreateProfile = () => {
-    if (!newProfileName.trim()) return;
-    const newProfile: Profile = {
-      id: generateId(),
-      name: newProfileName,
-      // Safeguard deep clone against undefined
-      data: JSON.parse(JSON.stringify(DEFAULT_DATA || {})),
-    };
-    const updated = [...profiles, newProfile];
-    setProfiles(updated);
-    saveState(updated);
-    setActiveProfileId(newProfile.id);
-    setIsCreateModalOpen(false);
-    setNewProfileName("");
+    updateActiveProfile(newData);
   };
 
   // --- FIX: Updated to use new FileService API ---
   const handleExport = async () => {
+    if (!activeProfile) return;
     // Save the DATA, not the Profile wrapper
     const result = await FileService.saveProject(
       activeProfile.data,
@@ -136,17 +78,8 @@ function App() {
           // Use helper to parse and validate
           const json = await FileService.parseJsonFile(file);
 
-          // Wrap the imported Data into a new Profile
-          const newProfile: Profile = {
-            id: generateId(),
-            name: `Imported ${new Date().toLocaleDateString()}`,
-            data: json,
-          };
-
-          const updated = [...profiles, newProfile];
-          setProfiles(updated);
-          saveState(updated);
-          setActiveProfileId(newProfile.id);
+          // Create new profile with imported data
+          await createNewProfile(`Imported ${new Date().toLocaleDateString()}`, json);
         } catch (err) {
           alert("Error reading file: " + err);
         }
@@ -156,21 +89,45 @@ function App() {
       // DESKTOP: Native Dialog
       const result = await FileService.loadProjectNative();
       if (result.data) {
-        // Wrap the imported Data into a new Profile
-        const newProfile: Profile = {
-          id: generateId(),
-          name: `Imported ${new Date().toLocaleDateString()}`,
-          data: result.data,
-        };
-
-        const updated = [...profiles, newProfile];
-        setProfiles(updated);
-        saveState(updated);
-        setActiveProfileId(newProfile.id);
+        // Create new profile with imported data
+        await createNewProfile(`Imported ${new Date().toLocaleDateString()}`, result.data);
         setActiveFilePath(result.path);
       }
     }
   };
+
+  // --- RENDER ---
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-slate-50 text-slate-400">
+        <div className="flex flex-col items-center gap-2">
+            <span className="animate-spin text-2xl">⟳</span>
+            <p>Loading Profiles...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If no profile active (and not loading), create one or show empty state?
+  // ProfileProvider attempts to load one. If list empty, it stops loading.
+  // We should enforce at least one profile or show a "Welcome" screen.
+  if (!activeProfile) {
+     // Fallback: This shouldn't happen often if we auto-create default, but good for safety
+     return (
+        <div className="flex items-center justify-center h-screen bg-slate-50">
+             <div className="text-center">
+                 <h1 className="text-2xl font-bold text-slate-800 mb-4">Welcome to EduScheduler Pro</h1>
+                 <Button onClick={() => setIsCreateModalOpen(true)}>Create First Profile</Button>
+             </div>
+             
+             <ProfileWizard 
+                isOpen={isCreateModalOpen} 
+                onClose={() => setIsCreateModalOpen(false)} 
+                onCreate={createNewProfile} 
+             />
+        </div>
+     );
+  }
 
   return (
     <div className="flex h-screen bg-slate-50 font-sans text-slate-600 overflow-hidden">
@@ -180,8 +137,11 @@ function App() {
           view={view}
           setView={setView}
           onSave={handleExport}
-          hasUnsavedChanges={autoSaveStatus === "SAVING"}
+          hasUnsavedChanges={isSaving}
           activeFilePath={activeFilePath}
+          activeProfile={activeProfile}
+          profiles={profiles}
+          onSwitchProfile={switchProfile}
         />
       )}
 
@@ -193,7 +153,7 @@ function App() {
           activeProfile={activeProfile}
           profiles={profiles}
           autoSaveStatus={autoSaveStatus}
-          onSwitchProfile={setActiveProfileId}
+          onSwitchProfile={switchProfile}
           onCreateProfile={() => setIsCreateModalOpen(true)}
           onImport={handleImport}
           onExport={handleExport}
@@ -271,37 +231,11 @@ function App() {
         </div>
       </main>
 
-      {/* GLOBAL MODALS */}
-      <Modal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        title="Create New Profile"
-        footer={
-          <div className="flex justify-end gap-2 w-full">
-            <Button
-              variant="secondary"
-              onClick={() => setIsCreateModalOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleCreateProfile}>Create Profile</Button>
-          </div>
-        }
-      >
-        <div className="space-y-4">
-          <p className="text-sm text-slate-500">
-            Create a clean slate for a new semester or academic year.
-          </p>
-          <Input
-            label="Profile Name"
-            value={newProfileName}
-            onChange={(e) => setNewProfileName(e.target.value)}
-            placeholder="e.g. 2nd Semester 2025"
-            autoFocus
-            onKeyDown={(e) => e.key === "Enter" && handleCreateProfile()}
-          />
-        </div>
-      </Modal>
+      <ProfileWizard 
+        isOpen={isCreateModalOpen} 
+        onClose={() => setIsCreateModalOpen(false)} 
+        onCreate={createNewProfile} 
+      />
     </div>
   );
 }

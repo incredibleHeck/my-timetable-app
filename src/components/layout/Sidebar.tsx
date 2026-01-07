@@ -22,6 +22,9 @@ interface SidebarProps {
   onSave: () => void;
   hasUnsavedChanges: boolean;
   activeFilePath: string | null;
+  activeProfile?: { id: string; name: string } | null;
+  profiles: { id: string; name: string }[];
+  onSwitchProfile: (id: string) => void;
 }
 
 const NavItem = ({
@@ -64,6 +67,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSave,
   hasUnsavedChanges,
   activeFilePath,
+  activeProfile,
+  profiles,
+  onSwitchProfile,
 }) => {
   return (
     <aside className="w-64 bg-slate-900 flex flex-col h-screen text-slate-300 shadow-2xl shrink-0 z-20">
@@ -171,6 +177,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
           currentView={view}
           onClick={setView}
         />
+
+        {/* Profiles Section */}
+        <div className="px-6 py-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest mt-6">
+          Profiles
+        </div>
+        <div className="px-4 mb-4 space-y-1">
+          {profiles.map(p => (
+            <button
+              key={p.id}
+              onClick={() => onSwitchProfile(p.id)}
+              className={`w-full text-left px-3 py-2 text-xs rounded-lg transition-all ${
+                activeProfile?.id === p.id
+                  ? "bg-amber-500 text-slate-900 font-bold shadow-lg shadow-amber-500/20"
+                  : "text-slate-400 hover:text-white hover:bg-slate-800"
+              }`}
+            >
+              {p.name}
+            </button>
+          ))}
+        </div>
       </nav>
 
       {/* Save Button */}
