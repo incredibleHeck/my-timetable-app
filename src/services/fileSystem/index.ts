@@ -1,11 +1,7 @@
 import { AppData } from "../../types";
 import { sanitizeAppData } from "./sanitization";
 import * as NativeAdapter from "./nativeAdapter";
-
-// Helper to detect Tauri environment (v1 or v2)
-const isTauriEnv = () => {
-  return typeof window !== "undefined" && (!!(window as any).__TAURI__ || !!(window as any).__TAURI_INTERNALS__);
-};
+import { isTauriEnv } from "../../utils/platform";
 
 export const FileService = {
   get isTauri(): boolean {

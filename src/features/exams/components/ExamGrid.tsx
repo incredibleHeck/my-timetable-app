@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { AppData, ExamSession, Subject } from "../../../types";
+import { ExamConflict } from "../logic/examValidation";
 import {
   AlertTriangle,
   Clock,
@@ -17,12 +18,18 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  closestCenter,
+  closestCorners,
+  DragStartEvent,
+  DragOverEvent,
 } from "@dnd-kit/core";
+
+// --- CONSTANTS ---
+// Cutoff for Session 1 vs Session 2. 
+// 11:30 AM allows 8:00 AM -> Session 1 and 11:30 AM+ -> Session 2.
+const SESSION_CUTOFF = "11:30";
 
 // --- COMPONENTS ---
 
-// 1. Draggable Exam Card (Renders a stack of sessions, with support for Intra-Column Split)
 const DraggableExamCard = ({
   exams,
   data,
@@ -38,7 +45,6 @@ const DraggableExamCard = ({
   onEdit: (e: ExamSession) => void;
   isEditMode: boolean;
 }) => {
-  // We use the first exam in the stack as the "Anchor" for ID and Subject info
   const mainExam = exams[0];
   const subject = data.subjects.find((s) => s.id === mainExam.subjectId);
 
@@ -54,13 +60,11 @@ const DraggableExamCard = ({
     disabled: !isEditMode,
   });
 
-  // Combine refs to allow this card to be both draggable AND a drop target (for swapping)
   const setRefs = (node: HTMLElement | null) => {
     setNodeRef(node);
     setDropRef(node);
   };
 
-  // Group exams by Paper Number for Split View
   const paperGroups = useMemo(() => {
     const groups: Record<number, ExamSession[]> = {};
     exams.forEach((e) => {
@@ -78,7 +82,7 @@ const DraggableExamCard = ({
     return (
       <div
         ref={setRefs}
-        className="opacity-30 bg-slate-200 border-2 border-dashed border-slate-400 rounded-xl min-h-[180px] w-full"
+        className="opacity-30 bg-slate-200 border-2 border-dashed border-slate-400 rounded-xl min-h-[120px] w-full"
       />
     );
   }
@@ -88,20 +92,15 @@ const DraggableExamCard = ({
       <div className="flex flex-col gap-2 h-full">
         {stack.map((exam, index) => {
           const conflicts = checkConflicts(exam);
-          const room = data.rooms.find((r) => r.id === exam.roomId);
-          const hasRoom = !!exam.roomId;
+          const classNames = exam.classIds
+            .map((cid) => data.classes.find((c) => c.id === cid)?.name)
+            .join(", ");
 
-          // Resolve Names
           const invigilatorNames = (exam.invigilatorIds || [])
             .map((id) => data.teachers.find((t) => t.id === id)?.name)
             .filter(Boolean)
             .join(", ");
 
-          const classNames = exam.classIds
-            .map((cid) => data.classes.find((c) => c.id === cid)?.name)
-            .join(", ");
-
-          // Only show Subject/Time header on the FIRST card in the stack to save space
           const showHeader = index === 0;
 
           return (
@@ -115,12 +114,11 @@ const DraggableExamCard = ({
                 relative flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all p-4 cursor-pointer group/card
                 ${
                   conflicts.length > 0
-                    ? "ring-2 ring-red-500/20 bg-red-50/10"
+                    ? "ring-2 ring-red-500 bg-red-50/10"
                     : ""
                 }
               `}
             >
-              {/* Subject Color Accent Bar */}
               <div
                 className="absolute top-0 left-0 w-full h-1.5 rounded-t-xl"
                 style={{ backgroundColor: subject?.color || "#cbd5e1" }}
@@ -140,37 +138,20 @@ const DraggableExamCard = ({
                         <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-1 border border-slate-200">
                           <Clock size={10} /> {exam.startTime}
                         </span>
-                        {/* Only show paper label if it's a multi-paper subject (Split View is active) */}
-                        {isSplitView && (
-                          <span
-                            className="text-[9px] font-black text-white px-2 py-0.5 rounded-full uppercase shadow-sm"
-                            style={{
-                              backgroundColor: subject?.color || "#94a3b8",
-                            }}
-                          >
-                            {exam.paperLabel || `P${exam.paperNumber}`}
-                          </span>
-                        )}
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* Class & Details Row */}
                 <div className="flex flex-col gap-2 flex-1 justify-center">
-                  {activeId === "ALL" && (
-                    <div className="text-xs font-black text-slate-700 bg-amber-50 border border-amber-100 px-2 py-1 rounded-md text-center">
-                      {classNames}
-                    </div>
-                  )}
-
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-2 text-[13px] font-bold text-slate-500 p-1.5 rounded-lg bg-slate-50/50 border border-transparent group-hover/card:border-slate-100 group-hover/card:bg-white">
-                      <Users size={11} className="text-slate-400" />
-                      <span className="truncate">
-                        {invigilatorNames || "NO STAFF ASSIGNED"}
-                      </span>
-                    </div>
+                  <div className="text-xs font-black text-slate-700 bg-amber-50 border border-amber-100 px-2 py-1 rounded-md text-center">
+                    {classNames}
+                  </div>
+                  <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 p-1 rounded-lg bg-slate-50/50 border border-transparent group-hover/card:border-slate-100 group-hover/card:bg-white transition-all">
+                    <Users size={11} className="text-slate-400" />
+                    <span className="truncate">
+                      {invigilatorNames || "NO STAFF ASSIGNED"}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -192,7 +173,6 @@ const DraggableExamCard = ({
         }
       `}
     >
-      {/* Drag Handle (Visible on hover in Edit Mode) */}
       {isEditMode && (
         <div
           {...listeners}
@@ -203,12 +183,10 @@ const DraggableExamCard = ({
         </div>
       )}
 
-      {/* RENDER CONTENT: Split View or Standard Stack */}
       {isSplitView ? (
         <div className="grid grid-cols-2 gap-2 h-full">
           {paperNumbers.map((pNum) => (
             <div key={pNum} className="flex flex-col gap-2 min-w-0">
-              {/* Mini Header for Split View */}
               <div className="text-[10px] font-black text-white uppercase text-center bg-slate-800 rounded-lg py-1 shadow-sm mb-1 tracking-wider">
                 Paper {pNum}
               </div>
@@ -223,19 +201,20 @@ const DraggableExamCard = ({
   );
 };
 
-// 2. Droppable Grid Cell
 const DroppableGridCell = ({
   date,
   startTime,
   children,
   isEditMode,
   onClick,
+  activeConflicts = []
 }: {
   date: string;
   startTime: string;
   children: React.ReactNode;
   isEditMode: boolean;
   onClick?: () => void;
+  activeConflicts?: ExamConflict[];
 }) => {
   const { setNodeRef, isOver } = useDroppable({
     id: `cell-${date}-${startTime}`,
@@ -243,27 +222,44 @@ const DroppableGridCell = ({
     disabled: !isEditMode,
   });
 
+  const hasCritical = activeConflicts.some(c => c.severity === 'CRITICAL');
+  const hasWarning = activeConflicts.some(c => c.severity === 'WARNING');
+
   return (
     <td
       ref={setNodeRef}
       onClick={onClick}
-      className={`p-3 border-r border-slate-100 align-top h-px transition-all duration-200
+      className={`p-3 border-r border-slate-100 align-top min-h-[150px] transition-all duration-200
         ${
           isOver && isEditMode
-            ? "bg-emerald-50 ring-inset ring-2 ring-emerald-300"
+            ? hasCritical 
+              ? "bg-red-50 ring-inset ring-2 ring-red-300" 
+              : hasWarning
+                ? "bg-amber-50 ring-inset ring-2 ring-amber-300"
+                : "bg-emerald-50 ring-inset ring-2 ring-emerald-300"
             : "bg-white hover:bg-slate-50/30"
         }
         ${!children ? "cursor-pointer" : ""}
       `}
     >
-      <div className="h-full w-full">{children}</div>
+      <div className="h-full w-full relative min-h-[100px]">
+        {isOver && activeConflicts.length > 0 && (
+          <div className="absolute -top-1 -left-1 z-50 bg-white border border-slate-200 shadow-xl rounded-lg p-2 min-w-[200px] pointer-events-none animate-in fade-in zoom-in duration-200">
+             <div className="flex flex-col gap-1.5">
+                {activeConflicts.map((c, i) => (
+                  <div key={i} className={`flex items-start gap-1.5 text-[10px] font-bold ${c.severity === 'CRITICAL' ? 'text-red-600' : 'text-amber-600'}`}>
+                    <AlertTriangle size={12} className="shrink-0" />
+                    <span>{c.message}</span>
+                  </div>
+                ))}
+             </div>
+          </div>
+        )}
+        {children}
+      </div>
     </td>
   );
 };
-
-// 3. Main component setup follows...
-
-// --- MAIN COMPONENT ---
 
 interface Props {
   data: AppData;
@@ -272,6 +268,7 @@ interface Props {
   onEdit: (exam: ExamSession) => void;
   onAddCell?: (date: string, time: string) => void;
   checkConflicts: (exam: ExamSession) => string[];
+  checkMoveConflicts: (ids: string[], date: string, time: string, ignoreIds?: string[]) => ExamConflict[];
   onSwap: (ids1: string | string[], ids2: string | string[]) => void;
   onMoveToSlot: (ids: string[], date: string, startTime: string) => void;
   isEditMode: boolean;
@@ -284,13 +281,15 @@ export const ExamGrid: React.FC<Props> = ({
   onEdit,
   onAddCell,
   checkConflicts,
+  checkMoveConflicts,
   onSwap,
   onMoveToSlot,
   isEditMode,
 }) => {
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const [currentConflicts, setCurrentConflicts] = useState<ExamConflict[]>([]);
+  const [overCell, setOverCell] = useState<{ date: string; time: string } | null>(null);
 
-  // Configure sensors for drag activation distance (prevents accidental drags on click)
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -303,29 +302,64 @@ export const ExamGrid: React.FC<Props> = ({
     return Array.from(new Set(exams.map((e) => e.date))).sort();
   }, [exams]);
 
-  // Derived Session Times (Fallback)
-  const defaultTimes = ["09:00", "14:00"];
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveDragId(event.active.id as string);
+  };
 
-  // --- DND HANDLERS ---
+  const handleDragOver = (event: DragOverEvent) => {
+    const { over, active } = event;
+    if (!over || !active.data.current) {
+        setOverCell(null);
+        setCurrentConflicts([]);
+        return;
+    }
+
+    const overData = over.data.current;
+    const activeData = active.data.current;
+    if (!overData || !activeData) {
+        setOverCell(null);
+        setCurrentConflicts([]);
+        return;
+    }
+
+    const activeIds = activeData.allExams.map((e: any) => e.id);
+
+    if (overData.type === 'CELL_TARGET') {
+        setOverCell({ date: overData.date, time: overData.startTime });
+        const conflicts = checkMoveConflicts(activeIds, overData.date, overData.startTime, activeIds);
+        setCurrentConflicts(conflicts);
+    } else if (overData.type === 'EXAM_TARGET') {
+        const targetExam = overData.exam;
+        if (targetExam) {
+            setOverCell({ date: targetExam.date, time: targetExam.startTime });
+            const overIds = overData.allExams.map((e: any) => e.id);
+            const conflicts = checkMoveConflicts(activeIds, targetExam.date, targetExam.startTime, [...activeIds, ...overIds]);
+            setCurrentConflicts(conflicts);
+        }
+    } else {
+        setOverCell(null);
+        setCurrentConflicts([]);
+    }
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     setActiveDragId(null);
+    setOverCell(null);
+    setCurrentConflicts([]);
+
     const { active, over } = event;
     if (!over || !isEditMode) return;
 
     const activeData = active.data.current;
     const overData = over.data.current;
 
-    // Safety check
     if (!activeData || !overData) return;
 
     const activeIds = activeData.allExams.map((e: ExamSession) => e.id);
 
-    // ONLY HANDLE DROP ON ANOTHER EXAM (Swap) OR EMPTY CELL (Move)
     if (overData.type === "EXAM_TARGET") {
       const targetExam = overData.exam;
-      // Prevent self-drop
       if (active.id === targetExam.id) return;
-
       const overIds = overData.allExams.map((e: ExamSession) => e.id);
       onSwap(activeIds, overIds);
     } else if (overData.type === "CELL_TARGET") {
@@ -333,33 +367,55 @@ export const ExamGrid: React.FC<Props> = ({
     }
   };
 
+  const getStacks = (sessions: ExamSession[]) => {
+    const stacks: ExamSession[][] = [];
+    const processedIds = new Set<string>();
+
+    sessions.forEach((s) => {
+      if (processedIds.has(s.id)) return;
+      const siblings = sessions.filter(
+        (o) => o.subjectId === s.subjectId && !processedIds.has(o.id)
+      );
+      if (siblings.length > 0) {
+        stacks.push(siblings);
+        siblings.forEach((sib) => processedIds.add(sib.id));
+      }
+    });
+    return stacks;
+  };
+
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragStart={(e) => setActiveDragId(e.active.id as string)}
+      collisionDetection={closestCorners}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
       <div className="h-full border border-slate-200 rounded-2xl overflow-hidden shadow-lg bg-white">
         <table className="w-full border-collapse table-fixed">
           <thead>
             <tr className="bg-slate-900 text-white">
-              {/* Corner Header */}
               <th className="p-4 border-r border-slate-800 text-left text-[11px] font-black text-slate-400 uppercase tracking-widest w-[140px] sticky left-0 z-40 bg-slate-900 shadow-md">
                 Date / Day
               </th>
-              {/* Session Headers */}
               <th className="p-4 border-r border-slate-800 text-center min-w-[350px] sticky top-0 z-20 shadow-md">
                 <div className="flex flex-col gap-1">
                   <span className="font-black text-sm uppercase tracking-widest">
-                    Subject 1
+                    Session 1
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-bold tracking-widest">
+                    START BEFORE {SESSION_CUTOFF} AM
                   </span>
                 </div>
               </th>
               <th className="p-4 border-r border-slate-800 text-center min-w-[350px] sticky top-0 z-20 shadow-md">
                 <div className="flex flex-col gap-1">
                   <span className="font-black text-sm uppercase tracking-widest">
-                    Subject 2
+                    Session 2
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-bold tracking-widest">
+                    START {SESSION_CUTOFF} AM OR LATER
                   </span>
                 </div>
               </th>
@@ -368,67 +424,14 @@ export const ExamGrid: React.FC<Props> = ({
           <tbody>
             {uniqueDates.map((date) => {
               const examsOnDate = exams.filter((e) => e.date === date);
+              
+              // Use fixed cutoff for Sessions
+              const session1Exams = examsOnDate.filter(e => e.startTime < SESSION_CUTOFF);
+              const session2Exams = examsOnDate.filter(e => e.startTime >= SESSION_CUTOFF);
 
-              // Sort exams by time
-              const sortedByTime = [...examsOnDate].sort((a, b) =>
-                a.startTime.localeCompare(b.startTime)
-              );
-
-              // GROUP BY SUBJECT and Assign to Columns sequentially (NOT time-bound)
-              const subjectGroups: Record<string, ExamSession[]> = {};
-              sortedByTime.forEach((e) => {
-                if (!subjectGroups[e.subjectId])
-                  subjectGroups[e.subjectId] = [];
-                subjectGroups[e.subjectId].push(e);
-              });
-
-              // Sort subject groups by their EARLIEST exam's start time to maintain a logical order
-              const sortedSubjectGroups = Object.values(subjectGroups).sort(
-                (groupA, groupB) => {
-                  const minA = groupA.reduce(
-                    (min, e) => (e.startTime < min ? e.startTime : min),
-                    "23:59"
-                  );
-                  const minB = groupB.reduce(
-                    (min, e) => (e.startTime < min ? e.startTime : min),
-                    "23:59"
-                  );
-                  return minA.localeCompare(minB);
-                }
-              );
-
-              // Column 1 = First Subject Group of the day
-              // Column 2 = Second Subject Group of the day (if it exists)
-              const session1Exams: ExamSession[] = sortedSubjectGroups[0] || [];
-              const session2Exams: ExamSession[] = sortedSubjectGroups[1] || [];
-
-              const defaultTimes = ["09:00", "14:00"];
-              const time1 = defaultTimes[0];
-              const time2 = defaultTimes[1];
-
-              // --- INTELLIGENT GROUPING LOGIC ---
-              // Groups exams into "Stacks" if they share Subject.
-              // Now supports grouping multiple papers (P1, P2) for Split View.
-              const getSlots = (sessions: ExamSession[]) => {
-                const units: ExamSession[][] = [];
-                const processedIds = new Set<string>();
-
-                sessions.forEach((s) => {
-                  if (processedIds.has(s.id)) return;
-
-                  // Find siblings: Same Subject (regardless of Paper/Duration)
-                  const siblings = sessions.filter(
-                    (o) =>
-                      o.subjectId === s.subjectId && !processedIds.has(o.id)
-                  );
-
-                  if (siblings.length > 0) {
-                    units.push(siblings);
-                    siblings.forEach((sib) => processedIds.add(sib.id));
-                  }
-                });
-                return units;
-              };
+              // Target times for empty cells
+              const time1 = "09:00";
+              const time2 = "14:00";
 
               return (
                 <tr
@@ -455,20 +458,18 @@ export const ExamGrid: React.FC<Props> = ({
                     </div>
                   </td>
 
-                  {/* SESSION 1 */}
                   <DroppableGridCell
                     date={date}
                     startTime={time1}
                     isEditMode={isEditMode}
-                    onClick={() =>
-                      !session1Exams.length && onAddCell?.(date, time1)
-                    }
+                    onClick={() => !session1Exams.length && onAddCell?.(date, time1)}
+                    activeConflicts={overCell?.date === date && overCell?.time === time1 ? currentConflicts : []}
                   >
                     <div className="flex flex-col h-full gap-3">
-                      {getSlots(session1Exams).map((slot) => (
+                      {getStacks(session1Exams).map((stack) => (
                         <DraggableExamCard
-                          key={slot[0].id}
-                          exams={slot}
+                          key={stack[0].id}
+                          exams={stack}
                           data={data}
                           activeId={activeId}
                           checkConflicts={checkConflicts}
@@ -479,20 +480,18 @@ export const ExamGrid: React.FC<Props> = ({
                     </div>
                   </DroppableGridCell>
 
-                  {/* SESSION 2 */}
                   <DroppableGridCell
                     date={date}
                     startTime={time2}
                     isEditMode={isEditMode}
-                    onClick={() =>
-                      !session2Exams.length && onAddCell?.(date, time2)
-                    }
+                    onClick={() => !session2Exams.length && onAddCell?.(date, time2)}
+                    activeConflicts={overCell?.date === date && overCell?.time === time2 ? currentConflicts : []}
                   >
                     <div className="flex flex-col h-full gap-3">
-                      {getSlots(session2Exams).map((slot) => (
+                      {getStacks(session2Exams).map((stack) => (
                         <DraggableExamCard
-                          key={slot[0].id}
-                          exams={slot}
+                          key={stack[0].id}
+                          exams={stack}
                           data={data}
                           activeId={activeId}
                           checkConflicts={checkConflicts}

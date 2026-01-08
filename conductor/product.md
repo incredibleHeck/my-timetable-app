@@ -11,9 +11,10 @@ To provide a robust, local-first scheduling platform that empowers institutional
 *   **Department Heads:** Users managing faculty workloads and specific departmental resource allocation.
 *   **University Registrar Offices:** Large-scale institutional users managing complex multi-tenant academic environments.
 
-## Core Goals
-*   **Desktop-First Experience:** Full optimization for the Windows desktop environment via Tauri, ensuring native performance and file system integration.
-*   **Enhanced Profile Management:** Streamlining the entire lifecycle of user profiles, including intuitive creation, robust saving/loading mechanisms, and instant context switching.
+## Core Goals (Completed)
+*   **Desktop-First Experience:** Initial Tauri integration and native file system support implemented.
+*   **Enhanced Profile Management:** Multi-tenant profile system with local file persistence and context switching implemented.
+*   **Web Compatibility:** Universal runtime support ensuring the application runs in standard browsers with local fallbacks.
 *   **Heuristic Excellence:** Continuous refinement of scheduling algorithms to ensure fairness and efficiency in complex scenarios.
 
 ## Key Features
@@ -21,6 +22,7 @@ To provide a robust, local-first scheduling platform that empowers institutional
 *   **Exam Logistics Engine:** Improved interactive tools for swapping subjects within the exam timetable, ensuring constraint compliance.
 *   **Intelligent Duty Roster:** Enhanced random assignment algorithms for teacher supervision duties to ensure fairness and coverage.
 *   **Desktop Integration:** Native window management, file system dialogs, and offline capability powered by Tauri.
+*   **Portable Web Mode:** Full application functionality available in standard browsers using LocalStorage for profile persistence and web-native file downloads.
 
 ## Design Philosophy
 *   **Data-Dense and Analytical:** High-density UI layouts that prioritize visibility of complex datasets for expert users.

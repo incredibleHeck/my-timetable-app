@@ -6,6 +6,8 @@ vi.mock('@tauri-apps/plugin-fs', () => ({
   writeTextFile: vi.fn(),
   readTextFile: vi.fn(),
   exists: vi.fn(),
+  writeFile: vi.fn(),
+  remove: vi.fn(),
   BaseDirectory: { AppData: 1 }
 }));
 
@@ -14,12 +16,13 @@ vi.mock('@tauri-apps/plugin-dialog', () => ({
   open: vi.fn()
 }));
 
-import { writeTextFile, readTextFile } from '@tauri-apps/plugin-fs';
+import { writeTextFile, readTextFile, remove } from '@tauri-apps/plugin-fs';
 import { save, open } from '@tauri-apps/plugin-dialog';
 
 describe('NativeAdapter', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubGlobal('__TAURI__', {});
   });
 
   describe('writeFile', () => {
@@ -44,6 +47,13 @@ describe('NativeAdapter', () => {
       const result = await NativeAdapter.saveDialog({ defaultPath: 'test.json' });
       expect(result).toBe('/path/to/save.json');
       expect(save).toHaveBeenCalled();
+    });
+  });
+
+  describe('removeFile', () => {
+    it('should remove a file', async () => {
+      await NativeAdapter.removeFile('test.txt');
+      expect(remove).toHaveBeenCalledWith('test.txt');
     });
   });
 });

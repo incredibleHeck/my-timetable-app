@@ -5,6 +5,7 @@ export type ScheduleMode = "UNIFORM" | "RANDOM";
 
 interface GeneratorConfig {
   subjects: { id: string; papers: number; duration: number }[];
+  selectedClassIds?: string[]; // NEW: Optional filter for classes
   mode: ScheduleMode;
   startDate: string;
   startTime: string;
@@ -46,12 +47,19 @@ export const generateExams = (
   const GLOBAL_MAX_DAYS = 60;
   const startMin = parseTime(config.startTime);
 
+  // Filter classes based on selection
+  const targetClasses = config.selectedClassIds && config.selectedClassIds.length > 0
+    ? data.classes.filter(c => config.selectedClassIds?.includes(c.id))
+    : data.classes;
+
+  if (targetClasses.length === 0) return [];
+
   // Ledger: ClassID -> Busy Time Ranges
   const classSchedules: Record<
     string,
     { start: number; end: number; date: string }[]
   > = {};
-  data.classes.forEach((c) => (classSchedules[c.id] = []));
+  targetClasses.forEach((c) => (classSchedules[c.id] = []));
 
   const maxPapers = Math.max(0, ...config.subjects.map((c) => c.papers));
   const baseDate = new Date(config.startDate);
@@ -68,7 +76,7 @@ export const generateExams = (
     // -----------------------------------------------------------------------
     if (config.mode === "UNIFORM") {
       currentSubjects.forEach((sub) => {
-        const involvedClassIds = data.classes
+        const involvedClassIds = targetClasses
           .filter((c) => c.curriculum.some((curr) => curr.subjectId === sub.id))
           .map((c) => c.id);
 
@@ -99,7 +107,7 @@ export const generateExams = (
       }[] = [];
 
       currentSubjects.forEach((sub) => {
-        const involvedClasses = data.classes.filter((c) =>
+        const involvedClasses = targetClasses.filter((c) =>
           c.curriculum.some((curr) => curr.subjectId === sub.id)
         );
 

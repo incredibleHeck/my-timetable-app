@@ -1,5 +1,35 @@
-import { writeTextFile, readTextFile, exists, BaseDirectory } from '@tauri-apps/plugin-fs';
-import { save, open } from '@tauri-apps/plugin-dialog';
+import { isTauriEnv } from '../../utils/platform';
+
+// Dynamic imports for Tauri plugins to prevent crashes in non-Tauri environments.
+
+const getFs = async () => {
+  if (isTauriEnv()) {
+    return await import('@tauri-apps/plugin-fs');
+  }
+  throw new Error('Tauri FS plugin is not available in this environment');
+};
+
+const getDialog = async () => {
+  if (isTauriEnv()) {
+    return await import('@tauri-apps/plugin-dialog');
+  }
+  throw new Error('Tauri Dialog plugin is not available in this environment');
+};
+
+/**
+ * Writes binary content to a file.
+ * @param path - The absolute path.
+ * @param content - The Uint8Array content.
+ */
+export async function writeBinaryFile(path: string, content: Uint8Array): Promise<void> {
+  try {
+    const { writeFile } = await getFs();
+    await writeFile(path, content);
+  } catch (error) {
+    console.error(`Failed to write binary file to ${path}:`, error);
+    throw error;
+  }
+}
 
 /**
  * Writes text content to a file at the specified path.
@@ -8,6 +38,7 @@ import { save, open } from '@tauri-apps/plugin-dialog';
  */
 export async function writeFile(path: string, content: string): Promise<void> {
   try {
+    const { writeTextFile } = await getFs();
     await writeTextFile(path, content);
   } catch (error) {
     console.error(`Failed to write file to ${path}:`, error);
@@ -22,6 +53,7 @@ export async function writeFile(path: string, content: string): Promise<void> {
  */
 export async function readFile(path: string): Promise<string> {
   try {
+    const { readTextFile } = await getFs();
     return await readTextFile(path);
   } catch (error) {
     console.error(`Failed to read file from ${path}:`, error);
@@ -36,6 +68,7 @@ export async function readFile(path: string): Promise<string> {
  */
 export async function fileExists(path: string): Promise<boolean> {
     try {
+        const { exists } = await getFs();
         return await exists(path);
     } catch (error) {
         console.error(`Failed to check existence of ${path}:`, error);
@@ -50,6 +83,7 @@ export async function fileExists(path: string): Promise<boolean> {
  */
 export async function saveDialog(options?: { defaultPath?: string; filters?: { name: string; extensions: string[] }[] }): Promise<string | null> {
   try {
+    const { save } = await getDialog();
     const result = await save({
       defaultPath: options?.defaultPath,
       filters: options?.filters,
@@ -68,6 +102,7 @@ export async function saveDialog(options?: { defaultPath?: string; filters?: { n
  */
 export async function openDialog(options?: { multiple?: boolean; filters?: { name: string; extensions: string[] }[] }): Promise<string | string[] | null> {
   try {
+    const { open } = await getDialog();
     const result = await open({
       multiple: options?.multiple,
       filters: options?.filters,
@@ -77,4 +112,18 @@ export async function openDialog(options?: { multiple?: boolean; filters?: { nam
     console.error('Failed to open dialog:', error);
     return null;
   }
+}
+
+/**
+ * Deletes a file.
+ * @param path - The absolute path.
+ */
+export async function removeFile(path: string): Promise<void> {
+    try {
+        const { remove } = await getFs();
+        await remove(path);
+    } catch (error) {
+        console.error(`Failed to remove file ${path}:`, error);
+        throw error;
+    }
 }

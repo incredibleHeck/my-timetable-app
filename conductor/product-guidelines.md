@@ -7,6 +7,7 @@
 ## Visual Identity & Aesthetic
 *   **Aesthetic:** High-Utility "Studio" Look. Use a neutral gray or dark mode palette with high-contrast accent colors for critical status indicators (conflicts, successes, locked states).
 *   **Platform Alignment:** While maintaining a unique "Studio" feel, ensure UI elements (buttons, inputs) feel robust and responsive on the Windows desktop environment.
+*   **Interactive Conflict Engine:** Provide real-time, visual feedback during drag-and-drop operations, preventing invalid states while allowing for soft-conflict resolution.
 
 ## Conflict Visualization
 *   **Detailed Tooltips:** Every scheduling conflict must provide a comprehensive explanation on hover, detailing the specific constraint violation.

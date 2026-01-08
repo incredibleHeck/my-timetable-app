@@ -13,6 +13,9 @@ import {
   ArrowLeft,
   FileSpreadsheet,
   Printer,
+  Lock,
+  Unlock,
+  Pencil,
 } from "lucide-react";
 import { AppData, DutyAssignment, DutyRoster, ViewState } from "../../types";
 import { Button } from "../../components/ui";
@@ -207,6 +210,17 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
     if (existing) {
       newAssignments = newAssignments.filter((a) => a.id !== existing.id);
     } else {
+      // Prevent manual double assignment if already assigned elsewhere in this roster
+      const duplicate = newAssignments.find(a => a.teacherId === teacherId);
+      if (duplicate) {
+        const teacherName = data.teachers.find(t => t.id === teacherId)?.name || "Teacher";
+        const dayName = rowLabels[duplicate.day] || "another slot";
+        if (!confirm(`${teacherName} is already assigned to ${dayName}. Allow double assignment?`)) {
+          setOpenSlot(null);
+          return;
+        }
+      }
+
       newAssignments = newAssignments.filter(a => !(a.day === rowIdx && a.period === slotIndex));
       newAssignments.push({ id: generateId(), locationId: "general", day: rowIdx, period: slotIndex, teacherId });
     }
@@ -273,168 +287,179 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-80px)] overflow-hidden bg-slate-50/50">
-      {/* FULL WIDTH HEADER */}
-      <div className="bg-white border-b border-slate-200 px-8 py-6 flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0 z-20 shadow-sm">
-        <div className="flex items-center gap-4">
+    <div className="flex flex-col h-full bg-slate-50 overflow-hidden">
+      {/* HEADER TOOLBAR */}
+      <div className="bg-white border-b border-slate-200 p-4 flex items-center justify-between gap-4 z-10 shrink-0 shadow-sm">
+        <div className="flex items-center gap-2 flex-1">
+          {/* Back Button */}
           <button
             onClick={() => onNavigate && onNavigate("DASHBOARD")}
-            className="p-3 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-500 shadow-sm transition-all"
+            className="p-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-500 mr-2"
             title="Back to Dashboard"
           >
             <ArrowLeft size={20} />
           </button>
-          <div className="w-14 h-14 bg-amber-500 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-amber-200/50">
-            <Shield size={28} />
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-center gap-3">
-              <input
+
+          <div className="flex flex-col">
+            <div className="flex items-center group/title relative">
+              <input 
                 value={activeRoster.name}
                 onChange={(e) => updateActiveRoster({ name: e.target.value })}
-                className="text-2xl font-black text-slate-800 bg-transparent border-none p-0 focus:ring-0 w-auto min-w-[200px]"
+                className="text-xl font-bold text-slate-800 bg-transparent border-none p-0 focus:ring-0 w-auto min-w-[200px] hover:bg-slate-50 rounded px-1 transition-colors"
               />
+              <Pencil size={12} className="text-slate-300 ml-1 opacity-0 group-hover/title:opacity-100 transition-opacity pointer-events-none" />
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full uppercase tracking-widest border border-amber-100">
-                {activeRoster.type} Mode Active
-              </span>
-              <span className="text-slate-300">•</span>
-              <p className="text-[11px] text-slate-500 font-bold uppercase tracking-tight">Created {new Date(activeRoster.createdAt).toLocaleDateString()}</p>
-            </div>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">
+              Duty Roster Management
+            </p>
           </div>
-        </div>
 
-        <div className="flex items-center gap-3 bg-slate-50 p-2 rounded-2xl border border-slate-200">
-          <div className="flex bg-white p-1 rounded-xl shadow-sm border border-slate-100">
+          {/* Mode Switcher */}
+          <div className="flex bg-slate-100 p-1 rounded-lg ml-6">
             <button
               onClick={() => updateActiveRoster({ type: "DAILY" })}
-              className={`px-4 py-1.5 text-[10px] font-black uppercase rounded-lg transition-all ${activeRoster.type === "DAILY" ? "bg-amber-500 text-white shadow-md shadow-amber-200" : "text-slate-500 hover:text-slate-700"}`}
+              className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${
+                activeRoster.type === "DAILY"
+                  ? "bg-white text-slate-800 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
             >
               Daily
             </button>
             <button
               onClick={() => updateActiveRoster({ type: "WEEKLY" })}
-              className={`px-4 py-1.5 text-[10px] font-black uppercase rounded-lg transition-all ${activeRoster.type === "WEEKLY" ? "bg-amber-500 text-white shadow-md shadow-amber-200" : "text-slate-500 hover:text-slate-700"}`}
+              className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${
+                activeRoster.type === "WEEKLY"
+                  ? "bg-white text-slate-800 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
             >
               Weekly
             </button>
           </div>
 
-          <div className="h-8 w-px bg-slate-200" />
+          {/* Edit Mode Toggles */}
+          <div className="flex items-center gap-2 pl-6 border-l border-slate-200 ml-6">
+            <button
+              onClick={() => setIsSwapMode(!isSwapMode)}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                isSwapMode
+                  ? "bg-amber-50 text-amber-700 border-amber-200 shadow-sm"
+                  : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
+              }`}
+              title={isSwapMode ? "Disable Drag & Drop" : "Enable Drag & Drop"}
+            >
+              {isSwapMode ? <Unlock size={14} /> : <Lock size={14} />}
+              {isSwapMode ? "Disable Edit" : "Enable Edit"}
+            </button>
+          </div>
 
-          <button
-            onClick={() => setIsSwapMode(!isSwapMode)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase border transition-all ${
-              isSwapMode ? "bg-amber-500 text-white border-amber-600 shadow-lg shadow-amber-200" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 shadow-sm"
-            }`}
-          >
-            <Repeat size={14} className={isSwapMode ? "animate-spin-slow" : ""} />
-            {isSwapMode ? "Swap On" : "Swap Off"}
-          </button>
+          {/* View Toggles */}
+          <div className="flex items-center gap-4 ml-auto border-l border-slate-200 pl-6">
+            <div className="flex bg-slate-100 p-1 rounded-lg">
+              <button
+                onClick={() => setActiveTab("ROSTER")}
+                className={`px-4 py-1.5 text-[10px] font-black uppercase rounded-md transition-all ${
+                  activeTab === "ROSTER"
+                    ? "bg-white text-amber-600 shadow-sm"
+                    : "text-slate-400 hover:text-slate-600"
+                }`}
+                title="Grid View"
+              >
+                Grid
+              </button>
+              <button
+                onClick={() => setActiveTab("SETTINGS")}
+                className={`px-4 py-1.5 text-[10px] font-black uppercase rounded-md transition-all ${
+                  activeTab === "SETTINGS"
+                    ? "bg-white text-amber-600 shadow-sm"
+                    : "text-slate-400 hover:text-slate-600"
+                }`}
+                title="Info & Stats"
+              >
+                Info
+              </button>
+            </div>
+          </div>
+        </div>
 
+        <div className="flex items-center gap-3">
           <Button
             size="md"
             variant="primary"
             icon={<Wand2 size={16} />}
             onClick={() => setGenModalOpen(true)}
-            className="shadow-lg shadow-amber-100"
           >
             Auto-Generate
           </Button>
 
-          <div className="flex bg-white p-1 rounded-xl shadow-sm border border-slate-100 ml-2">
-            <button
-              onClick={() => exportDutyToExcel(data, activeRoster)}
-              className="p-2 text-slate-500 hover:text-amber-600 transition-colors"
-              title="Export to Excel"
-            >
-              <FileSpreadsheet size={20} />
-            </button>
-            <button
-              onClick={() => printDutyRoster(data, activeRoster)}
-              className="p-2 text-slate-500 hover:text-amber-600 transition-colors"
-              title="Print PDF"
-            >
-              <Printer size={20} />
-            </button>
-          </div>
+          <Button
+            onClick={() => exportDutyToExcel(data, activeRoster)}
+            icon={<FileSpreadsheet size={16} />}
+            title="Export to Excel"
+          />
+          <Button 
+            onClick={() => printDutyRoster(data, activeRoster)} 
+            icon={<Printer size={16} />} 
+            title="Print PDF"
+          />
         </div>
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* SIDEBAR: SAVED ROSTERS */}
-        <div className="w-[248px] bg-white border-r border-slate-200 flex flex-col shrink-0">
-          <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
+        {/* SIDEBAR: HISTORY (Rosters) */}
+        <div className="w-48 bg-slate-50 border-r border-slate-200 flex flex-col h-full shrink-0 shadow-[inset_-1px_0_0_rgba(0,0,0,0.05)]">
+          <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-100/50">
             <div className="flex items-center gap-2">
-              <History size={18} className="text-slate-400" />
-              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">History</h3>
+              <History size={16} className="text-slate-400" />
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                Rosters
+              </span>
             </div>
             <button 
               onClick={createNewRoster}
-              className="p-1.5 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100 transition-colors border border-amber-100 shadow-sm"
-              title="Create New Roster"
+              className="p-1 bg-white text-amber-600 rounded border border-slate-200 hover:bg-amber-50 transition-all shadow-sm"
+              title="New Roster"
             >
-              <Plus size={16} />
+              <Plus size={14} />
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
             {data.dutyRosters?.map(r => (
               <div 
                 key={r.id}
                 onClick={() => setActiveRosterId(r.id)}
-                className={`group relative p-4 rounded-xl border transition-all cursor-pointer ${
+                className={`group relative p-3 rounded-xl border transition-all cursor-pointer ${
                   activeRosterId === r.id 
-                    ? "bg-amber-50/50 border-amber-200 shadow-sm" 
-                    : "bg-white border-slate-100 hover:border-slate-200"
+                    ? "bg-white border-amber-200 shadow-md ring-1 ring-amber-100" 
+                    : "bg-transparent border-transparent hover:bg-white hover:border-slate-200"
                 }`}
               >
-                <div className="flex flex-col gap-1 pr-6">
-                  <span className={`text-xs font-black uppercase tracking-tight ${activeRosterId === r.id ? "text-amber-800" : "text-slate-700"}`}>
+                <div className="flex flex-col gap-0.5 pr-6">
+                  <span className={`text-[11px] font-black truncate ${activeRosterId === r.id ? "text-amber-700" : "text-slate-600"}`}>
                     {r.name}
                   </span>
-                  <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400">
-                    <span className="px-1.5 py-0.5 bg-slate-100 rounded text-slate-500">{r.type}</span>
+                  <div className="flex items-center gap-2 text-[9px] font-bold text-slate-400">
+                    <span className="px-1.5 py-0.5 bg-slate-100 rounded text-slate-500 uppercase">{r.type}</span>
                     <span>{r.type === "DAILY" ? (r.dailyAssignments?.length || 0) : (r.weeklyAssignments?.length || 0)} Staff</span>
                   </div>
                 </div>
                 
                 <button 
                   onClick={(e) => { e.stopPropagation(); deleteRoster(r.id); }}
-                  className="absolute top-4 right-4 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                  className="absolute top-3 right-2 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
                 >
-                  <Trash2 size={14} />
+                  <Trash2 size={12} />
                 </button>
-
-                {activeRosterId === r.id && (
-                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-amber-500 rounded-l-full" />
-                )}
               </div>
             ))}
           </div>
         </div>
 
         {/* MAIN GRID AREA */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-8 bg-slate-50/30">
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-8 bg-white shadow-inner">
           <div className="max-w-6xl mx-auto space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="flex bg-white p-1.5 rounded-xl border border-slate-200 shadow-sm">
-                <button
-                  onClick={() => setActiveTab("ROSTER")}
-                  className={`px-6 py-2 text-xs font-black uppercase rounded-lg transition-all ${activeTab === "ROSTER" ? "bg-slate-100 text-slate-800" : "text-slate-400 hover:text-slate-600"}`}
-                >
-                  Grid View
-                </button>
-                <button
-                  onClick={() => setActiveTab("SETTINGS")}
-                  className={`px-6 py-2 text-xs font-black uppercase rounded-lg transition-all ${activeTab === "SETTINGS" ? "bg-slate-100 text-slate-800" : "text-slate-400 hover:text-slate-600"}`}
-                >
-                  Info & Stats
-                </button>
-              </div>
-            </div>
-
             {activeTab === "SETTINGS" && (
               <div className="bg-white rounded-[2rem] border border-slate-200 p-12 text-center space-y-6 shadow-sm">
                 <div className="w-20 h-20 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto text-amber-500 shadow-inner">

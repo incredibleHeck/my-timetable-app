@@ -36,9 +36,10 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
   const [selectedConfigs, setSelectedConfigs] = useState<
     Record<string, SubjectConfig>
   >({});
+  const [selectedClassIds, setSelectedClassIds] = useState<string[]>([]);
   const [mode, setMode] = useState<ScheduleMode>("UNIFORM");
 
-  // Auto-populate examinable subjects
+  // Auto-populate examinable subjects and classes
   useEffect(() => {
     if (isOpen) {
       const initialConfigs: Record<string, SubjectConfig> = {};
@@ -53,8 +54,10 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
         }
       });
       setSelectedConfigs(initialConfigs);
+      // Default to all classes selected
+      setSelectedClassIds(data.classes.map(c => c.id));
     }
-  }, [isOpen, data.subjects]);
+  }, [isOpen, data.subjects, data.classes]);
 
   // Settings
   const [startDate, setStartDate] = useState(
@@ -84,6 +87,14 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
     });
   };
 
+  const toggleClass = (classId: string) => {
+    setSelectedClassIds(prev => 
+      prev.includes(classId) 
+        ? prev.filter(id => id !== classId) 
+        : [...prev, classId]
+    );
+  };
+
   const updatePaper = (id: string, delta: number) => {
     setSelectedConfigs((prev) => ({
       ...prev,
@@ -94,6 +105,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
   const handleGenerate = () => {
     const sessions = generateExams(data, {
       subjects: Object.values(selectedConfigs),
+      selectedClassIds,
       mode,
       startDate,
       startTime,
@@ -206,7 +218,46 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* 4. SUBJECT SELECTION */}
+        {/* 4. CLASS SELECTION */}
+        <div>
+          <div className="flex justify-between items-center mb-2">
+            <h4 className="text-xs font-bold text-slate-400 uppercase">
+              Select Classes
+            </h4>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setSelectedClassIds(data.classes.map(c => c.id))}
+                className="text-[10px] font-bold text-amber-600 hover:underline"
+              >
+                Select All
+              </button>
+              <span className="text-slate-300">|</span>
+              <button 
+                onClick={() => setSelectedClassIds([])}
+                className="text-[10px] font-bold text-slate-400 hover:underline"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+            {data.classes.map((c) => (
+              <button
+                key={c.id}
+                onClick={() => toggleClass(c.id)}
+                className={`px-3 py-1.5 rounded-md text-[11px] font-bold border transition-all ${
+                  selectedClassIds.includes(c.id)
+                    ? "bg-amber-50 border-amber-300 text-amber-700 shadow-sm"
+                    : "bg-white border-slate-100 text-slate-400 hover:border-slate-200"
+                }`}
+              >
+                {c.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 5. SUBJECT SELECTION */}
         <div>
           <h4 className="text-xs font-bold text-slate-400 uppercase mb-2">
             Select Subjects
@@ -274,7 +325,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
           </Button>
           <Button
             onClick={handleGenerate}
-            disabled={Object.keys(selectedConfigs).length === 0}
+            disabled={Object.keys(selectedConfigs).length === 0 || selectedClassIds.length === 0}
             className="bg-amber-500 hover:bg-amber-600 text-white"
           >
             Generate Schedule

@@ -4,7 +4,7 @@
 *   **Programming Language:** TypeScript
 *   **Frontend Framework:** React 18
 *   **Build System:** Vite
-*   **Desktop Wrapper:** Tauri (Targeting Windows)
+*   **Desktop Wrapper:** Tauri v2 (with @tauri-apps/plugin-fs and @tauri-apps/plugin-dialog)
 
 ## Styling & UI
 *   **CSS Framework:** Tailwind CSS

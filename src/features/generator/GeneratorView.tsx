@@ -245,7 +245,7 @@ export const GeneratorView: React.FC<ViewProps> = ({
               }`}
             >
               {isEditMode ? <Unlock size={14} /> : <Lock size={14} />}
-              {isEditMode ? "Editing Enabled" : "Read Only"}
+              {isEditMode ? "Disable Edit" : "Enable Edit"}
             </button>
           </div>
         </div>
@@ -276,17 +276,15 @@ export const GeneratorView: React.FC<ViewProps> = ({
             onClick={handleExcelExport}
             disabled={isGenerating}
             icon={<FileSpreadsheet size={16} />}
-          >
-            Export All
-          </Button>
+            title="Export All"
+          />
 
           <Button
             onClick={handlePrint}
             disabled={isGenerating}
             icon={<Printer size={16} />}
-          >
-            Print All (PDF)
-          </Button>
+            title="Print All (PDF)"
+          />
         </div>
       </div>
 

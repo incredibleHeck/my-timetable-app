@@ -1,8 +1,9 @@
 // PASTE INTO: src/components/layout/Header.tsx
 
 import React, { useState } from "react";
-import { ChevronDown, PlusCircle, FolderOpen, Save } from "lucide-react";
+import { ChevronDown, PlusCircle, FolderOpen, Save, Globe } from "lucide-react";
 import { Profile, ViewState } from "../../types";
+import { isTauriEnv } from "../../utils/platform";
 
 interface HeaderProps {
   view: ViewState;
@@ -26,13 +27,25 @@ export const Header: React.FC<HeaderProps> = ({
   onExport,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const isTauri = isTauriEnv();
 
   // Helper to format view name
   const title = view.charAt(0) + view.slice(1).toLowerCase().replace("_", " ");
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shadow-sm z-10">
-      <h2 className="text-xl font-bold text-slate-800">{title}</h2>
+    <header className={`h-16 border-b flex items-center justify-between px-8 shadow-sm z-10 transition-colors ${
+      isTauri ? "bg-white border-slate-200" : "bg-slate-50 border-blue-100"
+    }`}>
+      <div className="flex items-center gap-4">
+        <h2 className="text-xl font-bold text-slate-800">{title}</h2>
+        
+        {!isTauri && (
+          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-[10px] font-bold uppercase tracking-wider border border-blue-200">
+            <Globe size={12} />
+            Web Mode
+          </div>
+        )}
+      </div>
 
       <div className="flex items-center gap-3">
         {/* Auto-Save Indicator */}

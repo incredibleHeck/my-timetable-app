@@ -20,30 +20,30 @@ export const generateDutyRoster = (
   const availableTeachers = data.teachers.filter(t => !excludedTeacherIds.includes(t.id));
   if (availableTeachers.length === 0) return [];
 
-  let assignedInCycle = new Set<string>();
+  let assignedGlobal = new Set<string>();
   const rowCount = viewType === "DAILY" ? 5 : numWeeks;
 
   for (let r = 0; r < rowCount; r++) {
-    const targetCount = Math.floor(Math.random() * (maxTeachers - minTeachers + 1)) + minTeachers;
+    const desiredCount = Math.floor(Math.random() * (maxTeachers - minTeachers + 1)) + minTeachers;
     
-    // Pick from pool of teachers not yet assigned in this cycle
-    let pool = availableTeachers.filter(t => !assignedInCycle.has(t.id));
+    // Pick from pool of teachers not yet assigned in the ENTIRE generated roster
+    const pool = availableTeachers.filter(t => !assignedGlobal.has(t.id));
     
-    // If pool is too small, reset cycle (everyone is available again)
-    if (pool.length < targetCount) {
-      assignedInCycle.clear();
-      pool = [...availableTeachers];
-    }
+    // If pool is empty, we simply cannot assign more teachers for the remaining rows/days
+    if (pool.length === 0) break;
+
+    // We can only assign as many as we have left in the pool
+    const targetCount = Math.min(desiredCount, pool.length);
     
     const shuffled = [...pool].sort(() => Math.random() - 0.5);
     const selected = shuffled.slice(0, targetCount);
 
     selected.forEach((t, slotIdx) => {
-      assignedInCycle.add(t.id);
+      assignedGlobal.add(t.id);
       newAssignments.push({
         id: generateId(),
         locationId: "general",
-        day: r, // Row Index
+        day: r, // Row Index (Day or Week)
         period: slotIdx, // Slot Index
         teacherId: t.id
       });

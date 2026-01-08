@@ -1,7 +1,7 @@
 import React from "react";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   variant?: "primary" | "secondary" | "danger" | "ghost";
   size?: "sm" | "md" | "lg";
   icon?: React.ReactNode;
@@ -19,8 +19,10 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props
 }) => {
+  const isIconOnly = !children;
+
   const baseStyles =
-    "inline-flex items-center justify-center gap-2 font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed";
+    `inline-flex items-center justify-center ${isIconOnly ? "" : "gap-2"} font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`;
 
   const variantStyles = {
     primary:
@@ -34,9 +36,9 @@ export const Button: React.FC<ButtonProps> = ({
   };
 
   const sizeStyles = {
-    sm: "px-3 py-1.5 text-xs",
-    md: "px-4 py-2 text-sm",
-    lg: "px-6 py-3 text-base",
+    sm: isIconOnly ? "p-1.5 text-xs" : "px-3 py-1.5 text-xs",
+    md: isIconOnly ? "p-2.5 text-sm" : "px-4 py-2 text-sm",
+    lg: isIconOnly ? "p-4 text-base" : "px-6 py-3 text-base",
   };
 
   return (

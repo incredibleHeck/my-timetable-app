@@ -5,7 +5,6 @@ import {
   Users,
   Trash2,
   Edit2,
-  MapPin,
   Lock,
   FileText,
   AlertTriangle,
@@ -16,30 +15,35 @@ import {
   Teacher,
   ClassGroup,
   Room,
+  AppData,
 } from "../../../types";
 import { Card } from "../../../components/ui";
+import { validateExamMove, ExamConflict } from "../logic/examValidation";
 
 interface Props {
   exam: ExamSession;
-  subject?: Subject;
-  teachers: Teacher[]; // CHANGED: Pass all teachers to look up multiple IDs
-  room?: Room;
-  classes: ClassGroup[];
-  conflicts: string[];
+  data: AppData;
+  allExams: ExamSession[];
   onEdit: () => void;
   onDelete: () => void;
 }
 
 export const ExamCard: React.FC<Props> = ({
   exam,
-  subject,
-  teachers,
-  room,
-  classes,
-  conflicts,
+  data,
+  allExams,
   onEdit,
   onDelete,
 }) => {
+  const subject = data.subjects.find((s) => s.id === exam.subjectId);
+  const teachers = data.teachers;
+  const classes = data.classes;
+  const room = data.rooms.find((r) => r.id === exam.roomId);
+
+  const conflicts = validateExamMove(exam, allExams, data);
+  const hasCritical = conflicts.some((c) => c.severity === "CRITICAL");
+  const hasWarning = conflicts.some((c) => c.severity === "WARNING");
+
   // Format class names for display (e.g. "10A, 10B")
   const classNames = classes
     .filter((c) => exam.classIds.includes(c.id))
@@ -50,18 +54,22 @@ export const ExamCard: React.FC<Props> = ({
 
   // Resolve invigilator names
   const invigilatorNames = (exam.invigilatorIds || [])
-    .map(id => teachers.find(t => t.id === id)?.name)
+    .map((id) => teachers.find((t) => t.id === id)?.name)
     .filter(Boolean)
     .join(", ");
 
   return (
     <Card
       className={`p-4 flex flex-col gap-3 hover:shadow-md transition-shadow relative overflow-hidden group border-l-4 ${
-        conflicts.length > 0 ? "border-l-red-500" : "border-l-transparent"
+        hasCritical
+          ? "border-l-red-500 bg-red-50/10"
+          : hasWarning
+          ? "border-l-amber-500 bg-amber-50/10"
+          : "border-l-transparent"
       }`}
     >
-      {/* Subject Color Strip (if no conflict) */}
-      {conflicts.length === 0 && (
+      {/* Subject Color Strip (if no critical conflict) */}
+      {!hasCritical && (
         <div
           className="absolute top-0 left-0 w-1 h-full"
           style={{ backgroundColor: subject?.color || "#cbd5e1" }}
@@ -124,11 +132,17 @@ export const ExamCard: React.FC<Props> = ({
         <div className="flex items-start gap-2 col-span-2">
           <Users
             size={14}
-            className={invigilatorNames ? "text-slate-400 mt-0.5" : "text-amber-400 mt-0.5"}
+            className={
+              invigilatorNames
+                ? "text-slate-400 mt-0.5"
+                : "text-amber-400 mt-0.5"
+            }
           />
           <span
             className={`text-[11px] leading-tight ${
-              !invigilatorNames ? "text-amber-600 italic" : "text-slate-600 font-medium"
+              !invigilatorNames
+                ? "text-amber-600 italic"
+                : "text-slate-600 font-medium"
             }`}
           >
             {invigilatorNames || "Unassigned Invigilators"}
@@ -151,11 +165,17 @@ export const ExamCard: React.FC<Props> = ({
 
       {/* Conflict Display */}
       {conflicts.length > 0 && (
-        <div className="mt-1 bg-red-50 border border-red-100 p-2 rounded flex flex-col gap-1 text-[10px] text-red-700 ml-2">
-          {conflicts.map((err, i) => (
+        <div
+          className={`mt-1 p-2 rounded flex flex-col gap-1 text-[10px] ml-2 border ${
+            hasCritical
+              ? "bg-red-50 border-red-100 text-red-700"
+              : "bg-amber-50 border-amber-100 text-amber-700"
+          }`}
+        >
+          {conflicts.map((c, i) => (
             <div key={i} className="flex items-start gap-1">
               <AlertTriangle size={10} className="mt-0.5 shrink-0" />
-              <span className="leading-tight">{err}</span>
+              <span className="leading-tight font-bold">{c.message}</span>
             </div>
           ))}
         </div>

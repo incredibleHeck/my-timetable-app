@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Plus,
   Search,
@@ -17,9 +17,13 @@ import {
   Printer,
   FileSpreadsheet,
   Table,
+  History,
+  Trash2,
+  Pencil,
 } from "lucide-react";
-import { AppData, ExamSession } from "../../types";
+import { AppData, ExamSession, ExamRoster } from "../../types";
 import { Button } from "../../components/ui";
+import { generateId } from "../../utils/utils";
 
 // Hooks
 import { useExamSchedule } from "./hooks/useExamSchedule";
@@ -52,7 +56,97 @@ export const ExamsView: React.FC<ViewProps> = ({
   onUpdate,
   onNavigate,
 }) => {
-  // 1. Logic Hook
+  // --- HISTORY & MULTI-ROSTER LOGIC ---
+  const [activeRosterId, setActiveRosterId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let updated = false;
+    let rosters = [...(data.examRosters || [])];
+
+    // 1. Migrate legacy data if it exists
+    if (data.exams?.length > 0 && rosters.length === 0) {
+      const legacyRoster: ExamRoster = {
+        id: generateId(),
+        name: "Imported Timetable",
+        exams: data.exams,
+        createdAt: new Date().toISOString()
+      };
+      rosters = [legacyRoster];
+      updated = true;
+    }
+
+    // 2. Ensure at least one roster exists
+    if (rosters.length === 0) {
+      const defaultRoster: ExamRoster = {
+        id: generateId(),
+        name: "Standard Timetable",
+        exams: [],
+        createdAt: new Date().toISOString()
+      };
+      rosters = [defaultRoster];
+      updated = true;
+    }
+
+    if (updated) {
+      onUpdate({ 
+        ...data, 
+        examRosters: rosters,
+        exams: [] // Clear legacy field
+      });
+    }
+
+    // Initialize active selection
+    if (!activeRosterId && rosters.length > 0) {
+      setActiveRosterId(rosters[0].id);
+    }
+  }, [data.examRosters, data.exams]);
+
+  const activeRoster = useMemo(() => {
+    if (!data.examRosters || data.examRosters.length === 0) return null;
+    return data.examRosters.find(r => r.id === activeRosterId) || data.examRosters[0];
+  }, [data.examRosters, activeRosterId]);
+
+  const activeData = useMemo(() => {
+    return { ...data, exams: activeRoster?.exams || [] };
+  }, [data, activeRoster]);
+
+  const handleUpdateActiveRoster = (updatedActiveData: AppData) => {
+    if (!activeRoster) return;
+    const newRosters = data.examRosters?.map(r => 
+      r.id === activeRoster.id ? { ...r, exams: updatedActiveData.exams } : r
+    );
+    onUpdate({ ...data, examRosters: newRosters });
+  };
+
+  const createNewRoster = () => {
+    const newRoster: ExamRoster = {
+      id: generateId(),
+      name: `New Timetable ${data.examRosters?.length ? data.examRosters.length + 1 : 1}`,
+      exams: [],
+      createdAt: new Date().toISOString()
+    };
+    onUpdate({ ...data, examRosters: [...(data.examRosters || []), newRoster] });
+    setActiveRosterId(newRoster.id);
+  };
+
+  const deleteRoster = (id: string) => {
+    if (!confirm("Are you sure you want to delete this timetable?")) return;
+    const filtered = data.examRosters?.filter(r => r.id !== id) || [];
+    onUpdate({ ...data, examRosters: filtered });
+    if (activeRosterId === id) {
+      setActiveRosterId(filtered[0]?.id || null);
+    }
+  };
+
+  const renameRoster = (name: string) => {
+    if (!activeRoster) return;
+    const newRosters = data.examRosters?.map(r => 
+      r.id === activeRoster.id ? { ...r, name } : r
+    );
+    onUpdate({ ...data, examRosters: newRosters });
+  };
+
+  // --- LOGIC HOOK ---
   const {
     exams,
     addExam,
@@ -61,10 +155,11 @@ export const ExamsView: React.FC<ViewProps> = ({
     upsertExams,
     clearAllExams,
     validateExam,
+    checkMoveConflicts,
     swapExams,
     moveExamToDate,
     moveExamToSlot,
-  } = useExamSchedule(data, onUpdate);
+  } = useExamSchedule(activeData, handleUpdateActiveRoster);
 
   // 2. UI State
   const [viewMode, setViewMode] = useState<"GRID" | "CARDS" | "ROSTER">("GRID");
@@ -87,8 +182,8 @@ export const ExamsView: React.FC<ViewProps> = ({
   // 3. Helper: Regenerate/Overwrite Logic
   const handleRegenerateExams = (newSessions: ExamSession[]) => {
     // Overwrite global state. This effectively "clears" old exams and sets new ones.
-    onUpdate({
-      ...data,
+    handleUpdateActiveRoster({
+      ...activeData,
       exams: newSessions,
     });
   };
@@ -181,7 +276,7 @@ export const ExamsView: React.FC<ViewProps> = ({
   const handleClearAll = () => {
     if (
       confirm(
-        "Are you sure you want to delete ALL exams? This cannot be undone."
+        "Are you sure you want to delete ALL exams in this timetable? This cannot be undone."
       )
     ) {
       clearAllExams();
@@ -198,13 +293,13 @@ export const ExamsView: React.FC<ViewProps> = ({
 
   const handleConfirmAllocation = (excludedIds: string[]) => {
     try {
-      const updatedExams = allocateInvigilators(data, {
+      const updatedExams = allocateInvigilators(activeData, {
         minInvigilators: minInv,
         maxInvigilators: maxInv,
         excludedTeacherIds: excludedIds,
       });
 
-      onUpdate({ ...data, exams: updatedExams });
+      handleUpdateActiveRoster({ ...activeData, exams: updatedExams });
       setExclusionModalOpen(false);
       alert(
         `Success! Staff assigned. Exam count is now: ${updatedExams.length}`
@@ -218,24 +313,26 @@ export const ExamsView: React.FC<ViewProps> = ({
   // Handlers
   const handleExcelExport = () => {
     if (viewMode === "ROSTER") {
-      exportInvigilatorsToExcel(data, exams);
+      exportInvigilatorsToExcel(activeData, exams);
     } else {
-      exportExamsToExcel(data);
+      exportExamsToExcel(activeData);
     }
   };
 
   const handlePrint = () => {
     if (viewMode === "ROSTER") {
-      exportInvigilatorsToPDF(data, exams);
+      exportInvigilatorsToPDF(activeData, exams);
     } else {
-      exportExamsToPDF(data);
+      exportExamsToPDF(activeData);
     }
   };
 
+  if (!activeRoster) return null;
+
   return (
-    <div className="flex flex-col h-full bg-slate-50 overflow-hidden p-6">
+    <div className="flex flex-col h-full bg-slate-50 overflow-hidden">
       {/* HEADER TOOLBAR */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4 mb-6 flex items-center justify-between gap-4">
+      <div className="bg-white border-b border-slate-200 p-4 flex items-center justify-between gap-4 z-10 shrink-0 shadow-sm">
         <div className="flex items-center gap-2 flex-1">
           {/* Back Button */}
           <button
@@ -246,17 +343,59 @@ export const ExamsView: React.FC<ViewProps> = ({
             <ArrowLeft size={20} />
           </button>
 
-          <div>
-            <h2 className="text-xl font-bold text-slate-800">
-              Exam Management
-            </h2>
-            <p className="text-xs text-slate-500 font-medium">
-              Coordinate and track school-wide assessments.
+          <div className="flex flex-col mr-4">
+            <div className="flex items-center group/title relative">
+              <input 
+                value={activeRoster.name}
+                onChange={(e) => renameRoster(e.target.value)}
+                className="text-xl font-bold text-slate-800 bg-transparent border-none p-0 focus:ring-0 w-auto hover:bg-slate-50 rounded px-1 transition-colors"
+              />
+              <Pencil size={12} className="text-slate-300 ml-1 opacity-0 group-hover/title:opacity-100 transition-opacity pointer-events-none" />
+            </div>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">
+              Exam Management History
             </p>
           </div>
 
+          {/* View Toggles */}
+          <div className="flex bg-slate-100 p-1 rounded-lg ml-2">
+            <button
+              onClick={() => setViewMode("GRID")}
+              className={`p-1.5 rounded ${
+                viewMode === "GRID"
+                  ? "bg-white shadow-sm text-amber-600"
+                  : "text-slate-400 hover:text-slate-600"
+              }`}
+              title="Master Table View"
+            >
+              <LayoutGrid size={16} />
+            </button>
+            <button
+              onClick={() => setViewMode("ROSTER")}
+              className={`p-1.5 rounded ${
+                viewMode === "ROSTER"
+                  ? "bg-white shadow-sm text-amber-600"
+                  : "text-slate-400 hover:text-slate-600"
+              }`}
+              title="Invigilator Roster"
+            >
+              <Table size={16} />
+            </button>
+            <button
+              onClick={() => setViewMode("CARDS")}
+              className={`p-1.5 rounded ${
+                viewMode === "CARDS"
+                  ? "bg-white shadow-sm text-amber-600"
+                  : "text-slate-400 hover:text-slate-600"
+              }`}
+              title="Card List View"
+            >
+              <List size={16} />
+            </button>
+          </div>
+
           {/* Edit Mode Toggles */}
-          <div className="flex items-center gap-2 pl-6 border-l border-slate-200 ml-6">
+          <div className="flex items-center gap-2 pl-4 border-l border-slate-200 ml-4">
             <button
               onClick={() => setIsEditMode(!isEditMode)}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
@@ -267,71 +406,22 @@ export const ExamsView: React.FC<ViewProps> = ({
               title={isEditMode ? "Disable Drag & Drop" : "Enable Drag & Drop"}
             >
               {isEditMode ? <Unlock size={14} /> : <Lock size={14} />}
-              {isEditMode ? "Editing Enabled" : "Read Only"}
+              {isEditMode ? "Disable Edit" : "Enable Edit"}
             </button>
-
-            {isEditMode && (
-              <div className="flex bg-slate-100 p-1 rounded-lg">
-                <button
-                  className="p-1.5 rounded-md transition-all bg-white text-emerald-600 shadow-sm"
-                  title="Swap Mode: Drag onto another exam to swap"
-                >
-                  <Repeat size={16} />
-                </button>
-              </div>
-            )}
           </div>
 
-          {/* View Toggles & Search */}
-          <div className="flex items-center gap-4 ml-auto border-l border-slate-200 pl-6">
-            <div className="flex bg-slate-100 p-1 rounded-lg">
-              <button
-                onClick={() => setViewMode("GRID")}
-                className={`p-1.5 rounded ${
-                  viewMode === "GRID"
-                    ? "bg-white shadow-sm text-amber-600"
-                    : "text-slate-400 hover:text-slate-600"
-                }`}
-                title="Master Table View"
-              >
-                <LayoutGrid size={16} />
-              </button>
-              <button
-                onClick={() => setViewMode("ROSTER")}
-                className={`p-1.5 rounded ${
-                  viewMode === "ROSTER"
-                    ? "bg-white shadow-sm text-amber-600"
-                    : "text-slate-400 hover:text-slate-600"
-                }`}
-                title="Invigilator Roster"
-              >
-                <Table size={16} />
-              </button>
-              <button
-                onClick={() => setViewMode("CARDS")}
-                className={`p-1.5 rounded ${
-                  viewMode === "CARDS"
-                    ? "bg-white shadow-sm text-amber-600"
-                    : "text-slate-400 hover:text-slate-600"
-                }`}
-                title="Card List View"
-              >
-                <List size={16} />
-              </button>
-            </div>
-
-            <div className="relative w-48">
-              <Search
-                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
-                size={14}
-              />
-              <input
-                placeholder="Search..."
-                className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
+          {/* Search */}
+          <div className="relative w-48 ml-auto">
+            <Search
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+              size={14}
+            />
+            <input
+              placeholder="Search exams..."
+              className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
         </div>
 
@@ -382,62 +472,125 @@ export const ExamsView: React.FC<ViewProps> = ({
           <Button
             onClick={handleExcelExport}
             icon={<FileSpreadsheet size={16} />}
-          >
-            Export
-          </Button>
-          <Button onClick={handlePrint} icon={<Printer size={16} />}>
-            Print
-          </Button>
+            title="Export to Excel"
+          />
+          <Button 
+            onClick={handlePrint} 
+            icon={<Printer size={16} />} 
+            title="Print PDF"
+          />
         </div>
       </div>
 
       {/* WORKSPACE AREA */}
-      <div className="flex-1 flex overflow-hidden border border-slate-200 rounded-xl bg-white shadow-sm relative">
-        {/* SIDEBAR: Class Filters */}
-        {viewMode !== "ROSTER" && (
-          <div className="w-56 bg-slate-50 border-r border-slate-200 flex flex-col h-full shrink-0">
-            <div className="p-4 border-b border-slate-200 sticky top-0 bg-slate-50 z-10">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                Exam Classes
+      <div className="flex-1 flex overflow-hidden">
+        {/* SIDEBAR 1: HISTORY (Timetables) */}
+        <div className="w-48 bg-slate-50 border-r border-slate-200 flex flex-col h-full shrink-0 shadow-[inset_-1px_0_0_rgba(0,0,0,0.05)]">
+          <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-100/50">
+            <div className="flex items-center gap-2">
+              <History size={16} className="text-slate-400" />
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                Timetables
               </span>
             </div>
-            <div className="overflow-y-auto flex-1 p-2 space-y-1 custom-scrollbar">
-              {sortedClasses.map((cls) => (
-                <button
-                  key={cls.id}
-                  onClick={() =>
-                    setActiveId(cls.id === activeId ? "ALL" : cls.id)
-                  }
-                  className={`w-full text-left px-3 py-2 rounded-md text-xs font-bold transition-colors flex items-center gap-2 ${
-                    activeId === cls.id
-                      ? "bg-white text-amber-700 shadow-sm border border-slate-200"
-                      : "text-slate-600 hover:bg-slate-100 border border-transparent"
-                  }`}
+            <button 
+              onClick={createNewRoster}
+              className="p-1 bg-white text-amber-600 rounded border border-slate-200 hover:bg-amber-50 transition-all shadow-sm"
+              title="New Timetable"
+            >
+              <Plus size={14} />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
+            {data.examRosters?.map(r => (
+              <div 
+                key={r.id}
+                onClick={() => setActiveRosterId(r.id)}
+                className={`group relative p-3 rounded-xl border transition-all cursor-pointer ${
+                  activeRosterId === r.id 
+                    ? "bg-white border-amber-200 shadow-md ring-1 ring-amber-100" 
+                    : "bg-transparent border-transparent hover:bg-white hover:border-slate-200"
+                }`}
+              >
+                <div className="flex flex-col gap-0.5 pr-6">
+                  <span className={`text-[11px] font-black truncate ${activeRosterId === r.id ? "text-amber-700" : "text-slate-600"}`}>
+                    {r.name}
+                  </span>
+                  <span className="text-[9px] font-bold text-slate-400">
+                    {r.exams.length} Sessions
+                  </span>
+                </div>
+                
+                <button 
+                  onClick={(e) => { e.stopPropagation(); deleteRoster(r.id); }}
+                  className="absolute top-3 right-2 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
                 >
-                  <div
-                    className={`w-2 h-2 rounded-full ${
-                      activeId === cls.id ? "bg-amber-500" : "bg-slate-300"
-                    }`}
-                  />
-                  {cls.name}
+                  <Trash2 size={12} />
                 </button>
-              ))}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* SIDEBAR 2: CLASS FILTERS */}
+        <div className="w-48 bg-white border-r border-slate-200 flex flex-col h-full shrink-0 z-10">
+          <div className="p-4 border-b border-slate-100 bg-white sticky top-0 z-20">
+            <div className="flex items-center gap-2">
+              <Users size={16} className="text-slate-400" />
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                Class Filter
+              </span>
             </div>
           </div>
-        )}
+          <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
+            <button
+              onClick={() => setActiveId("ALL")}
+              className={`w-full text-left px-3 py-2 rounded-lg text-[11px] font-black transition-all flex items-center gap-2 border ${
+                activeId === "ALL"
+                  ? "bg-amber-50 border-amber-200 text-amber-700 shadow-sm"
+                  : "bg-white border-transparent text-slate-500 hover:bg-slate-50 hover:border-slate-100"
+              }`}
+            >
+              <div className={`w-1.5 h-1.5 rounded-full ${activeId === "ALL" ? "bg-amber-500" : "bg-slate-300"}`} />
+              Show All Classes
+            </button>
+            <div className="h-px bg-slate-100 my-2 mx-2" />
+            {sortedClasses.map((cls) => (
+              <button
+                key={cls.id}
+                onClick={() =>
+                  setActiveId(cls.id === activeId ? "ALL" : cls.id)
+                }
+                className={`w-full text-left px-3 py-2 rounded-lg text-[11px] font-bold transition-all flex items-center gap-2 border ${
+                  activeId === cls.id
+                    ? "bg-slate-900 border-slate-900 text-white shadow-lg shadow-slate-200"
+                    : "bg-white border-transparent text-slate-600 hover:bg-slate-50 hover:border-slate-100"
+                }`}
+              >
+                <div
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    activeId === cls.id ? "bg-amber-400" : "bg-slate-300"
+                  }`}
+                />
+                <span className="truncate">{cls.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* CONTENT AREA */}
-        <div className="flex-1 overflow-auto bg-white relative custom-scrollbar">
+        <div className="flex-1 overflow-auto bg-white relative custom-scrollbar shadow-inner">
           {/* GRID VIEW */}
           {viewMode === "GRID" && (
             <div className="p-6 h-full min-w-full inline-block">
               <ExamGrid
-                data={data}
+                data={activeData}
                 exams={filteredExams}
                 activeId={activeId}
                 onEdit={handleEditClick}
                 onAddCell={handleCellClick}
-                checkConflicts={(exam) => validateExam(exam, exams)}
+                checkConflicts={(exam) => validateExam(exam)}
+                checkMoveConflicts={checkMoveConflicts}
                 onSwap={swapExams}
                 onMoveToSlot={moveExamToSlot}
                 isEditMode={isEditMode}
@@ -448,7 +601,7 @@ export const ExamsView: React.FC<ViewProps> = ({
           {/* ROSTER VIEW */}
           {viewMode === "ROSTER" && (
             <div className="p-6 h-full">
-              <InvigilatorRoster data={data} exams={filteredExams} />
+              <InvigilatorRoster data={activeData} exams={filteredExams} />
             </div>
           )}
 
@@ -459,11 +612,8 @@ export const ExamsView: React.FC<ViewProps> = ({
                 <ExamCard
                   key={exam.id}
                   exam={exam}
-                  subject={data.subjects.find((s) => s.id === exam.subjectId)}
-                  teachers={data.teachers}
-                  room={data.rooms.find((r) => r.id === exam.roomId)}
-                  classes={data.classes}
-                  conflicts={validateExam(exam, exams)}
+                  data={activeData}
+                  allExams={exams}
                   onEdit={() => handleEditClick(exam)}
                   onDelete={() => deleteExam(exam.id)}
                 />
@@ -490,7 +640,7 @@ export const ExamsView: React.FC<ViewProps> = ({
       <ExamManualModal
         isOpen={manualModalOpen}
         onClose={() => setManualModalOpen(false)}
-        data={data}
+        data={activeData}
         activeId={activeId}
         editingExam={editingExam}
         onSave={handleSaveManual}
@@ -499,14 +649,14 @@ export const ExamsView: React.FC<ViewProps> = ({
       <ExamSchoolAutoModal
         isOpen={autoModalOpen}
         onClose={() => setAutoModalOpen(false)}
-        data={data}
+        data={activeData}
         onSave={handleRegenerateExams}
       />
 
       <InvigilatorExclusionModal
         isOpen={exclusionModalOpen}
         onClose={() => setExclusionModalOpen(false)}
-        data={data}
+        data={activeData}
         onConfirm={handleConfirmAllocation}
       />
     </div>

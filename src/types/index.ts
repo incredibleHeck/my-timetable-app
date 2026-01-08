@@ -94,6 +94,7 @@ export interface ClassGroup {
   id: string;
   name: string;
   level?: string;
+  studentCount?: number; // ADDED: For capacity checks
   curriculum: CurriculumItem[];
 
   // Custom Structure Overrides (Optional)
@@ -191,6 +192,13 @@ export interface ExamSession {
   locked?: boolean; // If true, Auto-Scheduler ignores this
 }
 
+export interface ExamRoster {
+  id: string;
+  name: string;
+  exams: ExamSession[];
+  createdAt: string;
+}
+
 export interface DutyLocation {
   id: string;
   name: string;
@@ -231,6 +239,7 @@ export interface AppData {
   jointClasses: JointClass[];
   electives: ElectiveBlock[];
   exams: ExamSession[]; // NEW
+  examRosters?: ExamRoster[]; // NEW: Support for multiple exam rosters
   dutyLocations: DutyLocation[]; // NEW
   dutyAssignments: DutyAssignment[]; // LEGACY - to be migrated
   dutyRosters?: DutyRoster[]; // NEW: Support for multiple rosters
