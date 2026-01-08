@@ -23,6 +23,7 @@ interface Props {
   onUpdate: (d: AppData) => void;
   editMode: boolean;
   setHoverConflict?: (c: Conflict | null) => void;
+  highlightedConflict?: Conflict | null;
 }
 
 export const ScheduleGrid: React.FC<Props> = ({
@@ -32,6 +33,7 @@ export const ScheduleGrid: React.FC<Props> = ({
   onUpdate,
   editMode,
   setHoverConflict,
+  highlightedConflict,
 }) => {
   // --- SENSORS ---
   const sensors = useSensors(
@@ -385,6 +387,13 @@ export const ScheduleGrid: React.FC<Props> = ({
                 const isValidTarget = activeDragItem ? checkDragValidity(dIdx, pIdx) : true;
                 const opacityClass = !isValidTarget ? "opacity-30 grayscale cursor-not-allowed" : "";
 
+                // Highlight Logic
+                const isHighlighted = highlightedConflict && 
+                    highlightedConflict.day === dIdx && 
+                    highlightedConflict.period === pIdx;
+                    
+                const highlightClass = isHighlighted ? "ring-4 ring-red-400 ring-opacity-70 shadow-lg scale-[1.02] z-20 transition-all duration-300" : "";
+
                 // CONTENT RENDER
                 if (slot) {
                   // CHECK FOR ELECTIVE BLOCK (Split Cell)
@@ -475,7 +484,7 @@ export const ScheduleGrid: React.FC<Props> = ({
                     day={dIdx}
                     period={pIdx}
                     data={{ day: dIdx, period: pIdx }}
-                    className={`h-16 my-1 rounded-md border border-slate-100 flex transition-all relative bg-slate-50/50 ${!content && !isValidTarget ? "bg-slate-100" : ""}`}
+                    className={`h-16 my-1 rounded-md border border-slate-100 flex transition-all relative bg-slate-50/50 ${!content && !isValidTarget ? "bg-slate-100" : ""} ${highlightClass}`}
                   >
                     {content}
                   </DroppableCell>

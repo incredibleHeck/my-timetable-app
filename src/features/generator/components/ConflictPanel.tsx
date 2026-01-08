@@ -4,9 +4,10 @@ import { Conflict } from "../../../types";
 
 interface Props {
   conflicts: Conflict[];
+  onConflictSelect?: (conflict: Conflict) => void;
 }
 
-export const ConflictPanel: React.FC<Props> = ({ conflicts }) => {
+export const ConflictPanel: React.FC<Props> = ({ conflicts, onConflictSelect }) => {
   const sortedGroups = useMemo(() => {
     const groups: Record<string, Conflict[]> = {};
     conflicts.forEach((c) => {
@@ -54,7 +55,8 @@ export const ConflictPanel: React.FC<Props> = ({ conflicts }) => {
                 return (
                   <div
                     key={i}
-                    className={`text-xs p-2 rounded border ${style}`}
+                    className={`text-xs p-2 rounded border ${style} cursor-pointer hover:opacity-80 transition-opacity`}
+                    onClick={() => onConflictSelect?.(c)}
                   >
                     <div className="flex justify-between font-semibold mb-1">
                       <span>{c.subjectName}</span>

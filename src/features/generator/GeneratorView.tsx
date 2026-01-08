@@ -37,6 +37,7 @@ export const GeneratorView: React.FC<ViewProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [hoverConflict, setHoverConflict] = useState<Conflict | null>(null);
+  const [highlightedConflict, setHighlightedConflict] = useState<Conflict | null>(null);
   const [stats, setStats] = useState<{
     iterations: number;
     duration: number;
@@ -51,6 +52,23 @@ export const GeneratorView: React.FC<ViewProps> = ({
       return () => clearTimeout(timer);
     }
   }, [hoverConflict]);
+
+  // Clear highlighted conflict after 3 seconds
+  useEffect(() => {
+    if (highlightedConflict) {
+      // Switch view to the relevant class/teacher
+      if (mode === "CLASS" && highlightedConflict.classId !== activeId) {
+        setActiveId(highlightedConflict.classId);
+      } else if (mode === "TEACHER" && highlightedConflict.teacherId && highlightedConflict.teacherId !== activeId) {
+        setActiveId(highlightedConflict.teacherId);
+      }
+
+      const timer = setTimeout(() => {
+        setHighlightedConflict(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightedConflict, mode, activeId]);
 
   // WORKER REF
   // We keep a reference to the active worker so we can terminate it if needed
@@ -362,6 +380,7 @@ export const GeneratorView: React.FC<ViewProps> = ({
               onUpdate={onUpdate}
               editMode={isEditMode}
               setHoverConflict={setHoverConflict}
+              highlightedConflict={highlightedConflict}
             />
           </div>
         </div>
@@ -387,7 +406,10 @@ export const GeneratorView: React.FC<ViewProps> = ({
             )}
 
             {!isGenerating && data.conflicts.length > 0 && (
-              <ConflictPanel conflicts={data.conflicts} />
+              <ConflictPanel 
+                conflicts={data.conflicts} 
+                onConflictSelect={setHighlightedConflict}
+              />
             )}
           </div>
         )}
