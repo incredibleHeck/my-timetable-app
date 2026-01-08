@@ -20,9 +20,9 @@
     - [x] Subtask: Implement a mechanism to highlight the conflicting slot in `ScheduleGrid` when a conflict is selected in `ConflictPanel` (if not already present).
 - [ ] Task: Conductor - User Manual Verification 'UI Integration & Feedback' (Protocol in workflow.md)
 
-## Phase 3: Final Verification
-- [ ] Task: Perform an end-to-end manual test of the scheduling workflow.
-    - [ ] Subtask: Create a mock schedule with intentional conflicts.
-    - [ ] Subtask: Verify that all conflicts are detected and reported in the UI.
-    - [ ] Subtask: Resolve conflicts and verify that warnings disappear.
-- [ ] Task: Conductor - User Manual Verification 'Final Verification' (Protocol in workflow.md)
+## Phase 3: Final Verification [checkpoint: 382b9a1]
+- [x] Task: Perform an end-to-end manual test of the scheduling workflow. af40f60
+    - [x] Subtask: Create a mock schedule with intentional conflicts.
+    - [x] Subtask: Verify that all conflicts are detected and reported in the UI.
+    - [x] Subtask: Resolve conflicts and verify that warnings disappear.
+- [x] Task: Conductor - User Manual Verification 'Final Verification' (Protocol in workflow.md) af40f60
