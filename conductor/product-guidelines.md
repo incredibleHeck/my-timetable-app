@@ -1,22 +1,20 @@
-# Product Guidelines: EduScheduler Pro
+# Product Guidelines
 
-## Prose & Communication
-*   **Tone:** Professional and Technical. Use precise institutional and scheduling terminology (e.g., "Heuristic Solver," "Joint Class," "Invigilation Roster") to provide clarity for expert users.
-*   **Error Messaging:** Provide clear, technical reasons for failures (e.g., "Conflict: Room 101 over capacity for Period 3") rather than generic messages.
+## Visual Identity
+- **Clean Minimalism:** Prioritize high data density and clarity. Complex scheduling grids must be legible at a glance, using whitespace and subtle borders to separate elements without creating visual noise.
+- **Modern Aesthetic:** Use a professional color palette with softer accents and gently rounded corners (4px-8px) to provide a modern, approachable feel while maintaining a tool-like precision.
+- **Data-First Hierarchy:** Ensure that schedule data remains the primary focus. Controls and menus should be secondary in visual weight, appearing when needed but receding during focused scheduling tasks.
 
-## Visual Identity & Aesthetic
-*   **Aesthetic:** High-Utility "Studio" Look. Use a neutral gray or dark mode palette with high-contrast accent colors for critical status indicators (conflicts, successes, locked states).
-*   **Platform Alignment:** While maintaining a unique "Studio" feel, ensure UI elements (buttons, inputs) feel robust and responsive on the Windows desktop environment.
-*   **Interactive Conflict Engine:** Provide real-time, visual feedback during drag-and-drop operations, preventing invalid states while allowing for soft-conflict resolution.
+## Tone of Voice
+- **Professional and Authoritative:** Communication must be clear, concise, and technically precise.
+- **Reliability-Focused:** Error messages and status updates should emphasize accuracy (e.g., "Conflict detected at 09:00" rather than "Oops, there's a problem").
+- **Precision in Language:** Use industry-standard terminology for scheduling (e.g., "Invigilation," "Roster," "Double-booking") consistently across the application.
 
-## Conflict Visualization
-*   **Detailed Tooltips:** Every scheduling conflict must provide a comprehensive explanation on hover, detailing the specific constraint violation.
-*   **Persistent Conflict Panel:** Maintain a dedicated side panel that lists all active conflicts globally across the current profile, allowing for quick navigation and resolution.
+## Interaction Principles
+- **Direct Manipulation:** Users should interact directly with the schedule. If an object is visible, it should be draggable or right-clickable for actions.
+- **Interactive Precision:** Drag-and-drop operations should feel "snappy" and provide clear visual cues for valid and invalid drop targets.
+- **Predictable Behavior:** Every user action must have a predictable and immediate outcome. Avoid hidden states or unexpected side effects.
 
-## Profile & Navigation
-*   **Context Awareness:** Use persistent sidebar switchers and visual badging/headers to clearly identify the active Profile/Term.
-*   **Interactive Efficiency:** Prioritize non-modal side panels for wizards and multi-step processes, allowing users to reference the main schedule grid while performing administrative tasks.
-
-## Desktop Interaction
-*   **Density:** Maximize screen real estate for data visualization, assuming high-resolution desktop displays.
-*   **Responsiveness:** Ensure all drag-and-drop interactions and grid updates feel instantaneous, leveraging the low-latency environment of a native desktop app.
+## Workspace & Persistence
+- **Stateful Environment:** The application must remember the user's workspace configuration, including open panels, column widths, and view filters, ensuring they can resume work exactly where they left off.
+- **Context-Aware Assistance:** Provide specific, localized feedback based on the user's current task (e.g., highlighting specific room conflicts only when moving a class to that room).

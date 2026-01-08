@@ -1,34 +1,22 @@
 # Initial Concept
-EduScheduler Pro is a high-performance, client-side resource scheduling suite for managing class timetables, examination periods, and supervision rosters using specialized heuristic engines.
+EduScheduler Pro is a desktop application built with Tauri and React designed to streamline school timetable management, including class scheduling, exam logistics, and duty assignments.
 
-# Product Guide: EduScheduler Pro
+# Product Guide
 
 ## Vision
-To provide a robust, local-first scheduling platform that empowers institutional administrators with high-density analytical tools, specifically optimized for a seamless Windows desktop experience via Tauri.
+EduScheduler Pro aims to be the premier desktop solution for complex scheduling needs across educational and corporate environments. By combining a powerful automated conflict detection engine with an intuitive, interactive drag-and-drop interface, it empowers coordinators to create error-free schedules with unprecedented speed and flexibility.
 
 ## Target Users
-*   **School Administrators and Timetablers:** Primary power users responsible for master schedule creation.
-*   **Department Heads:** Users managing faculty workloads and specific departmental resource allocation.
-*   **University Registrar Offices:** Large-scale institutional users managing complex multi-tenant academic environments.
+- **School Administrators and Timetable Coordinators:** Managing complex K-12 schedules with intricate teacher, room, and student constraints.
+- **University Department Heads:** Coordinating course rotations, lecture hall bookings, and academic staff availability.
+- **Corporate Training Managers:** Organizing professional development sessions, instructor rotations, and facility usage.
 
-## Core Goals (Completed)
-*   **Desktop-First Experience:** Initial Tauri integration and native file system support implemented.
-*   **Enhanced Profile Management:** Multi-tenant profile system with local file persistence and context switching implemented.
-*   **Web Compatibility:** Universal runtime support ensuring the application runs in standard browsers with local fallbacks.
-*   **Heuristic Excellence:** Continuous refinement of scheduling algorithms to ensure fairness and efficiency in complex scenarios.
+## Primary Goals
+- **Automated Conflict Resolution:** Eliminate scheduling errors by automatically detecting and highlighting overlaps in room bookings, teacher assignments, and equipment usage.
+- **Streamlined Logistics:** Simplify the generation of specialized schedules, such as exam invigilation rosters and staff duty rotations, which are traditionally time-consuming to create manually.
+- **Interactive Planning:** Provide a fluid "what-if" environment where users can manually refine schedules using drag-and-drop tools while receiving instant feedback on validity.
 
 ## Key Features
-*   **Advanced Profile System:** A comprehensive manager for creating, persisting, and hot-swapping between multi-tenant profiles (e.g., different terms or draft scenarios).
-*   **Exam Logistics Engine:** Improved interactive tools for swapping subjects within the exam timetable, ensuring constraint compliance.
-*   **Intelligent Duty Roster:** Enhanced random assignment algorithms for teacher supervision duties to ensure fairness and coverage.
-*   **Desktop Integration:** Native window management, file system dialogs, and offline capability powered by Tauri.
-*   **Portable Web Mode:** Full application functionality available in standard browsers using LocalStorage for profile persistence and web-native file downloads.
-
-## Design Philosophy
-*   **Data-Dense and Analytical:** High-density UI layouts that prioritize visibility of complex datasets for expert users.
-*   **Task-Oriented and Guided:** Integrated wizards and step-by-step workflows to simplify the most challenging scheduling logistics.
-*   **Visual and Interactive:** A highly tactile experience utilizing drag-and-drop, color-coding, and immediate feedback loops.
-
-## Critical Constraints
-*   **Data Privacy:** A non-negotiable commitment to the local-first architecture to protect sensitive institutional data.
-*   **Windows Desktop Compatibility:** Ensuring the application compiles and runs flawlessly as a native Windows executable via Tauri.
+- **Real-time Conflict Engine:** A sophisticated engine that monitors every change and provides immediate visual warnings for rule violations or double-bookings.
+- **Visual Schedule Builder:** A high-performance, drag-and-drop grid for classes, exams, and duties, designed for high interactivity and ease of use.
+- **Professional Export Suite:** One-click generation of professional-grade PDFs and Excel spreadsheets tailored for different stakeholders (staff, students, facilities).

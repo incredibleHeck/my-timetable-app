@@ -1,25 +1,22 @@
-# Tech Stack: EduScheduler Pro
+# Tech Stack
 
-## Core Technologies
-*   **Programming Language:** TypeScript
-*   **Frontend Framework:** React 18
-*   **Build System:** Vite
-*   **Desktop Wrapper:** Tauri v2 (with @tauri-apps/plugin-fs and @tauri-apps/plugin-dialog)
+## Frontend
+- **Framework:** React 18 (TypeScript)
+- **Build Tool:** Vite
+- **Styling:** Tailwind CSS (with PostCSS and Autoprefixer)
+- **Icons:** Lucide React
+- **Drag & Drop:** @dnd-kit (Core and Utilities)
 
-## Styling & UI
-*   **CSS Framework:** Tailwind CSS
-*   **Post-processing:** PostCSS
-*   **Icons:** Lucide React
-*   **Interactions:** @dnd-kit (Core & Utilities)
+## Desktop Core
+- **Framework:** Tauri v2
+- **Backend Language:** Rust
+- **Capabilities:** Local file system access, system dialogs
 
-## Data & Export
-*   **Reporting:** ExcelJS
-*   **Persistence:** Local File System (via Tauri) and LocalStorage (Web fallback)
-*   **Export:** File-Saver, React-to-Print
-
-## Performance & Optimization
-*   **Background Processing:** Web Workers (Heuristic Solver)
+## Data & Exports
+- **Excel Generation:** ExcelJS
+- **File Handling:** file-saver
+- **Printing:** react-to-print
 
 ## Testing
-*   **Test Runner:** Vitest
-*   **Library:** React Testing Library, JSDOM
+- **Framework:** Vitest
+- **DOM Testing:** React Testing Library with jsdom
