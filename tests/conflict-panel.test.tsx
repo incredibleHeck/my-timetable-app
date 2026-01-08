@@ -66,4 +66,24 @@ describe('ConflictPanel', () => {
     const { container } = render(<ConflictPanel conflicts={[]} />);
     expect(container).toBeEmptyDOMElement();
   });
+
+  it('should apply correct styles based on severity', () => {
+    const mixedConflicts: Conflict[] = [
+      { ...mockConflicts[0], severity: 'HIGH' },
+      { ...mockConflicts[1], severity: 'MEDIUM', reason: 'Medium Warning' }
+    ];
+
+    render(<ConflictPanel conflicts={mixedConflicts} />);
+    
+    // High severity
+    // The text is inside a div, which is inside the container div we want
+    const highSeverityItem = screen.getByText('Room capacity exceeded by Class 1A').closest('div')?.parentElement;
+    expect(highSeverityItem).toHaveClass('bg-red-50/50');
+    expect(highSeverityItem).toHaveClass('border-red-100');
+
+    // Medium severity
+    const mediumSeverityItem = screen.getByText('Medium Warning').closest('div')?.parentElement;
+    expect(mediumSeverityItem).toHaveClass('bg-orange-50/50');
+    expect(mediumSeverityItem).toHaveClass('border-orange-100');
+  });
 });

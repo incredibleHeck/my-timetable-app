@@ -43,25 +43,34 @@ export const ConflictPanel: React.FC<Props> = ({ conflicts }) => {
               </span>
             </div>
             <div className="bg-white p-2 space-y-2">
-              {items.map((c, i) => (
-                <div
-                  key={i}
-                  className="text-xs p-2 bg-red-50/50 rounded border border-red-50"
-                >
-                  <div className="flex justify-between font-semibold text-red-900 mb-1">
-                    <span>{c.subjectName}</span>
-                    <span className="text-[9px] uppercase opacity-70">
-                      {c.duration === 2 ? "Double" : "Single"}
-                    </span>
+              {items.map((c, i) => {
+                const severityStyles = {
+                  HIGH: "bg-red-50/50 border-red-100 text-red-900",
+                  MEDIUM: "bg-orange-50/50 border-orange-100 text-orange-900",
+                  LOW: "bg-yellow-50/50 border-yellow-100 text-yellow-900",
+                };
+                const style = severityStyles[c.severity || "HIGH"];
+
+                return (
+                  <div
+                    key={i}
+                    className={`text-xs p-2 rounded border ${style}`}
+                  >
+                    <div className="flex justify-between font-semibold mb-1">
+                      <span>{c.subjectName}</span>
+                      <span className="text-[9px] uppercase opacity-70">
+                        {c.duration === 2 ? "Double" : "Single"}
+                      </span>
+                    </div>
+                    <div className="opacity-75 flex items-center gap-1 mb-1">
+                      <Users size={10} /> {c.teacherName}
+                    </div>
+                    <div className="italic text-[10px] opacity-90">
+                      {c.reason}
+                    </div>
                   </div>
-                  <div className="text-slate-500 flex items-center gap-1 mb-1">
-                    <Users size={10} /> {c.teacherName}
-                  </div>
-                  <div className="text-red-500 italic text-[10px]">
-                    {c.reason}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         ))}
