@@ -12,12 +12,12 @@
 - [ ] Task: Conductor - User Manual Verification 'Validation Logic Hardening' (Protocol in workflow.md)
 
 ## Phase 2: UI Integration & Feedback
-- [ ] Task: Audit `ConflictPanel.tsx` for data accuracy.
-    - [ ] Subtask: Verify that the component correctly subscribes to validation updates.
-    - [ ] Subtask: Ensure all error types returned by `validation.ts` are rendered correctly.
-- [ ] Task: Improve Visual Feedback.
-    - [ ] Subtask: Add visual distinction between "Critical" errors (e.g., double booking) and "Warnings" (e.g., capacity nearing limit).
-    - [ ] Subtask: Implement a mechanism to highlight the conflicting slot in `ScheduleGrid` when a conflict is selected in `ConflictPanel` (if not already present).
+- [x] Task: Audit `ConflictPanel.tsx` for data accuracy. e1601db
+    - [x] Subtask: Verify that the component correctly subscribes to validation updates.
+    - [x] Subtask: Ensure all error types returned by `validation.ts` are rendered correctly.
+- [x] Task: Improve Visual Feedback. 5354f3c
+    - [x] Subtask: Add visual distinction between "Critical" errors (e.g., double booking) and "Warnings" (e.g., capacity nearing limit).
+    - [x] Subtask: Implement a mechanism to highlight the conflicting slot in `ScheduleGrid` when a conflict is selected in `ConflictPanel` (if not already present).
 - [ ] Task: Conductor - User Manual Verification 'UI Integration & Feedback' (Protocol in workflow.md)
 
 ## Phase 3: Final Verification
