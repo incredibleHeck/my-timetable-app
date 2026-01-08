@@ -49,13 +49,6 @@ export const ScheduleGrid: React.FC<Props> = ({
   // --- LOGIC HOOK ---
   const { activeDragItem, handleDragStart, handleDragEnd } = useDndLogic(data, activeId, mode, onUpdate);
 
-  // Clear conflict on drag end
-  React.useEffect(() => {
-    if (!activeDragItem && setHoverConflict) {
-        setHoverConflict(null);
-    }
-  }, [activeDragItem, setHoverConflict]);
-
   // --- HELPERS ---
   const getSafeType = (item: any) =>
     (typeof item === "object" ? item.type : item) || "CLASS";

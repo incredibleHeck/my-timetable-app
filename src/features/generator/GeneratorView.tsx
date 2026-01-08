@@ -390,7 +390,10 @@ export const GeneratorView: React.FC<ViewProps> = ({
           <div>
             {/* LIVE VALIDATION ERROR */}
             {hoverConflict && (
-              <div className="w-64 mb-4 border border-red-200 bg-red-50 rounded-xl shadow-sm p-4 animate-pulse">
+              <div 
+                className="w-64 mb-4 border border-red-200 bg-red-50 rounded-xl shadow-sm p-4 animate-pulse cursor-pointer hover:bg-red-100 transition-colors"
+                onClick={() => setHighlightedConflict(hoverConflict)}
+              >
                   <h4 className="font-bold text-red-800 mb-1 text-sm flex items-center gap-2">
                     <Lock size={14} /> Invalid Move
                   </h4>
