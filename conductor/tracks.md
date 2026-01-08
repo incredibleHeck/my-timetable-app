@@ -4,5 +4,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-## [ ] Track: Refine and Validate Core Scheduler Constraints
+## [~] Track: Refine and Validate Core Scheduler Constraints
 *Link: [./conductor/tracks/scheduler_constraints_20260108/](./conductor/tracks/scheduler_constraints_20260108/)*
