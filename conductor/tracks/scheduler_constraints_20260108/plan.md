@@ -6,9 +6,9 @@
     - [x] Subtask: Write test cases for Teacher Availability (positive and negative).
     - [x] Subtask: Write test cases for Room Availability (positive and negative).
     - [x] Subtask: Write test cases for Room Capacity (positive and negative).
-- [ ] Task: Refine `src/services/scheduler/validation.ts` based on test results.
-    - [ ] Subtask: Fix any bugs identified by the new test suite.
-    - [ ] Subtask: Optimize validation performance if bottlenecks are found.
+- [x] Task: Refine `src/services/scheduler/validation.ts` based on test results. 87d2ea6
+    - [x] Subtask: Fix any bugs identified by the new test suite.
+    - [x] Subtask: Optimize validation performance if bottlenecks are found.
 - [ ] Task: Conductor - User Manual Verification 'Validation Logic Hardening' (Protocol in workflow.md)
 
 ## Phase 2: UI Integration & Feedback
