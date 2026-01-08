@@ -1,11 +1,11 @@
 # Track Plan: Refine and Validate Core Scheduler Constraints
 
 ## Phase 1: Validation Logic Hardening
-- [ ] Task: Create a comprehensive test suite for `src/services/scheduler/validation.ts`.
-    - [ ] Subtask: Create `tests/scheduler-validation.test.ts` and set up the testing harness.
-    - [ ] Subtask: Write test cases for Teacher Availability (positive and negative).
-    - [ ] Subtask: Write test cases for Room Availability (positive and negative).
-    - [ ] Subtask: Write test cases for Room Capacity (positive and negative).
+- [x] Task: Create a comprehensive test suite for `src/services/scheduler/validation.ts`. b08d4e6
+    - [x] Subtask: Create `tests/scheduler-validation.test.ts` and set up the testing harness.
+    - [x] Subtask: Write test cases for Teacher Availability (positive and negative).
+    - [x] Subtask: Write test cases for Room Availability (positive and negative).
+    - [x] Subtask: Write test cases for Room Capacity (positive and negative).
 - [ ] Task: Refine `src/services/scheduler/validation.ts` based on test results.
     - [ ] Subtask: Fix any bugs identified by the new test suite.
     - [ ] Subtask: Optimize validation performance if bottlenecks are found.
