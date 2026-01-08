@@ -4,6 +4,7 @@ export type ValidationResult = {
   valid: boolean;
   message?: string;
   isSwap?: boolean;
+  severity?: "HIGH" | "MEDIUM" | "LOW";
 };
 
 export const checkSlotValidity = (
@@ -29,7 +30,7 @@ export const checkSlotValidity = (
         cls?.periodCount || settings.periodsPerDay, 
         cls?.structure?.length || 0
     );
-    if (p >= maxPeriods) return { valid: false, message: "Exceeds daily limit" };
+    if (p >= maxPeriods) return { valid: false, message: "Exceeds daily limit", severity: "HIGH" };
 
     // 1. GLOBAL CHECKS
     const globalFixed = settings.fixedOccasions?.[targetDay]?.[p];
@@ -38,7 +39,7 @@ export const checkSlotValidity = (
         typeof globalFixed === "object" && "name" in globalFixed
           ? globalFixed.name
           : "School Event";
-      return { valid: false, message: `Global: ${label}` };
+      return { valid: false, message: `Global: ${label}`, severity: "HIGH" };
     }
 
     // Check Structure
@@ -47,13 +48,13 @@ export const checkSlotValidity = (
     const structureType = typeof structItem === "string" ? structItem : structItem?.type;
 
     if (structureType && structureType !== "CLASS") {
-      return { valid: false, message: `Period is ${structureType}` };
+      return { valid: false, message: `Period is ${structureType}`, severity: "HIGH" };
     }
 
     // 2. CLASS CHECKS
     if (cls?.fixedSessions?.[targetDay]?.[p]) {
       const fixedLabel = cls.fixedSessions[targetDay][p];
-      return { valid: false, message: `Class Busy: ${fixedLabel}` };
+      return { valid: false, message: `Class Busy: ${fixedLabel}`, severity: "HIGH" };
     }
 
     // 3. RESOURCE CHECKS
@@ -65,7 +66,7 @@ export const checkSlotValidity = (
             if (otherCId === classId) continue;
             const otherSlot = schedule[otherCId]?.[targetDay]?.[p];
             if (otherSlot && otherSlot.subjectId === subjectId) {
-                return { valid: false, message: `${subject.name} is already being taught elsewhere` };
+                return { valid: false, message: `${subject.name} is already being taught elsewhere`, severity: "HIGH" };
             }
         }
     }
@@ -74,7 +75,7 @@ export const checkSlotValidity = (
     // A. Constraints (Availability)
     const teacher = teachers.find(t => t.id === teacherId);
     if (teacher?.constraints?.[targetDay]?.[p]) {
-        return { valid: false, message: `${teacher.name} not available` };
+        return { valid: false, message: `${teacher.name} not available`, severity: "HIGH" };
     }
 
     // B. Overlaps
@@ -86,12 +87,12 @@ export const checkSlotValidity = (
           // Teacher Busy
           if (slot.teacherId === teacherId) {
              const className = classes.find((c) => c.id === cId)?.name || "another class";
-             return { valid: false, message: `Teacher is busy in ${className}` };
+             return { valid: false, message: `Teacher is busy in ${className}`, severity: "HIGH" };
           }
           // Room Busy
           if (roomId && slot.roomId === roomId) {
              const className = classes.find((c) => c.id === cId)?.name || "another class";
-             return { valid: false, message: `Room occupied by ${className}` };
+             return { valid: false, message: `Room occupied by ${className}`, severity: "HIGH" };
           }
       }
     }
@@ -104,6 +105,7 @@ export const checkSlotValidity = (
         return {
           valid: false,
           message: `Room capacity (${room.capacity}) exceeded by ${cls.name} (${cls.studentCount} students)`,
+          severity: "MEDIUM",
         };
       }
     }
@@ -141,7 +143,7 @@ export const checkSlotValidity = (
             dailyLoad++;
             consecutiveCount++;
             if (consecutiveCount > maxConsecutive) {
-                return { valid: false, message: `${teacher?.name} would exceed consecutive period limit (${maxConsecutive})` };
+                return { valid: false, message: `${teacher?.name} would exceed consecutive period limit (${maxConsecutive})`, severity: "MEDIUM" };
             }
         } else {
             consecutiveCount = 0;
@@ -150,7 +152,7 @@ export const checkSlotValidity = (
 
     // D. Teacher Daily Load Check
     if (dailyLoad > maxDailyLoad) {
-         return { valid: false, message: `${teacher?.name} exceeds daily limit of ${maxDailyLoad} classes` };
+         return { valid: false, message: `${teacher?.name} exceeds daily limit of ${maxDailyLoad} classes`, severity: "MEDIUM" };
     }
   }
 
@@ -160,7 +162,7 @@ export const checkSlotValidity = (
       jc.subjectId === subjectId && jc.classIds.includes(classId)
   );
   if (isJoint) {
-      return { valid: false, message: "Cannot move Joint Class manually (breaks sync)" };
+      return { valid: false, message: "Cannot move Joint Class manually (breaks sync)", severity: "HIGH" };
   }
 
   // 6. CLASS-LEVEL SUBJECT CONSTRAINTS (Daily Limit & Gaps)
@@ -191,7 +193,7 @@ export const checkSlotValidity = (
   // A. Daily Limit (Max 2)
   if (existingPeriods > 2) {
       const subject = subjects.find(s => s.id === subjectId);
-      return { valid: false, message: `Max 2 periods of ${subject?.name} per day` };
+      return { valid: false, message: `Max 2 periods of ${subject?.name} per day`, severity: "MEDIUM" };
   }
 
   // B. Gap Detection (Sandwich Rule)
@@ -209,7 +211,7 @@ export const checkSlotValidity = (
               const isOccupiedByExisting = daySchedule[gapP]?.subjectId === subjectId;
               
               if (!isOccupiedByProposed && !isOccupiedByExisting) {
-                  return { valid: false, message: `Gap detected in ${subjects.find(s => s.id === subjectId)?.name} sessions` };
+                  return { valid: false, message: `Gap detected in ${subjects.find(s => s.id === subjectId)?.name} sessions`, severity: "MEDIUM" };
               }
           }
       }
@@ -220,10 +222,10 @@ export const checkSlotValidity = (
   const targetSlot = schedule[classId]?.[targetDay]?.[targetPeriod];
   if (targetSlot) {
     if ((targetSlot as any).locked) {
-      return { valid: false, message: "Target slot is Locked" };
+      return { valid: false, message: "Target slot is Locked", severity: "HIGH" };
     }
     if (targetSlot.electiveBlockId) {
-        return { valid: false, message: "Cannot move Elective Block manually" };
+        return { valid: false, message: "Cannot move Elective Block manually", severity: "HIGH" };
     }
     return { valid: true, isSwap: true, message: "Swap with existing lesson" };
   }
