@@ -11,7 +11,7 @@
     - [x] Subtask: Optimize validation performance if bottlenecks are found.
 - [ ] Task: Conductor - User Manual Verification 'Validation Logic Hardening' (Protocol in workflow.md)
 
-## Phase 2: UI Integration & Feedback
+## Phase 2: UI Integration & Feedback [checkpoint: 4d94285]
 - [x] Task: Audit `ConflictPanel.tsx` for data accuracy. e1601db
     - [x] Subtask: Verify that the component correctly subscribes to validation updates.
     - [x] Subtask: Ensure all error types returned by `validation.ts` are rendered correctly.
