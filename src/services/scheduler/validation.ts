@@ -17,7 +17,7 @@ export const checkSlotValidity = (
   roomId?: string,
   duration: number = 1
 ): ValidationResult => {
-  const { schedule, settings, classes, teachers, subjects } = data;
+  const { schedule, settings, classes, teachers, subjects, rooms } = data;
 
   // LOOP for Duration (Check current period + next period if double)
   for (let i = 0; i < duration; i++) {
@@ -93,6 +93,18 @@ export const checkSlotValidity = (
              const className = classes.find((c) => c.id === cId)?.name || "another class";
              return { valid: false, message: `Room occupied by ${className}` };
           }
+      }
+    }
+
+    // Room Capacity Check
+    if (roomId) {
+      const room = rooms.find((r) => r.id === roomId);
+      const cls = classes.find((c) => c.id === classId);
+      if (room && cls && (cls.studentCount || 0) > room.capacity) {
+        return {
+          valid: false,
+          message: `Room capacity (${room.capacity}) exceeded by ${cls.name} (${cls.studentCount} students)`,
+        };
       }
     }
 
