@@ -18,6 +18,6 @@ EduScheduler Pro aims to be the premier desktop solution for complex scheduling 
 
 ## Key Features
 - **Real-time Conflict Engine:** A sophisticated engine with severity-based reporting (High, Medium, Low) that monitors changes and provides instant feedback on teacher availability, room capacity, and scheduling rules.
-- **Visual Schedule Builder:** A high-performance, drag-and-drop grid for classes, exams, and duties, designed for high interactivity and ease of use.
+- **Visual Schedule Builder:** A high-performance, drag-and-drop grid that intelligently handles complex period structures, including double periods split by breaks or lunch, ensuring logical units move together during swaps.
 - **Interactive Conflict Highlighting:** Direct integration between the conflict report and the schedule grid, allowing users to instantly locate and resolve violations with a single click.
 - **Professional Export Suite:** One-click generation of professional-grade PDFs and Excel spreadsheets tailored for different stakeholders (staff, students, facilities).
