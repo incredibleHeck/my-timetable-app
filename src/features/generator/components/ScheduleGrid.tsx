@@ -57,9 +57,12 @@ export const ScheduleGrid: React.FC<Props> = ({
     const cls = classes.find((c) => c.id === classId);
     const struct = cls?.structure || settings.dayStructure;
     const limit = cls?.periodCount || settings.periodsPerDay;
+    
+    // MODIFIED: Search for the next available CLASS slot, skipping BREAK/LUNCH
     for (let i = p + 1; i < limit; i++) {
       const item = struct[i];
-      if (getSafeType(item) === "CLASS") return i;
+      const type = getSafeType(item);
+      if (type === "CLASS") return i;
     }
     return null;
   };
@@ -70,6 +73,8 @@ export const ScheduleGrid: React.FC<Props> = ({
     const p2 = getNextClassIndex(p, classId);
     if (p2 !== null) {
       const nextSlot = schedule[classId]?.[d]?.[p2];
+      // MODIFIED: If the next CLASS slot (even if split by break) 
+      // is the second half of this double period, return 2.
       if (nextSlot && nextSlot.isFixed && nextSlot.subjectId === slot.subjectId)
         return 2;
     }
@@ -136,6 +141,7 @@ export const ScheduleGrid: React.FC<Props> = ({
     
     // Check if target has a slot
     const targetSlot = schedule[classId]?.[targetDay]?.[targetPeriod];
+    // MODIFIED: Use getDuration which now supports split checks
     const targetDuration = targetSlot ? getDuration(classId, targetDay, targetPeriod) : 1;
 
     // Strict swap constraint: must match duration
@@ -169,6 +175,7 @@ export const ScheduleGrid: React.FC<Props> = ({
                   }
                   return false;
              }
+             // MODIFIED: Check the correct target index (could be split)
              if (schedule[classId]?.[targetDay]?.[tP2]) {
                   if (isHoverCheck && setHoverConflict) {
                      const p2Slot = schedule[classId]?.[targetDay]?.[tP2];

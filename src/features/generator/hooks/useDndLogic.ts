@@ -19,9 +19,12 @@ export const useDndLogic = (
     const cls = data.classes.find((c) => c.id === classId);
     const struct = cls?.structure || data.settings.dayStructure;
     const limit = cls?.periodCount || data.settings.periodsPerDay;
+    
+    // MODIFIED: Search for the next available CLASS slot, skipping BREAK/LUNCH
     for (let i = p + 1; i < limit; i++) {
       const item = struct[i];
-      if (getSafeType(item) === "CLASS") return i;
+      const type = getSafeType(item);
+      if (type === "CLASS") return i;
     }
     return null;
   };
@@ -32,6 +35,8 @@ export const useDndLogic = (
     const p2 = getNextClassIndex(p, classId);
     if (p2 !== null) {
       const nextSlot = data.schedule[classId]?.[d]?.[p2];
+      // MODIFIED: If the next CLASS slot (even if split by break) 
+      // is the second half of this double period, return 2.
       if (nextSlot && nextSlot.isFixed && nextSlot.subjectId === slot.subjectId)
         return 2;
     }
