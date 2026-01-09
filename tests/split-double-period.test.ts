@@ -178,8 +178,8 @@ describe('Split Double Period Swap Logic', () => {
         2 // Duration 2 (Double Period)
     );
 
-    // Currently this should FAIL because Index 2 is a BREAK.
-    expect(resultDoubleAcrossBreak.valid).toBe(false); 
-    expect(resultDoubleAcrossBreak.message).toContain('Period is BREAK');
+    // Now this should PASS because it skips the break at Index 2
+    expect(resultDoubleAcrossBreak.valid).toBe(true); 
+    expect(resultDoubleAcrossBreak.message).toBe('Available');
   });
 });
