@@ -7,7 +7,7 @@
     - [x] Subtask: Assert that `checkSlotValidity` currently fails to recognize this as a swappable double period unit.
 - [x] Task: Conductor - User Manual Verification 'Research and Test Reproduction' (Protocol in workflow.md) 4645be8
 
-## Phase 2: Validation Logic Refinement
+## Phase 2: Validation Logic Refinement [checkpoint: 5b5e304]
 - [x] Task: Update `checkSlotValidity` in `src/services/scheduler/validation.ts`. bb945df
     - [x] Subtask: Enhance the duration detection logic to look past BREAK/LUNCH periods if the same subject is scheduled on the other side.
     - [x] Subtask: Update the swap detection logic to treat these split slots as a single atomic unit.
