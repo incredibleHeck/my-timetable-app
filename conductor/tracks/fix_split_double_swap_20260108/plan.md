@@ -1,6 +1,6 @@
 # Track Plan: Fix Split Double Period Swap Logic
 
-## Phase 1: Research and Test Reproduction
+## Phase 1: Research and Test Reproduction [checkpoint: fe42874]
 - [x] Task: Create a reproduction test case for split double period swaps. 4645be8
     - [x] Subtask: Add a test case in `tests/scheduler-validation.test.ts` (or a new file) that defines a class structure with a Break between two CLASS periods.
     - [x] Subtask: Mock a schedule with the same subject/teacher/class on both sides of the break.
