@@ -1,0 +1,8 @@
+{
+  "track_id": "fix_split_double_swap_20260108",
+  "type": "bug",
+  "status": "new",
+  "created_at": "2026-01-08T15:40:00Z",
+  "updated_at": "2026-01-08T15:40:00Z",
+  "description": "Fix swap logic for double periods split by break or lunch"
+}

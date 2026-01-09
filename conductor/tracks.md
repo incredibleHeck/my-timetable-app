@@ -4,5 +4,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-## [~] Track: Refine and Validate Core Scheduler Constraints
-*Link: [./conductor/tracks/scheduler_constraints_20260108/](./conductor/tracks/scheduler_constraints_20260108/)*
+## [~] Track: Fix Split Double Period Swap Logic
+*Link: [./conductor/tracks/fix_split_double_swap_20260108/](./conductor/tracks/fix_split_double_swap_20260108/)*
