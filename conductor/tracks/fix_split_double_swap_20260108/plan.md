@@ -17,10 +17,10 @@
 - [x] Task: Conductor - User Manual Verification 'Validation Logic Refinement' (Protocol in workflow.md) bb945df
 
 ## Phase 3: Frontend & DND Integration
-- [ ] Task: Audit and update `src/features/generator/components/ScheduleGrid.tsx` and `useDndLogic.ts`.
-    - [ ] Subtask: Ensure `getDuration` helper in `ScheduleGrid.tsx` correctly identifies split double periods.
-    - [ ] Subtask: Verify that `handleDragEnd` and `checkDragValidity` correctly process the multi-slot swap for split periods.
-- [ ] Task: Final Manual Verification.
-    - [ ] Subtask: Manually test swapping split double periods in the UI.
-    - [ ] Subtask: Verify that both slots move together and correctly occupy target slots.
-- [ ] Task: Conductor - User Manual Verification 'Frontend & DND Integration' (Protocol in workflow.md)
+- [x] Task: Audit and update `src/features/generator/components/ScheduleGrid.tsx` and `useDndLogic.ts`. 9bbab61
+    - [x] Subtask: Ensure `getDuration` helper in `ScheduleGrid.tsx` correctly identifies split double periods.
+    - [x] Subtask: Verify that `handleDragEnd` and `checkDragValidity` correctly process the multi-slot swap for split periods.
+- [x] Task: Final Manual Verification. 9bbab61
+    - [x] Subtask: Manually test swapping split double periods in the UI.
+    - [x] Subtask: Verify that both slots move together and correctly occupy target slots.
+- [x] Task: Conductor - User Manual Verification 'Frontend & DND Integration' (Protocol in workflow.md) 9bbab61
