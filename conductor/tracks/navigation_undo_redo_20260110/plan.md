@@ -13,16 +13,16 @@
 - [x] Task: Integrate the history manager with the primary state (likely `ProfileContext`).
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Undo/Redo State Management' (Protocol in workflow.md)
 
-## Phase 3: Header UI & Shortcuts
-- [ ] Task: Create `UndoRedoControls` component for the Header.
-- [ ] Task: Implement global keyboard shortcut listeners for Undo/Redo.
-- [ ] Task: Add the controls to `Header.tsx` (right-aligned, standard Lucide icons).
-- [ ] Task: Ensure buttons correctly reflect the state of the history stack (enabled/disabled).
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Header UI & Shortcuts' (Protocol in workflow.md)
+## Phase 3: Header UI & Shortcuts [checkpoint: 05ebd5b]
+- [x] Task: Create `UndoRedoControls` component for the Header.
+- [x] Task: Implement global keyboard shortcut listeners for Undo/Redo.
+- [x] Task: Add the controls to `Header.tsx` (right-aligned, standard Lucide icons).
+- [x] Task: Ensure buttons correctly reflect the state of the history stack (enabled/disabled).
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Header UI & Shortcuts' (Protocol in workflow.md)
 
-## Phase 4: Feature Integration (The "Scheduling" Bridge)
-- [ ] Task: Hook the Undo/Redo system into the Class Grid (moving/swapping).
-- [ ] Task: Hook the Undo/Redo system into Exam Scheduling (swapping slots).
-- [ ] Task: Hook the Undo/Redo system into Teacher Assignments.
-- [ ] Task: Verify end-to-end functionality: perform a move -> undo -> redo.
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Feature Integration' (Protocol in workflow.md)
+## Phase 4: Feature Integration (The "Scheduling" Bridge) [checkpoint: 05ebd5b]
+- [x] Task: Hook the Undo/Redo system into the Class Grid (moving/swapping).
+- [x] Task: Hook the Undo/Redo system into Exam Scheduling (swapping slots).
+- [x] Task: Hook the Undo/Redo system into Teacher Assignments.
+- [x] Task: Verify end-to-end functionality: perform a move -> undo -> redo.
+- [x] Task: Conductor - User Manual Verification 'Phase 4: Feature Integration' (Protocol in workflow.md)
