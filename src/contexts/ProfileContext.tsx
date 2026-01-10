@@ -15,9 +15,16 @@ interface ProfileContextType {
   switchProfile: (id: string) => Promise<void>;
   updateActiveProfile: (data: AppData) => void;
   reloadProfiles: () => Promise<void>;
+  undo: () => void;
+  redo: () => void;
+  pushToHistory: (data: AppData) => void;
+  canUndo: boolean;
+  canRedo: boolean;
 }
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
+
+const MAX_HISTORY = 50;
 
 export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   const [profiles, setProfiles] = useState<ProfileManifest['profiles']>([]);
@@ -25,6 +32,10 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   
+  // History State
+  const [past, setPast] = useState<AppData[]>([]);
+  const [future, setFuture] = useState<AppData[]>([]);
+
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const reloadProfiles = async () => {
@@ -38,6 +49,9 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     if (profile) {
       setActiveProfile(profile);
       await ProfileStorage.setActiveProfile(id);
+      // Reset history on profile switch
+      setPast([]);
+      setFuture([]);
     }
     setIsLoading(false);
   };
@@ -94,9 +108,6 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     // Cancel pending saves
     if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
-        // Force immediate save of current? 
-        // For simplicity, we assume debounce is short enough or we accept loss of last <1s chars.
-        // Ideally we should flush save here.
         if (activeProfile) {
             await ProfileStorage.saveProfile(activeProfile);
         }
@@ -104,7 +115,46 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     await loadActiveProfile(id);
   };
 
-  const updateActiveProfile = (data: AppData) => {
+  const undo = () => {
+    if (past.length === 0 || !activeProfile) return;
+
+    const previous = past[past.length - 1];
+    const newPast = past.slice(0, past.length - 1);
+    
+    setPast(newPast);
+    setFuture([activeProfile.data, ...future]);
+    
+    // Apply state without pushing to history again
+    applyState(previous);
+  };
+
+  const redo = () => {
+    if (future.length === 0 || !activeProfile) return;
+
+    const next = future[0];
+    const newFuture = future.slice(1);
+    
+    setPast([...past, activeProfile.data]);
+    setFuture(newFuture);
+    
+    // Apply state without pushing to history again
+    applyState(next);
+  };
+
+  const pushToHistory = (data: AppData) => {
+    if (!activeProfile) return;
+    
+    setPast(prevPast => {
+      const newPast = [...prevPast, activeProfile.data];
+      if (newPast.length > MAX_HISTORY) {
+        return newPast.slice(newPast.length - MAX_HISTORY);
+      }
+      return newPast;
+    });
+    setFuture([]);
+  };
+
+  const applyState = (data: AppData) => {
     if (!activeProfile) return;
 
     const updated = { 
@@ -113,12 +163,20 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
         lastModified: Date.now() 
     };
     setActiveProfile(updated);
-    setIsSaving(true);
+    triggerSave(updated);
+  };
 
+  const updateActiveProfile = (data: AppData) => {
+    if (!activeProfile) return;
+    applyState(data);
+  };
+
+  const triggerSave = (updatedProfile: Profile) => {
+    setIsSaving(true);
     // Debounce Save
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(async () => {
-      await ProfileStorage.saveProfile(updated);
+      await ProfileStorage.saveProfile(updatedProfile);
       setIsSaving(false);
     }, 1000);
   };
@@ -132,7 +190,12 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
       createNewProfile,
       switchProfile,
       updateActiveProfile,
-      reloadProfiles
+      reloadProfiles,
+      undo,
+      redo,
+      pushToHistory,
+      canUndo: past.length > 0,
+      canRedo: future.length > 0
     }}>
       {children}
     </ProfileContext.Provider>
