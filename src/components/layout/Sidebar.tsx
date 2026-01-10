@@ -27,6 +27,22 @@ interface SidebarProps {
   onSwitchProfile: (id: string) => void;
 }
 
+export const SidebarSection = ({
+  label,
+  isFirst = false,
+}: {
+  label: string;
+  isFirst?: boolean;
+}) => (
+  <div
+    className={`px-6 py-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest ${
+      !isFirst ? "mt-4" : ""
+    }`}
+  >
+    {label.toUpperCase()}
+  </div>
+);
+
 const NavItem = ({
   id,
   icon,
@@ -90,9 +106,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto custom-scrollbar py-4">
-        <div className="px-6 py-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
-          Main
-        </div>
+        <SidebarSection label="General" isFirst />
         <NavItem
           id="DASHBOARD"
           icon={<LayoutDashboard size={18} />}
@@ -101,17 +115,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
           onClick={setView}
         />
 
-        <div className="px-6 py-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest mt-4">
-          Configurations
-        </div>
+        <SidebarSection label="System" />
         <NavItem
           id="CONFIG"
           icon={<Sliders size={18} />}
-          label="Global Config"
+          label="Configuration"
           currentView={view}
           onClick={setView}
         />
 
+        <SidebarSection label="Academic Data" />
+        <NavItem
+          id="TEACHERS"
+          icon={<Users size={18} />}
+          label="Teachers"
+          currentView={view}
+          onClick={setView}
+        />
         <NavItem
           id="ROOMS"
           icon={<Building2 size={18} />}
@@ -119,22 +139,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           currentView={view}
           onClick={setView}
         />
-
         <NavItem
           id="SUBJECTS"
           icon={<Library size={18} />}
           label="Subjects"
-          currentView={view}
-          onClick={setView}
-        />
-
-        <div className="px-6 py-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest mt-4">
-          Management
-        </div>
-        <NavItem
-          id="TEACHERS"
-          icon={<Users size={18} />}
-          label="Teachers"
           currentView={view}
           onClick={setView}
         />
@@ -146,16 +154,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           onClick={setView}
         />
 
-        <div className="px-6 py-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest mt-4">
-          Operations
-        </div>
-        <NavItem
-          id="WORKLOAD"
-          icon={<BarChart3 size={18} />}
-          label="Workload Analysis"
-          currentView={view}
-          onClick={setView}
-        />
+        <SidebarSection label="Scheduling" />
         <NavItem
           id="GENERATOR"
           icon={<Zap size={18} />}
@@ -163,6 +162,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
           currentView={view}
           onClick={setView}
         />
+        <NavItem
+          id="WORKLOAD"
+          icon={<BarChart3 size={18} />}
+          label="Workload Analysis"
+          currentView={view}
+          onClick={setView}
+        />
+
+        <SidebarSection label="Operations" />
         <NavItem
           id="EXAMS"
           icon={<FileText size={18} />}
@@ -179,9 +187,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
         />
 
         {/* Profiles Section */}
-        <div className="px-6 py-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest mt-6">
-          Profiles
-        </div>
+
+        {/* Profiles Section */}
+        <SidebarSection label="Profiles" />
         <div className="px-4 mb-4 space-y-1">
           {profiles.map(p => (
             <button
