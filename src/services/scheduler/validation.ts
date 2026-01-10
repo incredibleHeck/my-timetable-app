@@ -266,18 +266,20 @@ export const checkSlotValidity = (
             isBusy = true;
         } else {
             // Check existing schedule
-            for (const cId of Object.keys(schedule)) {
-                const s = schedule[cId]?.[targetDay]?.[checkP];
-                if (s && s.teacherId === teacherId) {
-                    if (ignoreSlot && targetDay === ignoreSlot.day && checkP === ignoreSlot.period) {
-                        // ignore
-                    } else {
-                        isBusy = true;
-                        break;
-                    }
-                }
-            }
-        }
+                        // Check existing schedule
+                        for (const cId of Object.keys(schedule)) {
+                            const s = schedule[cId]?.[targetDay]?.[checkP];
+                            if (s && s.teacherId === teacherId) {
+                                // Ignore the old position of the dragged slot
+                                // Modified to ignore the FULL duration of the moved slot
+                                if (ignoreSlot && targetDay === ignoreSlot.day && checkP >= ignoreSlot.period && checkP < ignoreSlot.period + duration) {
+                                    // This is part of the old slot we are moving
+                                } else {
+                                    isBusy = true;
+                                    break;
+                                }
+                            }
+                        }        }
 
         if (isBusy) {
             dailyLoad++;
@@ -323,8 +325,8 @@ export const checkSlotValidity = (
   // Check existing slots for this subject
   for (const pStr in daySchedule) {
       const pIdx = parseInt(pStr);
-      // Ignore old position if we are moving
-      if (ignoreSlot && targetDay === ignoreSlot.day && pIdx === ignoreSlot.period) continue;
+      // Ignore old position if we are moving (Full Duration)
+      if (ignoreSlot && targetDay === ignoreSlot.day && pIdx >= ignoreSlot.period && pIdx < ignoreSlot.period + duration) continue;
       
       const s = daySchedule[pStr];
       if (s.subjectId === subjectId) {
