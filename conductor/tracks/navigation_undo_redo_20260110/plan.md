@@ -6,12 +6,12 @@
 - [x] Task: Update Sidebar styling to match "Option A" (small, uppercase labels as dividers).
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Sidebar Reorganization' (Protocol in workflow.md)
 
-## Phase 2: Undo/Redo State Management
-- [ ] Task: Design and implement a `useHistory` or `UndoRedoContext` to track scheduling state changes.
-- [ ] Task: Define the "Undoable Action" interface and state structure (limited to scheduling actions).
-- [ ] Task: Write tests for the Undo/Redo logic (History stack, limits, push/undo/redo operations).
-- [ ] Task: Integrate the history manager with the primary state (likely `ProfileContext`).
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Undo/Redo State Management' (Protocol in workflow.md)
+## Phase 2: Undo/Redo State Management [checkpoint: f6ba812]
+- [x] Task: Design and implement a `useHistory` or `UndoRedoContext` to track scheduling state changes.
+- [x] Task: Define the "Undoable Action" interface and state structure (limited to scheduling actions).
+- [x] Task: Write tests for the Undo/Redo logic (History stack, limits, push/undo/redo operations).
+- [x] Task: Integrate the history manager with the primary state (likely `ProfileContext`).
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Undo/Redo State Management' (Protocol in workflow.md)
 
 ## Phase 3: Header UI & Shortcuts
 - [ ] Task: Create `UndoRedoControls` component for the Header.
