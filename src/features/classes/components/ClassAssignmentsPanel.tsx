@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { AppData, Teacher, ClassGroup } from "../../../types";
 import { Badge, Button, Select } from "../../../components/ui";
 import { Check, Plus } from "lucide-react";
+import { useProfile } from "../../../contexts/ProfileContext";
 
 interface Props {
   data: AppData;
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export const ClassAssignmentsPanel: React.FC<Props> = ({ data, onUpdate }) => {
+  const { pushToHistory } = useProfile();
   const [selectedClassId, setSelectedClassId] = useState("");
   const [selectedTeacherId, setSelectedTeacherId] = useState("");
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
@@ -71,6 +73,7 @@ export const ClassAssignmentsPanel: React.FC<Props> = ({ data, onUpdate }) => {
       c.id === cls.id ? newClass : c
     );
 
+    pushToHistory(data);
     onUpdate({ ...data, classes: newClasses });
     
     // 3. Feedback

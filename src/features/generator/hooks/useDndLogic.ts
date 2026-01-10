@@ -2,6 +2,7 @@ import { useState } from "react";
 import { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { AppData, ScheduleSlot } from "../../../types";
 import { checkSlotValidity } from "../../../services/scheduler/validation";
+import { useProfile } from "../../../contexts/ProfileContext";
 
 export const useDndLogic = (
   data: AppData,
@@ -10,6 +11,7 @@ export const useDndLogic = (
   onUpdate: (d: AppData) => void
 ) => {
   const [activeDragItem, setActiveDragItem] = useState<any>(null);
+  const { pushToHistory } = useProfile();
 
   // --- HELPERS ---
   const getSafeType = (item: any) =>
@@ -186,6 +188,7 @@ export const useDndLogic = (
         setSlot(sD, sP, destSlot, targetDuration);
     }
 
+    pushToHistory(data);
     onUpdate({ ...data, schedule: newSchedule });
   };
 

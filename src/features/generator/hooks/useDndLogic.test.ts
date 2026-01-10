@@ -4,6 +4,13 @@ import { useDndLogic } from "./useDndLogic";
 import { AppData, ClassGroup, Subject, Teacher, ScheduleSlot } from "../../../types";
 import { DragEndEvent } from "@dnd-kit/core";
 
+// Mock ProfileContext
+vi.mock("../../../contexts/ProfileContext", () => ({
+  useProfile: () => ({
+    pushToHistory: vi.fn(),
+  }),
+}));
+
 // MOCK DATA FACTORY
 const createMockData = (): AppData => ({
   settings: {
@@ -20,6 +27,7 @@ const createMockData = (): AppData => ({
     { id: "sub3", name: "Science", color: "green" },
     { id: "sub4", name: "History", color: "yellow" },
   ] as Subject[],
+  rooms: [{ id: "r1", name: "Room 1", capacity: 30, type: "Classroom" }] as any,
   classrooms: [],
   schedule: {
     c1: {

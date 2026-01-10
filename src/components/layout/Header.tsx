@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { ChevronDown, PlusCircle, FolderOpen, Save, Globe } from "lucide-react";
 import { Profile, ViewState } from "../../types";
 import { isTauriEnv } from "../../utils/platform";
+import { UndoRedoControls } from "./UndoRedoControls";
 
 interface HeaderProps {
   view: ViewState;
@@ -11,9 +12,6 @@ interface HeaderProps {
   profiles: { id: string; name: string }[];
   autoSaveStatus: "SAVED" | "SAVING";
   onSwitchProfile: (id: string) => void;
-  onCreateProfile: () => void;
-  onImport: () => void;
-  onExport: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -22,9 +20,6 @@ export const Header: React.FC<HeaderProps> = ({
   profiles,
   autoSaveStatus,
   onSwitchProfile,
-  onCreateProfile,
-  onImport,
-  onExport,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isTauri = isTauriEnv();
@@ -63,6 +58,10 @@ export const Header: React.FC<HeaderProps> = ({
           )}
           {autoSaveStatus === "SAVED" ? "Saved" : "Saving..."}
         </div>
+
+        <div className="h-6 w-px bg-slate-200 mx-2"></div>
+
+        <UndoRedoControls />
 
         <div className="h-6 w-px bg-slate-200 mx-2"></div>
 
@@ -109,35 +108,6 @@ export const Header: React.FC<HeaderProps> = ({
                     </button>
                   ))}
                 </div>
-
-                <div className="border-t border-slate-100 my-1"></div>
-                <button
-                  onClick={() => {
-                    onCreateProfile();
-                    setIsMenuOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-2 text-sm text-slate-700 font-bold hover:bg-amber-50 rounded-lg flex items-center hover:text-amber-700"
-                >
-                  <PlusCircle size={16} className="mr-2" /> Create New Profile
-                </button>
-                <button
-                  onClick={() => {
-                    onImport();
-                    setIsMenuOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-2 text-sm text-slate-700 font-bold hover:bg-blue-50 rounded-lg flex items-center hover:text-blue-700"
-                >
-                  <FolderOpen size={16} className="mr-2" /> Load Profile
-                </button>
-                <button
-                  onClick={() => {
-                    onExport();
-                    setIsMenuOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-2 text-sm text-slate-700 font-bold hover:bg-emerald-50 rounded-lg flex items-center hover:text-emerald-700"
-                >
-                  <Save size={16} className="mr-2" /> Export Profile
-                </button>
               </div>
             </>
           )}

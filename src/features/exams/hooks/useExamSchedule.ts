@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { AppData, ExamSession } from "../../../types";
 import { generateId } from "../../../utils/utils";
 import { validateExamMove, ExamConflict } from "../logic/examValidation";
+import { useProfile } from "../../../contexts/ProfileContext";
 
 export const useExamSchedule = (
   initialData: AppData,
@@ -9,6 +10,7 @@ export const useExamSchedule = (
 ) => {
   // 1. STATE & REFS
   const [exams, setExams] = useState<ExamSession[]>(initialData.exams || []);
+  const { pushToHistory } = useProfile();
 
   // Create a Ref for initialData to avoid stale closures in complex DND handlers
   const dataRef = useRef(initialData);
@@ -62,30 +64,35 @@ export const useExamSchedule = (
   // --- CRUD OPERATIONS ---
 
   const addExam = (exam: ExamSession) => {
+    pushToHistory(dataRef.current);
     const newExams = [...exams, exam];
     setExams(newExams);
     onUpdate({ ...dataRef.current, exams: newExams });
   };
 
   const updateExam = (exam: ExamSession) => {
+    pushToHistory(dataRef.current);
     const newExams = exams.map((e) => (e.id === exam.id ? exam : e));
     setExams(newExams);
     onUpdate({ ...dataRef.current, exams: newExams });
   };
 
   const deleteExam = (id: string) => {
+    pushToHistory(dataRef.current);
     const newExams = exams.filter((e) => e.id !== id);
     setExams(newExams);
     onUpdate({ ...dataRef.current, exams: newExams });
   };
 
   const bulkAddExams = (newSessions: ExamSession[]) => {
+    pushToHistory(dataRef.current);
     const combined = [...exams, ...newSessions];
     setExams(combined);
     onUpdate({ ...dataRef.current, exams: combined });
   };
 
   const upsertExams = (sessions: ExamSession[]) => {
+    pushToHistory(dataRef.current);
     let currentList = [...exams];
     const allProjectClasses = dataRef.current.classes;
 
@@ -126,6 +133,7 @@ export const useExamSchedule = (
   };
 
   const clearAllExams = () => {
+    pushToHistory(dataRef.current);
     setExams([]);
     onUpdate({ ...dataRef.current, exams: [] });
   };
@@ -146,6 +154,8 @@ export const useExamSchedule = (
     const group2 = exams.filter(e => group2Ids.includes(e.id));
 
     if (group1.length === 0 || group2.length === 0) return;
+
+    pushToHistory(dataRef.current);
 
     // Use subject from first element of each group
     const sub1Id = group1[0].subjectId;
@@ -186,6 +196,7 @@ export const useExamSchedule = (
    * Directly moves a set of exams to a specific date.
    */
   const moveExamToDate = (ids: string | string[], newDate: string) => {
+    pushToHistory(dataRef.current);
     const targetIds = Array.isArray(ids) ? ids : [ids];
     const newExams = exams.map((e) =>
       targetIds.includes(e.id) ? { ...e, date: newDate } : e
@@ -201,6 +212,8 @@ export const useExamSchedule = (
   const moveExamToSlot = (ids: string[], newDate: string, newTime: string) => {
     const targetExams = exams.filter(e => ids.includes(e.id));
     if (targetExams.length === 0) return;
+
+    pushToHistory(dataRef.current);
 
     // Identify all related exams in the same streams
     const streams = new Set(targetExams.map(e => {
