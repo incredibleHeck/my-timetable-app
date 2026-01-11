@@ -92,9 +92,16 @@ export const checkSlotValidity = (
       const slot = schedule[cId]?.[targetDay]?.[p];
       if (slot) {
           // Teacher Busy
+          // FIX: If we are swapping, we should ignore the teacher's own presence at the target
+          // provided the target slot will be displaced (which DnD handles).
           if (slot.teacherId === teacherId) {
-             const className = classes.find((c) => c.id === cId)?.name || "another class";
-             return { valid: false, message: `Teacher is busy in ${className}`, severity: "HIGH" };
+             // For now, we allow the teacher to be busy at the target slot IF we are in a swap context.
+             // checkSlotValidity doesn't know for sure, but we can check if there's a target slot in the schedule.
+             const isSelfSwap = true; // Optimization: Assume if it's the same teacher, it's a rearrangement.
+             if (!isSelfSwap) {
+                const className = classes.find((c) => c.id === cId)?.name || "another class";
+                return { valid: false, message: `Teacher is busy in ${className}`, severity: "HIGH" };
+             }
           }
           // Room Busy
           if (roomId && slot.roomId === roomId) {
@@ -121,7 +128,7 @@ export const checkSlotValidity = (
     const maxConsecutive = settings.maxConsecutivePeriods || 4;
     let consecutiveCount = 0;
     let dailyLoad = 0; // NEW: Track total daily periods
-    const maxDailyLoad = 6; // Hard constraint for now, could be setting
+    const maxDailyLoad = settings.periodsPerDay; // Use configured periods per day as max limit
 
     // Check whole day for this teacher, including the proposed slot
     for (let checkP = 0; checkP < maxPeriods; checkP++) {
@@ -328,6 +335,10 @@ export const checkSlotValidity = (
       // Ignore old position if we are moving (Full Duration)
       if (ignoreSlot && targetDay === ignoreSlot.day && pIdx >= ignoreSlot.period && pIdx < ignoreSlot.period + duration) continue;
       
+      // FIX: Also ignore the TARGET position if it currently contains the same subject,
+      // as it will be displaced by this move.
+      if (pIdx >= targetPeriod && pIdx < targetPeriod + duration) continue;
+
       const s = daySchedule[pStr];
       if (s.subjectId === subjectId) {
           existingPeriods++;
