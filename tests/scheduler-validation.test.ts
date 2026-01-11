@@ -240,18 +240,31 @@ describe('Scheduler Validation', () => {
   });
 
   it('should enforce teacher daily load', () => {
-    // Max daily load is 6
+    // Max daily load is 6 (settings.periodsPerDay).
+    // We need the Class to have MORE slots than the Daily Limit to simulate overload.
+    const longDayClass: Class = {
+      ...mockClass,
+      periodCount: 10, // Class runs for 10 periods
+      structure: Array(10).fill({ type: 'CLASS', label: 'C' })
+    };
+    
+    // Set global limit to 6
     const data: AppData = {
       ...baseData,
+      settings: {
+          ...baseData.settings,
+          periodsPerDay: 6 
+      },
+      classes: [longDayClass],
       schedule: {
         'other-class': {
           0: {
             0: { subjectId: 's1', teacherId: 't1', classId: 'other-class' },
             2: { subjectId: 's1', teacherId: 't1', classId: 'other-class' },
             4: { subjectId: 's1', teacherId: 't1', classId: 'other-class' },
-            6: { subjectId: 's1', teacherId: 't1', classId: 'other-class' },
-            8: { subjectId: 's1', teacherId: 't1', classId: 'other-class' },
-            9: { subjectId: 's1', teacherId: 't1', classId: 'other-class' }
+            5: { subjectId: 's1', teacherId: 't1', classId: 'other-class' },
+            6: { subjectId: 's1', teacherId: 't1', classId: 'other-class' }, // 5th existing
+            7: { subjectId: 's1', teacherId: 't1', classId: 'other-class' }  // 6th existing
           }
         }
       }
@@ -260,11 +273,12 @@ describe('Scheduler Validation', () => {
     const result = checkSlotValidity(
       data,
       0,
-      1, // Adding 7th period. P0, P1, P2 will be consecutive (3 < 4)
+      1, // Adding 7th period (Proposed) at P1.
       't1',
-      'c1',
+      'c1', // Using mockClass id 'c1' but we updated classes list? Wait, mockClass.id is 'c1'.
       's1'
     );
+    // Note: checkSlotValidity looks up class by ID. 'longDayClass' has id 'c1'.
 
     expect(result.valid).toBe(false);
     expect(result.message).toContain('exceeds daily limit of 6 classes');
