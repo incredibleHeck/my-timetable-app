@@ -5,14 +5,12 @@ import { sanitizeAppData } from "../../../services/fileSystem/sanitization";
 
 export const useDashboard = (
   data: AppData,
-  onUpdate: (d: AppData) => void,
-  onProfileChange?: (name: string) => void
+  onUpdate: (d: AppData) => void
 ) => {
   // --- STATE ---
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [loadModalOpen, setLoadModalOpen] = useState(false);
   const [newProfileName, setNewProfileName] = useState("");
-  const [savedProfiles, setSavedProfiles] = useState<string[]>([]);
 
   // --- 1. METRICS ---
   const metrics = useMemo(() => {
@@ -112,67 +110,7 @@ export const useDashboard = (
     return { issues, conflicts: data.conflicts.length };
   }, [data]);
 
-  // --- 3. LOCAL STORAGE PROFILE LOGIC ---
-  const refreshProfiles = useCallback(() => {
-    try {
-      const keys = Object.keys(localStorage);
-      const profiles = keys
-        .filter((k) => k.startsWith("scheduler_data_"))
-        .map((k) => k.replace("scheduler_data_", ""));
-      setSavedProfiles(profiles);
-    } catch (e) {
-      console.error("Error accessing local storage", e);
-      setSavedProfiles([]);
-    }
-  }, []);
-
-  // Refresh whenever modal opens
-  useEffect(() => {
-    if (loadModalOpen) {
-      refreshProfiles();
-    }
-  }, [loadModalOpen, refreshProfiles]);
-
-  const handleCreateProfile = () => {
-    if (!newProfileName.trim()) return;
-    try {
-      const key = `scheduler_data_${newProfileName.trim()}`;
-      localStorage.setItem(key, JSON.stringify(data));
-      if (onProfileChange) onProfileChange(newProfileName.trim());
-      setCreateModalOpen(false);
-      setNewProfileName("");
-      alert(`Profile "${newProfileName}" saved to local storage!`);
-    } catch (e) {
-      alert("Failed to save. Storage might be full.");
-    }
-  };
-
-  const handleLoadProfile = (name: string) => {
-    try {
-      const key = `scheduler_data_${name}`;
-      const saved = localStorage.getItem(key);
-      if (saved) {
-        const loadedData = sanitizeAppData(JSON.parse(saved));
-        onUpdate(loadedData); // VITAL: Updates App State
-        if (onProfileChange) onProfileChange(name);
-        setLoadModalOpen(false);
-      } else {
-        alert("Profile not found.");
-      }
-    } catch (e) {
-      console.error(e);
-      alert("Failed to load profile. Data corrupted.");
-    }
-  };
-
-  const handleDeleteProfile = (name: string) => {
-    if (confirm(`Delete "${name}" from local storage?`)) {
-      localStorage.removeItem(`scheduler_data_${name}`);
-      refreshProfiles();
-    }
-  };
-
-  // --- 4. FILE SYSTEM LOGIC (NEW) ---
+  // --- 3. FILE SYSTEM LOGIC ---
   const handleExportBackup = async () => {
     await FileService.saveProject(data, "timetable_backup");
   };
@@ -197,13 +135,8 @@ export const useDashboard = (
     setLoadModalOpen,
     newProfileName,
     setNewProfileName,
-    savedProfiles,
     metrics,
     healthIssues,
-    // Local Storage
-    handleCreateProfile,
-    handleLoadProfile,
-    handleDeleteProfile,
     // File System
     handleExportBackup,
     handleImportBackup,

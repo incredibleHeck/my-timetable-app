@@ -154,9 +154,6 @@ function App() {
           profiles={profiles}
           autoSaveStatus={autoSaveStatus}
           onSwitchProfile={switchProfile}
-          onCreateProfile={() => setIsCreateModalOpen(true)}
-          onImport={handleImport}
-          onExport={handleExport}
         />
 
         {/* SCROLLABLE VIEW AREA */}

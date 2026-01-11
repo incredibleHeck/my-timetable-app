@@ -19,18 +19,20 @@ import {
 import { AppData, ViewState } from "../../types";
 import { Card, Button, Badge } from "../../components/ui";
 import { useDashboard } from "./hooks/useDashboard";
+import { useProfile } from "../../contexts/ProfileContext";
+import { FileService } from "../../services/fileSystem";
 
-// Sub-components
 import { MetricCard } from "./components/MetricCard";
 import { QuickAction } from "./components/QuickAction";
 import { ProfileModals } from "./components/ProfileModals";
+import { SystemStatus } from "./components/SystemStatus";
+import { RecentActivity } from "./components/RecentActivity";
 
 interface ViewProps {
   data: AppData;
   onUpdate: (newData: AppData) => void;
   profileName: string;
   onNavigate?: (view: ViewState) => void;
-  onProfileChange?: (name: string) => void;
 }
 
 export const DashboardView: React.FC<ViewProps> = ({
@@ -38,8 +40,15 @@ export const DashboardView: React.FC<ViewProps> = ({
   profileName,
   onNavigate,
   onUpdate,
-  onProfileChange,
 }) => {
+  const { 
+    profiles, 
+    activeProfile, 
+    createNewProfile, 
+    switchProfile,
+    isSaving 
+  } = useProfile();
+
   const {
     createModalOpen,
     setCreateModalOpen,
@@ -47,15 +56,11 @@ export const DashboardView: React.FC<ViewProps> = ({
     setLoadModalOpen,
     newProfileName,
     setNewProfileName,
-    savedProfiles,
     metrics,
     healthIssues,
-    handleCreateProfile,
-    handleLoadProfile,
-    handleDeleteProfile,
     handleExportBackup,
     handleImportBackup,
-  } = useDashboard(data, onUpdate, onProfileChange);
+  } = useDashboard(data, onUpdate);
 
   const { issues, conflicts } = healthIssues;
 
@@ -91,7 +96,7 @@ export const DashboardView: React.FC<ViewProps> = ({
         <div className="absolute -right-20 -top-20 h-96 w-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute right-0 bottom-0 h-full w-1/3 bg-gradient-to-l from-amber-500/5 to-transparent transform skew-x-12 pointer-events-none" />
 
-        <div className="relative p-8 md:p-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
+        <div className="relative p-8 md:p-12 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="space-y-6">
             <div className="flex items-center gap-4">
               <Badge className="bg-amber-500 text-slate-900 border-none px-3 py-1 font-black shadow-[0_0_15px_rgba(245,158,11,0.4)] tracking-wide">
@@ -113,80 +118,53 @@ export const DashboardView: React.FC<ViewProps> = ({
                     {profileName}
                   </strong>
                 </p>
-                <p className="flex items-center gap-2">
-                  System Status:
-                  <span className="flex items-center gap-2 text-white font-bold bg-white/10 px-2 py-0.5 rounded-md border border-white/10">
-                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                    Ready
-                  </span>
-                </p>
+                <div className="mt-2">
+                  <SystemStatus 
+                    isSaving={isSaving} 
+                    isGenerating={false} 
+                    hasConflicts={conflicts > 0} 
+                  />
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-col gap-3 w-full md:w-auto min-w-[320px]">
-            {/* ROW 1: FILE SYSTEM */}
-            <div className="flex gap-3">
-              <Button
-                icon={<Upload size={16} />}
-                onClick={handleExportBackup}
-                className="flex-1 bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 hover:text-white transition-colors"
-              >
-                Export Backup
-              </Button>
-              <Button
-                icon={<Download size={16} />}
-                onClick={handleImportClick}
-                className="flex-1 bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 hover:text-white transition-colors"
-              >
-                Import Backup
-              </Button>
-            </div>
-
-            {/* ROW 2: LOCAL PROFILES */}
-            <div className="flex gap-3">
-              <Button
-                icon={<Plus size={16} />}
-                onClick={() => setCreateModalOpen(true)}
-                className="flex-1 bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 hover:text-white transition-colors"
-              >
-                Save Profile
-              </Button>
-              <Button
-                icon={<FolderOpen size={16} />}
-                onClick={() => setLoadModalOpen(true)}
-                className="flex-1 bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 hover:text-white transition-colors"
-              >
-                Load Profile
-              </Button>
-            </div>
-
-            {/* ROW 3: TOOLS */}
-            <div className="flex gap-3">
-              <Button
-                icon={<Settings size={16} />}
-                onClick={() => onNavigate && onNavigate("CONFIG")}
-                className="flex-1 bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 hover:text-white transition-colors"
-              >
-                Settings
-              </Button>
-              <Button
-                icon={
-                  <Zap size={16} className="text-amber-500 fill-amber-500/20" />
-                }
-                onClick={() => onNavigate && onNavigate("GENERATOR")}
-                className="flex-1 bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 hover:text-white transition-colors"
-              >
-                Run Scheduler
-              </Button>
-            </div>
+          {/* Header Action Buttons (Profile Management) */}
+          <div className="grid grid-cols-2 gap-3 w-full md:w-auto min-w-[360px]">
+            <Button
+              icon={<Plus size={16} />}
+              onClick={() => setCreateModalOpen(true)}
+              className="bg-white/10 text-white border-white/10 hover:bg-white/20 transition-all font-bold text-xs py-3"
+            >
+              New Profile
+            </Button>
+            <Button
+              icon={<FolderOpen size={16} />}
+              onClick={() => setLoadModalOpen(true)}
+              className="bg-white/10 text-white border-white/10 hover:bg-white/20 transition-all font-bold text-xs py-3"
+            >
+              Switch Profile
+            </Button>
+            <Button
+              icon={<Upload size={16} />}
+              onClick={handleExportBackup}
+              className="bg-white/10 text-white border-white/10 hover:bg-white/20 transition-all font-bold text-xs py-3"
+            >
+              Export JSON
+            </Button>
+            <Button
+              icon={<Download size={16} />}
+              onClick={handleImportClick}
+              className="bg-white/10 text-white border-white/10 hover:bg-white/20 transition-all font-bold text-xs py-3"
+            >
+              Import JSON
+            </Button>
           </div>
         </div>
       </div>
 
       {/* METRICS GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <MetricCard
           label="Total Staff"
           value={metrics.teacherCount}
@@ -212,7 +190,15 @@ export const DashboardView: React.FC<ViewProps> = ({
           onClick={() => onNavigate && onNavigate("SUBJECTS")}
         />
         <MetricCard
-          label="Schedule Saturation"
+          label="Unplaced"
+          value={conflicts}
+          icon={<AlertTriangle size={20} />}
+          color="red"
+          subtext="Conflicts found"
+          onClick={() => onNavigate && onNavigate("GENERATOR")}
+        />
+        <MetricCard
+          label="Saturation"
           value={`${metrics.saturation}%`}
           icon={<Activity size={20} />}
           color="amber"
@@ -222,8 +208,9 @@ export const DashboardView: React.FC<ViewProps> = ({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* SYSTEM HEALTH / ALERTS PANEL */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-8">
+          {/* SYSTEM HEALTH / ALERTS PANEL */}
+          <div className="space-y-6">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
               <Activity size={20} className="text-slate-400" /> System Health
@@ -331,6 +318,9 @@ export const DashboardView: React.FC<ViewProps> = ({
             </div>
           )}
         </div>
+        
+        <RecentActivity />
+        </div>
 
         {/* QUICK ACTIONS & LAST RUN */}
         <div className="space-y-6">
@@ -404,10 +394,16 @@ export const DashboardView: React.FC<ViewProps> = ({
         setLoadOpen={setLoadModalOpen}
         newProfileName={newProfileName}
         setNewProfileName={setNewProfileName}
-        savedProfiles={savedProfiles}
-        onCreate={handleCreateProfile}
-        onLoad={handleLoadProfile}
-        onDelete={handleDeleteProfile}
+        savedProfiles={profiles}
+        onCreate={async () => {
+          await createNewProfile(newProfileName);
+          setCreateModalOpen(false);
+          setNewProfileName("");
+        }}
+        onLoad={async (id) => {
+          await switchProfile(id);
+          setLoadModalOpen(false);
+        }}
       />
     </div>
   );

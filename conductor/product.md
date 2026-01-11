@@ -14,10 +14,13 @@ EduScheduler Pro aims to be the premier desktop solution for complex scheduling 
 ## Primary Goals
 - **Automated Conflict Resolution:** Eliminate scheduling errors by automatically detecting and highlighting overlaps in room bookings, teacher assignments, and equipment usage.
 - **Streamlined Logistics:** Simplify the generation of specialized schedules, such as exam invigilation rosters and staff duty rotations, which are traditionally time-consuming to create manually.
-- **Interactive Planning:** Provide a fluid "what-if" environment where users can manually refine schedules using drag-and-drop tools while receiving instant feedback on validity.
+- **Interactive Planning:** Provide a fluid "what-if" environment where users can manually refine schedules using drag-and-drop tools, backed by a global Undo/Redo system, while receiving instant feedback on validity.
 
 ## Key Features
 - **Real-time Conflict Engine:** A sophisticated engine with severity-based reporting (High, Medium, Low) that monitors changes and provides instant feedback on teacher availability, room capacity, and scheduling rules.
 - **Visual Schedule Builder:** A high-performance, drag-and-drop grid that intelligently handles complex period structures, including double periods split by breaks or lunch, ensuring logical units move together during swaps.
+- **Intelligent Dashboard:** A centralized control center with optimized spatial hierarchy, featuring integrated profile management, real-time health metrics, and a prominent activity history log for streamlined session oversight.
+- **Workflow-Optimized Navigation:** A logically categorized sidebar designed around the scheduling workflow (General, System, Academic Data, Scheduling, Operations), providing quick access to all critical modules.
+- **Global Undo/Redo Safety Net:** A comprehensive history tracking system for all scheduling operations, allowing users to experiment with changes safely using standard shortcuts and dedicated UI controls.
 - **Interactive Conflict Highlighting:** Direct integration between the conflict report and the schedule grid, allowing users to instantly locate and resolve violations with a single click.
 - **Professional Export Suite:** One-click generation of professional-grade PDFs and Excel spreadsheets tailored for different stakeholders (staff, students, facilities).

@@ -5,7 +5,7 @@ interface MetricCardProps {
   label: string;
   value: string | number;
   icon: React.ReactNode;
-  color: "blue" | "emerald" | "violet" | "amber";
+  color: "blue" | "emerald" | "violet" | "amber" | "red";
   subtext: string;
   onClick?: () => void;
 }
@@ -23,6 +23,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
     emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
     violet: "bg-violet-50 text-violet-600 border-violet-100",
     amber: "bg-amber-50 text-amber-600 border-amber-100",
+    red: "bg-red-50 text-red-600 border-red-100",
   };
 
   return (

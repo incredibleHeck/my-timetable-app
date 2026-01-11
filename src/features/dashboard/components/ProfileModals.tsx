@@ -9,10 +9,10 @@ interface ProfileModalsProps {
   setLoadOpen: (open: boolean) => void;
   newProfileName: string;
   setNewProfileName: (name: string) => void;
-  savedProfiles: string[];
+  savedProfiles: { id: string; name: string }[];
   onCreate: () => void;
-  onLoad: (name: string) => void;
-  onDelete: (name: string) => void;
+  onLoad: (id: string) => void;
+  onDelete?: (id: string) => void;
 }
 
 export const ProfileModals: React.FC<ProfileModalsProps> = ({
@@ -47,8 +47,7 @@ export const ProfileModals: React.FC<ProfileModalsProps> = ({
       >
         <div className="space-y-4">
           <p className="text-sm text-slate-500">
-            Save this configuration to your browser's local storage. To backup
-            to a file, use "Export Backup" instead.
+            Create a new profile based on your current data. This will be saved to local storage.
           </p>
           <Input
             label="Profile Name"
@@ -64,7 +63,7 @@ export const ProfileModals: React.FC<ProfileModalsProps> = ({
       <Modal
         isOpen={loadOpen}
         onClose={() => setLoadOpen(false)}
-        title="Load Profile (Local)"
+        title="Switch Profile"
         footer={
           <div className="flex justify-end w-full">
             <Button variant="secondary" onClick={() => setLoadOpen(false)}>
@@ -75,10 +74,7 @@ export const ProfileModals: React.FC<ProfileModalsProps> = ({
       >
         <div className="space-y-4">
           <p className="text-sm text-slate-500">
-            Select a saved profile to load from local storage.{" "}
-            <strong className="text-red-500">
-              Warning: Unsaved changes in your current session will be lost.
-            </strong>
+            Select a saved profile to load. Unsaved changes in your current session will be lost if auto-save is off.
           </p>
           {savedProfiles.length === 0 ? (
             <div className="p-8 text-center text-slate-400 italic bg-slate-50 rounded-lg border border-slate-200 border-dashed">
@@ -86,23 +82,25 @@ export const ProfileModals: React.FC<ProfileModalsProps> = ({
             </div>
           ) : (
             <div className="grid gap-2 max-h-[300px] overflow-y-auto custom-scrollbar">
-              {savedProfiles.map((name) => (
+              {savedProfiles.map((p) => (
                 <div
-                  key={name}
+                  key={p.id}
                   className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-lg hover:border-amber-400 transition-colors group"
                 >
-                  <span className="font-bold text-slate-700">{name}</span>
+                  <span className="font-bold text-slate-700">{p.name}</span>
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button size="sm" onClick={() => onLoad(name)}>
-                      Load
+                    <Button size="sm" onClick={() => onLoad(p.id)}>
+                      Switch
                     </Button>
-                    <button
-                      onClick={() => onDelete(name)}
-                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                      title="Delete Profile"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    {onDelete && (
+                      <button
+                        onClick={() => onDelete(p.id)}
+                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                        title="Delete Profile"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}

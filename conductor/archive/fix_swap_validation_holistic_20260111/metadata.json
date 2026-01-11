@@ -1,0 +1,8 @@
+{
+  "track_id": "fix_swap_validation_holistic_20260111",
+  "type": "bug",
+  "status": "new",
+  "created_at": "2026-01-11T03:52:00Z",
+  "updated_at": "2026-01-11T03:52:00Z",
+  "description": "Fix 'Max periods exceeded' false positives during swaps by validating the final state instead of intermediate state."
+}

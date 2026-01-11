@@ -1,0 +1,8 @@
+{
+  "track_id": "navigation_undo_redo_20260110",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-01-10T11:57:00Z",
+  "updated_at": "2026-01-10T11:57:00Z",
+  "description": "Properly arrange main navigation sidebar with categories and introduce global undo/redo buttons in the header for scheduling actions."
+}
