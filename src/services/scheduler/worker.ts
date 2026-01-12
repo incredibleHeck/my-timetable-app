@@ -4,7 +4,7 @@ import { AppData } from "../../types";
 // Listen for messages from the Main Thread
 self.onmessage = (e: MessageEvent<AppData>) => {
   const data = e.data;
-  const MAX_TIME_MS = 3000; // Increased to 3s since UI won't freeze now
+  const MAX_TIME_MS = 20000; // Increased to 20s since UI won't freeze now
   const startTime = performance.now();
 
   let bestSchedule = data.schedule;
