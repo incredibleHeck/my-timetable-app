@@ -1,0 +1,1 @@
+export { GlobalConfigView } from './GlobalConfigView';
