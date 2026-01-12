@@ -198,7 +198,8 @@ export const ScheduleGrid: React.FC<Props> = ({
         data, targetDay, targetPeriod, activeDragItem.slot.teacherId, classId, activeDragItem.slot.subjectId,
         { day: activeDragItem.day, period: activeDragItem.period },
         activeDragItem.slot.roomId,
-        sourceDuration
+        sourceDuration,
+        targetSlot ? { day: targetDay, period: targetPeriod, duration: targetDuration } : undefined
     );
     if (!valMove.valid) {
          if (isHoverCheck && setHoverConflict) {
@@ -219,7 +220,8 @@ export const ScheduleGrid: React.FC<Props> = ({
             data, activeDragItem.day, activeDragItem.period, targetSlot.teacherId, classId, targetSlot.subjectId,
             { day: targetDay, period: targetPeriod },
             targetSlot.roomId,
-            targetDuration
+            targetDuration,
+            { day: activeDragItem.day, period: activeDragItem.period, duration: sourceDuration }
         );
         if (!valSwap.valid) {
              if (isHoverCheck && setHoverConflict) {

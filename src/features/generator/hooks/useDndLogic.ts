@@ -125,7 +125,8 @@ export const useDndLogic = (
         data, tD, tP, sData.slot.teacherId, classId, sData.slot.subjectId,
         { day: sD, period: sP }, // Ignore self
         sData.slot.roomId,
-        sourceDuration
+        sourceDuration,
+        targetSlot ? { day: tD, period: tP, duration: targetDuration } : undefined // Ignore Target (Displaced)
     );
     if (!valMove.valid) {
         // alert(valMove.message);
@@ -138,7 +139,8 @@ export const useDndLogic = (
             data, sD, sP, targetSlot.teacherId, classId, targetSlot.subjectId,
             { day: tD, period: tP }, // Ignore self
             targetSlot.roomId,
-            targetDuration // Should be same as sourceDuration here
+            targetDuration, // Should be same as sourceDuration here
+            { day: sD, period: sP, duration: sourceDuration } // Ignore Target (Source Location)
         );
         if (!valSwap.valid) {
             // alert(`Swap failed: ${valSwap.message}`);

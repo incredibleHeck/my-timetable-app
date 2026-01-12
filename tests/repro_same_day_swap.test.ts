@@ -58,14 +58,11 @@ describe("Reproduction: Same-Day Double Swap False Positive", () => {
   it("should allow moving Math (P2,3) to English (P0,1) - The Swap Back", () => {
     const result = checkSlotValidity(
       mockData,
-      0, // Target Day
-      0, // Target Period (P0)
-      "t1", // Teacher
-      "c1", // Class
-      "s2", // Subject (Math)
+      0, 0, "t1", "c1", "s2",
       { day: 0, period: 2 }, // Source (P2)
       undefined,
-      2 // Duration
+      2,
+      { day: 0, period: 0, duration: 2 } // Ignore Target (English)
     );
 
     expect(result.valid).toBe(true);
@@ -111,7 +108,8 @@ describe("Reproduction: Same-Day Double Swap False Positive", () => {
       0, 2, "t1", "c1", "s1",
       { day: 0, period: 0 },
       undefined,
-      2
+      2,
+      { day: 0, period: 2, duration: 2 } // Ignore Target (Math)
     );
 
     // Should detect 2 (Proposed) + 1 (Existing at P4) = 3.

@@ -16,7 +16,8 @@ export const checkSlotValidity = (
   subjectId: string,
   ignoreSlot?: { day: number; period: number },
   roomId?: string,
-  duration: number = 1
+  duration: number = 1,
+  ignoreTargetSlot?: { day: number; period: number; duration: number }
 ): ValidationResult => {
   const { schedule, settings, classes, teachers, subjects, rooms } = data;
 
@@ -95,23 +96,33 @@ export const checkSlotValidity = (
           // FIX: If we are swapping, we should ignore the teacher's own presence at the target
           // provided the target slot will be displaced (which DnD handles).
           if (slot.teacherId === teacherId) {
-             // We allow the teacher to be busy ONLY if we are moving the slot that is causing the busy state.
-             // This is handled by ignoreSlot in the calling code?
-             // But ignoreSlot is {day, period}. It doesn't specify classId.
-             // If we assume a teacher can only be in one place, then matching day/period is sufficient.
+             let isIgnored = false;
              
-             let isSelfSwap = false;
-             if (ignoreSlot && targetDay === ignoreSlot.day && slot) {
-                 // We don't have slot.period here easily unless we iterate?
-                 // Wait, 'p' is the period we are checking.
-                 // So 'slot' is at 'p'.
-                 // If 'p' matches 'ignoreSlot.period'.
-                 if (p === ignoreSlot.period) {
-                     isSelfSwap = true;
-                 }
+             // Check Source (ignoreSlot) - Single point matching?
+             // ignoreSlot is passed as {day, period}.
+             // We need to assume that if 'p' matches ignoreSlot.period (and day), it's the start.
+             // But what if 'p' is the second part of the ignored slot?
+             // We rely on the caller logic often. 
+             // However, strictly: 'p' is the PERIOD WE ARE VALIDATING.
+             // If 'p' corresponds to a period occupied by the Moving Item (Source), we ignore it.
+             // Since we don't pass source duration clearly for ignoreSlot matching here (only period),
+             // We assume exact match or rely on checkSlotValidity loop iteration matching the drag.
+             
+             // Actually, ignoreSlot usually points to the START of the drag.
+             // But here we are iterating 'p'. 
+             // If ignoreSlot.period === p, it is ignored.
+             if (ignoreSlot && targetDay === ignoreSlot.day && p === ignoreSlot.period) {
+                 isIgnored = true;
              }
              
-             if (!isSelfSwap) {
+             // Check Target (ignoreTargetSlot)
+             // This is the Displaced Item. It might have a duration.
+             if (ignoreTargetSlot && targetDay === ignoreTargetSlot.day && 
+                 p >= ignoreTargetSlot.period && p < ignoreTargetSlot.period + ignoreTargetSlot.duration) {
+                 isIgnored = true;
+             }
+
+             if (!isIgnored) {
                 const className = classes.find((c) => c.id === cId)?.name || "another class";
                 return { valid: false, message: `Teacher is busy in ${className}`, severity: "HIGH" };
              }
@@ -148,6 +159,16 @@ export const checkSlotValidity = (
         let isBusy = false;
         
         // 1. Proposed Slot Check
+        // If checkP falls within the PROPOSED duration at TARGET
+        // Current 'p' is just ONE part of the loop.
+        // We should check if checkP falls in [targetPeriod ... targetPeriod + duration] (accounting for gaps?)
+        // The original logic was `if (checkP === p)`.
+        // This is inside a `while` loop that iterates `p`.
+        // This effectively checks logic "If we place a block HERE, what happens?".
+        // But since we iterate `p`, we do this check multiple times?
+        // No, `checkP` loops 0..Max.
+        // If `checkP === p`, we say "This slot is busy because we are putting the class here".
+        // This is correct.
         if (checkP === p) {
              isBusy = true;
         } else {
@@ -156,9 +177,17 @@ export const checkSlotValidity = (
                 const s = schedule[cId]?.[targetDay]?.[checkP];
                 if (s && s.teacherId === teacherId) {
                     // Ignore the old position of the dragged slot (Full Duration)
+                    // Note: 'duration' here is the duration of the MOVING item.
+                    // We assume ignoreSlot refers to the same item.
                     if (ignoreSlot && targetDay === ignoreSlot.day && 
                         checkP >= ignoreSlot.period && checkP < ignoreSlot.period + duration) {
                         continue; // Ignored (Moving Source)
+                    }
+
+                    // Ignore Target (Displaced)
+                    if (ignoreTargetSlot && targetDay === ignoreTargetSlot.day && 
+                        checkP >= ignoreTargetSlot.period && checkP < ignoreTargetSlot.period + ignoreTargetSlot.duration) {
+                        continue; // Ignored (Displaced Target)
                     }
 
                     isBusy = true;
