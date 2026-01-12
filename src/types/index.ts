@@ -2,6 +2,23 @@
 // 1. BASIC CONFIGURATION & TIME
 // ----------------------------------------------------------------------
 
+import { Teacher } from "../features/teachers/types";
+import { Subject } from "../features/subjects/types";
+import { Room } from "../features/rooms/types";
+import { ClassGroup, JointClass, ElectiveBlock, CurriculumItem, Class } from "../features/classes/types";
+import { ExamSession, ExamRoster } from "../features/exams/types";
+import { DutyLocation, DutyAssignment, DutyRoster } from "../features/duty/types";
+import { ScheduleResult, Conflict, ScheduleSlot } from "../features/generator/types";
+
+// Re-exports for convenience and to avoid breaking existing imports
+export type { Teacher };
+export type { Subject };
+export type { Room };
+export type { ClassGroup, JointClass, ElectiveBlock, CurriculumItem, Class };
+export type { ExamSession, ExamRoster };
+export type { DutyLocation, DutyAssignment, DutyRoster };
+export type { ScheduleResult, Conflict, ScheduleSlot };
+
 export type PeriodType = "CLASS" | "BREAK" | "LUNCH" | "ASSEMBLY";
 
 export interface PeriodConfig {
@@ -40,190 +57,6 @@ export interface Settings {
   defaultClassDuration?: number;
   defaultBreakDuration?: number;
   defaultLunchDuration?: number;
-}
-
-// ----------------------------------------------------------------------
-// 2. RESOURCES (SUBJECTS, TEACHERS & ROOMS)
-// ----------------------------------------------------------------------
-
-export interface Room {
-  id: string;
-  name: string;
-  capacity: number;
-  type: string; // e.g. "Lab", "Classroom", "Gym"
-}
-
-export interface Subject {
-  id: string;
-  name: string;
-  color: string;
-  // If true, this subject can only happen once globally per period
-  isSingleResource?: boolean;
-  isExaminable?: boolean; // NEW: If true, this subject is included in exam generation by default
-  // Room requirements
-  preferredRoomIds?: string[]; // Specific rooms
-  requiredRoomType?: string; // e.g. "Lab"
-
-  // NEW: Exam Configuration Defaults
-  examPaperCount?: number; // Default 1 if undefined
-  examPaperDurations?: number[]; // e.g. [120, 90] for Paper 1 & 2
-}
-
-export interface Teacher {
-  id: string;
-  name: string;
-  specialtyIds: string[];
-  constraints: boolean[][]; // [day][period] true=blocked
-  targetLoad?: number; // Desired periods per week
-}
-
-// ----------------------------------------------------------------------
-// 3. CLASSES, CURRICULUM & GROUPINGS
-// ----------------------------------------------------------------------
-
-export interface CurriculumItem {
-  id: string;
-  subjectId: string;
-  periodsPerWeek: number;
-  singles: number;
-  doubles: number;
-  assignedTeacherId?: string;
-}
-
-export interface ClassGroup {
-  id: string;
-  name: string;
-  level?: string;
-  studentCount?: number; // ADDED: For capacity checks
-  curriculum: CurriculumItem[];
-
-  // Custom Structure Overrides (Optional)
-  periodCount?: number;
-  structure?: (PeriodType | PeriodConfig)[];
-  duration?: number;
-
-  // Class-Specific Reservations
-  fixedSessions?: FixedOccasion[][];
-}
-
-// Alias for compatibility if code imports "Class" instead of "ClassGroup"
-export type Class = ClassGroup;
-
-// Joint Classes (e.g. "Senior Math" combines Class 12A and 12B)
-export interface JointClass {
-  id: string;
-  name: string;
-  subjectId: string;
-  classIds: string[];
-}
-
-// Elective Blocks (e.g., Elective Options)
-export interface ElectiveBlock {
-  id: string;
-  name: string; // e.g. "Arts Option Block"
-  classId: string;
-  subjectIds: string[]; // e.g. [Art_ID, Music_ID, Drama_ID]
-  // Forced simultaneous scheduling
-  allowedPeriods?: { day: number; period: number }[];
-}
-
-// ----------------------------------------------------------------------
-// 4. SCHEDULING RESULTS
-// ----------------------------------------------------------------------
-
-export interface ScheduleSlot {
-  subjectId: string;
-  teacherId: string;
-  classId: string;
-  roomId?: string; // Assigned Room
-
-  isFixed?: boolean; // If true, this slot is the 2nd half of a double period
-  locked?: boolean; // ADDED: For the Drag & Drop Lock feature
-  electiveBlockId?: string; // ADDED: Represents an Elective Block
-}
-
-// Map: ClassID -> DayIndex -> PeriodIndex -> Slot
-export type ScheduleResult = Record<
-  string,
-  Record<number, Record<number, ScheduleSlot>>
->;
-
-export interface Conflict {
-  classId: string;
-  className: string;
-  subjectId?: string; // Made optional to be safe
-  subjectName?: string;
-  teacherId?: string;
-  teacherName?: string;
-  day: number;
-  period: number;
-  duration?: number;
-  reason: string;
-  severity?: "HIGH" | "MEDIUM" | "LOW";
-}
-
-// ----------------------------------------------------------------------
-// 5. EXAMS & DUTIES (NEW)
-// ----------------------------------------------------------------------
-
-export type ExamStatus = "DRAFT" | "PUBLISHED" | "COMPLETED";
-
-export interface ExamSession {
-  id: string;
-  subjectId: string;
-  classIds: string[];
-
-  // Scheduling
-  date: string; // ISO Date YYYY-MM-DD
-  startTime: string; // e.g. "09:00"
-  duration: number; // minutes
-
-  // Resources
-  // Room is now optional to allow "Curriculum First" creation, then "Room Allocation" later
-  roomId?: string;
-  invigilatorIds?: string[]; // CHANGED: Support for multiple teachers per session
-
-  // Multi-Paper Support
-  paperNumber: number; // 1, 2, 3...
-  paperLabel?: string; // e.g. "Paper 1 (Theory)"
-
-  // State
-  status: ExamStatus;
-  locked?: boolean; // If true, Auto-Scheduler ignores this
-}
-
-export interface ExamRoster {
-  id: string;
-  name: string;
-  exams: ExamSession[];
-  createdAt: string;
-}
-
-export interface DutyLocation {
-  id: string;
-  name: string;
-}
-
-export interface DutyAssignment {
-  id: string;
-  locationId: string;
-  teacherId: string;
-  classId?: string; // Optional: Assign duty to a specific class break
-  day: number;
-  period: number;
-}
-
-export interface DutyRoster {
-  id: string;
-  name: string;
-  type: "DAILY" | "WEEKLY";
-  // Independent Storage
-  dailyAssignments: DutyAssignment[];
-  weeklyAssignments: DutyAssignment[];
-  // Independent Parameters
-  dailyParams: { min: number; max: number };
-  weeklyParams: { min: number; max: number; weeks: number };
-  createdAt: string;
 }
 
 // ----------------------------------------------------------------------

@@ -12,10 +12,12 @@ import {
   Info,
   FileText,
 } from "lucide-react";
-import { AppData, Subject } from "../../types";
+import { AppData } from "../../types";
+import { Subject } from "./types";
 import { Button, Modal, Input } from "../../components/ui";
 import { generateId } from "../../utils/utils";
 import { COLOR_PALETTE } from "../../utils/constants";
+import { useSubjectUsage } from "./hooks/useSubjectUsage";
 
 interface ViewProps {
   data: AppData;
@@ -23,6 +25,7 @@ interface ViewProps {
 }
 
 export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
+  const { getSubjectUsage } = useSubjectUsage(data);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
   const [subjName, setSubjName] = useState("");
@@ -52,19 +55,6 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
   // Delete Modal State
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [subjectToDelete, setSubjectToDelete] = useState<Subject | null>(null);
-
-  // Dependency Tracking Helper
-  const getSubjectUsage = (subjectId: string) => {
-    const teacherCount = data.teachers.filter((t) =>
-      t.specialtyIds.includes(subjectId)
-    ).length;
-    let classCount = 0;
-    data.classes.forEach((c) => {
-      if (c.curriculum.some((curr) => curr.subjectId === subjectId))
-        classCount++;
-    });
-    return { teacherCount, classCount };
-  };
 
   // Smart Sort
   const sortedSubjects = useMemo(() => {

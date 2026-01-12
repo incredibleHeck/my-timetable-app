@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
-import { AppData, Teacher, ClassGroup } from "../../../types";
+import { AppData, Teacher } from "../../../types";
+import { ClassGroup } from "../types";
 import { Badge, Button, Select } from "../../../components/ui";
 import { Check, Plus } from "lucide-react";
 import { useProfile } from "../../../contexts/ProfileContext";

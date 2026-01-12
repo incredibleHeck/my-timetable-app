@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { JointClass, ElectiveBlock, Subject, ClassGroup } from "../../../types";
+import { Subject } from "../../../types";
+import { JointClass, ElectiveBlock, ClassGroup } from "../types";
 import { Button, Modal, Input, Select } from "../../../components/ui";
 import { generateId } from "../../../utils/utils";
 

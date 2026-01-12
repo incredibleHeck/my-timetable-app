@@ -12,7 +12,8 @@ import {
   Users,
   Search,
 } from "lucide-react";
-import { AppData, Teacher } from "../../types";
+import { AppData } from "../../types";
+import { Teacher } from "./types";
 import { Button, Modal, Badge } from "../../components/ui";
 import { TeacherEditorModal } from "./components/TeacherEditorModal";
 import { useTeacherManagement } from "./hooks/useTeacherManagement";

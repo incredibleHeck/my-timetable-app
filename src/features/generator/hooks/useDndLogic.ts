@@ -1,28 +1,32 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
-import { AppData, ScheduleSlot } from "../../../types";
+import { AppData, ScheduleSlot, Conflict } from "../../../types";
 import { checkSlotValidity } from "../../../services/scheduler/validation";
 import { useProfile } from "../../../contexts/ProfileContext";
+import { DAYS } from "../../../utils/constants";
 
 export const useDndLogic = (
   data: AppData,
   activeId: string, // Current Class/Teacher ID in view
   mode: "CLASS" | "TEACHER",
-  onUpdate: (d: AppData) => void
+  onUpdate: (d: AppData) => void,
+  setHoverConflict?: (c: Conflict | null) => void
 ) => {
   const [activeDragItem, setActiveDragItem] = useState<any>(null);
   const { pushToHistory } = useProfile();
+
+  const { settings, schedule, classes, teachers, subjects } = data;
+  const currentClass = classes.find((c) => c.id === activeId);
 
   // --- HELPERS ---
   const getSafeType = (item: any) =>
     (typeof item === "object" ? item.type : item) || "CLASS";
 
   const getNextClassIndex = (p: number, classId: string): number | null => {
-    const cls = data.classes.find((c) => c.id === classId);
-    const struct = cls?.structure || data.settings.dayStructure;
-    const limit = cls?.periodCount || data.settings.periodsPerDay;
+    const cls = classes.find((c) => c.id === classId);
+    const struct = cls?.structure || settings.dayStructure;
+    const limit = cls?.periodCount || settings.periodsPerDay;
     
-    // MODIFIED: Search for the next available CLASS slot, skipping BREAK/LUNCH
     for (let i = p + 1; i < limit; i++) {
       const item = struct[i];
       const type = getSafeType(item);
@@ -32,17 +36,159 @@ export const useDndLogic = (
   };
 
   const getDuration = (classId: string, d: number, p: number): number => {
-    const slot = data.schedule[classId]?.[d]?.[p];
+    const slot = schedule[classId]?.[d]?.[p];
     if (!slot) return 1;
     const p2 = getNextClassIndex(p, classId);
     if (p2 !== null) {
-      const nextSlot = data.schedule[classId]?.[d]?.[p2];
-      // MODIFIED: If the next CLASS slot (even if split by break) 
-      // is the second half of this double period, return 2.
+      const nextSlot = schedule[classId]?.[d]?.[p2];
       if (nextSlot && nextSlot.isFixed && nextSlot.subjectId === slot.subjectId)
         return 2;
     }
     return 1;
+  };
+
+  const checkDragValidity = (targetDay: number, targetPeriod: number, isHoverCheck = false): boolean => {
+    if (!activeDragItem) return true;
+    
+    if (activeDragItem.day === targetDay && activeDragItem.period === targetPeriod) {
+        if (isHoverCheck && setHoverConflict) setHoverConflict(null);
+        return true;
+    }
+
+    const sourceClassId = mode === "CLASS" ? activeId : activeDragItem.classGroup?.id;
+    if (!sourceClassId) return false;
+
+    let targetClassId = sourceClassId;
+    let targetClassName = mode === "CLASS" ? currentClass?.name : activeDragItem.classGroup?.name;
+    
+    if (mode === "TEACHER") {
+         for (const cId of Object.keys(schedule)) {
+            const s = schedule[cId]?.[targetDay]?.[targetPeriod];
+            if (s && s.teacherId === activeId) {
+                targetClassId = cId;
+                targetClassName = classes.find(c => c.id === cId)?.name;
+                break;
+            }
+         }
+    }
+
+    if (sourceClassId !== targetClassId) {
+        if (isHoverCheck && setHoverConflict) {
+             setHoverConflict({
+                 classId: targetClassId,
+                 className: targetClassName || "Unknown",
+                 reason: "Cannot move between different classes",
+                 day: targetDay,
+                 period: targetPeriod
+             });
+        }
+        return false;
+    }
+
+    const classId = sourceClassId;
+
+    const formatConflict = (reason: string) => {
+        const subj = subjects.find(s => s.id === activeDragItem.slot.subjectId);
+        const teach = teachers.find(t => t.id === activeDragItem.slot.teacherId);
+        const time = `${DAYS[targetDay]} P${targetPeriod + 1}`;
+        return `${reason} for ${subj?.name} (${teach?.name}) at ${time}`;
+    };
+
+    const sourceDuration = getDuration(classId, activeDragItem.day, activeDragItem.period);
+    const targetSlot = schedule[classId]?.[targetDay]?.[targetPeriod];
+    const targetDuration = targetSlot ? getDuration(classId, targetDay, targetPeriod) : 1;
+
+    if (targetSlot) {
+        if (sourceDuration !== targetDuration) {
+             if (isHoverCheck && setHoverConflict) {
+                 const targetSubj = subjects.find(s => s.id === targetSlot.subjectId);
+                 setHoverConflict({
+                     classId,
+                     className: targetClassName || "Unknown",
+                     reason: `Duration Mismatch: Cannot swap ${sourceDuration}-period lesson with ${targetDuration}-period ${targetSubj?.name}.`,
+                     day: targetDay,
+                     period: targetPeriod
+                 });
+            }
+            return false;
+        }
+    } else {
+        if (sourceDuration === 2) {
+             const tP2 = getNextClassIndex(targetPeriod, classId);
+             if (tP2 === null) {
+                  if (isHoverCheck && setHoverConflict) {
+                     setHoverConflict({
+                         classId,
+                         className: targetClassName || "Unknown",
+                         reason: formatConflict("Not enough time remaining in day"),
+                         day: targetDay,
+                         period: targetPeriod
+                     });
+                  }
+                  return false;
+             }
+             if (schedule[classId]?.[targetDay]?.[tP2]) {
+                  if (isHoverCheck && setHoverConflict) {
+                     const p2Slot = schedule[classId]?.[targetDay]?.[tP2];
+                     const p2Subj = subjects.find(s => s.id === p2Slot?.subjectId);
+                     setHoverConflict({
+                         classId,
+                         className: targetClassName || "Unknown",
+                         reason: `Overlap: Next period occupied by ${p2Subj?.name}`,
+                         day: targetDay,
+                         period: targetPeriod
+                     });
+                  }
+                  return false;
+             }
+        }
+    }
+
+    const valMove = checkSlotValidity(
+        data, targetDay, targetPeriod, activeDragItem.slot.teacherId, classId, activeDragItem.slot.subjectId,
+        { day: activeDragItem.day, period: activeDragItem.period },
+        activeDragItem.slot.roomId,
+        sourceDuration,
+        targetSlot ? { day: targetDay, period: targetPeriod, duration: targetDuration } : undefined
+    );
+    if (!valMove.valid) {
+         if (isHoverCheck && setHoverConflict) {
+             setHoverConflict({
+                 classId,
+                 className: targetClassName || "Unknown",
+                 reason: `${valMove.message}`,
+                 day: targetDay,
+                 period: targetPeriod
+             });
+         }
+         return false;
+    }
+
+    if (targetSlot) {
+         const valSwap = checkSlotValidity(
+            data, activeDragItem.day, activeDragItem.period, targetSlot.teacherId, classId, targetSlot.subjectId,
+            { day: targetDay, period: targetPeriod },
+            targetSlot.roomId,
+            targetDuration,
+            { day: activeDragItem.day, period: activeDragItem.period, duration: sourceDuration }
+        );
+        if (!valSwap.valid) {
+             if (isHoverCheck && setHoverConflict) {
+                 const targetSubj = subjects.find(s => s.id === targetSlot.subjectId);
+                 setHoverConflict({
+                     classId,
+                     className: targetClassName || "Unknown",
+                     reason: `Swap Target Invalid: ${valSwap.message} (for ${targetSubj?.name})`,
+                     day: targetDay,
+                     period: targetPeriod
+                 });
+             }
+             return false;
+        }
+    }
+
+    if (isHoverCheck && setHoverConflict) setHoverConflict(null);
+    return true;
   };
 
   // --- HANDLERS ---
@@ -56,7 +202,6 @@ export const useDndLogic = (
 
     if (!over) return;
 
-    // Source Data
     const sData = active.data.current as {
       day: number;
       period: number;
@@ -64,22 +209,14 @@ export const useDndLogic = (
       classGroup?: any;
     };
     
-    // Target Data
     const tData = over.data.current as {
       day: number;
       period: number;
     };
 
     if (!sData || !tData) return;
-    
-    // Verify we are not dropping on same slot
     if (sData.day === tData.day && sData.period === tData.period) return;
 
-    // Identify Class Context
-    // In CLASS mode, we are editing 'activeId'.
-    // In TEACHER mode, we are editing the class of the dragged slot (sData.classGroup.id).
-    // Note: Moving between classes is NOT supported/safe usually without re-checking curriculum.
-    // For now, assume operation is within the SAME class.
     const classId = mode === "CLASS" ? activeId : sData.classGroup?.id;
     if (!classId) return;
 
@@ -88,73 +225,47 @@ export const useDndLogic = (
     const tD = tData.day;
     const tP = tData.period;
 
-    // 1. DURATION CHECKS
     const sourceDuration = getDuration(classId, sD, sP);
     const targetSlot = data.schedule[classId]?.[tD]?.[tP];
-    const targetDuration = targetSlot ? getDuration(classId, tD, tP) : 1; // Treat empty as 1 for basic fit check, but logic below handles empty explicitly.
+    const targetDuration = targetSlot ? getDuration(classId, tD, tP) : 1;
 
-    // Calculate P2 indices
-    const sP2 = getNextClassIndex(sP, classId);
     const tP2 = getNextClassIndex(tP, classId);
 
-    // --- RULE: Strict Duration Swap ---
     if (targetSlot) {
-        // SWAPPING
-        if (sourceDuration !== targetDuration) {
-            // Cannot swap Double with Single
-            // Provide visual feedback? (Shake?) - For now just return.
-            // alert("Cannot swap lessons of different durations."); // Optional
-            return;
-        }
+        if (sourceDuration !== targetDuration) return;
     } else {
-        // MOVING TO EMPTY
         if (sourceDuration === 2) {
-            // Must ensure P2 is also empty
-            if (tP2 === null) return; // End of day
+            if (tP2 === null) return;
             const tSlot2 = data.schedule[classId]?.[tD]?.[tP2];
-            if (tSlot2) {
-                // Cannot move Double here (Overlap)
-                return;
-            }
+            if (tSlot2) return;
         }
     }
 
-    // 2. VALIDATION (Constraints & Conflicts)
-    // We check if Source fits in Target
     const valMove = checkSlotValidity(
         data, tD, tP, sData.slot.teacherId, classId, sData.slot.subjectId,
-        { day: sD, period: sP }, // Ignore self
+        { day: sD, period: sP },
         sData.slot.roomId,
         sourceDuration,
-        targetSlot ? { day: tD, period: tP, duration: targetDuration } : undefined // Ignore Target (Displaced)
+        targetSlot ? { day: tD, period: tP, duration: targetDuration } : undefined
     );
-    if (!valMove.valid) {
-        // alert(valMove.message);
-        return;
-    }
+    if (!valMove.valid) return;
 
-    // If Swapping, check if Target fits in Source
     if (targetSlot) {
         const valSwap = checkSlotValidity(
             data, sD, sP, targetSlot.teacherId, classId, targetSlot.subjectId,
-            { day: tD, period: tP }, // Ignore self
+            { day: tD, period: tP },
             targetSlot.roomId,
-            targetDuration, // Should be same as sourceDuration here
-            { day: sD, period: sP, duration: sourceDuration } // Ignore Target (Source Location)
+            targetDuration,
+            { day: sD, period: sP, duration: sourceDuration }
         );
-        if (!valSwap.valid) {
-            // alert(`Swap failed: ${valSwap.message}`);
-            return;
-        }
+        if (!valSwap.valid) return;
     }
 
-    // 3. EXECUTE UPDATE
     const newSchedule = JSON.parse(JSON.stringify(data.schedule));
     if (!newSchedule[classId]) newSchedule[classId] = {};
     if (!newSchedule[classId][sD]) newSchedule[classId][sD] = {};
     if (!newSchedule[classId][tD]) newSchedule[classId][tD] = {};
 
-    // Helper to clear a slot
     const clearSlot = (d: number, p: number, dur: number) => {
         if (!newSchedule[classId][d]) return;
         delete newSchedule[classId][d][p];
@@ -164,7 +275,6 @@ export const useDndLogic = (
         }
     };
 
-    // Helper to set a slot
     const setSlot = (d: number, p: number, slot: ScheduleSlot, dur: number) => {
         if (!newSchedule[classId][d]) newSchedule[classId][d] = {};
         newSchedule[classId][d][p] = slot;
@@ -176,15 +286,12 @@ export const useDndLogic = (
         }
     };
 
-    // Prepare slots
-    const sourceSlot = { ...sData.slot }; // Clone
-    const destSlot = targetSlot ? { ...targetSlot } : null; // Clone if exists
+    const sourceSlot = { ...sData.slot };
+    const destSlot = targetSlot ? { ...targetSlot } : null;
 
-    // Clear both locations
     clearSlot(sD, sP, sourceDuration);
-    if (destSlot) clearSlot(tD, tP, targetDuration); // targetDuration == sourceDuration if swapping
+    if (destSlot) clearSlot(tD, tP, targetDuration);
 
-    // Place slots
     setSlot(tD, tP, sourceSlot, sourceDuration);
     if (destSlot) {
         setSlot(sD, sP, destSlot, targetDuration);
@@ -197,6 +304,9 @@ export const useDndLogic = (
   return {
     activeDragItem,
     handleDragStart,
-    handleDragEnd
+    handleDragEnd,
+    checkDragValidity,
+    getDuration,
+    getNextClassIndex
   };
 };

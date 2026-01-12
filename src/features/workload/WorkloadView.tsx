@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { AppData } from "../../types";
 import { Card, Button } from "../../components/ui";
 import { Upload, AlertCircle, Clock } from "lucide-react";
+import { useWorkloadStats } from "./hooks/useWorkloadStats";
 
 interface ViewProps {
   data: AppData;
@@ -9,69 +10,7 @@ interface ViewProps {
 }
 
 export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
-  // Advanced Workload Calculation
-  const workloadStats = useMemo(() => {
-    // 1. Identify which periods are actually "Teachable" globally (Excluding Breaks/Lunch)
-    // We only count 'CLASS' periods towards the denominator (Total Capacity).
-    const teachablePeriodIndices = data.settings.dayStructure
-      .map((p, index) => (p.type === "CLASS" ? index : -1))
-      .filter((i) => i !== -1);
-
-    const totalWeeklyCapacity = teachablePeriodIndices.length * 5; // e.g. 9 periods * 5 days = 45
-
-    return data.teachers
-      .map((t) => {
-        // A. Calculate Assigned Load (Curriculum)
-        // Note: We count ALL assigned periods, even if they are during a Break (Duty/Staggered)
-        let assignedPeriods = 0;
-        data.classes.forEach((c) => {
-          c.curriculum.forEach((curr) => {
-            if (curr.assignedTeacherId === t.id)
-              assignedPeriods += curr.periodsPerWeek;
-          });
-        });
-
-        // B. Calculate Real Availability (Constraints)
-        // We only count a constraint as "Reducing Capacity" if it blocks a valid 'CLASS' period.
-        // Blocking a Lunch doesn't reduce your teaching capacity, because you weren't supposed to teach then anyway.
-        let blockedTeachableSlots = 0;
-        if (t.constraints) {
-          t.constraints.forEach((dayRow) => {
-            dayRow.forEach((isBlocked, pIdx) => {
-              if (isBlocked && teachablePeriodIndices.includes(pIdx)) {
-                blockedTeachableSlots++;
-              }
-            });
-          });
-        }
-
-        const availableSlots = totalWeeklyCapacity - blockedTeachableSlots;
-
-        // C. Utilization Metrics
-        // If a teacher teaches during a break (Staggered), their assignedPeriods might be high,
-        // correctly pushing utilization over 100% (Overload/Duty).
-        const utilizationPct =
-          availableSlots > 0
-            ? (assignedPeriods / availableSlots) * 100
-            : assignedPeriods > 0
-            ? 100
-            : 0;
-
-        return {
-          t,
-          assignedPeriods,
-          availableSlots,
-          blockedSlots: blockedTeachableSlots,
-          utilizationPct,
-        };
-      })
-      .sort((a, b) => b.utilizationPct - a.utilizationPct); // Sort by % Utilized (Most busy first)
-  }, [
-    data.teachers,
-    data.classes,
-    data.settings.periodsPerDay,
-    data.settings.dayStructure,
-  ]);
+  const { workloadStats } = useWorkloadStats(data);
 
   const handleExportCSV = () => {
     const headers = [

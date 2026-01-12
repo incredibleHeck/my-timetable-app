@@ -17,7 +17,8 @@ import {
   Unlock,
   Pencil,
 } from "lucide-react";
-import { AppData, DutyAssignment, DutyRoster, ViewState } from "../../types";
+import { AppData, ViewState } from "../../types";
+import { DutyAssignment, DutyRoster } from "./types";
 import { Button } from "../../components/ui";
 import { generateId } from "../../utils/utils";
 import { DAYS } from "../../utils/constants";
@@ -26,6 +27,7 @@ import { DAYS } from "../../utils/constants";
 import { DutyGeneratorModal } from "./components/DutyGeneratorModal";
 import { generateDutyRoster } from "./logic/dutyGenerator";
 import { exportDutyToExcel, printDutyRoster } from "../../services/export/duty";
+import { useDutyRosters } from "./hooks/useDutyRosters";
 
 interface ViewProps {
   data: AppData;
@@ -34,146 +36,21 @@ interface ViewProps {
 }
 
 export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) => {
-  const [activeRosterId, setActiveRosterId] = useState<string | null>(null);
+  const {
+    activeRosterId,
+    setActiveRosterId,
+    activeRoster,
+    updateActiveRoster,
+    createNewRoster,
+    deleteRoster
+  } = useDutyRosters(data, onUpdate);
   
   const [activeTab, setActiveTab] = useState<"ROSTER" | "SETTINGS">("ROSTER");
   const [genModalOpen, setGenModalOpen] = useState(false);
   const [openSlot, setOpenSlot] = useState<{ row: number; col: number } | null>(null);
 
-  // Swap Mode State
   const [isSwapMode, setIsSwapMode] = useState(false);
   const [swapSource, setSwapSource] = useState<{ row: number; col: number; teacherId: string } | null>(null);
-
-  // --- MIGRATION & INITIALIZATION ---
-  useEffect(() => {
-    let updated = false;
-    let rosters = [...(data.dutyRosters || [])];
-
-    // 1. Migrate legacy data if it exists and no rosters are defined
-    if (data.dutyAssignments?.length > 0 && rosters.length === 0) {
-      const legacyRoster: DutyRoster = {
-        id: generateId(),
-        name: "Imported Roster",
-        type: "DAILY",
-        dailyAssignments: data.dutyAssignments,
-        weeklyAssignments: [],
-        dailyParams: { min: 4, max: 6 },
-        weeklyParams: { min: 4, max: 6, weeks: 4 },
-        createdAt: new Date().toISOString()
-      };
-      rosters = [legacyRoster];
-      updated = true;
-    }
-
-    // 2. Format migration for ANY version that is missing params
-    let formatChanged = false;
-    const migratedRosters = rosters.map(r => {
-      let changed = false;
-      const copy = { ...r };
-
-      // @ts-ignore - check for old property
-      if (copy.assignments !== undefined) {
-        copy.dailyAssignments = copy.type === "DAILY" ? (copy as any).assignments : [];
-        copy.weeklyAssignments = copy.type === "WEEKLY" ? (copy as any).assignments : [];
-        // @ts-ignore
-        delete copy.assignments;
-        changed = true;
-      }
-
-      if (!copy.dailyParams) {
-        copy.dailyParams = { min: 4, max: (copy as any).slotCount || 6 };
-        changed = true;
-      }
-      if (!copy.weeklyParams) {
-        copy.weeklyParams = { min: 4, max: (copy as any).slotCount || 6, weeks: (copy as any).rowCount || 4 };
-        changed = true;
-      }
-      if (!copy.dailyAssignments) {
-        copy.dailyAssignments = [];
-        changed = true;
-      }
-      if (!copy.weeklyAssignments) {
-        copy.weeklyAssignments = [];
-        changed = true;
-      }
-
-      if (changed) formatChanged = true;
-      return copy;
-    });
-
-    if (formatChanged) {
-      rosters = migratedRosters;
-      updated = true;
-    }
-
-    // 3. Ensure at least one roster exists
-    if (rosters.length === 0) {
-      const defaultRoster: DutyRoster = {
-        id: generateId(),
-        name: "Standard Duty Roster",
-        type: "DAILY",
-        dailyAssignments: [],
-        weeklyAssignments: [],
-        dailyParams: { min: 4, max: 6 },
-        weeklyParams: { min: 4, max: 6, weeks: 4 },
-        createdAt: new Date().toISOString()
-      };
-      rosters = [defaultRoster];
-      updated = true;
-    }
-
-    if (updated) {
-      onUpdate({ 
-        ...data, 
-        dutyRosters: rosters,
-        dutyAssignments: [] // Clear legacy field
-      });
-    }
-
-    // Initialize active selection
-    if (!activeRosterId && rosters.length > 0) {
-      setActiveRosterId(rosters[0].id);
-    }
-  }, [data.dutyRosters, data.dutyAssignments]);
-
-  // --- DERIVED DATA (SAFELY) ---
-  const activeRoster = useMemo(() => {
-    if (!data.dutyRosters || data.dutyRosters.length === 0) return null;
-    return data.dutyRosters.find(r => r.id === activeRosterId) || data.dutyRosters[0];
-  }, [data.dutyRosters, activeRosterId]);
-
-  // IMPORTANT: Move derivation into variables that are only calculated IF activeRoster exists
-  const updateActiveRoster = (updates: Partial<DutyRoster>) => {
-    if (!activeRoster) return;
-    const newRosters = data.dutyRosters?.map(r => 
-      r.id === activeRoster.id ? { ...r, ...updates } : r
-    );
-    onUpdate({ ...data, dutyRosters: newRosters });
-  };
-
-  const createNewRoster = () => {
-    const newRoster: DutyRoster = {
-      id: generateId(),
-      name: `New Roster ${data.dutyRosters?.length ? data.dutyRosters.length + 1 : 1}`,
-      type: "DAILY",
-      dailyAssignments: [],
-      weeklyAssignments: [],
-      dailyParams: { min: 4, max: 6 },
-      weeklyParams: { min: 4, max: 6, weeks: 4 },
-      createdAt: new Date().toISOString()
-    };
-    onUpdate({ ...data, dutyRosters: [...(data.dutyRosters || []), newRoster] });
-    setActiveRosterId(newRoster.id);
-  };
-
-  const deleteRoster = (id: string) => {
-    if (!confirm("Are you sure you want to delete this roster?")) return;
-    const filtered = data.dutyRosters?.filter(r => r.id !== id) || [];
-    onUpdate({ ...data, dutyRosters: filtered });
-    if (activeRosterId === id) {
-      setActiveRosterId(filtered[0]?.id || null);
-    }
-  };
 
   if (!activeRoster || !activeRoster.dailyParams || !activeRoster.weeklyParams) {
     return (

@@ -8,7 +8,8 @@ import {
   Users,
   Box,
 } from "lucide-react";
-import { AppData, Room } from "../../types";
+import { AppData } from "../../types";
+import { Room } from "./types";
 import { Button, Modal, Input, Select } from "../../components/ui";
 import { generateId } from "../../utils/utils";
 

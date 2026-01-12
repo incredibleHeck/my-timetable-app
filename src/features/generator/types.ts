@@ -1,0 +1,29 @@
+export interface ScheduleSlot {
+  subjectId: string;
+  teacherId: string;
+  classId: string;
+  roomId?: string;
+
+  isFixed?: boolean;
+  locked?: boolean;
+  electiveBlockId?: string;
+}
+
+export type ScheduleResult = Record<
+  string,
+  Record<number, Record<number, ScheduleSlot>>
+>;
+
+export interface Conflict {
+  classId: string;
+  className: string;
+  subjectId?: string;
+  subjectName?: string;
+  teacherId?: string;
+  teacherName?: string;
+  day: number;
+  period: number;
+  duration?: number;
+  reason: string;
+  severity?: "HIGH" | "MEDIUM" | "LOW";
+}

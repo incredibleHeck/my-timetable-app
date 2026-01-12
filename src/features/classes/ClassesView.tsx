@@ -9,12 +9,14 @@ import {
   X,
   AlertTriangle,
 } from "lucide-react";
-import { AppData, ClassGroup, JointClass, ElectiveBlock } from "../../types";
+import { AppData } from "../../types";
+import { ClassGroup, JointClass, ElectiveBlock } from "./types";
 import { Button, Modal } from "../../components/ui";
 import { generateId } from "../../utils/utils";
 import { ClassEditorModal } from "./components/ClassEditorModal";
 import { JointClassModal, ElectiveBlockModal } from "./components/GroupModals";
 import { ClassAssignmentsPanel } from "./components/ClassAssignmentsPanel";
+import { useClassMetrics } from "./hooks/useClassMetrics";
 
 interface ViewProps {
   data: AppData;
@@ -26,6 +28,8 @@ export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
     "LIST" | "LINKED" | "ELECTIVES" | "ASSIGNMENTS"
   >("LIST");
 
+  const { getLoadMetrics } = useClassMetrics(data);
+
   // Modals State
   const [modalOpen, setModalOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<ClassGroup | null>(null);
@@ -35,59 +39,6 @@ export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
   // Delete State
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [classToDelete, setClassToDelete] = useState<ClassGroup | null>(null);
-
-  // ------------------------------------------------------------------
-  //  HELPERS
-  // ------------------------------------------------------------------
-  const getLoadMetrics = (cls: ClassGroup) => {
-    // Use class-specific structure if defined, otherwise global default
-    const structure =
-      cls.structure && cls.structure.length > 0
-        ? cls.structure
-        : data.settings.dayStructure;
-
-    // Use class specific period count or global
-    const pCount = cls.periodCount || data.settings.periodsPerDay;
-
-    let capacity = 0;
-    let fixedLoad = 0;
-
-    // Calculate Capacity based on 'CLASS' slots in a 5-day week
-    // And account for Fixed Occasions (Global OR Class-Specific) taking up load
-    for (let d = 0; d < 5; d++) {
-      for (let p = 0; p < pCount; p++) {
-        // Determine type of this slot
-        // If structure is defined for this period, use it. If period > structure length, assume CLASS (Year 7 case)
-        let pType = "CLASS";
-        if (p < structure.length) {
-          const item = structure[p];
-          pType = (typeof item === "object" ? item.type : item) || "CLASS";
-        }
-
-        if (pType === "CLASS") {
-          capacity++;
-          // 1. Global Fixed Event
-          if (data.settings.fixedOccasions[d]?.[p]) {
-            fixedLoad++;
-          }
-          // 2. Class-Specific Fixed Event (e.g. Year 7 Clubs)
-          else if (cls.fixedSessions?.[d]?.[p]) {
-            fixedLoad++;
-          }
-        }
-      }
-    }
-
-    const curriculumLoad = cls.curriculum.reduce(
-      (acc, curr) => acc + curr.periodsPerWeek,
-      0
-    );
-
-    return {
-      assigned: curriculumLoad + fixedLoad,
-      capacity,
-    };
-  };
 
   // ------------------------------------------------------------------
   //  CLASS HANDLERS

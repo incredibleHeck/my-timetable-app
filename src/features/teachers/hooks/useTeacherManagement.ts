@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { AppData, Teacher } from "../../../types";
+import { AppData } from "../../../types";
+import { Teacher } from "../types";
 import { generateId } from "../../../utils/utils";
 
 export const useTeacherManagement = (
