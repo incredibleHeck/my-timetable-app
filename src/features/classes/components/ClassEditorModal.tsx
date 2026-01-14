@@ -242,6 +242,19 @@ export const ClassEditorModal: React.FC<ClassEditorModalProps> = ({
               const next = types[(types.indexOf(type) + 1) % 3];
               const newStruct = [...cStructure];
               newStruct[idx] = next;
+
+              // Auto-update duration if it's the first slot of this type
+              const isFirstOfType = !cStructure.includes(next);
+              if (isFirstOfType) {
+                if (next === "BREAK") {
+                  setCBreakDuration(data.settings.defaultBreakDuration || 20);
+                } else if (next === "LUNCH") {
+                  setCLunchDuration(data.settings.defaultLunchDuration || 60);
+                } else if (next === "CLASS") {
+                  setCDuration(data.settings.defaultClassDuration || 50);
+                }
+              }
+
               setCStructure(newStruct);
             }}
             className={`
