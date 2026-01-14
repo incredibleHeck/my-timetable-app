@@ -186,6 +186,43 @@ export const ClassEditorModal: React.FC<ClassEditorModalProps> = ({
     onClose();
   };
 
+  const renderStructureTimingInputs = () => (
+    <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-slate-100">
+      <Input
+        label="Periods/Day"
+        type="number"
+        value={cPeriodCount}
+        onChange={(e) =>
+          handlePeriodCountChange(parseInt(e.target.value) || 0)
+        }
+      />
+      <Input
+        label="Duration (min)"
+        type="number"
+        value={cDuration}
+        onChange={(e) =>
+          setCDuration(parseInt(e.target.value) || 0)
+        }
+      />
+      <Input
+        label="Break (min)"
+        type="number"
+        value={cBreakDuration}
+        onChange={(e) =>
+          setCBreakDuration(parseInt(e.target.value) || 0)
+        }
+      />
+      <Input
+        label="Lunch (min)"
+        type="number"
+        value={cLunchDuration}
+        onChange={(e) =>
+          setCLunchDuration(parseInt(e.target.value) || 0)
+        }
+      />
+    </div>
+  );
+
   const renderStructureEditor = () => (
     <div className="space-y-4 animate-in fade-in">
       <p className="text-xs text-slate-500 bg-blue-50 p-3 rounded border border-blue-100">
