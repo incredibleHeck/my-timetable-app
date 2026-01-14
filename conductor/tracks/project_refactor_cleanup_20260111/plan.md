@@ -15,7 +15,7 @@
 - [x] Task: Refactor other features (`generator`, `workload`, `duty`, `exams`, `configuration`) following the same pattern. [Complete - Extracted hooks for Generator, Exams, Duty, Workload]
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Feature Reorganization' (Protocol in workflow.md) [checkpoint: 5e45da1]
 
-## Phase 3: Infrastructure and Layout Cleanup
+## Phase 3: Infrastructure and Layout Cleanup [checkpoint: 29fa8c9]
 - [x] Task: Clean up `src/services`: ensure domain-agnostic services (fileSystem, persistence) are clearly separated from domain-orchestrators (scheduler). [Moved scheduler to features/generator] [ec79f19]
 - [x] Task: Organize `src/components/layout`: ensure Sidebar, Header, and UndoRedo are correctly placed and their internal components are properly modularized. [9f9429a]
 - [x] Task: Final audit of `src/hooks`, `src/utils`, and `src/types` to remove remaining "clutter" and ensure all imports are clean and use consistent paths (e.g., aliased imports if configured). [54cf8a8]
