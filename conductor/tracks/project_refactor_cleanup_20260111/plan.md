@@ -17,7 +17,7 @@
 
 ## Phase 3: Infrastructure and Layout Cleanup
 - [x] Task: Clean up `src/services`: ensure domain-agnostic services (fileSystem, persistence) are clearly separated from domain-orchestrators (scheduler). [Moved scheduler to features/generator] [ec79f19]
-- [ ] Task: Organize `src/components/layout`: ensure Sidebar, Header, and UndoRedo are correctly placed and their internal components are properly modularized.
+- [x] Task: Organize `src/components/layout`: ensure Sidebar, Header, and UndoRedo are correctly placed and their internal components are properly modularized. [9f9429a]
 - [ ] Task: Final audit of `src/hooks`, `src/utils`, and `src/types` to remove remaining "clutter" and ensure all imports are clean and use consistent paths (e.g., aliased imports if configured).
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Infrastructure and Layout Cleanup' (Protocol in workflow.md)
 
