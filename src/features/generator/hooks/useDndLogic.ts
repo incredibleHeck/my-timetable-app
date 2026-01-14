@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { AppData, ScheduleSlot, Conflict } from "../../../types";
-import { checkSlotValidity } from "../../../services/scheduler/validation";
+import { checkSlotValidity } from "../scheduler/validation";
 import { useProfile } from "../../../contexts/ProfileContext";
 import { DAYS } from "../../../utils/constants";
 

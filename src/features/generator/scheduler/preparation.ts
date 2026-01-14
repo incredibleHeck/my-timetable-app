@@ -1,4 +1,4 @@
-import { AppData } from "../../types";
+import { AppData } from "../../../types";
 import { AllocationUnit } from "./types";
 import { calculatePriority } from "./heuristics";
 

@@ -1,4 +1,4 @@
-import { PeriodConfig, PeriodType } from "../../types";
+import { PeriodConfig, PeriodType } from "../../../types";
 
 // Handles the difference between Global (Object) and Class (String) structures
 export const getPeriodType = (

@@ -1,4 +1,4 @@
-import { AppData, ScheduleResult, Conflict } from "../../types";
+import { AppData, ScheduleResult, Conflict } from "../../../types";
 import { prepareAllocationUnits } from "./preparation";
 import { solveSmart } from "./solver";
 

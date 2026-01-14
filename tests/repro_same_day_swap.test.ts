@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { checkSlotValidity } from "../src/services/scheduler/validation";
+import { checkSlotValidity } from "../src/features/generator/scheduler/validation";
 import { AppData } from "../src/types";
 
 describe("Reproduction: Same-Day Double Swap False Positive", () => {

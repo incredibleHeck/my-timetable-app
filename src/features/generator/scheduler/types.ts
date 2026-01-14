@@ -1,4 +1,4 @@
-import { ScheduleResult } from "../../types";
+import { ScheduleResult } from "../../../types";
 
 export interface AllocationUnit {
   id: string;

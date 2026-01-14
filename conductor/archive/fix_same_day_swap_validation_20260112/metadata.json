@@ -1,0 +1,8 @@
+{
+  "track_id": "fix_same_day_swap_validation_20260112",
+  "type": "bug",
+  "status": "new",
+  "created_at": "2026-01-12T16:06:00Z",
+  "updated_at": "2026-01-12T16:06:00Z",
+  "description": "Validation Error When Swapping Existing Periods on the Same Day"
+}

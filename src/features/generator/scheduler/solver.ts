@@ -1,4 +1,4 @@
-import { AppData, ScheduleResult, Conflict, ClassGroup, ScheduleSlot } from "../../types";
+import { AppData, ScheduleResult, Conflict, ClassGroup, ScheduleSlot } from "../../../types";
 import { AllocationUnit, SchedulerState } from "./types";
 import { getPeriodType, getNextClassPeriod } from "./utils";
 

@@ -1,4 +1,4 @@
-import { Teacher } from "../../types";
+import { Teacher } from "../../../types";
 import { AllocationUnit } from "./types";
 
 /**

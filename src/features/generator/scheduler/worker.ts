@@ -1,5 +1,5 @@
 import { generateSchedule } from "./index";
-import { AppData } from "../../types";
+import { AppData } from "../../../types";
 
 // Listen for messages from the Main Thread
 self.onmessage = (e: MessageEvent<AppData>) => {

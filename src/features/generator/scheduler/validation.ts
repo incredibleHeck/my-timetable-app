@@ -1,4 +1,4 @@
-import { AppData, ScheduleSlot } from "../../types";
+import { AppData, ScheduleSlot } from "../../../types";
 
 export type ValidationResult = {
   valid: boolean;
