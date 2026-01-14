@@ -10,21 +10,14 @@ vi.mock('../src/services/fileSystem/nativeAdapter', () => ({
   removeFile: vi.fn()
 }));
 
-// Mock Tauri Path API
-vi.mock('@tauri-apps/api/path', () => ({
-  appDataDir: vi.fn().mockResolvedValue('/app/data')
-}));
-
-// Mock join from path
-vi.mock('@tauri-apps/api/path', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
+// Mock Platform
+vi.mock('../src/utils/platform', () => ({
+  isTauriEnv: vi.fn().mockReturnValue(true),
+  getTauriPath: vi.fn().mockResolvedValue({
     appDataDir: vi.fn().mockResolvedValue('/app/data'),
     join: vi.fn().mockImplementation((...args) => args.join('/'))
-  };
-});
-
+  })
+}));
 
 describe('ProfileStorage', () => {
   beforeEach(() => {

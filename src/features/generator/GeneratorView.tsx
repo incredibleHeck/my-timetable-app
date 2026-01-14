@@ -130,7 +130,7 @@ export const GeneratorView: React.FC<ViewProps> = ({
     // 1. Initialize Worker
     // Vite specific syntax for Web Workers
     workerRef.current = new Worker(
-      new URL("../../services/scheduler/worker.ts", import.meta.url),
+      new URL("./scheduler/worker.ts", import.meta.url),
       { type: "module" }
     );
 

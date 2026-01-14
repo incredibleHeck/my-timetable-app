@@ -4,6 +4,12 @@ import { useExamSchedule } from '../src/features/exams/hooks/useExamSchedule';
 import { DEFAULT_DATA } from '../src/utils/constants';
 import { ExamSession } from '../src/types';
 
+vi.mock('../src/contexts/ProfileContext', () => ({
+  useProfile: () => ({
+    pushToHistory: vi.fn(),
+  }),
+}));
+
 describe('Vertical Swapping Logic', () => {
   const mockOnUpdate = vi.fn();
   

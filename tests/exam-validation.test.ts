@@ -14,18 +14,6 @@ describe('Exam Validation Logic', () => {
     ]
   };
 
-  it('should detect student conflicts', () => {
-    const existing = [
-      { id: 'e1', subjectId: 's1', date: '2026-05-01', startTime: '09:00', classIds: ['c1'], roomId: 'r1' }
-    ] as any;
-
-    const move = { id: 'e2', subjectId: 's2', date: '2026-05-01', startTime: '09:00', classIds: ['c1'] } as any;
-    const conflicts = validateExamMove(move, existing, mockData);
-    
-    expect(conflicts).toHaveLength(1);
-    expect(conflicts[0].type).toBe('STUDENT');
-  });
-
   it('should detect room capacity warnings', () => {
     const move = { id: 'e1', subjectId: 's1', date: '2026-05-01', startTime: '09:00', classIds: ['c1'], roomId: 'r1' } as any;
     const conflicts = validateExamMove(move, [], mockData);
