@@ -42,4 +42,25 @@ describe('ClassEditorModal UI Reorganization', () => {
     expect(screen.getByText(/Break \(min\)/i)).toBeDefined();
     expect(screen.getByText(/Lunch \(min\)/i)).toBeDefined();
   });
+
+  it('updates reservations grid when Periods/Day is changed in Structure tab', () => {
+    render(<ClassEditorModal {...defaultProps} />);
+    
+    // Switch to Structure tab
+    const structureTabButton = screen.getByRole('button', { name: /Structure/i });
+    fireEvent.click(structureTabButton);
+
+    // Change Periods/Day to 10
+    const periodsInput = screen.getByDisplayValue(DEFAULT_DATA.settings.periodsPerDay.toString());
+    fireEvent.change(periodsInput, { target: { value: '10' } });
+
+    // Switch back to Basics tab
+    const basicsTabButton = screen.getByRole('button', { name: /Basics/i });
+    fireEvent.click(basicsTabButton);
+
+    // Check for 10 period headers (P1 through P10)
+    for (let i = 1; i <= 10; i++) {
+      expect(screen.getByText(`P${i}`)).toBeDefined();
+    }
+  });
 });
