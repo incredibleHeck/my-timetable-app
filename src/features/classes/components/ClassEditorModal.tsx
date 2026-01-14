@@ -47,6 +47,12 @@ export const ClassEditorModal: React.FC<ClassEditorModalProps> = ({
       setCDuration(
         editingClass?.duration || data.settings.defaultClassDuration || 50
       );
+      setCBreakDuration(
+        editingClass?.breakDuration || data.settings.defaultBreakDuration || 20
+      );
+      setCLunchDuration(
+        editingClass?.lunchDuration || data.settings.defaultLunchDuration || 60
+      );
       const targetCount =
         editingClass?.periodCount || data.settings.periodsPerDay;
       setCPeriodCount(targetCount);
