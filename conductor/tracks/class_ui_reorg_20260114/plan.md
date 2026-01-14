@@ -2,7 +2,7 @@
 
 ## Phase 1: Data Model and State Setup
 - [x] Task: Update the `ClassGroup` interface in `src/features/classes/types.ts` to include `breakDuration` and `lunchDuration`. [8a06b3a]
-- [ ] Task: Add new state variables `cBreakDuration` and `cLunchDuration` to `ClassEditorModal.tsx`.
+- [x] Task: Add new state variables `cBreakDuration` and `cLunchDuration` to `ClassEditorModal.tsx`. [7e3f5d1]
 - [ ] Task: Update the hydration logic in `useEffect` to initialize these new states from `editingClass` or global defaults (`data.settings`).
 - [ ] Task: Update the `handleSave` function to include the new duration fields in the `newClass` object.
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Data Model and State Setup' (Protocol in workflow.md)
