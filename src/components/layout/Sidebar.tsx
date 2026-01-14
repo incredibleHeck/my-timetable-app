@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { ViewState } from "../../types";
 import { FileService } from "../../services/fileSystem";
+import { SidebarSection } from "./sidebar/SidebarSection";
+import { NavItem } from "./sidebar/NavItem";
 
 interface SidebarProps {
   view: ViewState;
@@ -26,56 +28,6 @@ interface SidebarProps {
   profiles: { id: string; name: string }[];
   onSwitchProfile: (id: string) => void;
 }
-
-export const SidebarSection = ({
-  label,
-  isFirst = false,
-}: {
-  label: string;
-  isFirst?: boolean;
-}) => (
-  <div
-    className={`px-6 py-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest ${
-      !isFirst ? "mt-4" : ""
-    }`}
-  >
-    {label.toUpperCase()}
-  </div>
-);
-
-const NavItem = ({
-  id,
-  icon,
-  label,
-  currentView,
-  onClick,
-}: {
-  id: ViewState;
-  icon: React.ReactNode;
-  label: string;
-  currentView: ViewState;
-  onClick: (v: ViewState) => void;
-}) => (
-  <button
-    onClick={() => onClick(id)}
-    className={`w-full flex items-center px-6 py-3 transition-colors border-l-4 text-sm font-medium group ${
-      currentView === id
-        ? "bg-slate-800 text-white border-amber-400"
-        : "text-slate-400 border-transparent hover:text-white hover:bg-slate-800/50"
-    }`}
-  >
-    <span
-      className={`mr-3 transition-transform ${
-        currentView === id
-          ? "scale-110 text-amber-400"
-          : "group-hover:scale-110"
-      }`}
-    >
-      {icon}
-    </span>
-    {label}
-  </button>
-);
 
 export const Sidebar: React.FC<SidebarProps> = ({
   view,
@@ -185,8 +137,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           currentView={view}
           onClick={setView}
         />
-
-        {/* Profiles Section */}
 
         {/* Profiles Section */}
         <SidebarSection label="Profiles" />

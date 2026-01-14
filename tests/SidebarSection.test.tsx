@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { SidebarSection } from "../src/components/layout/Sidebar";
+import { SidebarSection } from "../src/components/layout/sidebar/SidebarSection";
 import { describe, it, expect } from "vitest";
 
 describe("SidebarSection", () => {
