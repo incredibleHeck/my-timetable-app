@@ -176,6 +176,8 @@ export const ClassEditorModal: React.FC<ClassEditorModalProps> = ({
       name: cName,
       periodCount: cPeriodCount,
       duration: cDuration,
+      breakDuration: cBreakDuration,
+      lunchDuration: cLunchDuration,
       structure: finalStructure,
       fixedSessions: cFixedSessions, // Save the reservations
       curriculum: activeCurriculum,
