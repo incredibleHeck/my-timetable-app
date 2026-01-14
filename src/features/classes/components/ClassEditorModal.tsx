@@ -414,7 +414,10 @@ export const ClassEditorModal: React.FC<ClassEditorModalProps> = ({
                 </div>
               </div>
             ) : (
-              renderStructureEditor()
+              <div className="space-y-6">
+                {renderStructureEditor()}
+                {renderStructureTimingInputs()}
+              </div>
             )}
           </div>
 
