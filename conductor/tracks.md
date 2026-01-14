@@ -9,14 +9,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-## [x] Track: Comprehensive Project Structure Refactoring
-
-*Link: [./conductor/tracks/project_refactor_cleanup_20260111/](./conductor/tracks/project_refactor_cleanup_20260111/)*
-
----
-
-## [ ] Track: Extreme Project Refactor & Reorganization
-*Link: [./conductor/tracks/extreme_refactor_20260112/](./conductor/tracks/extreme_refactor_20260112/)*
-
-
-
+## [~] Track: Class Settings UI Reorganization
+*Link: [./conductor/tracks/class_ui_reorg_20260114/](./conductor/tracks/class_ui_reorg_20260114/)*
