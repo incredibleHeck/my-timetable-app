@@ -14,7 +14,7 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 2: UI Reorganization' (Protocol in workflow.md) [d532b34]
 
 ## Phase 3: Validation and Verification
-- [ ] Task: Create a unit test in `tests/` to verify that `ClassEditorModal` correctly initializes and saves the new fields.
-- [ ] Task: Verify that changing "Periods/Day" in the "Structure" tab correctly updates the Reservations grid in the "Basics" tab.
-- [ ] Task: Run full build (`npm run build`) to ensure no type mismatches.
+- [x] Task: Create a unit test in `tests/` to verify that `ClassEditorModal` correctly initializes and saves the new fields. [fef82f3]
+- [x] Task: Verify that changing "Periods/Day" in the "Structure" tab correctly updates the Reservations grid in the "Basics" tab. [fef82f3]
+- [x] Task: Run full build (`npm run build`) to ensure no type mismatches.
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Validation and Verification' (Protocol in workflow.md)
