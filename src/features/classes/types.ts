@@ -20,6 +20,8 @@ export interface ClassGroup {
   periodCount?: number;
   structure?: (PeriodType | PeriodConfig)[];
   duration?: number;
+  breakDuration?: number;
+  lunchDuration?: number;
 
   // Class-Specific Reservations
   fixedSessions?: FixedOccasion[][];
