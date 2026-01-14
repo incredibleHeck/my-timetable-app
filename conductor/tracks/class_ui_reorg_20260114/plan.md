@@ -1,11 +1,11 @@
 # Plan: Class Settings UI Reorganization
 
-## Phase 1: Data Model and State Setup
+## Phase 1: Data Model and State Setup [checkpoint: a2c159b]
 - [x] Task: Update the `ClassGroup` interface in `src/features/classes/types.ts` to include `breakDuration` and `lunchDuration`. [8a06b3a]
 - [x] Task: Add new state variables `cBreakDuration` and `cLunchDuration` to `ClassEditorModal.tsx`. [7e3f5d1]
 - [x] Task: Update the hydration logic in `useEffect` to initialize these new states from `editingClass` or global defaults (`data.settings`). [d791cb2]
 - [x] Task: Update the `handleSave` function to include the new duration fields in the `newClass` object. [6a9806d]
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Data Model and State Setup' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Data Model and State Setup' (Protocol in workflow.md) [a2c159b]
 
 ## Phase 2: UI Reorganization
 - [ ] Task: Modify the "Basics" tab content in `ClassEditorModal.tsx` to remove "Periods/Day" and "Duration".
