@@ -9,8 +9,8 @@
 
 ## Phase 2: UI Reorganization
 - [x] Task: Modify the "Basics" tab content in `ClassEditorModal.tsx` to remove "Periods/Day" and "Duration". [b64a7af]
-- [ ] Task: Create a new sub-component or helper function `renderStructureTimingInputs` to house the 2x2 grid of numeric inputs.
-- [ ] Task: Update the "Structure" tab content to include the visual grid followed by the new timing inputs grid.
+- [ ] Task: Create a new sub-component or helper function `renderStructureTimingInputs` to house the 2x2 grid of numeric inputs. [7d7f8ca]
+- [x] Task: Update the "Structure" tab content to include the visual grid followed by the new timing inputs grid. [d18b6bc]
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: UI Reorganization' (Protocol in workflow.md)
 
 ## Phase 3: Validation and Verification
