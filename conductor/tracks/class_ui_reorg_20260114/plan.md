@@ -8,7 +8,7 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Data Model and State Setup' (Protocol in workflow.md) [a2c159b]
 
 ## Phase 2: UI Reorganization
-- [ ] Task: Modify the "Basics" tab content in `ClassEditorModal.tsx` to remove "Periods/Day" and "Duration".
+- [x] Task: Modify the "Basics" tab content in `ClassEditorModal.tsx` to remove "Periods/Day" and "Duration". [b64a7af]
 - [ ] Task: Create a new sub-component or helper function `renderStructureTimingInputs` to house the 2x2 grid of numeric inputs.
 - [ ] Task: Update the "Structure" tab content to include the visual grid followed by the new timing inputs grid.
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: UI Reorganization' (Protocol in workflow.md)
