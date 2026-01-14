@@ -291,26 +291,6 @@ export const ClassEditorModal: React.FC<ClassEditorModalProps> = ({
                   placeholder="e.g. Grade 10A"
                   autoFocus
                 />
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Input
-                      label="Periods/Day"
-                      type="number"
-                      value={cPeriodCount}
-                      onChange={(e) =>
-                        handlePeriodCountChange(parseInt(e.target.value) || 0)
-                      }
-                    />
-                  </div>
-                  <Input
-                    label="Duration (min)"
-                    type="number"
-                    value={cDuration}
-                    onChange={(e) =>
-                      setCDuration(parseInt(e.target.value) || 0)
-                    }
-                  />
-                </div>
 
                 {/* RESERVATIONS GRID */}
                 <div>
