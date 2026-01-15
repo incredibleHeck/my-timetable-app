@@ -11,7 +11,7 @@ This plan implements hierarchical duration precedence (Class > Global), time-awa
     - [x] Implement logic to generate a full schedule of `[startTime, endTime]` for all slots in a day for a specific class
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Foundation' (Protocol in workflow.md)
 
-## Phase 2: Generator View UI Updates
+## Phase 2: Generator View UI Updates [checkpoint: 93b95e4]
 - [x] Task: Update Grid Header UI (844ebfb)
     - [x] Write tests for `PeriodHeader` component (displaying times)
     - [x] Implement time display in Generator View headers `(HH:mm - HH:mm)`
