@@ -10,6 +10,7 @@ describe("Repro: Max Daily Load Hardcoded Limit", () => {
       timeSlots: [],
       maxConsecutivePeriods: 8, // Allow full day
       fixedOccasions: [],
+      maxTeacherPeriodsPerDay: 8, // ADDED: Allow full load for this test
     },
     classes: [
       { id: "c1", name: "Class 1", periodCount: 8, structure: [] } as any,
