@@ -1,6 +1,7 @@
 import { AppData, ScheduleResult, Conflict, ClassGroup, ScheduleSlot } from "../../../types";
 import { AllocationUnit, SchedulerState } from "./types";
 import { getPeriodType, getNextClassPeriod } from "./utils";
+import { calculateClassSchedule, doTimeRangesOverlap } from "../../../utils/timeUtils";
 
 export const solveSmart = (
   units: AllocationUnit[],
@@ -13,6 +14,12 @@ export const solveSmart = (
     ...data.classes.map((c) => Math.max(c.periodCount || 0, c.structure?.length || 0))
   );
   const globalDayStructure = data.settings.dayStructure;
+
+  // Pre-calculate all class schedules
+  const allClassSchedules = new Map<string, any[]>();
+  data.classes.forEach(c => {
+    allClassSchedules.set(c.id, calculateClassSchedule(c, data.settings, c.structure || globalDayStructure));
+  });
 
   // Cache Single Resource Subjects
   const singleResourceSubjectIds = new Set(
@@ -75,6 +82,7 @@ export const solveSmart = (
     p: number,
     duration: number,
     p2: number,
+    uClassId: string, // Added class context
     preferredIds?: string[],
     requiredType?: string,
     excludedRoomIds: Set<string> = new Set()
@@ -82,24 +90,38 @@ export const solveSmart = (
     // If no rooms defined in system, and no requirement, return undefined (No room needed)
     if (rooms.length === 0) return undefined;
     
-    // If no requirement specified, and we are not enforcing strict room usage for everything, return undefined
-    // (You can toggle this if you want ALL classes to have rooms)
-    if (!preferredIds?.length && !requiredType) return undefined;
+    const targetClassSched = allClassSchedules.get(uClassId);
+    const targetRangeP1 = targetClassSched?.[p];
+    const targetRangeP2 = duration === 2 ? targetClassSched?.[p2] : null;
 
     const validRooms = rooms.filter((r) => {
       if (excludedRoomIds.has(r.id)) return false;
       if (requiredType && r.type !== requiredType) return false;
       if (preferredIds?.length && !preferredIds.includes(r.id)) return false;
       
-      // Check Occupancy
-      if (state.roomOccupancy[r.id][d][p]) return false;
-      if (duration === 2 && state.roomOccupancy[r.id][d][p2]) return false;
+      // Check Occupancy (Absolute Time Aware)
+      // We must check if ANY class is using this room at an overlapping time
+      for (const otherCId of Object.keys(state.schedule)) {
+          const otherDaySlots = state.schedule[otherCId][d];
+          if (!otherDaySlots) continue;
+
+          const otherSched = allClassSchedules.get(otherCId);
+          if (!otherSched) continue;
+
+          for (const otherPStr in otherDaySlots) {
+              const oP = parseInt(otherPStr);
+              const oSlot = otherDaySlots[oP];
+              if (oSlot.roomId === r.id) {
+                  const otherRange = otherSched[oP];
+                  if (targetRangeP1 && otherRange && doTimeRangesOverlap(targetRangeP1, otherRange)) return false;
+                  if (duration === 2 && targetRangeP2 && otherRange && doTimeRangesOverlap(targetRangeP2, otherRange)) return false;
+              }
+          }
+      }
       
       return true;
     });
 
-    // Heuristic: Pick room with smallest capacity that fits? 
-    // For now, just pick first valid.
     return validRooms.length > 0 ? validRooms[0].id : undefined;
   };
 
@@ -202,18 +224,74 @@ export const solveSmart = (
         const takenRoomsInThisSlot = new Set<string>();
 
         for (const u of gangUnits) {
-            // Teacher Occupancy
+            // Teacher Occupancy (Absolute Time Aware)
+            const targetClassSched = allClassSchedules.get(u.classIds[0]);
+            const targetRangeP1 = targetClassSched?.[p];
+            const targetRangeP2 = duration === 2 ? targetClassSched?.[p2] : null;
+
             for (const tid of u.teacherIds) {
+                // 1. Check Teacher Availability (Index-based constraints still apply as base)
                 if (state.teacherOccupancy[tid][d][p] || (duration === 2 && state.teacherOccupancy[tid][d][p2])) {
                     gangValid = false; break;
                 }
+
+                // 2. Check Teacher Overlap with OTHER classes (Time-aware)
+                // We need to look at what this teacher is already doing in state.schedule
+                for (const otherCId of Object.keys(state.schedule)) {
+                    // Check if current u.classIds already includes this cId (to avoid self-clash in gang)
+                    if (u.classIds.includes(otherCId)) continue;
+
+                    const otherDaySlots = state.schedule[otherCId][d];
+                    if (!otherDaySlots) continue;
+
+                    const otherSched = allClassSchedules.get(otherCId);
+                    if (!otherSched) continue;
+
+                    for (const otherPStr in otherDaySlots) {
+                        const oP = parseInt(otherPStr);
+                        const oSlot = otherDaySlots[otherPStr];
+                        if (oSlot.teacherId === tid) {
+                            const otherRange = otherSched[oP];
+                            if (targetRangeP1 && otherRange && doTimeRangesOverlap(targetRangeP1, otherRange)) {
+                                gangValid = false; break;
+                            }
+                            if (duration === 2 && targetRangeP2 && otherRange && doTimeRangesOverlap(targetRangeP2, otherRange)) {
+                                gangValid = false; break;
+                            }
+                        }
+                    }
+                    if (!gangValid) break;
+                }
+                if (!gangValid) break;
             }
             if (!gangValid) break;
 
-            // Single Resource
+            // Single Resource (Absolute Time Aware)
              if (singleResourceSubjectIds.has(u.subjectId)) {
-                if (state.singleResourceUsage[u.subjectId][d][p] || (duration === 2 && state.singleResourceUsage[u.subjectId][d][p2])) {
-                    gangValid = false; break;
+                // Check if ANY other class is using this subject at an overlapping time
+                for (const otherCId of Object.keys(state.schedule)) {
+                    if (u.classIds.includes(otherCId)) continue;
+
+                    const otherDaySlots = state.schedule[otherCId][d];
+                    if (!otherDaySlots) continue;
+
+                    const otherSched = allClassSchedules.get(otherCId);
+                    if (!otherSched) continue;
+
+                    for (const otherPStr in otherDaySlots) {
+                        const oP = parseInt(otherPStr);
+                        const oSlot = otherDaySlots[otherPStr];
+                        if (oSlot.subjectId === u.subjectId) {
+                            const otherRange = otherSched[oP];
+                            if (targetRangeP1 && otherRange && doTimeRangesOverlap(targetRangeP1, otherRange)) {
+                                gangValid = false; break;
+                            }
+                            if (duration === 2 && targetRangeP2 && otherRange && doTimeRangesOverlap(targetRangeP2, otherRange)) {
+                                gangValid = false; break;
+                            }
+                        }
+                    }
+                    if (!gangValid) break;
                 }
              }
              if (!gangValid) break;
@@ -221,6 +299,7 @@ export const solveSmart = (
              // Room Check
              const roomId = findAvailableRoom(
                  d, p, duration, p2, 
+                 u.classIds[0], // Pass primary classId for context
                  u.preferredRoomIds, u.requiredRoomType, 
                  takenRoomsInThisSlot
              );
