@@ -111,6 +111,7 @@ export const ClassEditorModal: React.FC<ClassEditorModalProps> = ({
               doubles: 0,
               singles: 0,
               assignedTeacherId: undefined,
+              isWorkloadExempt: false,
             };
       });
       setCCurriculum(fullCurr as CurriculumItem[]);
@@ -469,6 +470,9 @@ export const ClassEditorModal: React.FC<ClassEditorModalProps> = ({
                     )
                   );
                 };
+
+                const isExempt = item.isWorkloadExempt;
+
                 return (
                   <div
                     key={item.subjectId}
@@ -545,7 +549,7 @@ export const ClassEditorModal: React.FC<ClassEditorModalProps> = ({
                     </div>
 
                     {item.periodsPerWeek > 0 && (
-                      <div className="mt-2 pt-2 border-t border-slate-100">
+                      <div className="mt-2 pt-2 border-t border-slate-100 flex items-center gap-2">
                         <Select
                           value={item.assignedTeacherId || ""}
                           onChange={(e) =>
@@ -561,8 +565,19 @@ export const ClassEditorModal: React.FC<ClassEditorModalProps> = ({
                               label: t.name,
                             })),
                           ]}
-                          className="text-xs py-1"
+                          className="text-xs py-1 flex-1"
                         />
+                        <button
+                          onClick={() => updateItem("isWorkloadExempt", !isExempt)}
+                          title={isExempt ? "Include in Workload" : "Exempt from Workload"}
+                          className={`p-1.5 rounded border transition-colors ${
+                            isExempt 
+                              ? "bg-amber-100 border-amber-300 text-amber-700" 
+                              : "bg-slate-50 border-slate-200 text-slate-400 hover:text-slate-600"
+                          }`}
+                        >
+                          <Zap size={14} className={isExempt ? "fill-amber-500" : ""} />
+                        </button>
                       </div>
                     )}
                   </div>

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Subject } from "../../../types";
+import { Subject, Teacher } from "../../../types";
 import { JointClass, ElectiveBlock, ClassGroup } from "../types";
 import { Button, Modal, Input, Select } from "../../../components/ui";
 import { generateId } from "../../../utils/utils";
@@ -10,6 +10,7 @@ interface JointClassModalProps {
   onSave: (joint: JointClass) => void;
   subjects: Subject[];
   classes: ClassGroup[];
+  teachers: Teacher[];
 }
 
 export const JointClassModal: React.FC<JointClassModalProps> = ({
@@ -18,9 +19,11 @@ export const JointClassModal: React.FC<JointClassModalProps> = ({
   onSave,
   subjects,
   classes,
+  teachers,
 }) => {
   const [name, setName] = useState("");
   const [subjectId, setSubjectId] = useState("");
+  const [teacherId, setTeacherId] = useState("");
   const [classIds, setClassIds] = useState<string[]>([]);
 
   const handleSave = () => {
@@ -30,11 +33,13 @@ export const JointClassModal: React.FC<JointClassModalProps> = ({
       name: name || "Joint Group",
       subjectId,
       classIds,
+      teacherId: teacherId || undefined,
     });
     onClose();
     setName("");
     setClassIds([]);
     setSubjectId("");
+    setTeacherId("");
   };
 
   return (
@@ -46,15 +51,26 @@ export const JointClassModal: React.FC<JointClassModalProps> = ({
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g. Senior Math"
         />
-        <Select
-          label="Subject"
-          options={[
-            { value: "", label: "Select" },
-            ...subjects.map((s) => ({ value: s.id, label: s.name })),
-          ]}
-          value={subjectId}
-          onChange={(e) => setSubjectId(e.target.value)}
-        />
+        <div className="grid grid-cols-2 gap-4">
+          <Select
+            label="Subject"
+            options={[
+              { value: "", label: "Select" },
+              ...subjects.map((s) => ({ value: s.id, label: s.name })),
+            ]}
+            value={subjectId}
+            onChange={(e) => setSubjectId(e.target.value)}
+          />
+          <Select
+            label="Override Teacher (Optional)"
+            options={[
+              { value: "", label: "Auto (from Curriculum)" },
+              ...teachers.map((t) => ({ value: t.id, label: t.name })),
+            ]}
+            value={teacherId}
+            onChange={(e) => setTeacherId(e.target.value)}
+          />
+        </div>
         <div className="border p-2 rounded max-h-40 overflow-y-auto grid grid-cols-2 gap-2">
           {classes.map((c) => (
             <label key={c.id} className="flex items-center gap-2">

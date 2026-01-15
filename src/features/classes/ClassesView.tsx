@@ -415,6 +415,7 @@ export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
         onClose={() => setIsLinkModalOpen(false)}
         subjects={data.subjects}
         classes={data.classes}
+        teachers={data.teachers}
         onSave={handleSaveLink}
       />
 
