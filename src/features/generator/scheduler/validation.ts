@@ -1,4 +1,4 @@
-import { AppData, ScheduleSlot } from "../../../types";
+import { AppData, ScheduleSlot, Conflict } from "../../../types";
 import { calculateClassSchedule, doTimeRangesOverlap } from "../../../utils/timeUtils";
 
 export type ValidationResult = {
