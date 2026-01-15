@@ -14,5 +14,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-## [~] Track: Dynamic State Handling - Auto-Update Duration
-*Link: [./conductor/tracks/dynamic_duration_20260114/](./conductor/tracks/dynamic_duration_20260114/)*
+- [~] **Track: Generator Logic & Precedence**
+*Link: [./tracks/generator_logic_precedence_20260115/](./tracks/generator_logic_precedence_20260115/)*
