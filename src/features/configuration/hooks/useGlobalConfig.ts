@@ -184,6 +184,20 @@ export const useGlobalConfig = (
     });
   };
 
+  const updateMaxSubjectPeriods = (val: number) => {
+    onUpdate({
+      ...data,
+      settings: { ...data.settings, maxSubjectPeriodsPerDay: val },
+    });
+  };
+
+  const updateMaxTeacherPeriods = (val: number) => {
+    onUpdate({
+      ...data,
+      settings: { ...data.settings, maxTeacherPeriodsPerDay: val },
+    });
+  };
+
   const handleSlotClick = (d: number, p: number) => {
     let val: any = data.settings.fixedOccasions[d]?.[p];
     if (val === true) val = "Reserved";
@@ -230,6 +244,8 @@ export const useGlobalConfig = (
     updateTimeSlot,
     saveCustomLabel,
     updateMaxConsecutive,
+    updateMaxSubjectPeriods,
+    updateMaxTeacherPeriods,
     handleSlotClick,
     saveSlot,
   };

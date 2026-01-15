@@ -39,6 +39,8 @@ export const GlobalConfigView: React.FC<ViewProps> = ({ data, onUpdate }) => {
     updateTimeSlot,
     saveCustomLabel,
     updateMaxConsecutive,
+    updateMaxSubjectPeriods,
+    updateMaxTeacherPeriods,
     handleSlotClick,
     saveSlot,
   } = useGlobalConfig(data, onUpdate);
@@ -50,6 +52,8 @@ export const GlobalConfigView: React.FC<ViewProps> = ({ data, onUpdate }) => {
     defaultBreakDuration: breakDur,
     defaultLunchDuration: lunchDur,
     maxConsecutivePeriods: maxConsecutive,
+    maxSubjectPeriodsPerDay: maxSubject,
+    maxTeacherPeriodsPerDay: maxTeacher,
     timeSlots,
   } = data.settings;
 
@@ -367,6 +371,86 @@ export const GlobalConfigView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                     onClick={() =>
                       updateMaxConsecutive(
                         Math.min(8, (maxConsecutive || 4) + 1)
+                      )
+                    }
+                    className="w-8 h-8 rounded bg-white border border-slate-300 font-bold hover:bg-slate-100"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              <div className="h-px bg-slate-200 w-full"></div>
+
+              {/* Subject Limit */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <ShieldAlert size={18} className="text-amber-600" />
+                  <h4 className="font-bold text-slate-700 text-sm">
+                    Subject Daily Limit
+                  </h4>
+                </div>
+                <p className="text-xs text-slate-500 mb-3 leading-relaxed">
+                  Limits how many times a single subject can be taught to a class in one day.
+                </p>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() =>
+                      updateMaxSubjectPeriods(
+                        Math.max(1, (maxSubject || 2) - 1)
+                      )
+                    }
+                    className="w-8 h-8 rounded bg-white border border-slate-300 font-bold hover:bg-slate-100"
+                  >
+                    -
+                  </button>
+                  <span className="text-lg font-bold text-slate-800 w-8 text-center">
+                    {maxSubject || 2}
+                  </span>
+                  <button
+                    onClick={() =>
+                      updateMaxSubjectPeriods(
+                        Math.min(4, (maxSubject || 2) + 1)
+                      )
+                    }
+                    className="w-8 h-8 rounded bg-white border border-slate-300 font-bold hover:bg-slate-100"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              <div className="h-px bg-slate-200 w-full"></div>
+
+              {/* Teacher Limit */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <ShieldAlert size={18} className="text-amber-600" />
+                  <h4 className="font-bold text-slate-700 text-sm">
+                    Teacher Daily Load
+                  </h4>
+                </div>
+                <p className="text-xs text-slate-500 mb-3 leading-relaxed">
+                  Limits the total number of periods a teacher can be assigned across all classes per day.
+                </p>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() =>
+                      updateMaxTeacherPeriods(
+                        Math.max(1, (maxTeacher || 6) - 1)
+                      )
+                    }
+                    className="w-8 h-8 rounded bg-white border border-slate-300 font-bold hover:bg-slate-100"
+                  >
+                    -
+                  </button>
+                  <span className="text-lg font-bold text-slate-800 w-8 text-center">
+                    {maxTeacher || 6}
+                  </span>
+                  <button
+                    onClick={() =>
+                      updateMaxTeacherPeriods(
+                        Math.min(15, (maxTeacher || 6) + 1)
                       )
                     }
                     className="w-8 h-8 rounded bg-white border border-slate-300 font-bold hover:bg-slate-100"
