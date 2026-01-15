@@ -95,20 +95,20 @@ export const ElectiveBlockModal: React.FC<ElectiveBlockModalProps> = ({
   classes,
 }) => {
   const [name, setName] = useState("");
-  const [classId, setClassId] = useState("");
+  const [classIds, setClassIds] = useState<string[]>([]);
   const [subjectIds, setSubjectIds] = useState<string[]>([]);
 
   const handleSave = () => {
-    if (!classId || subjectIds.length < 2) return;
+    if (classIds.length === 0 || subjectIds.length < 2) return;
     onSave({
       id: generateId(),
       name: name || "Option Block",
-      classId,
+      classIds,
       subjectIds,
     });
     onClose();
     setName("");
-    setClassId("");
+    setClassIds([]);
     setSubjectIds([]);
   };
 
@@ -121,15 +121,27 @@ export const ElectiveBlockModal: React.FC<ElectiveBlockModalProps> = ({
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g. Arts Options"
         />
-        <Select
-          label="Class"
-          options={[
-            { value: "", label: "Select" },
-            ...classes.map((c) => ({ value: c.id, label: c.name })),
-          ]}
-          value={classId}
-          onChange={(e) => setClassId(e.target.value)}
-        />
+        
+        <label className="block text-xs font-bold text-slate-500">
+          Select Classes
+        </label>
+        <div className="border p-2 rounded max-h-40 overflow-y-auto grid grid-cols-2 gap-2">
+          {classes.map((c) => (
+            <label key={c.id} className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={classIds.includes(c.id)}
+                onChange={() => {
+                  if (classIds.includes(c.id))
+                    setClassIds(classIds.filter((x) => x !== c.id));
+                  else setClassIds([...classIds, c.id]);
+                }}
+              />
+              <span className="text-sm">{c.name}</span>
+            </label>
+          ))}
+        </div>
+
         <label className="block text-xs font-bold text-slate-500">
           Select Subjects in Block
         </label>

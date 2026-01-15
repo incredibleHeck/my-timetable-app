@@ -82,9 +82,12 @@ export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
         classIds: j.classIds.filter((id) => id !== classToDelete.id),
       }))
       .filter((j) => j.classIds.length >= 2);
-    const newElectives = (data.electives || []).filter(
-      (e) => e.classId !== classToDelete.id
-    );
+    const newElectives = (data.electives || [])
+      .map((e) => ({
+        ...e,
+        classIds: e.classIds.filter((id) => id !== classToDelete.id),
+      }))
+      .filter((e) => e.classIds.length > 0);
     onUpdate({
       ...data,
       classes: newClasses,
@@ -362,9 +365,12 @@ export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                   <Layers size={16} className="text-purple-500" /> {elec.name}
                 </h4>
                 <div className="text-xs font-bold text-slate-500 mb-3">
-                  Class:{" "}
+                  Classes:{" "}
                   <span className="text-slate-800">
-                    {data.classes.find((c) => c.id === elec.classId)?.name}
+                    {elec.classIds
+                      .map((cid) => data.classes.find((c) => c.id === cid)?.name)
+                      .filter(Boolean)
+                      .join(", ")}
                   </span>
                 </div>
                 <div className="space-y-1">
