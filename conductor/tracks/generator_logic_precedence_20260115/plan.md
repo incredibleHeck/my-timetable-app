@@ -12,12 +12,12 @@ This plan implements hierarchical duration precedence (Class > Global), time-awa
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Foundation' (Protocol in workflow.md)
 
 ## Phase 2: Generator View UI Updates
-- [ ] Task: Update Grid Header UI
-    - [ ] Write tests for `PeriodHeader` component (displaying times)
-    - [ ] Implement time display in Generator View headers `(HH:mm - HH:mm)`
-- [ ] Task: Ensure dynamic updates when switching classes
-    - [ ] Write tests for header refresh on class selection change
-    - [ ] Implement context/hook connection to update headers based on active class
+- [x] Task: Update Grid Header UI (844ebfb)
+    - [x] Write tests for `PeriodHeader` component (displaying times)
+    - [x] Implement time display in Generator View headers `(HH:mm - HH:mm)`
+- [x] Task: Ensure dynamic updates when switching classes (da15a7c)
+    - [x] Write tests for header refresh on class selection change
+    - [x] Implement context/hook connection to update headers based on active class
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: UI Updates' (Protocol in workflow.md)
 
 ## Phase 3: Time-Aware Generator Logic
