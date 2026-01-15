@@ -170,7 +170,9 @@ export const DashboardView: React.FC<ViewProps> = ({
           value={metrics.teacherCount}
           icon={<Users size={20} />}
           color="blue"
-          subtext={`${metrics.teacherCount} active`}
+          subtext={metrics.overloadedCount > 0 
+            ? `${metrics.overloadedCount} overloaded` 
+            : `${metrics.teacherCount} active`}
           onClick={() => onNavigate && onNavigate("TEACHERS")}
         />
         <MetricCard
@@ -202,7 +204,7 @@ export const DashboardView: React.FC<ViewProps> = ({
           value={`${metrics.saturation}%`}
           icon={<Activity size={20} />}
           color="amber"
-          subtext={`${metrics.filledSlots} slots filled`}
+          subtext={`Avg. Load: ${metrics.avgUtilization}%`}
           onClick={() => onNavigate && onNavigate("GENERATOR")}
         />
       </div>

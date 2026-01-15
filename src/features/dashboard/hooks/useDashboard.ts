@@ -2,11 +2,14 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { AppData, ViewState } from "../../../types";
 import { FileService } from "../../../services/fileSystem";
 import { sanitizeAppData } from "../../../services/fileSystem/sanitization";
+import { useWorkloadStats } from "../../workload/hooks/useWorkloadStats";
 
 export const useDashboard = (
   data: AppData,
   onUpdate: (d: AppData) => void
 ) => {
+  const { workloadStats } = useWorkloadStats(data);
+
   // --- STATE ---
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [loadModalOpen, setLoadModalOpen] = useState(false);
@@ -17,6 +20,11 @@ export const useDashboard = (
     const teacherCount = data.teachers.length;
     const classCount = data.classes.length;
     const subjectCount = data.subjects.length;
+
+    const overloadedCount = workloadStats.filter(s => s.utilizationPct > 100).length;
+    const avgUtilization = workloadStats.length > 0 
+      ? Math.round(workloadStats.reduce((acc, s) => acc + s.utilizationPct, 0) / workloadStats.length)
+      : 0;
 
     let totalSlots = 0;
     let filledSlots = 0;
@@ -50,8 +58,17 @@ export const useDashboard = (
     });
     const saturation =
       totalSlots > 0 ? Math.round((filledSlots / totalSlots) * 100) : 0;
-    return { teacherCount, classCount, subjectCount, saturation, filledSlots };
-  }, [data]);
+    
+    return { 
+      teacherCount, 
+      classCount, 
+      subjectCount, 
+      saturation, 
+      filledSlots,
+      overloadedCount,
+      avgUtilization
+    };
+  }, [data, workloadStats]);
 
   // --- 2. HEALTH ---
   const healthIssues = useMemo(() => {
@@ -78,24 +95,31 @@ export const useDashboard = (
       });
     }
 
-    // 2. Unused teachers
-    const unusedTeachers = data.teachers.filter(
-      (t) =>
-        !data.classes.some((c) =>
-          c.curriculum.some((curr) => curr.assignedTeacherId === t.id)
-        )
-    );
+    // 2. Unused teachers (using de-duplicated stats)
+    const unusedTeachers = workloadStats.filter(s => s.assignedPeriods === 0);
+    
     if (unusedTeachers.length > 0 && data.classes.length > 0) {
-      const names = unusedTeachers.slice(0, 3).map((t) => t.name);
-      let message = `Teacher ${names.join(", ")} ${
-        unusedTeachers.length > 3 ? `and ${unusedTeachers.length - 3} more ` : ""
-      } ${unusedTeachers.length === 1 ? "is" : "are"} currently unassigned.`;
+      const names = unusedTeachers.slice(0, 3).map((s) => s.t.name);
+      const moreText = unusedTeachers.length > 3 ? ` and ${unusedTeachers.length - 3} more` : "";
+      const verb = unusedTeachers.length === 1 ? "is" : "are";
+      const message = `Teacher ${names.join(", ")}${moreText} ${verb} currently unassigned.`;
 
       issues.push({
         type: "warning",
         message,
         action: "Assign",
         view: "CLASSES",
+      });
+    }
+
+    // 3. Overloaded teachers
+    const overloaded = workloadStats.filter(s => s.utilizationPct > 100);
+    if (overloaded.length > 0) {
+       issues.push({
+        type: "error",
+        message: `${overloaded.length} teachers are overloaded (>100% utilization).`,
+        action: "Review",
+        view: "WORKLOAD",
       });
     }
 
@@ -108,7 +132,7 @@ export const useDashboard = (
       });
 
     return { issues, conflicts: data.conflicts.length };
-  }, [data]);
+  }, [data.classes, data.subjects, data.conflicts, workloadStats]);
 
   // --- 3. FILE SYSTEM LOGIC ---
   const handleExportBackup = async () => {
