@@ -5,6 +5,8 @@ import * as ProfileStorage from '../services/profile/profileStorage';
 import * as Migration from '../services/profile/migration';
 import { generateId, deepClone } from '../utils/utils';
 import { DEFAULT_DATA } from '../utils/constants';
+import { calculateClassSchedule } from '../utils/timeUtils';
+import { TimeSlot } from '../types';
 
 interface ProfileContextType {
   profiles: ProfileManifest['profiles'];
@@ -20,6 +22,7 @@ interface ProfileContextType {
   pushToHistory: (data: AppData) => void;
   canUndo: boolean;
   canRedo: boolean;
+  getClassSchedule: (classId: string) => TimeSlot[];
 }
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
@@ -181,6 +184,19 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     }, 1000);
   };
 
+  const getClassSchedule = (classId: string): TimeSlot[] => {
+    if (!activeProfile) return [];
+    
+    const classGroup = activeProfile.data.classes.find(c => c.id === classId);
+    if (!classGroup) return [];
+
+    return calculateClassSchedule(
+      classGroup,
+      activeProfile.data.settings,
+      activeProfile.data.settings.dayStructure
+    );
+  };
+
   return (
     <ProfileContext.Provider value={{
       profiles,
@@ -195,7 +211,8 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
       redo,
       pushToHistory,
       canUndo: past.length > 0,
-      canRedo: future.length > 0
+      canRedo: future.length > 0,
+      getClassSchedule
     }}>
       {children}
     </ProfileContext.Provider>

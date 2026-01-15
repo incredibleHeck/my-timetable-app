@@ -88,4 +88,13 @@ describe('timeUtils - calculateClassSchedule', () => {
     expect(schedule[4]).toEqual({ start: '10:40', end: '11:25' }); // Lunch (45m global)
     expect(schedule[5]).toEqual({ start: '11:25', end: '12:15' }); // P4 (50m)
   });
+
+  it('should handle different school start times', () => {
+    const classGroup: Partial<ClassGroup> = { id: 'c1', name: 'Class 1' };
+    const lateGlobal = { ...globalSettings, schoolStartTime: '09:00' };
+    const schedule = calculateClassSchedule(classGroup as ClassGroup, lateGlobal as Settings, dayStructure);
+
+    expect(schedule[0].start).toBe('09:00');
+    expect(schedule[0].end).toBe('09:40');
+  });
 });
