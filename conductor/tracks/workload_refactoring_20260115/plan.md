@@ -22,12 +22,12 @@ This plan refactors the data models for `JointClass` and `ElectiveBlock` and upd
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Workload Logic' (Protocol in workflow.md)
 
 ## Phase 3: Engine & Validation Refactoring
-- [ ] Task: Update Validation Logic
-    - [ ] Write tests for `checkSlotValidity` with concurrent teacher assignments
-    - [ ] Refactor `checkSlotValidity` in `src/features/generator/scheduler/validation.ts` to count unique periods for `dailyLoad`
-- [ ] Task: Update Solver Logic
-    - [ ] Update `solveSmart` in `src/features/generator/scheduler/solver.ts` to use unique period counts for "Workload Balancing" score
-    - [ ] Update `solveSmart` to use unique period counts for `maxTeacherPeriodsPerDay` constraint
+- [x] Task: Update Validation Logic (7423ce2)
+    - [x] Write tests for `checkSlotValidity` with concurrent teacher assignments
+    - [x] Refactor `checkSlotValidity` in `src/features/generator/scheduler/validation.ts` to count unique periods for `dailyLoad`
+- [x] Task: Update Solver Logic (7423ce2)
+    - [x] Update `solveSmart` in `src/features/generator/scheduler/solver.ts` to use unique period counts for "Workload Balancing" score
+    - [x] Update `solveSmart` to use unique period counts for `maxTeacherPeriodsPerDay` constraint
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Engine' (Protocol in workflow.md)
 
 ## Phase 4: Final Integration & Regression
