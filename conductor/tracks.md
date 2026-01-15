@@ -12,7 +12,4 @@ This file tracks all major tracks for the project. Each track has its own detail
 ## [x] Track: Class Settings UI Reorganization
 *Link: [./conductor/tracks/class_ui_reorg_20260114/](./conductor/tracks/class_ui_reorg_20260114/)*
 
----
 
-- [x] **Track: Generator Logic & Precedence**
-*Link: [./tracks/generator_logic_precedence_20260115/](./tracks/generator_logic_precedence_20260115/)*
