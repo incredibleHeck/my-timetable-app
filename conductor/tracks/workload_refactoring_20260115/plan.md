@@ -17,8 +17,8 @@ This plan refactors the data models for `JointClass` and `ElectiveBlock` and upd
     - [x] Write tests for de-duplicated workload calculation
     - [x] Implement de-duplication for "Requested Workload" (Curriculum-based)
     - [x] Implement de-duplication for "Scheduled Workload" (Timetable-based)
-- [ ] Task: Update Dashboard Metrics
-    - [ ] Ensure dashboard workload metrics use the new de-duplicated logic
+- [x] Task: Update Dashboard Metrics (a45e5e0)
+    - [x] Ensure dashboard workload metrics use the new de-duplicated logic
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Workload Logic' (Protocol in workflow.md)
 
 ## Phase 3: Engine & Validation Refactoring
