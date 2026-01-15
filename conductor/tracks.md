@@ -9,5 +9,10 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-## [~] Track: Class Settings UI Reorganization
+## [x] Track: Class Settings UI Reorganization
 *Link: [./conductor/tracks/class_ui_reorg_20260114/](./conductor/tracks/class_ui_reorg_20260114/)*
+
+---
+
+## [~] Track: Dynamic State Handling - Auto-Update Duration
+*Link: [./conductor/tracks/dynamic_duration_20260114/](./conductor/tracks/dynamic_duration_20260114/)*
