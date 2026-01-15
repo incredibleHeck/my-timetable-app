@@ -19,7 +19,7 @@ This track removes hardcoded scheduling constraints and makes them user-configur
     - [x] Add handlers for updating the new constraint fields in the settings state.
 - [x] Task: Conductor - User Manual Verification 'Phase 2: UI Implementation' (Protocol in workflow.md)
 
-## Phase 3: Logic Refactoring
+## Phase 3: Logic Refactoring [checkpoint: 7acda40]
 - [x] Task: Update Validation Logic (58f2299)
     - [x] Refactor `checkSlotValidity` in `src/features/generator/scheduler/validation.ts` to use `settings.maxSubjectPeriodsPerDay` (fallback to 2).
     - [x] Refactor `checkSlotValidity` to use `settings.maxTeacherPeriodsPerDay` (fallback to 6).
