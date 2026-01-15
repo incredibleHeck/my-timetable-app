@@ -22,8 +22,10 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
   const electiveLookup = new Map<string, string>();
   if (data.electives) {
     data.electives.forEach((eb) => {
-      eb.subjectIds.forEach((sid) => {
-        electiveLookup.set(`${eb.classId}|${sid}`, eb.id);
+      eb.classIds.forEach((cid) => {
+        eb.subjectIds.forEach((sid) => {
+          electiveLookup.set(`${cid}|${sid}`, eb.id);
+        });
       });
     });
   }
@@ -38,7 +40,8 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
     const curr = repClass.curriculum.find((x) => x.subjectId === jc.subjectId);
     if (!curr) return;
 
-    const teacherId = curr.assignedTeacherId;
+    // USE jc.teacherId if present, else fallback to curriculum
+    const teacherId = jc.teacherId || curr.assignedTeacherId;
     const teacherName = teacherId
       ? teacherMap.get(teacherId)?.name || "Unknown"
       : "Unassigned";
