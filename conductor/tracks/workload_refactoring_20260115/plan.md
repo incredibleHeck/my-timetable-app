@@ -2,7 +2,7 @@
 
 This plan refactors the data models for `JointClass` and `ElectiveBlock` and updates workload calculation logic across the UI and the scheduling engine to count unique time slots.
 
-## Phase 1: Model Updates & Data Integrity
+## Phase 1: Model Updates & Data Integrity [checkpoint: 9a669ed]
 - [x] Task: Update Entity Interfaces (8b72b2e)
     - [x] Update `ElectiveBlock` in `src/features/classes/types.ts`: `classId: string` -> `classIds: string[]`
     - [x] Update `JointClass` in `src/features/classes/types.ts`: add `teacherId?: string`
@@ -10,7 +10,7 @@ This plan refactors the data models for `JointClass` and `ElectiveBlock` and upd
 - [x] Task: Update Default Data & Preparation (d18e649)
     - [x] Update `DEFAULT_DATA` in `src/utils/constants.ts` to reflect model changes
     - [x] Update `prepareAllocationUnits` in `src/features/generator/scheduler/preparation.ts` to handle `ElectiveBlock.classIds` and `JointClass.teacherId`
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Models' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Models' (Protocol in workflow.md)
 
 ## Phase 2: Workload Calculation Logic
 - [ ] Task: Refactor `useWorkloadStats` hook
