@@ -45,8 +45,10 @@ describe('Scheduler Validation', () => {
   };
 
   it('should detect teacher overlap', () => {
+    const otherClass: Class = { id: 'other-class', name: 'Other', curriculum: [] };
     const data: AppData = {
       ...baseData,
+      classes: [...baseData.classes, otherClass],
       schedule: {
         'other-class': {
           0: { // Monday
@@ -74,8 +76,10 @@ describe('Scheduler Validation', () => {
   });
 
   it('should detect room overlap', () => {
+    const otherClass: Class = { id: 'other-class', name: 'Other', curriculum: [] };
     const data: AppData = {
       ...baseData,
+      classes: [...baseData.classes, otherClass],
       schedule: {
         'other-class': {
           0: { // Monday
@@ -212,8 +216,10 @@ describe('Scheduler Validation', () => {
 
   it('should enforce teacher fatigue (consecutive periods)', () => {
     // Max consecutive is 4 by default
+    const otherClass: Class = { id: 'other-class', name: 'Other', curriculum: [] };
     const data: AppData = {
       ...baseData,
+      classes: [...baseData.classes, otherClass],
       schedule: {
         'other-class': {
           0: {
@@ -248,6 +254,7 @@ describe('Scheduler Validation', () => {
       structure: Array(10).fill({ type: 'CLASS', label: 'C' })
     };
     
+    const otherClass: Class = { id: 'other-class', name: 'Other', curriculum: [] };
     // Set global limit to 6
     const data: AppData = {
       ...baseData,
@@ -255,7 +262,7 @@ describe('Scheduler Validation', () => {
           ...baseData.settings,
           periodsPerDay: 6 
       },
-      classes: [longDayClass],
+      classes: [longDayClass, otherClass],
       schedule: {
         'other-class': {
           0: {
@@ -337,5 +344,47 @@ describe('Scheduler Validation', () => {
     // This is expected to FAIL currently as it's not implemented
     expect(result.valid).toBe(false);
     expect(result.message).toContain('capacity');
+  });
+
+  it('should detect teacher overlap across different class schedules (staggered)', () => {
+    // Class A (c1): Default 40m slots starting at 08:00
+    // Class B (c2): Custom 60m slots starting at 08:00
+    
+    const classB: Class = {
+      id: 'c2',
+      name: '10B',
+      curriculum: [],
+      duration: 60,
+    };
+
+    const data: AppData = {
+      ...baseData,
+      classes: [...baseData.classes, classB],
+      schedule: {
+        'c2': {
+          0: { // Monday
+            0: { // Period 0 for Class B (08:00 - 09:00)
+              subjectId: 's2',
+              teacherId: 't1',
+              classId: 'c2',
+            }
+          }
+        }
+      }
+    };
+
+    // Checking Period 1 for Class A (08:40 - 09:20)
+    // This SHOULD overlap with Class B's Period 0 (08:00 - 09:00)
+    const result = checkSlotValidity(
+      data,
+      0, // Monday
+      1, // Period 1
+      't1',
+      'c1',
+      's1',
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.message).toContain('Teacher is busy');
   });
 });

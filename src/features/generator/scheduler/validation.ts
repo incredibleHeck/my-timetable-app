@@ -1,4 +1,5 @@
 import { AppData, ScheduleSlot } from "../../../types";
+import { calculateClassSchedule, doTimeRangesOverlap } from "../../../utils/timeUtils";
 
 export type ValidationResult = {
   valid: boolean;
@@ -20,6 +21,14 @@ export const checkSlotValidity = (
   ignoreTargetSlot?: { day: number; period: number; duration: number }
 ): ValidationResult => {
   const { schedule, settings, classes, teachers, subjects, rooms } = data;
+  
+  // Pre-calculate all class schedules once
+  const allClassSchedules = new Map<string, any[]>();
+  classes.forEach(c => {
+    allClassSchedules.set(c.id, calculateClassSchedule(c, settings, c.structure || settings.dayStructure));
+  });
+
+  const targetClassSchedule = allClassSchedules.get(classId) || [];
 
   // LOOP for Duration (Check current period + next period(s) if double)
   // MODIFIED: Use a while loop to skip non-CLASS periods (e.g. Breaks)
@@ -87,51 +96,55 @@ export const checkSlotValidity = (
     }
 
     // B. Overlaps
+    const targetTimeRange = targetClassSchedule[p];
+
     for (const cId of Object.keys(schedule)) {
       if (cId === classId) continue;
 
-      const slot = schedule[cId]?.[targetDay]?.[p];
-      if (slot) {
-          // Teacher Busy
-          // FIX: If we are swapping, we should ignore the teacher's own presence at the target
-          // provided the target slot will be displaced (which DnD handles).
-          if (slot.teacherId === teacherId) {
+      const otherClassSchedule = allClassSchedules.get(cId);
+      if (!otherClassSchedule) continue;
+
+      // Check all slots in the other class for absolute time overlap
+      const otherDaySlots = schedule[cId]?.[targetDay] || {};
+      for (const otherPStr in otherDaySlots) {
+        const otherP = parseInt(otherPStr);
+        const slot = otherDaySlots[otherP];
+        
+        if (slot && slot.teacherId === teacherId) {
+          const otherTimeRange = otherClassSchedule[otherP];
+          
+          if (targetTimeRange && otherTimeRange && doTimeRangesOverlap(targetTimeRange, otherTimeRange)) {
              let isIgnored = false;
              
-             // Check Source (ignoreSlot) - Single point matching?
-             // ignoreSlot is passed as {day, period}.
-             // We need to assume that if 'p' matches ignoreSlot.period (and day), it's the start.
-             // But what if 'p' is the second part of the ignored slot?
-             // We rely on the caller logic often. 
-             // However, strictly: 'p' is the PERIOD WE ARE VALIDATING.
-             // If 'p' corresponds to a period occupied by the Moving Item (Source), we ignore it.
-             // Since we don't pass source duration clearly for ignoreSlot matching here (only period),
-             // We assume exact match or rely on checkSlotValidity loop iteration matching the drag.
-             
-             // Actually, ignoreSlot usually points to the START of the drag.
-             // But here we are iterating 'p'. 
-             // If ignoreSlot.period === p, it is ignored.
              if (ignoreSlot && targetDay === ignoreSlot.day && p === ignoreSlot.period) {
                  isIgnored = true;
              }
              
-             // Check Target (ignoreTargetSlot)
-             // This is the Displaced Item. It might have a duration.
              if (ignoreTargetSlot && targetDay === ignoreTargetSlot.day && 
                  p >= ignoreTargetSlot.period && p < ignoreTargetSlot.period + ignoreTargetSlot.duration) {
                  isIgnored = true;
              }
 
              if (!isIgnored) {
-                const className = classes.find((c) => c.id === cId)?.name || "another class";
+                const otherCls = classes.find(c => c.id === cId);
+                const className = otherCls?.name || "another class";
                 return { valid: false, message: `Teacher is busy in ${className}`, severity: "HIGH" };
              }
           }
-          // Room Busy
-          if (roomId && slot.roomId === roomId) {
-             const className = classes.find((c) => c.id === cId)?.name || "another class";
-             return { valid: false, message: `Room occupied by ${className}`, severity: "HIGH" };
-          }
+        }
+
+        // Room Busy
+        if (roomId) {
+            const slot = otherDaySlots[otherP];
+            if (slot && slot.roomId === roomId) {
+                const otherTimeRange = otherClassSchedule[otherP];
+                if (targetTimeRange && otherTimeRange && doTimeRangesOverlap(targetTimeRange, otherTimeRange)) {
+                    const otherCls = classes.find(c => c.id === cId);
+                    const className = otherCls?.name || "another class";
+                    return { valid: false, message: `Room occupied by ${className}`, severity: "HIGH" };
+                }
+            }
+        }
       }
     }
 
