@@ -7,9 +7,9 @@ This plan refactors the data models for `JointClass` and `ElectiveBlock` and upd
     - [x] Update `ElectiveBlock` in `src/features/classes/types.ts`: `classId: string` -> `classIds: string[]`
     - [x] Update `JointClass` in `src/features/classes/types.ts`: add `teacherId?: string`
     - [x] Update `CurriculumItem` in `src/features/classes/types.ts`: add `isWorkloadExempt?: boolean`
-- [ ] Task: Update Default Data & Preparation
-    - [ ] Update `DEFAULT_DATA` in `src/utils/constants.ts` to reflect model changes
-    - [ ] Update `prepareAllocationUnits` in `src/features/generator/scheduler/preparation.ts` to handle `ElectiveBlock.classIds` and `JointClass.teacherId`
+- [x] Task: Update Default Data & Preparation (d18e649)
+    - [x] Update `DEFAULT_DATA` in `src/utils/constants.ts` to reflect model changes
+    - [x] Update `prepareAllocationUnits` in `src/features/generator/scheduler/preparation.ts` to handle `ElectiveBlock.classIds` and `JointClass.teacherId`
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Models' (Protocol in workflow.md)
 
 ## Phase 2: Workload Calculation Logic
