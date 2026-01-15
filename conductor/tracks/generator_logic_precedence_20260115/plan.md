@@ -29,7 +29,7 @@ This plan implements hierarchical duration precedence (Class > Global), time-awa
     - [x] Refactor the generation core to use time windows instead of just period indices for teacher availability
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Generator Logic' (Protocol in workflow.md)
 
-## Phase 4: Export Integration
+## Phase 4: Export Integration [checkpoint: ca660eb]
 - [x] Task: Update Export Services (f1013d8)
     - [x] Write tests for PDF/CSV export containing start/end times
     - [x] Update export logic to include calculated period times for each class
