@@ -165,7 +165,7 @@ export const checkSlotValidity = (
     const maxConsecutive = settings.maxConsecutivePeriods || 4;
     let consecutiveCount = 0;
     let dailyLoad = 0; // NEW: Track total daily periods
-    const maxDailyLoad = settings.periodsPerDay; // Use configured periods per day as max limit
+    const maxDailyLoad = settings.maxTeacherPeriodsPerDay || 6;
 
     // Check whole day for this teacher, including the proposed slot
     for (let checkP = 0; checkP < maxPeriods; checkP++) {
@@ -268,10 +268,11 @@ export const checkSlotValidity = (
       }
   }
 
-  // A. Daily Limit (Max 2)
-  if (existingPeriods > 2) {
+  // A. Daily Limit
+  const maxSubjPeriods = settings.maxSubjectPeriodsPerDay || 2;
+  if (existingPeriods > maxSubjPeriods) {
       const subject = subjects.find(s => s.id === subjectId);
-      return { valid: false, message: `Max 2 periods of ${subject?.name} per day`, severity: "MEDIUM" };
+      return { valid: false, message: `Max ${maxSubjPeriods} periods of ${subject?.name} per day`, severity: "MEDIUM" };
   }
 
   // B. Gap Detection (Sandwich Rule)
