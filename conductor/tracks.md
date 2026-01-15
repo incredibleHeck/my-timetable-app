@@ -16,5 +16,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [~] **Track: Configuration Refactoring (Remove Hardcoding)**
-*Link: [./tracks/config_refactoring_20260115/](./tracks/config_refactoring_20260115/)*
+- [x] **Track: Configuration Refactoring (Remove Hardcoding)**
+*Link: [./tracks/config_refactoring_20260115/](./config_refactoring_20260115/)*
