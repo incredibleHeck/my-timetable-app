@@ -6,9 +6,9 @@ This plan implements hierarchical duration precedence (Class > Global), time-awa
 - [x] Task: Create duration resolution utility (7f74df2)
     - [x] Write tests for `getEffectiveDuration(classSettings, globalSettings, type, index)`
     - [x] Implement utility to prioritize Class overrides over Global defaults
-- [ ] Task: Update Profile Context/Types to support time calculations
-    - [ ] Write tests for `calculateClassSchedule(classId, profile)`
-    - [ ] Implement logic to generate a full schedule of `[startTime, endTime]` for all slots in a day for a specific class
+- [x] Task: Update Profile Context/Types to support time calculations (d77c55c)
+    - [x] Write tests for `calculateClassSchedule(classId, profile)`
+    - [x] Implement logic to generate a full schedule of `[startTime, endTime]` for all slots in a day for a specific class
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Foundation' (Protocol in workflow.md)
 
 ## Phase 2: Generator View UI Updates
