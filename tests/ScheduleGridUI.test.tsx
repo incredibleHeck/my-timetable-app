@@ -78,4 +78,38 @@ describe("ScheduleGrid UI Labels", () => {
     expect(screen.getByText(/Period 3/)).toBeInTheDocument();
     expect(screen.getByText(/\(09:35 - 10:15\)/)).toBeInTheDocument();
   });
+
+  it("should update times when switching to a class with different durations", () => {
+    const dataWithOverrides = {
+      ...mockData,
+      classes: [
+        { id: "class-1", name: "Class 1", curriculum: [] },
+        { id: "class-2", name: "Class 2", duration: 50, curriculum: [] }
+      ]
+    };
+
+    const { rerender } = render(
+      <ScheduleGrid 
+        data={dataWithOverrides as AppData}
+        activeId="class-1"
+        mode="CLASS"
+        onUpdate={() => {}}
+        editMode={false}
+      />
+    );
+
+    expect(screen.getByText(/\(08:00 - 08:40\)/)).toBeInTheDocument();
+
+    rerender(
+      <ScheduleGrid 
+        data={dataWithOverrides as AppData}
+        activeId="class-2"
+        mode="CLASS"
+        onUpdate={() => {}}
+        editMode={false}
+      />
+    );
+
+    expect(screen.getByText(/\(08:00 - 08:50\)/)).toBeInTheDocument();
+  });
 });
