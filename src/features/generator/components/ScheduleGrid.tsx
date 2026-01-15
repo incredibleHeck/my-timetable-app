@@ -11,6 +11,8 @@ import {
 import { Lock, ArrowRightLeft } from "lucide-react";
 import { AppData, Conflict } from "../../../types";
 import { DAYS } from "../../../utils/constants";
+import { calculateClassSchedule } from "../../../utils/timeUtils";
+import { useProfile } from "../../../contexts/ProfileContext";
 import { DraggableSlot } from "./DraggableSlot";
 import { DroppableCell } from "./DroppableCell";
 import { useDndLogic } from "../hooks/useDndLogic";
@@ -42,6 +44,7 @@ export const ScheduleGrid: React.FC<Props> = ({
   );
 
   const { settings, schedule, classes, teachers, subjects } = data;
+  const { getClassSchedule } = useProfile();
   const currentClass = classes.find((c) => c.id === activeId);
   const currentTeacher = teachers.find((t) => t.id === activeId);
 
@@ -60,6 +63,13 @@ export const ScheduleGrid: React.FC<Props> = ({
     }
     return settings.dayStructure;
   }, [mode, currentClass, settings.dayStructure]);
+
+  const classSchedule = useMemo(() => {
+    if (mode === "CLASS" && currentClass) {
+        return calculateClassSchedule(currentClass, settings, currentStructure as any);
+    }
+    return [];
+  }, [mode, currentClass, settings, currentStructure]);
 
   let periodsToRender = settings.periodsPerDay;
   if (mode === "CLASS" && currentClass) {
@@ -96,20 +106,35 @@ export const ScheduleGrid: React.FC<Props> = ({
     const type = typeof item === "object" ? item.type : (item || "CLASS");
     const effectiveType = type || "CLASS"; 
 
+    let label = "";
     if (effectiveType !== "CLASS") {
-        const label = typeof item === "string" ? item : (item as any)?.label || effectiveType;
-        return label || "Break";
+        const l = typeof item === "string" ? item : (item as any)?.label || effectiveType;
+        label = l || "Break";
+    } else {
+        let classCount = 0;
+        for (let i = 0; i <= index; i++) {
+            const pItem = currentStructure?.[i];
+            const pType = typeof pItem === "object" ? pItem.type : (pItem || "CLASS");
+            if ((pType || "CLASS") === "CLASS") {
+                classCount++;
+            }
+        }
+        label = `Period ${classCount}`;
     }
 
-    let classCount = 0;
-    for (let i = 0; i <= index; i++) {
-        const pItem = currentStructure?.[i];
-        const pType = typeof pItem === "object" ? pItem.type : (pItem || "CLASS");
-        if ((pType || "CLASS") === "CLASS") {
-            classCount++;
-        }
+    const time = classSchedule[index];
+    if (time && mode === "CLASS") {
+        return (
+            <div className="flex flex-col items-center">
+                <span>{label}</span>
+                <span className="text-[10px] font-normal lowercase opacity-70">
+                    ({time.start} - {time.end})
+                </span>
+            </div>
+        );
     }
-    return `Period ${classCount}`;
+
+    return label;
   };
 
   const handleDragOver = (event: any) => {
