@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { School, Coffee, Utensils, Minus, Plus } from "lucide-react";
+import { School, Coffee, Utensils, Minus, Plus, Zap } from "lucide-react";
 import { AppData, PeriodType } from "../../../types";
 import { ClassGroup, CurriculumItem } from "../types";
 import { Button, Modal, Input, Select } from "../../../components/ui";
