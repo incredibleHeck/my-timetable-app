@@ -31,8 +31,8 @@ This plan refactors the data models for `JointClass` and `ElectiveBlock` and upd
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Engine' (Protocol in workflow.md)
 
 ## Phase 4: Final Integration & Regression
-- [ ] Task: Regression Testing
-    - [ ] Verify that existing "Joint Class" and "Elective" test cases still pass
-- [ ] Task: UI Cleanup
-    - [ ] Ensure any UI components (Modals, Editors) that create Joint Classes or Electives handle the new fields
+- [x] Task: Regression Testing (1e3910c)
+    - [x] Verify that existing "Joint Class" and "Elective" test cases still pass
+- [x] Task: UI Cleanup (45c00cf)
+    - [x] Ensure any UI components (Modals, Editors) that create Joint Classes or Electives handle the new fields
 - [ ] Task: Conductor - User Manual Verification 'Phase 4: Final' (Protocol in workflow.md)
