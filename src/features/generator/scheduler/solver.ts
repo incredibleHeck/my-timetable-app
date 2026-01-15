@@ -125,11 +125,11 @@ export const solveSmart = (
     return validRooms.length > 0 ? validRooms[0].id : undefined;
   };
 
-  // --- SOLVING LOOP ---
-  for (const unit of units) {
-    if (unit.electiveBlockId && processedElectiveBlocks.has(unit.electiveBlockId)) {
-      continue;
-    }
+    // --- SOLVING LOOP ---
+    for (const unit of units) {
+      if (unit.electiveBlockId && processedElectiveBlocks.has(unit.electiveBlockId)) {
+        continue;
+      }
 
     // Determine Mode: Single or Gang
     const isGang = !!unit.electiveBlockId;

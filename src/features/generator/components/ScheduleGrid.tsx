@@ -66,7 +66,7 @@ export const ScheduleGrid: React.FC<Props> = ({
 
   const classSchedule = useMemo(() => {
     if (mode === "CLASS" && currentClass) {
-        return calculateClassSchedule(currentClass, settings, currentStructure as any);
+        return calculateClassSchedule(currentClass, settings, currentStructure);
     }
     return [];
   }, [mode, currentClass, settings, currentStructure]);

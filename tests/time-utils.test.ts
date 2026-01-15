@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getEffectiveDuration, calculateClassSchedule } from '../src/utils/timeUtils';
+import { getEffectiveDuration, calculateClassSchedule, doTimeRangesOverlap } from '../src/utils/timeUtils';
 import { ClassGroup } from '../src/features/classes/types';
 import { Settings } from '../src/types';
 
@@ -96,5 +96,33 @@ describe('timeUtils - calculateClassSchedule', () => {
 
     expect(schedule[0].start).toBe('09:00');
     expect(schedule[0].end).toBe('09:40');
+  });
+});
+
+describe('timeUtils - doTimeRangesOverlap', () => {
+  it('should return true for overlapping ranges', () => {
+    expect(doTimeRangesOverlap(
+      { start: '08:00', end: '08:40' },
+      { start: '08:30', end: '09:10' }
+    )).toBe(true);
+  });
+
+  it('should return true for fully contained ranges', () => {
+    expect(doTimeRangesOverlap(
+      { start: '08:00', end: '09:00' },
+      { start: '08:15', end: '08:45' }
+    )).toBe(true);
+  });
+
+  it('should return false for non-overlapping ranges', () => {
+    expect(doTimeRangesOverlap(
+      { start: '08:00', end: '08:40' },
+      { start: '08:40', end: '09:20' }
+    )).toBe(false); // Touching is not overlapping
+    
+    expect(doTimeRangesOverlap(
+      { start: '08:00', end: '08:40' },
+      { start: '09:00', end: '09:40' }
+    )).toBe(false);
   });
 });

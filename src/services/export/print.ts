@@ -122,6 +122,8 @@ export const printAllSchedules = (data: AppData, mode: "CLASS" | "TEACHER") => {
         : [];
     
     const maxPeriods = currentClass
+        ? (currentStructure.length || currentClass.periodCount || settings.periodsPerDay)
+        : settings.periodsPerDay;
 
     const periods = Array.from({ length: maxPeriods }, (_, i) => i);
 

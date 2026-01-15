@@ -55,7 +55,7 @@ describe('Time-Aware Generator', () => {
         classNames: ['Class A'],
         teacherIds: ['t1'], 
         teacherNames: ['John'], 
-        priority: 1
+        priority: 10 // Higher priority to ensure it schedules first
       },
       { 
         id: 'u2', 
@@ -66,34 +66,40 @@ describe('Time-Aware Generator', () => {
         classNames: ['Class B'],
         teacherIds: ['t1'], 
         teacherNames: ['John'], 
-        priority: 1
+        priority: 5
       }
     ];
 
     const result = solveSmart(units as any, baseData);
 
-    const schedA = result.schedule['cA']?.[0] || {};
-    const schedB = result.schedule['cB']?.[0] || {};
-
     let slotA = -1;
+    let dayA = -1;
     let slotB = -1;
+    let dayB = -1;
 
-    for(const p in schedA) if(schedA[p].subjectId === 's1') slotA = parseInt(p);
-    for(const p in schedB) if(schedB[p].subjectId === 's2') slotB = parseInt(p);
+    for(let d=0; d<5; d++) {
+        const schedA = result.schedule['cA']?.[d] || {};
+        for(const p in schedA) if(schedA[p].subjectId === 's1') { slotA = parseInt(p); dayA = d; }
+        
+        const schedB = result.schedule['cB']?.[d] || {};
+        for(const p in schedB) if(schedB[p].subjectId === 's2') { slotB = parseInt(p); dayB = d; }
+    }
 
     expect(slotA).not.toBe(-1);
     expect(slotB).not.toBe(-1);
 
-    // Verify no overlap
-    // Class A Slot Time Range:
-    const startA = 8*60 + slotA * 40;
-    const endA = startA + 40;
+    // If on the same day, verify no overlap
+    if (dayA === dayB) {
+        // Class A Slot Time Range:
+        const startA = 8*60 + slotA * 40;
+        const endA = startA + 40;
 
-    // Class B Slot Time Range:
-    const startB = 8*60 + slotB * 60;
-    const endB = startB + 60;
+        // Class B Slot Time Range:
+        const startB = 8*60 + slotB * 60;
+        const endB = startB + 60;
 
-    const overlap = startA < endB && startB < endA;
-    expect(overlap).toBe(false);
+        const overlap = startA < endB && startB < endA;
+        expect(overlap).toBe(false);
+    }
   });
 });
