@@ -7,6 +7,6 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Implementation & Unit Testing' (Protocol in workflow.md) [8d844a6]
 
 ## Phase 2: Final Verification [checkpoint: ]
-- [ ] Task: Run the full test suite (`npm test`) to ensure no regressions in existing `ClassEditorModal` tests.
-- [ ] Task: Run the full build (`npm run build`) to ensure type safety.
+- [x] Task: Run the full test suite (`npm test`) to ensure no regressions in existing `ClassEditorModal` tests. [99680bf]
+- [x] Task: Run the full build (`npm run build`) to ensure type safety.
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Final Verification' (Protocol in workflow.md)
