@@ -2,7 +2,7 @@
 
 This plan implements hierarchical duration precedence (Class > Global), time-aware scheduling for teacher conflict resolution, UI updates for period times, and export integration.
 
-## Phase 1: Foundation & Duration Resolution Logic
+## Phase 1: Foundation & Duration Resolution Logic [checkpoint: 72ce8b8]
 - [x] Task: Create duration resolution utility (7f74df2)
     - [x] Write tests for `getEffectiveDuration(classSettings, globalSettings, type, index)`
     - [x] Implement utility to prioritize Class overrides over Global defaults
