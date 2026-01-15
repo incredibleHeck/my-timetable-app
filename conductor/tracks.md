@@ -15,3 +15,8 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 
 
+
+---
+
+- [~] **Track: Workload Refactoring & Model Improvements**
+*Link: [./tracks/workload_refactoring_20260115/](./tracks/workload_refactoring_20260115/)*

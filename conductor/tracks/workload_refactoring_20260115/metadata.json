@@ -1,0 +1,8 @@
+{
+  "track_id": "workload_refactoring_20260115",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-01-15T09:05:00Z",
+  "updated_at": "2026-01-15T09:05:00Z",
+  "description": "Workload Refactoring & Model Improvements: Refactor workload calculation to count unique time slots and improve JointClass/ElectiveBlock models."
+}
