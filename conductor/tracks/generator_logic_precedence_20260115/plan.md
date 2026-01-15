@@ -21,12 +21,12 @@ This plan implements hierarchical duration precedence (Class > Global), time-awa
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: UI Updates' (Protocol in workflow.md)
 
 ## Phase 3: Time-Aware Generator Logic
-- [ ] Task: Implement Absolute Time Validation
-    - [ ] Write tests for `checkTeacherOverlap(teacherId, classA_TimeRange, classB_TimeRange)`
-    - [ ] Implement validation logic to detect overlaps across different class schedules
-- [ ] Task: Update Generator Algorithm
-    - [ ] Write tests for Generator avoiding time-based teacher conflicts
-    - [ ] Refactor the generation core to use time windows instead of just period indices for teacher availability
+- [x] Task: Implement Absolute Time Validation (36700bb)
+    - [x] Write tests for `checkTeacherOverlap(teacherId, classA_TimeRange, classB_TimeRange)`
+    - [x] Implement validation logic to detect overlaps across different class schedules
+- [x] Task: Update Generator Algorithm (2fb918a)
+    - [x] Write tests for Generator avoiding time-based teacher conflicts
+    - [x] Refactor the generation core to use time windows instead of just period indices for teacher availability
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Generator Logic' (Protocol in workflow.md)
 
 ## Phase 4: Export Integration
