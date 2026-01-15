@@ -2,6 +2,7 @@ import ExcelJS from "exceljs";
 import { AppData, ScheduleSlot } from "../../types";
 import { DAYS } from "../../utils/constants";
 import { FileService } from "../fileSystem";
+import { calculateClassSchedule, getFormattedTimeRange } from "../../utils/timeUtils";
 
 // --- HELPERS ---
 const hexToArgb = (hex?: string) => {
@@ -68,6 +69,11 @@ const generateSheet = (
     ? currentClass.structure
     : settings.dayStructure;
 
+  // Pre-calculate class schedule for times
+  const classSchedule = (mode === "CLASS" && currentClass) 
+    ? calculateClassSchedule(currentClass, settings, currentStructure)
+    : [];
+
   // Periods calculation
   let maxPeriods = settings.periodsPerDay;
   if (mode === "CLASS" && currentClass) {
@@ -123,10 +129,15 @@ const generateSheet = (
 
   for (let p = 0; p < maxPeriods; p++) {
     const cell = headerRow.getCell(p + 2);
-    const timeSlot = settings.timeSlots[p];
     const label = getLabel(p);
+    let timeSlot = settings.timeSlots[p];
     
-    cell.value = timeSlot ? `${label}\n(${timeSlot.start}-${timeSlot.end})` : label;
+    if (mode === "CLASS" && classSchedule[p]) {
+        timeSlot = classSchedule[p];
+    }
+    
+    const timeLabel = getFormattedTimeRange(timeSlot);
+    cell.value = timeLabel ? `${label}\n${timeLabel}` : label;
     cell.alignment = {
       vertical: "middle",
       horizontal: "center",

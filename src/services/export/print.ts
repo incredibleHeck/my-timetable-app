@@ -1,4 +1,5 @@
 import { AppData, ScheduleSlot, Subject, Teacher, ClassGroup } from "../../types";
+import { calculateClassSchedule, getFormattedTimeRange } from "../../utils/timeUtils";
 
 // --- HELPER: GET DURATION ---
 const getDuration = (data: any, classId: string, d: number, p: number): number => {
@@ -116,9 +117,11 @@ export const printAllSchedules = (data: AppData, mode: "CLASS" | "TEACHER") => {
         ? currentClass.structure
         : settings.dayStructure;
     
+    const classSchedule = currentClass 
+        ? calculateClassSchedule(currentClass, settings, currentStructure)
+        : [];
+    
     const maxPeriods = currentClass
-        ? (currentClass.structure?.length || currentClass.periodCount || settings.periodsPerDay)
-        : settings.periodsPerDay;
 
     const periods = Array.from({ length: maxPeriods }, (_, i) => i);
 
@@ -158,8 +161,13 @@ export const printAllSchedules = (data: AppData, mode: "CLASS" | "TEACHER") => {
             <tr>
               <th style="width: 45px;">DAY</th>
               ${periods.map((p) => {
-                  const timeLabel = settings.timeSlots?.[p] 
-                    ? `<div style="font-weight:normal; font-size:8px;">${settings.timeSlots[p].start}-${settings.timeSlots[p].end}</div>`
+                  let timeSlot = settings.timeSlots?.[p];
+                  if (mode === "CLASS" && classSchedule[p]) {
+                      timeSlot = classSchedule[p];
+                  }
+                  
+                  const timeLabel = timeSlot 
+                    ? `<div style="font-weight:normal; font-size:8px;">${getFormattedTimeRange(timeSlot)}</div>`
                     : "";
                   return `<th>${getPeriodLabel(p)}${timeLabel}</th>`;
               }).join("")}
