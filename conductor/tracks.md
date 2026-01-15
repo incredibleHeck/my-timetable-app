@@ -13,3 +13,8 @@ This file tracks all major tracks for the project. Each track has its own detail
 *Link: [./conductor/tracks/class_ui_reorg_20260114/](./conductor/tracks/class_ui_reorg_20260114/)*
 
 
+
+---
+
+- [~] **Track: Configuration Refactoring (Remove Hardcoding)**
+*Link: [./tracks/config_refactoring_20260115/](./tracks/config_refactoring_20260115/)*
