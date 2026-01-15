@@ -18,7 +18,8 @@ export const checkSlotValidity = (
   ignoreSlot?: { day: number; period: number },
   roomId?: string,
   duration: number = 1,
-  ignoreTargetSlot?: { day: number; period: number; duration: number }
+  ignoreTargetSlot?: { day: number; period: number; duration: number },
+  isAuto: boolean = false
 ): ValidationResult => {
   const { schedule, settings, classes, teachers, subjects, rooms } = data;
   
@@ -126,9 +127,23 @@ export const checkSlotValidity = (
              }
 
              if (!isIgnored) {
-                const otherCls = classes.find(c => c.id === cId);
-                const className = otherCls?.name || "another class";
-                return { valid: false, message: `Teacher is busy in ${className}`, severity: "HIGH" };
+                // Check if this is a Joint Class or Elective Block overlap (Allowed)
+                const isJointOverlap = data.jointClasses?.some(jc => 
+                  jc.subjectId === subjectId && 
+                  jc.classIds.includes(classId) && 
+                  jc.classIds.includes(cId)
+                );
+
+                const isElectiveOverlap = data.electives?.some(e => 
+                  e.classIds.includes(classId) && 
+                  e.classIds.includes(cId)
+                );
+
+                if (!isJointOverlap && !isElectiveOverlap) {
+                  const otherCls = classes.find(c => c.id === cId);
+                  const className = otherCls?.name || "another class";
+                  return { valid: false, message: `Teacher is busy in ${className}`, severity: "HIGH" };
+                }
              }
           }
         }
@@ -164,7 +179,7 @@ export const checkSlotValidity = (
     // C. Teacher Fatigue (Consecutive Periods)
     const maxConsecutive = settings.maxConsecutivePeriods || 4;
     let consecutiveCount = 0;
-    let dailyLoad = 0; // NEW: Track total daily periods
+    const busyPeriods = new Set<number>();
     const maxDailyLoad = settings.maxTeacherPeriodsPerDay || 6;
 
     // Check whole day for this teacher, including the proposed slot
@@ -172,16 +187,6 @@ export const checkSlotValidity = (
         let isBusy = false;
         
         // 1. Proposed Slot Check
-        // If checkP falls within the PROPOSED duration at TARGET
-        // Current 'p' is just ONE part of the loop.
-        // We should check if checkP falls in [targetPeriod ... targetPeriod + duration] (accounting for gaps?)
-        // The original logic was `if (checkP === p)`.
-        // This is inside a `while` loop that iterates `p`.
-        // This effectively checks logic "If we place a block HERE, what happens?".
-        // But since we iterate `p`, we do this check multiple times?
-        // No, `checkP` loops 0..Max.
-        // If `checkP === p`, we say "This slot is busy because we are putting the class here".
-        // This is correct.
         if (checkP === p) {
              isBusy = true;
         } else {
@@ -190,8 +195,6 @@ export const checkSlotValidity = (
                 const s = schedule[cId]?.[targetDay]?.[checkP];
                 if (s && s.teacherId === teacherId) {
                     // Ignore the old position of the dragged slot (Full Duration)
-                    // Note: 'duration' here is the duration of the MOVING item.
-                    // We assume ignoreSlot refers to the same item.
                     if (ignoreSlot && targetDay === ignoreSlot.day && 
                         checkP >= ignoreSlot.period && checkP < ignoreSlot.period + duration) {
                         continue; // Ignored (Moving Source)
@@ -210,7 +213,7 @@ export const checkSlotValidity = (
         }
 
         if (isBusy) {
-            dailyLoad++;
+            busyPeriods.add(checkP);
             consecutiveCount++;
             if (consecutiveCount > maxConsecutive) {
                 return { valid: false, message: `${teacher?.name} would exceed consecutive period limit (${maxConsecutive})`, severity: "MEDIUM" };
@@ -220,8 +223,8 @@ export const checkSlotValidity = (
         }
     }
 
-    // D. Teacher Daily Load Check
-    if (dailyLoad > maxDailyLoad) {
+    // D. Teacher Daily Load Check (Unique periods only)
+    if (busyPeriods.size > maxDailyLoad) {
          return { valid: false, message: `${teacher?.name} exceeds daily limit of ${maxDailyLoad} classes`, severity: "MEDIUM" };
     }
     
@@ -235,7 +238,7 @@ export const checkSlotValidity = (
   const isJoint = data.jointClasses?.some(jc => 
       jc.subjectId === subjectId && jc.classIds.includes(classId)
   );
-  if (isJoint) {
+  if (isJoint && !isAuto) {
       return { valid: false, message: "Cannot move Joint Class manually (breaks sync)", severity: "HIGH" };
   }
 
@@ -376,7 +379,9 @@ export const validateFullSchedule = (data: AppData): Conflict[] => {
           slot.subjectId,
           { day, period }, // ignore itself
           slot.roomId,
-          duration
+          duration,
+          undefined,
+          true
         );
 
         if (!result.valid) {

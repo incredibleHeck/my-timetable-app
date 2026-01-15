@@ -237,9 +237,18 @@ export const solveSmart = (
 
                 // 2. Check Teacher Daily Load (Hard Constraint)
                 const maxTeacherLoad = data.settings.maxTeacherPeriodsPerDay || 6;
-                let currentTeacherLoad = 0;
-                state.teacherOccupancy[tid][d].forEach(isBusy => { if(isBusy) currentTeacherLoad++; });
-                if (currentTeacherLoad + duration > maxTeacherLoad) {
+                const busyPeriods = new Set<number>();
+                
+                // Add existing busy periods
+                state.teacherOccupancy[tid][d].forEach((isBusy, idx) => { 
+                    if (isBusy) busyPeriods.add(idx); 
+                });
+                
+                // Add proposed periods
+                busyPeriods.add(p);
+                if (duration === 2) busyPeriods.add(p2);
+
+                if (busyPeriods.size > maxTeacherLoad) {
                     gangValid = false; break;
                 }
 
@@ -417,18 +426,25 @@ export const solveSmart = (
         gangUnits.forEach(u => {
             u.teacherIds.forEach(tid => {
                  // 1. Workload Balancing (Distribute load across days)
-                 // Count how many periods this teacher already has on this day
-                 let dailyLoad = 0;
-                 state.teacherOccupancy[tid][d].forEach(isBusy => { if(isBusy) dailyLoad++; });
-                 score -= (dailyLoad * 10); // Penalty for piling up on one day
+                 // Count unique busy periods on this day
+                 const busyPeriods = new Set<number>();
+                 state.teacherOccupancy[tid][d].forEach((busy, idx) => { if(busy) busyPeriods.add(idx); });
+                 
+                 const dailyLoad = busyPeriods.size;
+                 
+                 if (dailyLoad === 0) {
+                     score += 40; // BIG BONUS for keeping a day completely free (Day off)
+                 } else {
+                     score -= (dailyLoad * 12); // Penalty for piling up on one day
+                 }
 
                  // 2. Continuity (Minimize gaps)
                  // If teacher is teaching immediately before, BIG BONUS (Cluster classes)
-                 if (p > 0 && state.teacherOccupancy[tid][d][p-1]) score += 25;
+                 if (p > 0 && state.teacherOccupancy[tid][d][p-1]) score += 30;
                  
                  // If teacher is teaching immediately after (Check p2+1 or p+1)
                  const endP = duration === 2 ? p2 : p;
-                 if (endP < maxSystemPeriods - 1 && state.teacherOccupancy[tid][d][endP+1]) score += 25;
+                 if (endP < maxSystemPeriods - 1 && state.teacherOccupancy[tid][d][endP+1]) score += 30;
             });
         });
 
