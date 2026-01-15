@@ -2,13 +2,13 @@
 
 This track removes hardcoded scheduling constraints and makes them user-configurable via the Global Configuration UI.
 
-## Phase 1: Schema and Defaults
+## Phase 1: Schema and Defaults [checkpoint: 507c193]
 - [x] Task: Update Settings interface (f99e23b)
     - [x] Add `maxSubjectPeriodsPerDay` and `maxTeacherPeriodsPerDay` to `Settings` in `src/types/index.ts`.
     - [x] Update `DEFAULT_DATA` in `src/utils/constants.ts` to include these new fields with defaults (2 and 6).
 - [x] Task: Migration and Type Safety (56f89e8)
     - [x] Ensure `validateProfile` or initializers handle missing fields by providing defaults.
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Schema' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Schema' (Protocol in workflow.md)
 
 ## Phase 2: Global Configuration UI
 - [ ] Task: Implement "Rules and Constraints" section
