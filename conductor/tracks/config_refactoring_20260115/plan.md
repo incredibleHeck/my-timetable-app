@@ -10,7 +10,7 @@ This track removes hardcoded scheduling constraints and makes them user-configur
     - [x] Ensure `validateProfile` or initializers handle missing fields by providing defaults.
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Schema' (Protocol in workflow.md)
 
-## Phase 2: Global Configuration UI
+## Phase 2: Global Configuration UI [checkpoint: d79e02a]
 - [x] Task: Implement "Rules and Constraints" section (188564e)
     - [x] Add a new section to `GlobalConfigView.tsx` below "Timetable Structure".
     - [x] Implement `Number` inputs for "Max Periods Per Subject" and "Max Teaching Periods".
