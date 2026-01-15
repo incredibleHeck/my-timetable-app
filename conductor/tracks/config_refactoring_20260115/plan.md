@@ -30,8 +30,8 @@ This track removes hardcoded scheduling constraints and makes them user-configur
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Logic Refactoring' (Protocol in workflow.md)
 
 ## Phase 4: Integration and Polishing
-- [ ] Task: Trigger Re-validation
-    - [ ] Ensure that updating these settings in the UI triggers a global conflict check.
-- [ ] Task: Final Build and Cleanup
+- [x] Task: Trigger Re-validation (ff009e3)
+    - [x] Ensure that updating these settings in the UI triggers a global conflict check.
+- [~] Task: Final Build and Cleanup
     - [ ] Run `npm run build` to ensure type safety across the project.
 - [ ] Task: Conductor - User Manual Verification 'Phase 4: Final Integration' (Protocol in workflow.md)
