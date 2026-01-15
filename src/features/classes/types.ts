@@ -7,6 +7,7 @@ export interface CurriculumItem {
   singles: number;
   doubles: number;
   assignedTeacherId?: string;
+  isWorkloadExempt?: boolean;
 }
 
 export interface ClassGroup {
@@ -35,12 +36,13 @@ export interface JointClass {
   name: string;
   subjectId: string;
   classIds: string[];
+  teacherId?: string;
 }
 
 export interface ElectiveBlock {
   id: string;
   name: string;
-  classId: string;
+  classIds: string[];
   subjectIds: string[];
   // Forced simultaneous scheduling
   allowedPeriods?: { day: number; period: number }[];
