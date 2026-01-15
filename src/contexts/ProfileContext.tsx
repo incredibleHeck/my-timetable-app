@@ -3,7 +3,7 @@ import { Profile, ProfileManifest } from '../types/profile';
 import { AppData } from '../types';
 import * as ProfileStorage from '../services/profile/profileStorage';
 import * as Migration from '../services/profile/migration';
-import { generateId, deepClone } from '../utils/utils';
+import { generateId, deepClone, mergeWithDefaults } from '../utils/utils';
 import { DEFAULT_DATA } from '../utils/constants';
 import { calculateClassSchedule } from '../utils/timeUtils';
 import { TimeSlot } from '../types';
@@ -50,6 +50,9 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     const profile = await ProfileStorage.loadProfile(id);
     if (profile) {
+      // Ensure defaults for new schema fields
+      profile.data = mergeWithDefaults(profile.data, DEFAULT_DATA);
+      
       setActiveProfile(profile);
       await ProfileStorage.setActiveProfile(id);
       // Reset history on profile switch

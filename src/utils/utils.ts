@@ -64,3 +64,17 @@ export const exportToCSV = (
   link.click();
   document.body.removeChild(link);
 };
+
+/**
+ * Merges loaded app data with defaults to ensure schema consistency
+ */
+export const mergeWithDefaults = (loadedData: AppData, defaults: AppData): AppData => {
+  return {
+    ...defaults,
+    ...loadedData,
+    settings: {
+      ...defaults.settings,
+      ...loadedData.settings,
+    }
+  };
+};
