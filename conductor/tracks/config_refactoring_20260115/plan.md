@@ -11,13 +11,13 @@ This track removes hardcoded scheduling constraints and makes them user-configur
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Schema' (Protocol in workflow.md)
 
 ## Phase 2: Global Configuration UI
-- [ ] Task: Implement "Rules and Constraints" section
-    - [ ] Add a new section to `GlobalConfigView.tsx` below "Timetable Structure".
-    - [ ] Implement `Number` inputs for "Max Periods Per Subject" and "Max Teaching Periods".
-    - [ ] Add tooltips or help text explaining each constraint.
-- [ ] Task: Update `useGlobalConfig` hook
-    - [ ] Add handlers for updating the new constraint fields in the settings state.
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: UI Implementation' (Protocol in workflow.md)
+- [x] Task: Implement "Rules and Constraints" section (188564e)
+    - [x] Add a new section to `GlobalConfigView.tsx` below "Timetable Structure".
+    - [x] Implement `Number` inputs for "Max Periods Per Subject" and "Max Teaching Periods".
+    - [x] Add tooltips or help text explaining each constraint.
+- [x] Task: Update `useGlobalConfig` hook (188564e)
+    - [x] Add handlers for updating the new constraint fields in the settings state.
+- [x] Task: Conductor - User Manual Verification 'Phase 2: UI Implementation' (Protocol in workflow.md)
 
 ## Phase 3: Logic Refactoring
 - [ ] Task: Update Validation Logic
