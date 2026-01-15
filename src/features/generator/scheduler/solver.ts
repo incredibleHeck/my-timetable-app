@@ -235,7 +235,15 @@ export const solveSmart = (
                     gangValid = false; break;
                 }
 
-                // 2. Check Teacher Overlap with OTHER classes (Time-aware)
+                // 2. Check Teacher Daily Load (Hard Constraint)
+                const maxTeacherLoad = data.settings.maxTeacherPeriodsPerDay || 6;
+                let currentTeacherLoad = 0;
+                state.teacherOccupancy[tid][d].forEach(isBusy => { if(isBusy) currentTeacherLoad++; });
+                if (currentTeacherLoad + duration > maxTeacherLoad) {
+                    gangValid = false; break;
+                }
+
+                // 3. Check Teacher Overlap with OTHER classes (Time-aware)
                 // We need to look at what this teacher is already doing in state.schedule
                 for (const otherCId of Object.keys(state.schedule)) {
                     // Check if current u.classIds already includes this cId (to avoid self-clash in gang)
@@ -361,8 +369,9 @@ export const solveSmart = (
               }
             }
 
-            // A. Daily Limit: Max 2 periods per day
-            if (existingPeriods + duration > 2) {
+            // A. Daily Limit: Max periods per day
+            const maxSubjPeriods = data.settings.maxSubjectPeriodsPerDay || 2;
+            if (existingPeriods + duration > maxSubjPeriods) {
               dailyLimitConflict = true;
               break;
             }
