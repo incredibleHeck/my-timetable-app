@@ -57,6 +57,8 @@ export interface Settings {
   defaultClassDuration?: number;
   defaultBreakDuration?: number;
   defaultLunchDuration?: number;
+  maxSubjectPeriodsPerDay?: number;
+  maxTeacherPeriodsPerDay?: number;
 }
 
 // ----------------------------------------------------------------------

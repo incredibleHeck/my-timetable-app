@@ -134,6 +134,8 @@ export const DEFAULT_DATA: AppData = {
     defaultClassDuration: 50,
     defaultBreakDuration: 20,
     defaultLunchDuration: 60,
+    maxSubjectPeriodsPerDay: 2,
+    maxTeacherPeriodsPerDay: 6,
   },
   subjects: [],
   teachers: [],
