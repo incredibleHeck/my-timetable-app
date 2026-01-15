@@ -20,14 +20,14 @@ This track removes hardcoded scheduling constraints and makes them user-configur
 - [x] Task: Conductor - User Manual Verification 'Phase 2: UI Implementation' (Protocol in workflow.md)
 
 ## Phase 3: Logic Refactoring
-- [ ] Task: Update Validation Logic
-    - [ ] Refactor `checkSlotValidity` in `src/features/generator/scheduler/validation.ts` to use `settings.maxSubjectPeriodsPerDay` (fallback to 2).
-    - [ ] Refactor `checkSlotValidity` to use `settings.maxTeacherPeriodsPerDay` (fallback to 6).
-- [ ] Task: Update Solver Logic
-    - [ ] Update `solveSmart` in `src/features/generator/scheduler/solver.ts` to respect the new teacher period limit during automated generation.
-- [ ] Task: Add Regression Tests
-    - [ ] Create tests in `tests/config-constraints.test.ts` to verify that changing these limits correctly triggers/resolves conflicts.
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Logic Refactoring' (Protocol in workflow.md)
+- [x] Task: Update Validation Logic (58f2299)
+    - [x] Refactor `checkSlotValidity` in `src/features/generator/scheduler/validation.ts` to use `settings.maxSubjectPeriodsPerDay` (fallback to 2).
+    - [x] Refactor `checkSlotValidity` to use `settings.maxTeacherPeriodsPerDay` (fallback to 6).
+- [x] Task: Update Solver Logic (ee9807e)
+    - [x] Update `solveSmart` in `src/features/generator/scheduler/solver.ts` to respect the new teacher period limit during automated generation.
+- [x] Task: Add Regression Tests (67b6712)
+    - [x] Create tests in `tests/config-constraints.test.ts` to verify that changing these limits correctly triggers/resolves conflicts.
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Logic Refactoring' (Protocol in workflow.md)
 
 ## Phase 4: Integration and Polishing
 - [ ] Task: Trigger Re-validation
