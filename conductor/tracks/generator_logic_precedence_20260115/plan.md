@@ -30,7 +30,7 @@ This plan implements hierarchical duration precedence (Class > Global), time-awa
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Generator Logic' (Protocol in workflow.md)
 
 ## Phase 4: Export Integration
-- [ ] Task: Update Export Services
-    - [ ] Write tests for PDF/CSV export containing start/end times
-    - [ ] Update export logic to include calculated period times for each class
+- [x] Task: Update Export Services (f1013d8)
+    - [x] Write tests for PDF/CSV export containing start/end times
+    - [x] Update export logic to include calculated period times for each class
 - [ ] Task: Conductor - User Manual Verification 'Phase 4: Export Integration' (Protocol in workflow.md)
