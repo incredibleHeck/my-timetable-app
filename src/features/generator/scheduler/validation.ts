@@ -339,3 +339,65 @@ export const checkSlotValidity = (
 
   return { valid: true, message: "Available" };
 };
+
+export const validateFullSchedule = (data: AppData): Conflict[] => {
+  const { schedule, classes, subjects, teachers } = data;
+  const allConflicts: Conflict[] = [];
+
+  for (const classId of Object.keys(schedule)) {
+    const cls = classes.find(c => c.id === classId);
+    if (!cls) continue;
+
+    for (const dayStr of Object.keys(schedule[classId])) {
+      const day = parseInt(dayStr);
+      const daySchedule = schedule[classId][day];
+
+      for (const periodStr of Object.keys(daySchedule)) {
+        const period = parseInt(periodStr);
+        const slot = daySchedule[period];
+
+        // Skip tails of double periods
+        if (slot.isFixed) {
+            const prevP = period > 0 ? daySchedule[period - 1] : null;
+            if (prevP && prevP.subjectId === slot.subjectId) continue;
+        }
+
+        // Determine duration
+        const nextP = period + 1; // Simplified, checkSlotValidity handles gaps
+        const hasNext = daySchedule[nextP] && daySchedule[nextP].isFixed && daySchedule[nextP].subjectId === slot.subjectId;
+        const duration = hasNext ? 2 : 1;
+
+        const result = checkSlotValidity(
+          data,
+          day,
+          period,
+          slot.teacherId,
+          classId,
+          slot.subjectId,
+          { day, period }, // ignore itself
+          slot.roomId,
+          duration
+        );
+
+        if (!result.valid) {
+          const subject = subjects.find(s => s.id === slot.subjectId);
+          const teacher = teachers.find(t => t.id === slot.teacherId);
+          
+          allConflicts.push({
+            classId,
+            className: cls.name,
+            subjectId: slot.subjectId,
+            subjectName: subject?.name || "Unknown",
+            teacherName: teacher?.name || "Unknown",
+            day,
+            period,
+            reason: result.message || "Invalid placement",
+            severity: result.severity || "HIGH"
+          });
+        }
+      }
+    }
+  }
+
+  return allConflicts;
+};

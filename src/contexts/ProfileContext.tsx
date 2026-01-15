@@ -7,6 +7,7 @@ import { generateId, deepClone, mergeWithDefaults } from '../utils/utils';
 import { DEFAULT_DATA } from '../utils/constants';
 import { calculateClassSchedule } from '../utils/timeUtils';
 import { TimeSlot } from '../types';
+import { validateFullSchedule } from '../features/generator/scheduler/validation';
 
 interface ProfileContextType {
   profiles: ProfileManifest['profiles'];
@@ -163,9 +164,13 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   const applyState = (data: AppData) => {
     if (!activeProfile) return;
 
+    // Trigger validation
+    const conflicts = validateFullSchedule(data);
+    const validatedData = { ...data, conflicts };
+
     const updated = { 
         ...activeProfile, 
-        data, 
+        data: validatedData, 
         lastModified: Date.now() 
     };
     setActiveProfile(updated);
