@@ -180,7 +180,7 @@ export const checkSlotValidity = (
     const maxConsecutive = settings.maxConsecutivePeriods || 4;
     let consecutiveCount = 0;
     const busyPeriods = new Set<number>();
-    const maxDailyLoad = settings.maxTeacherPeriodsPerDay || 6;
+    const maxDailyLoad = teacher?.maxPeriodsPerDay ?? (settings.maxTeacherPeriodsPerDay || 6);
 
     // Check whole day for this teacher, including the proposed slot
     for (let checkP = 0; checkP < maxPeriods; checkP++) {
@@ -225,7 +225,11 @@ export const checkSlotValidity = (
 
     // D. Teacher Daily Load Check (Unique periods only)
     if (busyPeriods.size > maxDailyLoad) {
-         return { valid: false, message: `${teacher?.name} exceeds daily limit of ${maxDailyLoad} classes`, severity: "MEDIUM" };
+         return { 
+           valid: false, 
+           message: `Exceeds ${teacher?.name}'s daily limit of ${maxDailyLoad} periods`, 
+           severity: "MEDIUM" 
+         };
     }
     
     // Increment consumed duration only if we actually processed a CLASS period

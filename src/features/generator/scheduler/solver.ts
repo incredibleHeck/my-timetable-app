@@ -236,7 +236,8 @@ export const solveSmart = (
                 }
 
                 // 2. Check Teacher Daily Load (Hard Constraint)
-                const maxTeacherLoad = data.settings.maxTeacherPeriodsPerDay || 6;
+                const teacher = data.teachers.find(t => t.id === tid);
+                const maxTeacherLoad = teacher?.maxPeriodsPerDay ?? (data.settings.maxTeacherPeriodsPerDay || 6);
                 const busyPeriods = new Set<number>();
                 
                 // Add existing busy periods

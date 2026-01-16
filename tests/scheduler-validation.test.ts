@@ -288,7 +288,7 @@ describe('Scheduler Validation', () => {
     // Note: checkSlotValidity looks up class by ID. 'longDayClass' has id 'c1'.
 
     expect(result.valid).toBe(false);
-    expect(result.message).toContain('exceeds daily limit of 6 classes');
+    expect(result.message).toContain("Exceeds John Doe's daily limit of 6 periods");
   });
 
   it('should enforce joint class integrity', () => {
