@@ -16,7 +16,7 @@
     - [x] Verify it correctly handles numeric input and empty state [21dd2bd]
 - [x] Task: Conductor - User Manual Verification 'Phase 2: UI Implementation' (Protocol in workflow.md) [7e5e017]
 
-## Phase 3: Validation Logic & Conflict Detection
+## Phase 3: Validation Logic & Conflict Detection [checkpoint: 487074e]
 - [x] Task: Implement teacher-specific limit fallback logic [61dfe77]
     - [x] Create/Update a helper function to get `effectiveMaxPeriods` for a teacher [61dfe77]
 - [x] Task: Update Conflict Detection Engine [61dfe77]
@@ -26,7 +26,7 @@
     - [x] Create a test case where a teacher has a specific limit lower than the global limit [61dfe77]
     - [x] Create a test case where a teacher has a specific limit higher than the global limit [61dfe77]
     - [x] Verify that conflicts are correctly reported with the specific limit [61dfe77]
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Validation Logic & Conflict Detection' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Validation Logic & Conflict Detection' (Protocol in workflow.md) [487074e]
 
 ## Phase 4: Integration & Real-time Updates
 - [ ] Task: Verify Real-time Conflict Updates
