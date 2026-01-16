@@ -1,10 +1,10 @@
 # Implementation Plan: Per-Teacher Constraint Overrides
 
-## Phase 1: Data Model & Type Definitions
+## Phase 1: Data Model & Type Definitions [checkpoint: 3bb3d87]
 - [x] Task: Update `Teacher` interface to include `maxPeriodsPerDay` [d6c459b]
     - [ ] Add `maxPeriodsPerDay?: number` to `Teacher` in `src/features/teachers/types.ts`
     - [ ] Update any mock data or initial state in `src/utils/constants.ts` or relevant files
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Data Model & Type Definitions' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Data Model & Type Definitions' (Protocol in workflow.md) [3bb3d87]
 
 ## Phase 2: UI Implementation
 - [ ] Task: Update `TeacherEditorModal` component
