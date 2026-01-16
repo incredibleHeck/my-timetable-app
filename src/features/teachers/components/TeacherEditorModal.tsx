@@ -31,6 +31,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
 }) => {
   const [tName, setTName] = useState("");
   const [tTargetLoad, setTTargetLoad] = useState("");
+  const [tMaxPeriods, setTMaxPeriods] = useState("");
   const [tSpecialties, setTSpecialties] = useState<string[]>([]);
   const [tConstraints, setTConstraints] = useState<boolean[][]>([]);
 
@@ -55,6 +56,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
     if (isOpen) {
       setTName(editingTeacher?.name || "");
       setTTargetLoad(editingTeacher?.targetLoad?.toString() || "");
+      setTMaxPeriods(editingTeacher?.maxPeriodsPerDay?.toString() || "");
       setTSpecialties(editingTeacher?.specialtyIds || []);
 
       // Initialize Constraint Matrix (Deep Copy & Resize safety)
@@ -84,6 +86,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
       specialtyIds: tSpecialties,
       constraints: tConstraints,
       targetLoad: parseInt(tTargetLoad) || undefined,
+      maxPeriodsPerDay: parseInt(tMaxPeriods) || undefined,
     };
     onSave(newT);
     onClose();
@@ -166,6 +169,15 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
               value={tTargetLoad}
               onChange={(e) => setTTargetLoad(e.target.value)}
               placeholder="e.g. 20"
+            />
+          </div>
+          <div className="flex-1">
+            <Input
+              label="Max Periods Per Day"
+              type="number"
+              value={tMaxPeriods}
+              onChange={(e) => setTMaxPeriods(e.target.value)}
+              placeholder="Use Global"
             />
           </div>
         </div>
