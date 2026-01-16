@@ -7,13 +7,13 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Data Model & Type Definitions' (Protocol in workflow.md) [3bb3d87]
 
 ## Phase 2: UI Implementation
-- [ ] Task: Update `TeacherEditorModal` component
-    - [ ] Add "Max Periods Per Day" number input field to the form
-    - [ ] Implement validation for the input (positive integer or empty)
-    - [ ] Ensure the value is correctly passed to the update/create handler
-- [ ] Task: Write Tests for `TeacherEditorModal` UI
-    - [ ] Verify the new field is rendered
-    - [ ] Verify it correctly handles numeric input and empty state
+- [x] Task: Update `TeacherEditorModal` component [21dd2bd]
+    - [x] Add "Max Periods Per Day" number input field to the form [21dd2bd]
+    - [x] Implement validation for the input (positive integer or empty) [21dd2bd]
+    - [x] Ensure the value is correctly passed to the update/create handler [21dd2bd]
+- [x] Task: Write Tests for `TeacherEditorModal` UI [21dd2bd]
+    - [x] Verify the new field is rendered [21dd2bd]
+    - [x] Verify it correctly handles numeric input and empty state [21dd2bd]
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: UI Implementation' (Protocol in workflow.md)
 
 ## Phase 3: Validation Logic & Conflict Detection
