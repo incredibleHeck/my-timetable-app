@@ -14,5 +14,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [~] **Track: Feature: Per-Teacher Constraint Overrides**
+## [x] Track: Feature: Per-Teacher Constraint Overrides
 *Link: [./tracks/teacher_constraint_overrides_20260116/](./tracks/teacher_constraint_overrides_20260116/)*
