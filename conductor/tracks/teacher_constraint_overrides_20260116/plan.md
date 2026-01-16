@@ -1,0 +1,37 @@
+# Implementation Plan: Per-Teacher Constraint Overrides
+
+## Phase 1: Data Model & Type Definitions
+- [~] Task: Update `Teacher` interface to include `maxPeriodsPerDay`
+    - [ ] Add `maxPeriodsPerDay?: number` to `Teacher` in `src/features/teachers/types.ts`
+    - [ ] Update any mock data or initial state in `src/utils/constants.ts` or relevant files
+- [ ] Task: Conductor - User Manual Verification 'Phase 1: Data Model & Type Definitions' (Protocol in workflow.md)
+
+## Phase 2: UI Implementation
+- [ ] Task: Update `TeacherEditorModal` component
+    - [ ] Add "Max Periods Per Day" number input field to the form
+    - [ ] Implement validation for the input (positive integer or empty)
+    - [ ] Ensure the value is correctly passed to the update/create handler
+- [ ] Task: Write Tests for `TeacherEditorModal` UI
+    - [ ] Verify the new field is rendered
+    - [ ] Verify it correctly handles numeric input and empty state
+- [ ] Task: Conductor - User Manual Verification 'Phase 2: UI Implementation' (Protocol in workflow.md)
+
+## Phase 3: Validation Logic & Conflict Detection
+- [ ] Task: Implement teacher-specific limit fallback logic
+    - [ ] Create/Update a helper function to get `effectiveMaxPeriods` for a teacher
+- [ ] Task: Update Conflict Detection Engine
+    - [ ] Modify `src/features/generator/scheduler/validation.ts` to use the `effectiveMaxPeriods`
+    - [ ] Update the conflict message to be teacher-specific if an override is active
+- [ ] Task: Write Tests for Teacher-Specific Validation
+    - [ ] Create a test case where a teacher has a specific limit lower than the global limit
+    - [ ] Create a test case where a teacher has a specific limit higher than the global limit
+    - [ ] Verify that conflicts are correctly reported with the specific limit
+- [ ] Task: Conductor - User Manual Verification 'Phase 3: Validation Logic & Conflict Detection' (Protocol in workflow.md)
+
+## Phase 4: Integration & Real-time Updates
+- [ ] Task: Verify Real-time Conflict Updates
+    - [ ] Ensure that editing a teacher's limit immediately updates the conflict report
+    - [ ] Verify the visual feedback in the schedule grid
+- [ ] Task: Final Regression Testing
+    - [ ] Run all existing scheduler and teacher tests to ensure no regressions
+- [ ] Task: Conductor - User Manual Verification 'Phase 4: Integration & Real-time Updates' (Protocol in workflow.md)
