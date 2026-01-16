@@ -17,15 +17,15 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 2: UI Implementation' (Protocol in workflow.md) [7e5e017]
 
 ## Phase 3: Validation Logic & Conflict Detection
-- [ ] Task: Implement teacher-specific limit fallback logic
-    - [ ] Create/Update a helper function to get `effectiveMaxPeriods` for a teacher
-- [ ] Task: Update Conflict Detection Engine
-    - [ ] Modify `src/features/generator/scheduler/validation.ts` to use the `effectiveMaxPeriods`
-    - [ ] Update the conflict message to be teacher-specific if an override is active
-- [ ] Task: Write Tests for Teacher-Specific Validation
-    - [ ] Create a test case where a teacher has a specific limit lower than the global limit
-    - [ ] Create a test case where a teacher has a specific limit higher than the global limit
-    - [ ] Verify that conflicts are correctly reported with the specific limit
+- [x] Task: Implement teacher-specific limit fallback logic [61dfe77]
+    - [x] Create/Update a helper function to get `effectiveMaxPeriods` for a teacher [61dfe77]
+- [x] Task: Update Conflict Detection Engine [61dfe77]
+    - [x] Modify `src/features/generator/scheduler/validation.ts` to use the `effectiveMaxPeriods` [61dfe77]
+    - [x] Update the conflict message to be teacher-specific if an override is active [61dfe77]
+- [x] Task: Write Tests for Teacher-Specific Validation [61dfe77]
+    - [x] Create a test case where a teacher has a specific limit lower than the global limit [61dfe77]
+    - [x] Create a test case where a teacher has a specific limit higher than the global limit [61dfe77]
+    - [x] Verify that conflicts are correctly reported with the specific limit [61dfe77]
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Validation Logic & Conflict Detection' (Protocol in workflow.md)
 
 ## Phase 4: Integration & Real-time Updates
