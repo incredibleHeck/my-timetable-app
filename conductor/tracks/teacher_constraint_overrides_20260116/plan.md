@@ -29,9 +29,9 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Validation Logic & Conflict Detection' (Protocol in workflow.md) [487074e]
 
 ## Phase 4: Integration & Real-time Updates
-- [ ] Task: Verify Real-time Conflict Updates
-    - [ ] Ensure that editing a teacher's limit immediately updates the conflict report
-    - [ ] Verify the visual feedback in the schedule grid
-- [ ] Task: Final Regression Testing
-    - [ ] Run all existing scheduler and teacher tests to ensure no regressions
+- [x] Task: Verify Real-time Conflict Updates [a81aaad]
+    - [x] Ensure that editing a teacher's limit immediately updates the conflict report [a81aaad]
+    - [x] Verify the visual feedback in the schedule grid [a81aaad]
+- [x] Task: Final Regression Testing [a81aaad]
+    - [x] Run all existing scheduler and teacher tests to ensure no regressions [a81aaad]
 - [ ] Task: Conductor - User Manual Verification 'Phase 4: Integration & Real-time Updates' (Protocol in workflow.md)
