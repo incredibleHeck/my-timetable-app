@@ -17,26 +17,39 @@ interface Props {
 
 // Wrapped in memo for performance (prevents unnecessary re-renders in large grids)
 export const DraggableSlot: React.FC<Props> = memo(
-  ({ slot, day, period, subject, teacher, classGroup, mode, disabled, timeRange }) => {
-    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-      id: `slot-${day}-${period}`,
-      data: { slot, day, period, classGroup, teacher }, // Pass all context data
-      disabled: disabled || slot.isFixed,
-    });
+  ({
+    slot,
+    day,
+    period,
+    subject,
+    teacher,
+    classGroup,
+    mode,
+    disabled,
+    timeRange,
+  }) => {
+    const { attributes, listeners, setNodeRef, transform, isDragging } =
+      useDraggable({
+        id: `slot-${day}-${period}`,
+        data: { slot, day, period, classGroup, teacher }, // Pass all context data
+        disabled: disabled || slot.isFixed,
+      });
 
-    const style = transform ? {
-      transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-      zIndex: 999, // Ensure it's above everything while dragging
-    } : undefined;
+    const style = transform
+      ? {
+          transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+          zIndex: 999, // Ensure it's above everything while dragging
+        }
+      : undefined;
 
     return (
       <div
         ref={setNodeRef}
         {...listeners}
         {...attributes}
-        style={{ 
-          ...style, 
-          borderLeftColor: subject?.color || "#cbd5e1" 
+        style={{
+          ...style,
+          borderLeftColor: subject?.color || "#cbd5e1",
         }}
         className={`relative group border-l-4 shadow-sm rounded-r-md p-2 flex flex-col justify-center w-full h-full transition-shadow bg-white overflow-hidden print:border print:border-slate-300 touch-none
          ${
@@ -61,7 +74,7 @@ export const DraggableSlot: React.FC<Props> = memo(
           {subject?.name}
         </div>
 
-        <div className="text-[13px] text-slate-500 truncate mt-1 flex items-center gap-1 relative z-10">
+        <div className="text-[10px] text-slate-500 truncate mt-1 flex items-center gap-1 relative z-10">
           {mode === "CLASS" ? (
             <>
               <Users size={10} /> {teacher?.name || "Unassigned"}
@@ -96,4 +109,3 @@ export const DraggableSlot: React.FC<Props> = memo(
 );
 
 DraggableSlot.displayName = "DraggableSlot";
-

@@ -1,534 +1,220 @@
-import { AppData, ScheduleResult, Conflict, ClassGroup, ScheduleSlot } from "../../../types";
-import { AllocationUnit, SchedulerState } from "./types";
+import { AppData, Conflict } from "../../../types";
+import { AllocationUnit } from "./types";
+import { initializeState } from "./state";
+import { checkHardConstraints } from "./constraints";
 import { getPeriodType, getNextClassPeriod } from "./utils";
-import { calculateClassSchedule, doTimeRangesOverlap } from "../../../utils/timeUtils";
 
-export const solveSmart = (
-  units: AllocationUnit[],
+// --- SCORING HELPER ---
+const calculateScore = (
+  d: number,
+  p: number,
+  unit: AllocationUnit,
   data: AppData
-): { schedule: ScheduleResult; conflicts: Conflict[] } => {
-  const globalPeriods = data.settings.periodsPerDay;
-  const days = (data.settings as any).daysPerWeek || 5;
-  const maxSystemPeriods = Math.max(
-    globalPeriods,
-    ...data.classes.map((c) => Math.max(c.periodCount || 0, c.structure?.length || 0))
-  );
-  const globalDayStructure = data.settings.dayStructure;
+): number => {
+  let score = 0;
+  // Morning Bias
+  const maxPeriods = data.settings.periodsPerDay;
+  if (p < maxPeriods / 2) score += 10;
 
-  // Pre-calculate all class schedules
-  const allClassSchedules = new Map<string, any[]>();
-  data.classes.forEach(c => {
-    allClassSchedules.set(c.id, calculateClassSchedule(c, data.settings, c.structure || globalDayStructure));
+  // Random noise to prevent "striped" patterns
+  score += Math.random() * 2;
+  return score;
+};
+
+// --- FIND ROOM HELPER ---
+const findRoom = (
+  d: number,
+  p: number,
+  p2: number,
+  unit: AllocationUnit,
+  state: any,
+  data: AppData,
+  taken: Set<string>
+): string | undefined => {
+  if (!data.rooms || data.rooms.length === 0) return undefined;
+
+  // Filter rooms by type/preference
+  const validRooms = data.rooms.filter((r) => {
+    if (taken.has(r.id)) return false;
+    if (unit.requiredRoomType && r.type !== unit.requiredRoomType) return false;
+    if (unit.preferredRoomIds?.length && !unit.preferredRoomIds.includes(r.id))
+      return false;
+    // Check Occupancy
+    if (state.roomOccupancy[r.id][d][p]) return false;
+    if (unit.duration === 2 && state.roomOccupancy[r.id][d][p2]) return false;
+    // Capacity
+    const maxStudents = Math.max(
+      ...unit.classIds.map(
+        (cid) => data.classes.find((c) => c.id === cid)?.studentCount || 0
+      )
+    );
+    if (maxStudents > r.capacity) return false;
+    return true;
   });
 
-  // Cache Single Resource Subjects
-  const singleResourceSubjectIds = new Set(
-    data.subjects.filter((s) => s.isSingleResource).map((s) => s.id)
-  );
+  // Heuristic: Pick smallest room that fits (save big rooms)
+  validRooms.sort((a, b) => a.capacity - b.capacity);
+  return validRooms[0]?.id;
+};
 
-  // Initialize State
-  const state: SchedulerState = {
-    schedule: {},
-    teacherOccupancy: {},
-    classOccupancy: {},
-    classDailySubjects: {},
-    singleResourceUsage: {},
-    roomOccupancy: {},
-  };
-
-  // Hydrate State
-  data.classes.forEach((c) => {
-    const pCount = Math.max(c.periodCount || globalPeriods, c.structure?.length || 0);
-    state.schedule[c.id] = {};
-    state.classOccupancy[c.id] = Array(days)
-      .fill(null)
-      .map(() => Array(pCount).fill(false));
-    state.classDailySubjects[c.id] = {};
-    for (let d = 0; d < days; d++)
-      state.classDailySubjects[c.id][d] = new Set();
-  });
-
-  data.teachers.forEach((t) => {
-    state.teacherOccupancy[t.id] = Array(days)
-      .fill(null)
-      .map(() => Array(maxSystemPeriods).fill(false));
-    t.constraints.forEach((row, d) => {
-      row.forEach((isBlocked, p) => {
-        if (isBlocked && d < days && p < maxSystemPeriods)
-          state.teacherOccupancy[t.id][d][p] = true;
-      });
-    });
-  });
-
-  const rooms = data.rooms || [];
-  rooms.forEach((r) => {
-    state.roomOccupancy[r.id] = Array(days)
-      .fill(null)
-      .map(() => Array(maxSystemPeriods).fill(false));
-  });
-
-  singleResourceSubjectIds.forEach((id) => {
-    state.singleResourceUsage[id] = Array(days)
-      .fill(null)
-      .map(() => Array(maxSystemPeriods).fill(false));
-  });
-
+// --- MAIN FUNCTION ---
+export const solveSmart = (units: AllocationUnit[], data: AppData) => {
+  const state = initializeState(data);
   const conflicts: Conflict[] = [];
-  const processedElectiveBlocks = new Set<string>();
 
-  // Helper: Find Room
-  const findAvailableRoom = (
-    d: number,
-    p: number,
-    duration: number,
-    p2: number,
-    uClassId: string, // Added class context
-    preferredIds?: string[],
-    requiredType?: string,
-    excludedRoomIds: Set<string> = new Set()
-  ): string | undefined => {
-    // If no rooms defined in system, and no requirement, return undefined (No room needed)
-    if (rooms.length === 0) return undefined;
-    
-    const targetClassSched = allClassSchedules.get(uClassId);
-    const targetRangeP1 = targetClassSched?.[p];
-    const targetRangeP2 = duration === 2 ? targetClassSched?.[p2] : null;
+  // Process "Gangs" (Elective Blocks / Joints) together
+  const processedIds = new Set<string>();
 
-    const validRooms = rooms.filter((r) => {
-      if (excludedRoomIds.has(r.id)) return false;
-      if (requiredType && r.type !== requiredType) return false;
-      if (preferredIds?.length && !preferredIds.includes(r.id)) return false;
-      
-      // Check Occupancy (Absolute Time Aware)
-      // We must check if ANY class is using this room at an overlapping time
-      for (const otherCId of Object.keys(state.schedule)) {
-          const otherDaySlots = state.schedule[otherCId][d];
-          if (!otherDaySlots) continue;
+  for (const unit of units) {
+    if (processedIds.has(unit.id)) continue;
 
-          const otherSched = allClassSchedules.get(otherCId);
-          if (!otherSched) continue;
-
-          for (const otherPStr in otherDaySlots) {
-              const oP = parseInt(otherPStr);
-              const oSlot = otherDaySlots[oP];
-              if (oSlot.roomId === r.id) {
-                  const otherRange = otherSched[oP];
-                  if (targetRangeP1 && otherRange && doTimeRangesOverlap(targetRangeP1, otherRange)) return false;
-                  if (duration === 2 && targetRangeP2 && otherRange && doTimeRangesOverlap(targetRangeP2, otherRange)) return false;
-              }
-          }
-      }
-      
-      return true;
-    });
-
-    return validRooms.length > 0 ? validRooms[0].id : undefined;
-  };
-
-    // --- SOLVING LOOP ---
-    for (const unit of units) {
-      if (unit.electiveBlockId && processedElectiveBlocks.has(unit.electiveBlockId)) {
-        continue;
-      }
-
-    // Determine Mode: Single or Gang
-    const isGang = !!unit.electiveBlockId;
-    const gangUnits = isGang 
-      ? units.filter(u => u.electiveBlockId === unit.electiveBlockId)
+    const isGang = !!unit.electiveBlockId || unit.classIds.length > 1; // Treat Joint as Gang
+    const gangUnits = isGang
+      ? units.filter(
+          (u) =>
+            (u.electiveBlockId && u.electiveBlockId === unit.electiveBlockId) ||
+            u.id === unit.id
+        )
       : [unit];
 
-    if (isGang && unit.electiveBlockId) {
-      processedElectiveBlocks.add(unit.electiveBlockId);
-    }
+    gangUnits.forEach((u) => processedIds.add(u.id));
 
-    // Shared constraints (Class)
-    // Note: Gang units share the same classIds (usually).
-    const unitClasses = gangUnits[0].classIds
-      .map((id) => data.classes.find((c) => c.id === id))
-      .filter((c) => !!c) as ClassGroup[];
+    // --- FIND SLOT ---
+    let bestSlot: {
+      d: number;
+      p: number;
+      p2: number;
+      rooms: Record<string, string>;
+    } | null = null;
+    let bestScore = -Infinity;
 
-    // Use strict period limit from the Class
-    const unitPeriodLimit = Math.min(
-      ...unitClasses.map((c) => Math.max(c.periodCount || globalPeriods, c.structure?.length || 0))
-    );
+    const days = (data.settings as any).daysPerWeek || 5;
+    const periods = data.settings.periodsPerDay;
 
-    let possibleSlots: { 
-      d: number; 
-      p: number; 
-      p2: number; 
-      score: number; 
-      // Map Unit ID -> Room ID
-      roomAssignments: Record<string, string | undefined>;
-    }[] = [];
-
-    // Search Space
+    // Try every day/period
     for (let d = 0; d < days; d++) {
-      for (let p = 0; p < unitPeriodLimit; p++) {
-        
-        // 1. Check Structure (Prioritize Class Overrides)
-        // If all classes involved consider this a CLASS period, it's valid, 
-        // even if the global structure says it's a BREAK.
-        const allClassesAvailable = unitClasses.every((c) => {
-          const struct = c.structure?.length ? c.structure : globalDayStructure;
-          return getPeriodType(struct, p) === "CLASS";
-        });
-        if (!allClassesAvailable) continue;
-
-        // Duration Check
-        const duration = gangUnits[0].duration;
-        let p2 = -1;
-        
-        if (duration === 2) {
-            const primaryClass = unitClasses[0];
-            const primaryStructure = primaryClass?.structure?.length
-              ? primaryClass.structure
-              : globalDayStructure;
-            const primaryLimit = primaryClass.periodCount || globalPeriods;
-  
-            const next = getNextClassPeriod(p, primaryStructure, primaryLimit);
-            if (next === null) continue;
-            p2 = next;
-  
-            const allClassesAvailableP2 = unitClasses.every((c) => {
-              const limit = c.periodCount || globalPeriods;
-              if (p2 >= limit) return false;
-              const struct = c.structure?.length ? c.structure : globalDayStructure;
-              return getPeriodType(struct, p2) === "CLASS";
-            });
-            if (!allClassesAvailableP2) continue;
-        }
-
-        // 3. Fixed Occasions
-        if (data.settings.fixedOccasions?.[d]?.[p]) continue;
-        if (duration === 2 && data.settings.fixedOccasions?.[d]?.[p2]) continue;
-
-        // Class Fixed Sessions
-        const isClassBlocked = unitClasses.some(
-          (c) =>
-            c.fixedSessions?.[d]?.[p] ||
-            (duration === 2 && c.fixedSessions?.[d]?.[p2])
-        );
-        if (isClassBlocked) continue;
-
-        // 4. Class Occupancy (Only need to check once for the group)
-        let classClash = false;
-        for (const cid of gangUnits[0].classIds) {
-          if (state.classOccupancy[cid][d][p]) { classClash = true; break; }
-          if (duration === 2 && state.classOccupancy[cid][d][p2]) { classClash = true; break; }
-        }
-        if (classClash) continue;
-
-        // 5. Check PER UNIT constraints (Teachers, Rooms, Single Resource)
+      for (let p = 0; p < periods; p++) {
+        // 1. Structure Check for Gang
         let gangValid = true;
-        const currentRoomAssignments: Record<string, string | undefined> = {};
-        const takenRoomsInThisSlot = new Set<string>();
+        let p2 = -1;
 
-        for (const u of gangUnits) {
-            // Teacher Occupancy (Absolute Time Aware)
-            const targetClassSched = allClassSchedules.get(u.classIds[0]);
-            const targetRangeP1 = targetClassSched?.[p];
-            const targetRangeP2 = duration === 2 ? targetClassSched?.[p2] : null;
+        // Calculate P2 based on first unit (assuming alignment)
+        const firstClass = data.classes.find(
+          (c) => c.id === gangUnits[0].classIds[0]
+        );
+        const struct = firstClass?.structure || data.settings.dayStructure;
+        if (getPeriodType(struct, p) !== "CLASS") continue;
 
-            for (const tid of u.teacherIds) {
-                // 1. Check Teacher Availability (Index-based constraints still apply as base)
-                if (state.teacherOccupancy[tid][d][p] || (duration === 2 && state.teacherOccupancy[tid][d][p2])) {
-                    gangValid = false; break;
-                }
-
-                // 2. Check Teacher Daily Load (Hard Constraint)
-                const teacher = data.teachers.find(t => t.id === tid);
-                const maxTeacherLoad = teacher?.maxPeriodsPerDay ?? (data.settings.maxTeacherPeriodsPerDay || 6);
-                const busyPeriods = new Set<number>();
-                
-                // Add existing busy periods
-                state.teacherOccupancy[tid][d].forEach((isBusy, idx) => { 
-                    if (isBusy) busyPeriods.add(idx); 
-                });
-                
-                // Add proposed periods
-                busyPeriods.add(p);
-                if (duration === 2) busyPeriods.add(p2);
-
-                if (busyPeriods.size > maxTeacherLoad) {
-                    gangValid = false; break;
-                }
-
-                // 3. Check Teacher Overlap with OTHER classes (Time-aware)
-                // We need to look at what this teacher is already doing in state.schedule
-                for (const otherCId of Object.keys(state.schedule)) {
-                    // Check if current u.classIds already includes this cId (to avoid self-clash in gang)
-                    if (u.classIds.includes(otherCId)) continue;
-
-                    const otherDaySlots = state.schedule[otherCId][d];
-                    if (!otherDaySlots) continue;
-
-                    const otherSched = allClassSchedules.get(otherCId);
-                    if (!otherSched) continue;
-
-                    for (const otherPStr in otherDaySlots) {
-                        const oP = parseInt(otherPStr);
-                        const oSlot = otherDaySlots[otherPStr];
-                        if (oSlot.teacherId === tid) {
-                            const otherRange = otherSched[oP];
-                            if (targetRangeP1 && otherRange && doTimeRangesOverlap(targetRangeP1, otherRange)) {
-                                gangValid = false; break;
-                            }
-                            if (duration === 2 && targetRangeP2 && otherRange && doTimeRangesOverlap(targetRangeP2, otherRange)) {
-                                gangValid = false; break;
-                            }
-                        }
-                    }
-                    if (!gangValid) break;
-                }
-                if (!gangValid) break;
-            }
-            if (!gangValid) break;
-
-            // Single Resource (Absolute Time Aware)
-             if (singleResourceSubjectIds.has(u.subjectId)) {
-                // Check if ANY other class is using this subject at an overlapping time
-                for (const otherCId of Object.keys(state.schedule)) {
-                    if (u.classIds.includes(otherCId)) continue;
-
-                    const otherDaySlots = state.schedule[otherCId][d];
-                    if (!otherDaySlots) continue;
-
-                    const otherSched = allClassSchedules.get(otherCId);
-                    if (!otherSched) continue;
-
-                    for (const otherPStr in otherDaySlots) {
-                        const oP = parseInt(otherPStr);
-                        const oSlot = otherDaySlots[otherPStr];
-                        if (oSlot.subjectId === u.subjectId) {
-                            const otherRange = otherSched[oP];
-                            if (targetRangeP1 && otherRange && doTimeRangesOverlap(targetRangeP1, otherRange)) {
-                                gangValid = false; break;
-                            }
-                            if (duration === 2 && targetRangeP2 && otherRange && doTimeRangesOverlap(targetRangeP2, otherRange)) {
-                                gangValid = false; break;
-                            }
-                        }
-                    }
-                    if (!gangValid) break;
-                }
-             }
-             if (!gangValid) break;
-
-             // Room Check
-             const roomId = findAvailableRoom(
-                 d, p, duration, p2, 
-                 u.classIds[0], // Pass primary classId for context
-                 u.preferredRoomIds, u.requiredRoomType, 
-                 takenRoomsInThisSlot
-             );
-             
-             // If room required but not found
-             if ((u.requiredRoomType || u.preferredRoomIds?.length) && !roomId) {
-                 gangValid = false; break;
-             }
-
-             if (roomId) {
-                 takenRoomsInThisSlot.add(roomId);
-                 currentRoomAssignments[u.id] = roomId;
-             }
+        if (gangUnits[0].duration === 2) {
+          const next = getNextClassPeriod(p, struct, periods);
+          if (next === null) continue;
+          p2 = next;
         }
 
-        if (!gangValid) continue;
+        // 2. Constraints & Rooms
+        const currentRooms: Record<string, string> = {};
+        const takenRooms = new Set<string>();
 
-        // 6. Fatigue Guard (Check all teachers in gang)
-        // ... (Simplified: Skipping expensive fatigue check for gang to save tokens/time, or implement if critical)
-        // Implementing basic fatigue check:
-        const maxConsecutive = data.settings.maxConsecutivePeriods || 4;
-        let fatigueConflict = false;
         for (const u of gangUnits) {
-            for (const tid of u.teacherIds) {
-                const dayMap = state.teacherOccupancy[tid][d];
-                let currentRun = 0;
-                for (let i = 0; i < dayMap.length; i++) {
-                    let isOccupied = dayMap[i];
-                    if (i === p || (duration === 2 && i === p2)) isOccupied = true;
-                    if (isOccupied) currentRun++; else currentRun = 0;
-                    if (currentRun > maxConsecutive) { fatigueConflict = true; break; }
-                }
-                if (fatigueConflict) break;
-            }
-            if (fatigueConflict) break;
-        }
-        if (fatigueConflict) continue;
+          const classes = u.classIds.map((cid) =>
+            data.classes.find((c) => c.id === cid)
+          );
 
-        // 7. Daily Subject Limit & Sandwich/Gap Detection
-        let dailyLimitConflict = false;
-        let gapConflict = false;
+          // Check Hard Constraints
+          if (!checkHardConstraints(state, data, d, p, p2, u, classes)) {
+            gangValid = false;
+            break;
+          }
 
-        for (const cid of gangUnits[0].classIds) {
-          if (state.classDailySubjects[cid][d].has(unit.subjectId)) {
-            let existingPeriods = 0;
-            let prevSlot = -99;
-            let nextSlot = 999;
-
-            const daySchedule = state.schedule[cid][d];
-            if (daySchedule) {
-              for (const pStr in daySchedule) {
-                const pIdx = parseInt(pStr);
-                const slot = daySchedule[pStr];
-                if (slot.subjectId === unit.subjectId) {
-                  existingPeriods++;
-                  if (pIdx < p) prevSlot = Math.max(prevSlot, pIdx);
-                  if (pIdx > p) nextSlot = Math.min(nextSlot, pIdx);
-                }
-              }
-            }
-
-            // A. Daily Limit: Max periods per day
-            const maxSubjPeriods = data.settings.maxSubjectPeriodsPerDay || 2;
-            if (existingPeriods + duration > maxSubjPeriods) {
-              dailyLimitConflict = true;
-              break;
-            }
-
-            // B. Gap Detection (Sandwich): Prevent gaps between sessions of same subject
-            const struct = unitClasses[0].structure?.length ? unitClasses[0].structure : globalDayStructure;
-
-            if (prevSlot !== -99) {
-              for (let gap = prevSlot + 1; gap < p; gap++) {
-                if (getPeriodType(struct, gap) === "CLASS") {
-                  gapConflict = true;
-                  break;
-                }
-              }
-            }
-            if (!gapConflict && nextSlot !== 999) {
-              const endOfCurrent = duration === 2 ? p2 : p;
-              for (let gap = endOfCurrent + 1; gap < nextSlot; gap++) {
-                if (getPeriodType(struct, gap) === "CLASS") {
-                  gapConflict = true;
-                  break;
-                }
-              }
-            }
-            if (gapConflict) break;
+          // Check Room
+          const rId = findRoom(d, p, p2, u, state, data, takenRooms);
+          if (!rId && (u.requiredRoomType || u.preferredRoomIds?.length)) {
+            gangValid = false;
+            break;
+          }
+          if (rId) {
+            takenRooms.add(rId);
+            currentRooms[u.id] = rId;
           }
         }
-        if (dailyLimitConflict || gapConflict) continue;
 
-        // --- SCORING ---
-        let score = 0;
-        score += globalPeriods - p; // Pack mornings
-
-        // Core Subject Morning Bias
-        const lowerName = gangUnits[0].subjectName.toLowerCase();
-        const isCore = lowerName.includes("math") || lowerName.includes("english") || lowerName.includes("science");
-        if (isCore) {
-            if (p < 4) score += 50;
-            else score -= 10;
+        if (gangValid) {
+          const score = calculateScore(d, p, gangUnits[0], data);
+          if (score > bestScore) {
+            bestScore = score;
+            bestSlot = { d, p, p2, rooms: currentRooms };
+          }
         }
-
-        // Teacher Constraints Scoring
-        gangUnits.forEach(u => {
-            u.teacherIds.forEach(tid => {
-                 // 1. Workload Balancing (Distribute load across days)
-                 // Count unique busy periods on this day
-                 const busyPeriods = new Set<number>();
-                 state.teacherOccupancy[tid][d].forEach((busy, idx) => { if(busy) busyPeriods.add(idx); });
-                 
-                 const dailyLoad = busyPeriods.size;
-                 
-                 if (dailyLoad === 0) {
-                     score += 40; // BIG BONUS for keeping a day completely free (Day off)
-                 } else {
-                     score -= (dailyLoad * 12); // Penalty for piling up on one day
-                 }
-
-                 // 2. Continuity (Minimize gaps)
-                 // If teacher is teaching immediately before, BIG BONUS (Cluster classes)
-                 if (p > 0 && state.teacherOccupancy[tid][d][p-1]) score += 30;
-                 
-                 // If teacher is teaching immediately after (Check p2+1 or p+1)
-                 const endP = duration === 2 ? p2 : p;
-                 if (endP < maxSystemPeriods - 1 && state.teacherOccupancy[tid][d][endP+1]) score += 30;
-            });
-        });
-
-        score += Math.random();
-        possibleSlots.push({ d, p, p2, score, roomAssignments: currentRoomAssignments });
       }
     }
 
-    // Sort and Pick
-    possibleSlots.sort((a, b) => b.score - a.score);
+    // --- COMMIT OR FAIL ---
+    if (bestSlot) {
+      const { d, p, p2, rooms } = bestSlot;
 
-    if (possibleSlots.length > 0) {
-        const { d, p, p2, roomAssignments } = possibleSlots[0];
+      gangUnits.forEach((u) => {
+        u.classIds.forEach((cid) => {
+          // Update Schedule
+          if (!state.schedule[cid][d]) state.schedule[cid][d] = {};
+          const roomId = rooms[u.id];
 
-        // Apply for ALL Gang Units
-        gangUnits.forEach((u, idx) => {
-            const isRepresentative = idx === 0; // The first unit owns the class schedule slot
+          state.schedule[cid][d][p] = {
+            subjectId: u.subjectId,
+            teacherId: u.teacherIds[0],
+            classId: cid,
+            roomId,
+            electiveBlockId: u.electiveBlockId,
+            isFixed: false,
+          };
+          state.classOccupancy[cid][d][p] = true;
+          state.classDailySubjects[cid][d].add(u.subjectId);
 
-            // 1. Schedule Entry (Only for Representative, or we overwrite)
-            if (isRepresentative) {
-                 u.classIds.forEach(cid => {
-                     if (!state.schedule[cid][d]) state.schedule[cid][d] = {};
-                     state.schedule[cid][d][p] = {
-                         subjectId: u.subjectId,
-                         teacherId: u.teacherIds[0] || "Unassigned",
-                         classId: cid,
-                         isFixed: false,
-                         electiveBlockId: u.electiveBlockId,
-                         roomId: roomAssignments[u.id]
-                     };
-                     state.classOccupancy[cid][d][p] = true;
-                     state.classDailySubjects[cid][d].add(u.subjectId);
-
-                     if (u.duration === 2 && p2 !== -1) {
-                         state.schedule[cid][d][p2] = {
-                             subjectId: u.subjectId,
-                             teacherId: u.teacherIds[0] || "Unassigned",
-                             classId: cid,
-                             isFixed: true,
-                             electiveBlockId: u.electiveBlockId,
-                             roomId: roomAssignments[u.id]
-                         };
-                         state.classOccupancy[cid][d][p2] = true;
-                     }
-                 });
-            }
-
-            // 2. Teacher Occupancy (For ALL units)
-            u.teacherIds.forEach(tid => {
-                state.teacherOccupancy[tid][d][p] = true;
-                if (u.duration === 2 && p2 !== -1) state.teacherOccupancy[tid][d][p2] = true;
-            });
-
-            // 3. Single Resource (For ALL units)
-            if (singleResourceSubjectIds.has(u.subjectId)) {
-                state.singleResourceUsage[u.subjectId][d][p] = true;
-                if (u.duration === 2 && p2 !== -1) state.singleResourceUsage[u.subjectId][d][p2] = true;
-            }
-
-            // 4. Room Occupancy (For ALL units)
-            const rId = roomAssignments[u.id];
-            if (rId) {
-                state.roomOccupancy[rId][d][p] = true;
-                if (u.duration === 2 && p2 !== -1) state.roomOccupancy[rId][d][p2] = true;
-            }
+          if (u.duration === 2 && p2 !== -1) {
+            state.schedule[cid][d][p2] = {
+              ...state.schedule[cid][d][p],
+              isFixed: true,
+            };
+            state.classOccupancy[cid][d][p2] = true;
+          }
         });
 
+        // Update Resources
+        u.teacherIds.forEach((tid) => {
+          state.teacherOccupancy[tid][d][p] = true;
+          state.teacherDailyLoad[tid][d]++;
+          if (u.duration === 2 && p2 !== -1) {
+            state.teacherOccupancy[tid][d][p2] = true;
+            state.teacherDailyLoad[tid][d]++;
+          }
+        });
+
+        if (state.singleResourceUsage[u.subjectId]) {
+          state.singleResourceUsage[u.subjectId][d][p] = true;
+          if (u.duration === 2)
+            state.singleResourceUsage[u.subjectId][d][p2] = true;
+        }
+
+        const rid = rooms[u.id];
+        if (rid) {
+          state.roomOccupancy[rid][d][p] = true;
+          if (u.duration === 2) state.roomOccupancy[rid][d][p2] = true;
+        }
+      });
     } else {
-        // Handle Conflict
-        gangUnits.forEach(u => {
-            conflicts.push({
-                classId: u.classIds.join(", "),
-                className: u.classNames.join(", "),
-                subjectId: u.subjectId,
-                subjectName: u.subjectName,
-                teacherName: u.teacherNames.join(", ") || "Unassigned",
-                duration: u.duration,
-                reason: isGang ? "Elective Block Conflict (Resources/Rooms)" : "Could not find a valid slot",
-                day: -1,
-                period: -1,
-                severity: "HIGH",
-            });
+      // Log Conflict
+      gangUnits.forEach((u) => {
+        conflicts.push({
+          classId: u.classIds.join(","),
+          className: u.classNames.join(","),
+          subjectId: u.subjectId,
+          subjectName: u.subjectName,
+          teacherName: u.teacherNames.join(","),
+          day: -1,
+          period: -1,
+          reason: "No valid slot found",
+          severity: "HIGH",
         });
+      });
     }
   }
 

@@ -1,40 +1,39 @@
-import { ScheduleResult } from "../../../types";
+import {
+  ScheduleResult,
+  Conflict,
+  ClassGroup,
+  Teacher,
+  Room,
+  Subject,
+  TimeSlot,
+} from "../../../types";
 
 export interface AllocationUnit {
+  // ... (keep existing fields)
   id: string;
   subjectId: string;
   subjectName: string;
-  duration: number; // 1 (Single) or 2 (Double)
-
-  // Who is involved?
+  duration: number;
   classIds: string[];
   classNames: string[];
   teacherIds: string[];
   teacherNames: string[];
-
-  // Constraints
   electiveBlockId?: string;
   preferredRoomIds?: string[];
   requiredRoomType?: string;
-
-  // Smart Priority Score
   priority: number;
+  bumpedCount?: number;
 }
 
 export interface SchedulerState {
   schedule: ScheduleResult;
-  // [teacherId][day][period] -> boolean
   teacherOccupancy: Record<string, boolean[][]>;
-  // [classId][day][period] -> boolean
   classOccupancy: Record<string, boolean[][]>;
-  // [classId][day] -> Set<subjectId>
+  roomOccupancy: Record<string, boolean[][]>;
   classDailySubjects: Record<string, Record<number, Set<string>>>;
-
-  // ADDED: Track usage of single-resource subjects
-  // [subjectId][day][period] -> boolean (Is this subject already scheduled anywhere?)
+  teacherDailyLoad: Record<string, Record<number, number>>;
   singleResourceUsage: Record<string, boolean[][]>;
 
-  // ADDED: Track room usage
-  // [roomId][day][period] -> boolean
-  roomOccupancy: Record<string, boolean[][]>;
+  // FIX: Use TimeSlot[] (strings) instead of numeric ranges
+  classTimeRanges: Map<string, TimeSlot[]>;
 }

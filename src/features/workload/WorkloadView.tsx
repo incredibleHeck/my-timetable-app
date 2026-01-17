@@ -15,7 +15,8 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
   const handleExportCSV = () => {
     const headers = [
       "Teacher Name",
-      "Assigned Periods",
+      "Requested Periods",
+      "Scheduled Periods",
       "Blocked Slots",
       "Available Slots",
       "Utilization %",
@@ -23,6 +24,7 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
     const rows = workloadStats.map((s) => [
       s.t.name,
       s.assignedPeriods,
+      s.scheduledPeriods,
       s.blockedSlots,
       s.availableSlots,
       `${s.utilizationPct.toFixed(1)}%`,
@@ -78,13 +80,16 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {workloadStats.map(
-          ({
-            t,
-            assignedPeriods,
-            availableSlots,
-            blockedSlots,
-            utilizationPct,
-          }) => {
+          (stat) => {
+            const {
+              t,
+              assignedPeriods,
+              scheduledPeriods,
+              availableSlots,
+              blockedSlots,
+              utilizationPct,
+            } = stat;
+
             // Determine Status Color
             let statusColor = "bg-emerald-500";
 
@@ -165,12 +170,17 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
                   )}
                 </div>
 
-                <div className="flex justify-between items-center text-xs pt-2 border-t border-slate-50 mt-1">
-                  <div className="text-slate-500">
-                    <strong>{assignedPeriods}</strong> assigned
+                <div className="flex justify-between items-center text-[11px] pt-2 border-t border-slate-50 mt-1">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-slate-500">
+                      <strong>{assignedPeriods}</strong> Requested
+                    </span>
+                    <span className="text-slate-400">
+                      <strong>{scheduledPeriods}</strong> Scheduled
+                    </span>
                   </div>
-                  <div className="text-slate-400">
-                    of <strong>{availableSlots}</strong> capacity
+                  <div className="text-slate-400 text-right">
+                    <strong>{availableSlots}</strong> Capacity
                   </div>
                 </div>
 
