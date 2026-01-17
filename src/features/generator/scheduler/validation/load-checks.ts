@@ -1,6 +1,6 @@
 import { SchedulerState } from "../types";
 import { ValidationContext, ValidationResult } from "./types";
-import { getType } from "./utils";
+import { getType, getPrevClassPeriod } from "./utils";
 
 /**
  * RULE: Teacher Load & Consecutive Limits
@@ -172,7 +172,7 @@ export const checkGapDetection = (
   ignoredSlots: Set<number>,
   state?: SchedulerState
 ): ValidationResult | null => {
-  const { data, classId, targetDay, maxPeriods, structure, subjectId } = ctx;
+  const { data, classId, teacherId, targetDay, maxPeriods, structure, subjectId } = ctx;
 
   // 1. GENERAL SANDWICH CHECK (Any Lesson)
   // Flags a gap if ANY empty CLASS period exists between ANY two lessons.
@@ -249,6 +249,38 @@ export const checkGapDetection = (
                 conflictCount: 0
               };
            }
+        }
+      }
+    }
+  }
+
+  // 3. TEACHER GAP DETECTION (Class-Sensitive & Break-Aware)
+  // Flags cases where a teacher has Class 1 at P1, Free at P2, and Class 1 at P3.
+  // Breaks and Lunches are transparent and do not break continuity.
+  if (state) {
+    const teacherGrid = state.teacherOccupancy[teacherId]?.[targetDay];
+    if (teacherGrid) {
+      for (const p of Array.from(proposedSlots)) {
+        const prevInstructionalP = getPrevClassPeriod(p, structure);
+        if (prevInstructionalP !== null) {
+          if (!teacherGrid[prevInstructionalP] || ignoredSlots.has(prevInstructionalP)) {
+            const sourceInstructionalP = getPrevClassPeriod(prevInstructionalP, structure);
+            if (sourceInstructionalP !== null) {
+              const prevUnitId = teacherGrid[sourceInstructionalP];
+              if (prevUnitId && prevUnitId !== "BLOCK" && !ignoredSlots.has(sourceInstructionalP)) {
+                const isSameClass = state.classOccupancy[classId]?.[targetDay]?.[sourceInstructionalP] === prevUnitId;
+                if (isSameClass) {
+                  return {
+                    valid: false,
+                    message: "Teacher gap (Same Class)",
+                    severity: "MEDIUM",
+                    penaltyPoints: 400,
+                    conflictCount: 0,
+                  };
+                }
+              }
+            }
+          }
         }
       }
     }

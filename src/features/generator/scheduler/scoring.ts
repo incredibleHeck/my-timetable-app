@@ -1,6 +1,6 @@
 import { AllocationUnit, SchedulerState } from "./types";
 import { AppData, Teacher } from "../../../types";
-import { getPeriodType } from "./utils";
+import { getPeriodType, getPrevClassPeriod } from "./utils";
 
 /**
  * CONFIGURATION: Weights for different soft constraints.
@@ -68,82 +68,34 @@ export const calculateTeacherGapPenalty = (
   currentClassIds: string[]
 ): number => {
   let penalty = 0;
+  const structure = state.settings?.dayStructure || [];
 
   for (const tid of teacherIds) {
     const dailyGrid = state.teacherOccupancy[tid]?.[d];
     if (!dailyGrid) continue;
 
-    // 1. Swiss Cheese (1-period gap)
-    // Check Previous Gap: [Occupied P-2] [Empty P-1] [Current Assignment P]
-    if (p >= 2 && !dailyGrid[p - 1] && dailyGrid[p - 2]) {
-      const prevUnitId = dailyGrid[p - 2];
-      if (prevUnitId && prevUnitId !== "BLOCK") {
-        // Only penalize if the gap is between the SAME class group
-        const isSameClass = currentClassIds.some(cid => 
-          state.classOccupancy[cid]?.[d]?.[p - 2] === prevUnitId
-        );
-        if (isSameClass) {
-          penalty += WEIGHTS.TEACHER_GAP;
-        }
-      }
-    }
-
-    // Check Next Gap: [Current Assignment P] [Empty P+1] [Occupied P+2]
-    if (p + 2 < dailyGrid.length && !dailyGrid[p + 1] && dailyGrid[p + 2]) {
-      const nextUnitId = dailyGrid[p + 2];
-      if (nextUnitId && nextUnitId !== "BLOCK") {
-        const isSameClass = currentClassIds.some(cid => 
-          state.classOccupancy[cid]?.[d]?.[p + 2] === nextUnitId
-        );
-        if (isSameClass) {
-          penalty += WEIGHTS.TEACHER_GAP;
-        }
-      }
-    }
-
-    // 2. Large Window (Gap > 2 periods)
-    // We apply the same "Same Class" logic to windows to avoid penalizing teachers 
-    // who have breaks between different groups.
-    let gapSize = 0;
-    for (let i = p - 1; i >= 0; i--) {
-        if (dailyGrid[i] !== null) break;
-        gapSize++;
-    }
-    if (gapSize > 2 && p - gapSize - 1 >= 0) {
-        const windowUnitId = dailyGrid[p - gapSize - 1];
-        if (windowUnitId && windowUnitId !== "BLOCK") {
+    // --- BRIDGE & IGNORE BREAKS LOGIC (Look Backwards) ---
+    const prevInstructionalP = getPrevClassPeriod(p, structure);
+    if (prevInstructionalP !== null) {
+      if (!dailyGrid[prevInstructionalP]) {
+        const sourceInstructionalP = getPrevClassPeriod(prevInstructionalP, structure);
+        if (sourceInstructionalP !== null) {
+          const prevUnitId = dailyGrid[sourceInstructionalP];
+          if (prevUnitId && prevUnitId !== "BLOCK") {
             const isSameClass = currentClassIds.some(cid => 
-                state.classOccupancy[cid]?.[d]?.[p - gapSize - 1] === windowUnitId
+              state.classOccupancy[cid]?.[d]?.[sourceInstructionalP] === prevUnitId
             );
             if (isSameClass) {
-                penalty += WEIGHTS.TEACHER_WINDOW;
+              penalty += WEIGHTS.TEACHER_GAP;
             }
+          }
         }
-    }
-    
-    // Check forwards
-    let fwdGapSize = 0;
-    for (let i = p + 1; i < dailyGrid.length; i++) {
-        if (dailyGrid[i] !== null) break;
-        fwdGapSize++;
-    }
-    if (fwdGapSize > 2 && p + fwdGapSize + 1 < dailyGrid.length) {
-        const windowUnitId = dailyGrid[p + fwdGapSize + 1];
-        if (windowUnitId && windowUnitId !== "BLOCK") {
-            const isSameClass = currentClassIds.some(cid => 
-                state.classOccupancy[cid]?.[d]?.[p + fwdGapSize + 1] === windowUnitId
-            );
-            if (isSameClass) {
-                penalty += WEIGHTS.TEACHER_WINDOW;
-            }
-        }
+      }
     }
 
     // REWARD: Continuity (Teaching back-to-back)
-    if (
-      (p > 0 && dailyGrid[p - 1]) ||
-      (p + 1 < dailyGrid.length && dailyGrid[p + 1])
-    ) {
+    const immediatePrevP = getPrevClassPeriod(p, structure);
+    if (immediatePrevP !== null && dailyGrid[immediatePrevP]) {
       penalty += WEIGHTS.TEACHER_CLUSTER;
     }
   }

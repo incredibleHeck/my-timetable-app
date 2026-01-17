@@ -41,6 +41,7 @@ export const initializeState = (data: AppData): SchedulerState => {
     classTimeRanges,
     lessonNavigation,
     unitPlacements: new Map(),
+    settings,
   };
 
   // Initialize Teachers

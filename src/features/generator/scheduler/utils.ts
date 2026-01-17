@@ -43,3 +43,22 @@ export function getNextClassPeriod(
 
   return null; // Day ended before finding another lesson slot
 }
+
+/**
+ * UTILITY: getPrevClassPeriod
+ * Finds the previous available CLASS period index, skipping Breaks/Lunches.
+ */
+export function getPrevClassPeriod(
+  currentP: number,
+  structure: (PeriodType | PeriodConfig)[],
+): number | null {
+  let prevP = currentP - 1;
+
+  while (prevP >= 0) {
+    const type = getPeriodType(structure, prevP);
+    if (type === "CLASS") return prevP;
+    prevP--;
+  }
+
+  return null;
+}

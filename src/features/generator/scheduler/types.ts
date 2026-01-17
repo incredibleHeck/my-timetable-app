@@ -81,4 +81,7 @@ export interface SchedulerState {
    * This enables O(1) "Next Lesson" lookups for double periods.
    */
   lessonNavigation: Map<string, number[]>;
+
+  /** Global settings reference for scoring/validation access */
+  settings: any;
 }
