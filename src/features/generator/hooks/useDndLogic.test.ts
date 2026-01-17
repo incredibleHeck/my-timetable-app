@@ -8,6 +8,7 @@ import { DragEndEvent } from "@dnd-kit/core";
 vi.mock("../../../contexts/ProfileContext", () => ({
   useProfile: () => ({
     pushToHistory: vi.fn(),
+    addActivity: vi.fn(),
   }),
 }));
 
