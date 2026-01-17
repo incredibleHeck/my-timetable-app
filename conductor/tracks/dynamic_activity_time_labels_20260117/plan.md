@@ -13,10 +13,10 @@
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Data Model & Activity Service' (Protocol in workflow.md)
 
 ## Phase 2: Scheduling Activity Integration [checkpoint: ]
-- [ ] Task: Integrate activity tracking into Drag-and-Drop operations
-    - [ ] Update `src/features/generator/hooks/useDndLogic.ts` to call `addActivity` on move/swap
-- [ ] Task: Write unit tests for scheduling activities
-    - [ ] Verify human-readable messages are generated for DnD actions
+- [x] Task: Integrate activity tracking into Drag-and-Drop operations (54b0eba)
+    - [x] Update `src/features/generator/hooks/useDndLogic.ts` to call `addActivity` on move/swap
+- [x] Task: Write unit tests for scheduling activities (54b0eba)
+    - [x] Verify human-readable messages are generated for DnD actions
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Scheduling Activity Integration' (Protocol in workflow.md)
 
 ## Phase 3: Academic Data & Settings Integration [checkpoint: ]
