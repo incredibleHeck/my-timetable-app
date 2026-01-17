@@ -10,7 +10,7 @@
     - [ ] Remove any temporary debug logs.
 
 ## Phase 2: Logic Consolidation
-- [ ] Task: Utility Audit
+- [x] Task: Utility Audit cb6a646
     - [ ] Review `src/utils` and feature-specific logic for duplicate functions.
     - [ ] Consolidate duplicate time calculation or data transformation logic into shared utilities.
     - [ ] Update call sites to use the consolidated functions.
