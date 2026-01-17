@@ -31,6 +31,7 @@ describe('Real-time Validation Integration', () => {
       periodsPerDay: 8,
       dayStructure: Array(8).fill({ type: 'CLASS', label: 'C' }),
       maxTeacherPeriodsPerDay: 4,
+      maxSubjectPeriodsPerDay: 4,
     },
     teachers: [mockTeacher],
     classes: [mockClass],

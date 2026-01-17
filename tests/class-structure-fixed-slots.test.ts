@@ -3,6 +3,7 @@ import { generateSchedule } from '../src/features/generator/scheduler/generator'
 import { AppData, Settings } from '../src/types';
 
 import { validateFullSchedule } from '../src/features/generator/scheduler/validation/index';
+import { initializeState } from '../src/features/generator/scheduler/state';
 
 describe('Generator - Class Structure Fixed Slots', () => {
   const mockSettings: Settings = {
@@ -109,9 +110,10 @@ describe('Generator - Class Structure Fixed Slots', () => {
          }
      };
 
-     const conflicts = validateFullSchedule(dataWithOverload);
+     const state = initializeState(dataWithOverload);
+     const conflicts = validateFullSchedule(dataWithOverload, state);
 
-     const overloadConflict = conflicts.find((c: any) => c.reason.includes('curriculum limit'));
+     const overloadConflict = conflicts.find((c: any) => c.reason.includes('Curriculum Over-Allocation'));
      expect(overloadConflict).toBeDefined();
   });
 });

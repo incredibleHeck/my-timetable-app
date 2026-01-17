@@ -111,7 +111,8 @@ describe("Reproduction: Same-Day Double Swap False Positive", () => {
       { day: 0, period: 0, duration: 2 },
       undefined,
       2,
-      { day: 0, period: 2, duration: 2 } // Ignore Target (Math)
+      { day: 0, period: 2, duration: 2 },
+      true // isAuto
     );
 
     // Should detect 2 (Proposed) + 1 (Existing at P4) = 3.
