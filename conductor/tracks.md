@@ -14,8 +14,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [~] **Track: Shift engine from Dynamic Room Discovery to Determined Room Mapping Hierarchy (Subject Lab > Class Home Room)**
+## [x] Track: Shift engine from Dynamic Room Discovery to Determined Room Mapping Hierarchy (Subject Lab > Class Home Room)
 *Link: [./tracks/room_mapping_hierarchy_20260117/](./tracks/room_mapping_hierarchy_20260117/)*
-
-
-
