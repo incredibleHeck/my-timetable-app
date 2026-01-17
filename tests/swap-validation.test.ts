@@ -31,6 +31,7 @@ describe('Swap Validation Reproduction', () => {
       dayStructure: Array(8).fill({ type: 'CLASS', label: 'C' }),
       maxSubjectPeriodsPerDay: 2,
       maxTeacherPeriodsPerDay: 6,
+      maxConsecutivePeriods: 10,
     },
     teachers: [mockTeacher],
     classes: [mockClass],

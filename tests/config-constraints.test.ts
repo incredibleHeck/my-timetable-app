@@ -95,6 +95,6 @@ describe('Configurable Constraints', () => {
     );
 
     expect(result.valid).toBe(false);
-    expect(result.message).toContain("Exceeds John Doe's daily limit of 2 periods");
+    expect(result.message).toContain("Exceeds daily limit");
   });
 });

@@ -30,15 +30,15 @@ describe('Export Header Logic', () => {
     const schedule = calculateClassSchedule(classGroup as ClassGroup, globalSettings as Settings, dayStructure);
     
     // P1 (50m): 08:00 - 08:50
-    expect(getFormattedTimeRange(schedule[0])).toBe('(08:00 - 08:50)');
+    expect(getFormattedTimeRange(schedule[0])).toBe('08:00 - 08:50');
     
     // Break (10m): 08:50 - 09:00
-    expect(getFormattedTimeRange(schedule[1])).toBe('(08:50 - 09:00)');
+    expect(getFormattedTimeRange(schedule[1])).toBe('08:50 - 09:00');
   });
 
   it('should fall back to global timeSlots for TEACHER mode (simulated)', () => {
     // In teacher mode, we use settings.timeSlots[p]
     const p0Time = globalSettings.timeSlots![0];
-    expect(getFormattedTimeRange(p0Time)).toBe('(08:00 - 08:40)');
+    expect(getFormattedTimeRange(p0Time)).toBe('08:00 - 08:40');
   });
 });

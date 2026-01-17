@@ -267,4 +267,79 @@ describe('Room Mapping Hierarchy', () => {
 
     expect(priorityICT).toBeGreaterThan(priorityMath);
   });
+
+  it('should handle complex end-to-end scenario with competing room requirements', () => {
+    // 3 Classes, 2 Rooms
+    // r-lab (bottleneck)
+    // r-home-a (home for class A)
+    // r-home-b (home for class B)
+    // r-home-c (home for class C)
+    
+    const mockRooms: Room[] = [
+      { id: 'r-lab', name: 'Computer Lab', type: 'Lab', capacity: 30 },
+      { id: 'r-a', name: 'Room A', type: 'Classroom', capacity: 30 },
+      { id: 'r-b', name: 'Room B', type: 'Classroom', capacity: 30 },
+      { id: 'r-c', name: 'Room C', type: 'Classroom', capacity: 30 },
+    ];
+
+    const mockSubjects: Subject[] = [
+      { id: 's-ict', name: 'ICT', color: 'blue', requiredRoomId: 'r-lab' },
+      { id: 's-sci', name: 'Science', color: 'green', requiredRoomId: 'r-lab' }, // Also wants Lab!
+      { id: 's-math', name: 'Math', color: 'red', requiredRoomId: null },
+    ];
+
+    const mockClasses: Class[] = [
+      { id: 'c-a', name: 'Class A', curriculum: [], defaultRoomId: 'r-a' },
+      { id: 'c-b', name: 'Class B', curriculum: [], defaultRoomId: 'r-b' },
+      { id: 'c-c', name: 'Class C', curriculum: [], defaultRoomId: 'r-c' },
+    ];
+
+    const units = [
+      // Class A: ICT (1), Math (1)
+      { id: 'u-a-ict', subjectId: 's-ict', duration: 1, classIds: ['c-a'], teacherIds: ['t1'], priority: 8000 },
+      { id: 'u-a-math', subjectId: 's-math', duration: 1, classIds: ['c-a'], teacherIds: ['t1'], priority: 0 },
+      // Class B: Sci (1), Math (1)
+      { id: 'u-b-sci', subjectId: 's-sci', duration: 1, classIds: ['c-b'], teacherIds: ['t2'], priority: 8000 },
+      { id: 'u-b-math', subjectId: 's-math', duration: 1, classIds: ['c-b'], teacherIds: ['t2'], priority: 0 },
+      // Class C: ICT (1), Math (1)
+      { id: 'u-c-ict', subjectId: 's-ict', duration: 1, classIds: ['c-c'], teacherIds: ['t3'], priority: 8000 },
+    ];
+
+    const data: AppData = {
+      ...DEFAULT_DATA,
+      rooms: mockRooms,
+      subjects: mockSubjects,
+      classes: mockClasses,
+      teachers: [
+        { id: 't1', name: 'T1', specialtyIds: ['s-ict', 's-math'], constraints: [] },
+        { id: 't2', name: 'T2', specialtyIds: ['s-sci', 's-math'], constraints: [] },
+        { id: 't3', name: 'T3', specialtyIds: ['s-ict'], constraints: [] },
+      ] as any,
+    };
+
+    const result = solveSmart(units as any, data);
+
+    expect(result.conflicts.length).toBe(0);
+
+    // Verify Lab assignments
+    const labUsage = new Set<string>();
+    for(const cId of ['c-a', 'c-b', 'c-c']) {
+      for(let d=0; d<5; d++) {
+        for(let p=0; p<8; p++) {
+          const slot = result.schedule[cId]?.[d]?.[p];
+          if(slot && (slot.subjectId === 's-ict' || slot.subjectId === 's-sci')) {
+            expect(slot.roomId).toBe('r-lab');
+            const key = `D${d}P${p}`;
+            expect(labUsage.has(key)).toBe(false); // No overlaps in Lab
+            labUsage.add(key);
+          }
+          if(slot && slot.subjectId === 's-math') {
+            expect(slot.roomId).toBe(mockClasses.find(c => c.id === cId)?.defaultRoomId);
+          }
+        }
+      }
+    }
+    
+    expect(labUsage.size).toBe(3); // 2 ICTs + 1 Science = 3 lab slots total
+  });
 });

@@ -91,6 +91,6 @@ describe('checkSlotValidity - Concurrent Daily Load', () => {
     );
 
     expect(result.valid).toBe(false);
-    expect(result.message).toMatch(/exceeds .* daily limit/i);
+    expect(result.message).toMatch(/exceeds daily limit/i);
   });
 });

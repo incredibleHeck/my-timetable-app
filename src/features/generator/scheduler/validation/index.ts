@@ -36,76 +36,7 @@ export const checkSlotValidity = (
     structure?.length || 0
   );
 
-  // Pre-calculate all class schedules for physical overlap checking
-  const allClassSchedules = new Map<string, any[]>();
-  classes.forEach((c) => {
-    allClassSchedules.set(
-      c.id,
-      calculateClassSchedule(c, settings, c.structure || settings.dayStructure)
-    );
-  });
-
-  const ctx: ValidationContext = {
-    data,
-    targetDay,
-    targetPeriod,
-    teacherId,
-    classId,
-    subjectId,
-    roomId,
-    duration,
-    maxPeriods,
-    structure,
-    classSchedule: allClassSchedules.get(classId) || [],
-    allClassSchedules,
-  };
-
-  // --- 2. PERIOD LOOP (SLOT BY SLOT CHECKS) ---
-  const proposedSlots = new Set<number>();
-  let periodsConsumed = 0;
-  let currentOffset = 0;
-
-  // We iterate until we've satisfied the duration, skipping non-class slots (Breaks/Lunch)
-  while (periodsConsumed < duration) {
-    const p = targetPeriod + currentOffset;
-    if (p >= maxPeriods)
-      return { valid: false, message: "Exceeds daily limit", severity: "HIGH" };
-
-    // Skip Breaks/Lunch but keep looking for the next CLASS slot
-    if (getType(structure, p) !== "CLASS") {
-      currentOffset++;
-      continue;
-    }
-
-    proposedSlots.add(p);
-
-    // Hard Constraint Checks
-    const blockError = checkGlobalAndClassBlocks(ctx, p);
-    if (blockError) return blockError;
-
-    const resourceError = checkResourceAndAvailability(ctx, p);
-    if (resourceError) return resourceError;
-
-    const overlapError = checkOverlaps(ctx, p);
-    if (overlapError) return overlapError;
-
-    // Room Capacity Check
-    if (roomId) {
-      const room = rooms.find((r) => r.id === roomId);
-      if (room && cls && (cls.studentCount || 0) > room.capacity) {
-        return {
-          valid: false,
-          message: `Room capacity exceeded (${cls.studentCount}/${room.capacity})`,
-          severity: "MEDIUM",
-        };
-      }
-    }
-
-    periodsConsumed++;
-    currentOffset++;
-  }
-
-  // --- 3. IGNORE LIST SETUP ---
+  // --- 2. IGNORE LIST SETUP ---
   // When validating a 'Move', we must ignore the teacher's current presence in the 'Old' slots
   const ignoredSlots = new Set<number>();
   const daySchedule = data.schedule[classId]?.[targetDay] || {};
@@ -137,6 +68,85 @@ export const checkSlotValidity = (
 
   if (ignoreSlot) populateIgnored(ignoreSlot);
   if (ignoreTargetSlot) populateIgnored(ignoreTargetSlot as any);
+
+  // Pre-calculate all class schedules for physical overlap checking
+  const allClassSchedules = new Map<string, any[]>();
+  classes.forEach((c) => {
+    allClassSchedules.set(
+      c.id,
+      calculateClassSchedule(c, settings, c.structure || settings.dayStructure)
+    );
+  });
+
+  const ctx: ValidationContext = {
+    data,
+    targetDay,
+    targetPeriod,
+    teacherId,
+    classId,
+    subjectId,
+    roomId,
+    duration,
+    maxPeriods,
+    structure,
+    classSchedule: allClassSchedules.get(classId) || [],
+    allClassSchedules,
+    ignoredSlots,
+  };
+
+  // --- 3. PERIOD LOOP (SLOT BY SLOT CHECKS) ---
+  const proposedSlots = new Set<number>();
+  let periodsConsumed = 0;
+  let currentOffset = 0;
+
+  // We iterate until we've satisfied the duration, skipping non-class slots (Breaks/Lunch)
+  while (periodsConsumed < duration) {
+    const p = targetPeriod + currentOffset;
+    if (p >= maxPeriods)
+      return { valid: false, message: "Exceeds daily limit", severity: "HIGH" };
+
+    // Skip Breaks/Lunch but keep looking for the next CLASS slot
+    if (getType(structure, p) !== "CLASS") {
+      currentOffset++;
+      continue;
+    }
+
+    proposedSlots.add(p);
+
+    // Hard Constraint Checks
+    const blockError = checkGlobalAndClassBlocks(ctx, p);
+    if (blockError) {
+      console.log(`Failed blockError at P${p}: ${blockError.message}`);
+      return blockError;
+    }
+
+    const resourceError = checkResourceAndAvailability(ctx, p);
+    if (resourceError) {
+      console.log(`Failed resourceError at P${p}: ${resourceError.message}`);
+      return resourceError;
+    }
+
+    const overlapError = checkOverlaps(ctx, p);
+    if (overlapError) {
+      console.log(`Failed overlapError at P${p}: ${overlapError.message}`);
+      return overlapError;
+    }
+
+    // Room Capacity Check
+    if (roomId) {
+      const room = rooms.find((r) => r.id === roomId);
+      if (room && cls && (cls.studentCount || 0) > room.capacity) {
+        return {
+          valid: false,
+          message: `Room capacity exceeded (${cls.studentCount}/${room.capacity})`,
+          severity: "MEDIUM",
+        };
+      }
+    }
+
+    periodsConsumed++;
+    currentOffset++;
+  }
 
   // --- 4. LOAD & PATTERN CHECKS ---
   const loadError = checkTeacherLoad(ctx, proposedSlots, ignoredSlots);

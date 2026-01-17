@@ -19,6 +19,7 @@ export const checkOverlaps = (
     subjectId,
     classSchedule: targetTimeRange,
     allClassSchedules,
+    ignoredSlots,
   } = ctx;
 
   // 1. Get the physical time range of the proposed slot
@@ -39,6 +40,8 @@ export const checkOverlaps = (
     // 3. Check every period in the "other" class
     for (const otherPStr in otherDaySlots) {
       const otherP = parseInt(otherPStr);
+      if (ignoredSlots.has(otherP)) continue; // SKIP: This slot is being vacated
+
       const slot = otherDaySlots[otherP];
       if (!slot) continue;
 

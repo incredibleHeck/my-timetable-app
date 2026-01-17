@@ -74,20 +74,25 @@ export const checkResourceAndAvailability = (
   const subject = data.subjects.find((s) => s.id === subjectId);
 
   if (subject?.isSingleResource) {
-    // ITERATIVE SCAN: Check every other class's schedule for this specific time slot.
-    // (Note: This is expensive, which is why we don't use it in the main solver loop, only in validation)
-    for (const otherCId of Object.keys(data.schedule)) {
-      if (otherCId === classId) continue; // Don't check against self
+    // If the subject itself is being moved from this slot, don't block
+    if (ctx.ignoredSlots.has(p)) {
+      // Logic: If it's a swap of the SAME subject, we allow it.
+      // (This is rare but possible if user drags a Science slot onto another Science slot)
+    } else {
+      // ITERATIVE SCAN: Check every other class's schedule for this specific time slot.
+      for (const otherCId of Object.keys(data.schedule)) {
+        if (otherCId === classId) continue; // Don't check against self
 
-      const otherSlot = data.schedule[otherCId]?.[targetDay]?.[p];
+        const otherSlot = data.schedule[otherCId]?.[targetDay]?.[p];
 
-      // If another class is holding this Subject ID at this time...
-      if (otherSlot && otherSlot.subjectId === subjectId) {
-        return {
-          valid: false,
-          message: `${subject.name} is already being taught elsewhere`,
-          severity: "HIGH",
-        };
+        // If another class is holding this Subject ID at this time...
+        if (otherSlot && otherSlot.subjectId === subjectId) {
+          return {
+            valid: false,
+            message: `${subject.name} is already being taught elsewhere`,
+            severity: "HIGH",
+          };
+        }
       }
     }
   }

@@ -29,4 +29,7 @@ export interface ValidationContext {
 
   /** Map of ALL calculated class schedules for O(1) overlap checks */
   allClassSchedules: Map<string, TimeSlot[]>;
+
+  /** Slots to ignore during validation (e.g. source of a move/swap) */
+  ignoredSlots: Set<number>;
 }

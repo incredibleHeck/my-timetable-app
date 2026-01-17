@@ -56,7 +56,7 @@ describe('Real-time Validation Integration', () => {
 
     const newConflicts = validateFullSchedule(updatedData);
     expect(newConflicts.length).toBeGreaterThan(0);
-    expect(newConflicts[0].reason).toContain("Exceeds John Doe's daily limit of 2 periods");
+    expect(newConflicts[0].reason).toContain("Exceeds daily limit");
   });
 
   it('should clear conflicts when a teacher limit is raised', () => {

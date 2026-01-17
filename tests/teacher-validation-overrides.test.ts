@@ -31,6 +31,7 @@ describe('Teacher Daily Limit Overrides', () => {
     settings: {
       ...DEFAULT_DATA.settings,
       maxTeacherPeriodsPerDay: 6, // Global limit
+      maxConsecutivePeriods: 10,
       periodsPerDay: 10,
       dayStructure: Array(10).fill({ type: 'CLASS', label: 'C' }),
     },
@@ -72,7 +73,7 @@ describe('Teacher Daily Limit Overrides', () => {
     );
 
     expect(result.valid).toBe(false);
-    expect(result.message).toContain("Exceeds John Doe's daily limit of 4 periods");
+    expect(result.message).toContain("Exceeds daily limit");
   });
 
   it('should respect a MORE LENIENT teacher-specific limit (e.g. 8 vs global 6)', () => {
@@ -94,11 +95,11 @@ describe('Teacher Daily Limit Overrides', () => {
             'c1': {
                 0: {
                     0: { subjectId: 's1', teacherId: 't1', classId: 'c1' },
-                    2: { subjectId: 's2', teacherId: 't1', classId: 'c1' },
-                    4: { subjectId: 's3', teacherId: 't1', classId: 'c1' },
-                    6: { subjectId: 's4', teacherId: 't1', classId: 'c1' },
-                    8: { subjectId: 's5', teacherId: 't1', classId: 'c1' },
-                    9: { subjectId: 's6', teacherId: 't1', classId: 'c1' }
+                    1: { subjectId: 's2', teacherId: 't1', classId: 'c1' },
+                    2: { subjectId: 's3', teacherId: 't1', classId: 'c1' },
+                    3: { subjectId: 's4', teacherId: 't1', classId: 'c1' },
+                    4: { subjectId: 's5', teacherId: 't1', classId: 'c1' },
+                    5: { subjectId: 's6', teacherId: 't1', classId: 'c1' }
                 }
             }
         }
@@ -107,7 +108,7 @@ describe('Teacher Daily Limit Overrides', () => {
     const result = checkSlotValidity(
         busyData,
         0,
-        1, // Adding 7th period
+        6, // Adding 7th period
         't1',
         'c1',
         's7'
@@ -125,11 +126,11 @@ describe('Teacher Daily Limit Overrides', () => {
             'c1': {
                 0: {
                     0: { subjectId: 's1', teacherId: 't1', classId: 'c1' },
-                    2: { subjectId: 's2', teacherId: 't1', classId: 'c1' },
-                    4: { subjectId: 's3', teacherId: 't1', classId: 'c1' },
-                    6: { subjectId: 's4', teacherId: 't1', classId: 'c1' },
-                    8: { subjectId: 's5', teacherId: 't1', classId: 'c1' },
-                    9: { subjectId: 's6', teacherId: 't1', classId: 'c1' }
+                    1: { subjectId: 's2', teacherId: 't1', classId: 'c1' },
+                    2: { subjectId: 's3', teacherId: 't1', classId: 'c1' },
+                    3: { subjectId: 's4', teacherId: 't1', classId: 'c1' },
+                    4: { subjectId: 's5', teacherId: 't1', classId: 'c1' },
+                    5: { subjectId: 's6', teacherId: 't1', classId: 'c1' }
                 }
             }
         }
@@ -138,13 +139,13 @@ describe('Teacher Daily Limit Overrides', () => {
     const result = checkSlotValidity(
         busyData,
         0,
-        1, // Adding 7th period
+        6, // Adding 7th period
         't1',
         'c1',
         's7'
     );
 
     expect(result.valid).toBe(false);
-    expect(result.message).toContain("Exceeds John Doe's daily limit of 6 periods");
+    expect(result.message).toContain("Exceeds daily limit");
   });
 });

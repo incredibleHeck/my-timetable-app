@@ -33,16 +33,20 @@ const createMockData = (): AppData => ({
   schedule: {
     c1: {
       0: {
-        // Day 0
-        0: { subjectId: "sub1", teacherId: "t1", duration: 1, isFixed: false, roomId: "r1" }, // Single (P0)
-        2: { subjectId: "sub2", teacherId: "t1", duration: 1, isFixed: false, roomId: "r1" }, // Double Start (P2)
-        3: { subjectId: "sub2", teacherId: "t1", duration: 1, isFixed: true, roomId: "r1" },  // Double End (P3)
-        4: { subjectId: "sub4", teacherId: "t1", duration: 1, isFixed: false, roomId: "r1" }, // Single (P4)
+        // Day 0 - Fill all 5 slots
+        0: { subjectId: "sub1", teacherId: "t1", duration: 1, isFixed: false, roomId: "r1" }, 
+        1: { subjectId: "sub2", teacherId: "t1", duration: 1, isFixed: false, roomId: "r1" }, 
+        2: { subjectId: "sub3", teacherId: "t1", duration: 1, isFixed: false, roomId: "r1" }, 
+        3: { subjectId: "sub3", teacherId: "t1", duration: 1, isFixed: true, roomId: "r1" },  
+        4: { subjectId: "sub4", teacherId: "t1", duration: 1, isFixed: false, roomId: "r1" }, 
       },
       1: {
         // Day 1
-        0: { subjectId: "sub3", teacherId: "t1", duration: 1, isFixed: false, roomId: "r1" }, // Double Start
-        1: { subjectId: "sub3", teacherId: "t1", duration: 1, isFixed: true, roomId: "r1" },  // Double End
+        0: { subjectId: "sub3", teacherId: "t1", duration: 1, isFixed: false, roomId: "r1" }, 
+        1: { subjectId: "sub3", teacherId: "t1", duration: 1, isFixed: true, roomId: "r1" },  
+        2: { subjectId: "sub1", teacherId: "t1", duration: 1, isFixed: false, roomId: "r1" },
+        3: { subjectId: "sub2", teacherId: "t1", duration: 1, isFixed: false, roomId: "r1" },
+        4: { subjectId: "sub4", teacherId: "t1", duration: 1, isFixed: false, roomId: "r1" },
       }
     },
   },

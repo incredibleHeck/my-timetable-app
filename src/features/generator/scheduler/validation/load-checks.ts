@@ -28,18 +28,17 @@ export const checkTeacherLoad = (
     }
     // 2. Is this an EXISTING slot? (That we aren't moving)
     else {
-      // We scan all classes to see if this teacher is teaching ANYWHERE else at this time.
-      // Optimization: We iterate class IDs because we don't have a teacher-centric index in ValidationContext.
-      for (const cId of Object.keys(data.schedule)) {
-        // Skip the class we are currently validating if this slot is marked to be ignored (moved from)
-        if (cId === ctx.classId && ignoredSlots.has(p)) continue;
-
-        const slot = data.schedule[cId]?.[targetDay]?.[p];
-
-        // If the slot exists and is taught by this teacher
-        if (slot && slot.teacherId === teacherId) {
-          isOccupied = true;
-          break; // Found them, no need to check other classes
+      // Optimization: If the teacher is moving OUT of this slot, don't count it as occupied
+      if (ignoredSlots.has(p)) {
+        isOccupied = false;
+      } else {
+        // We scan all classes to see if this teacher is teaching ANYWHERE else at this time.
+        for (const cId of Object.keys(data.schedule)) {
+          const slot = data.schedule[cId]?.[targetDay]?.[p];
+          if (slot && slot.teacherId === teacherId) {
+            isOccupied = true;
+            break;
+          }
         }
       }
     }
