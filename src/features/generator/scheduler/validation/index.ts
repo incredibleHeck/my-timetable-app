@@ -179,7 +179,7 @@ export const checkSlotValidity = (
   const isJoint = data.jointClasses?.some(jc => jc.subjectId === subjectId && jc.classIds.includes(classId));
   if (isJoint && !isAuto) {
     return { 
-      valid: false, message: "Joint classes must be moved via Generator", 
+      valid: false, message: "Joint classes must be moved via the Generator", 
       severity: "HIGH", penaltyPoints: 1000, conflictCount: 1 
     };
   }

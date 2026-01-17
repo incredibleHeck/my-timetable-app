@@ -79,7 +79,7 @@ export const checkResourceAndAvailability = (
     if (occupantId === "BLOCK") {
       return {
         valid: false,
-        message: "Teacher availability constraint (Blocked)",
+        message: `${data.teachers.find(t=>t.id === teacherId)?.name || "Teacher"} is unavailable`,
         severity: "HIGH",
         penaltyPoints: 1000,
         conflictCount: 1,

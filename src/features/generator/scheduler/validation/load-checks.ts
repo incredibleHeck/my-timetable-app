@@ -64,12 +64,11 @@ export const checkTeacherLoad = (
   }
 
   if (currentDailyLoad > maxDailyLoad) {
-    const overflow = currentDailyLoad - maxDailyLoad;
     return {
       valid: false,
-      message: `Teacher daily limit exceeded (${currentDailyLoad}/${maxDailyLoad})`,
+      message: `Exceeds daily limit (${currentDailyLoad}/${maxDailyLoad})`,
       severity: "MEDIUM",
-      penaltyPoints: 1000 + (overflow * 500),
+      penaltyPoints: 1000 + (currentDailyLoad - maxDailyLoad) * 500,
       conflictCount: 1, // Triggers Min-Conflicts eviction
     };
   }
@@ -98,14 +97,17 @@ export const checkSubjectLimit = (
       dailyCount++;
     } else if (!ignoredSlots.has(p)) {
       const entry = state ? state.schedule[classId]?.[targetDay]?.[p] : data.schedule[classId]?.[targetDay]?.[p];
-      if (entry && entry.subjectId === subjectId) dailyCount++;
+      if (entry && entry.subjectId === subjectId) {
+        dailyCount++;
+      }
     }
   }
 
   if (dailyCount > maxDaily) {
+    // console.log(`Subject limit exceeded: dailyCount=${dailyCount}, maxDaily=${maxDaily}, subjectId=${subjectId}`);
     return {
       valid: false,
-      message: `Subject daily variety limit exceeded (${maxDaily})`,
+      message: `Max ${maxDaily} periods per day`,
       severity: "LOW",
       penaltyPoints: 300, 
       conflictCount: 0,
@@ -204,7 +206,7 @@ export const checkGapDetection = (
       if (periodType === "CLASS" && !proposedSlots.has(p)) {
         return {
           valid: false,
-          message: "Empty lesson slot detected between classes",
+          message: "Gap detected",
           severity: "MEDIUM",
           penaltyPoints: 400,
           conflictCount: 0,

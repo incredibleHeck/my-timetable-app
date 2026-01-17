@@ -17,7 +17,11 @@ const createOccupancyGrid = (days: number, periods: number): (string | null)[][]
  * Pre-calculates navigation maps to ensure O(1) jumps over non-lesson slots.
  */
 export const initializeState = (data: AppData): SchedulerState => {
-  const { classes, teachers, subjects, rooms, settings } = data;
+  const classes = data.classes || [];
+  const teachers = data.teachers || [];
+  const subjects = data.subjects || [];
+  const rooms = data.rooms || [];
+  const settings = data.settings;
   const days = (settings as any).daysPerWeek || 5;
   const periods = settings.periodsPerDay;
 
@@ -144,6 +148,16 @@ export const initializeState = (data: AppData): SchedulerState => {
                   
                   const unitId = slot.unitId || `LEGACY-${slot.subjectId}`;
                   
+                  // 0. State Schedule
+                  if (!state.schedule[cId]) state.schedule[cId] = {};
+                  if (!state.schedule[cId][d]) state.schedule[cId][d] = {};
+                  state.schedule[cId][d][p] = { ...slot, unitId };
+
+                  // 0.5 Register Placement
+                  if (!state.unitPlacements.has(unitId)) {
+                      state.unitPlacements.set(unitId, { d, p, p2: -1, rooms: { [unitId]: slot.roomId || "" } });
+                  }
+
                   // 1. Class
                   if (state.classOccupancy[cId]) {
                       state.classOccupancy[cId][d][p] = unitId;

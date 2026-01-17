@@ -1,4 +1,4 @@
-import { doTimeRangesOverlap } from "../../../../utils/timeUtils";
+import { doTimeRangesOverlap, calculateClassSchedule } from "../../../../utils/timeUtils";
 import { SchedulerState } from "../types";
 import { ValidationContext, ValidationResult } from "./types";
 
@@ -37,7 +37,15 @@ export const checkOverlaps = (
   for (const cId of Object.keys(scheduleSource)) {
     if (cId === classId) continue;
 
-    const otherClassSchedule = allClassSchedules.get(cId);
+    let otherClassSchedule = allClassSchedules.get(cId);
+    if (!otherClassSchedule) {
+        const cls = data.classes.find(c => c.id === cId);
+        if (cls) {
+            otherClassSchedule = calculateClassSchedule(cls, data.settings, cls.structure || data.settings.dayStructure);
+        } else {
+            otherClassSchedule = calculateClassSchedule({ id: cId, name: cId, curriculum: [] } as any, data.settings, data.settings.dayStructure);
+        }
+    }
     if (!otherClassSchedule) continue;
 
     const otherDaySlots = scheduleSource[cId]?.[targetDay] || {};
@@ -68,7 +76,7 @@ export const checkOverlaps = (
           const otherCls = data.classes.find((c) => c.id === cId);
           return {
             valid: false,
-            message: `Teacher is busy in ${otherCls?.name || "another class"}`,
+            message: `Teacher Busy in ${otherCls?.name || "another class"}`,
             severity: "HIGH",
             penaltyPoints: 1000,
             conflictCount: 1,
@@ -112,7 +120,7 @@ export const checkOverlaps = (
           if (!isJointSession) {
              return {
                  valid: false,
-                 message: `${subject.name} is already being taught elsewhere`,
+                 message: "Resource bottleneck",
                  severity: "HIGH",
                  penaltyPoints: 1000,
                  conflictCount: 1,
