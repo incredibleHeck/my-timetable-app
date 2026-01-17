@@ -15,7 +15,7 @@
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Solver Engine Refactor' (Protocol in workflow.md)
 
 ## Phase 3: Heuristics & Prioritization
-- [ ] Task: Update MRV Heuristics for Bottleneck Rooms
+- [x] Task: Update MRV Heuristics for Bottleneck Rooms [8389cf2]
     - [ ] Write failing tests in `tests/time-aware-generator.test.ts` demonstrating prioritization of Lab-based subjects.
     - [ ] Update `calculatePriority` in `src/features/generator/heuristics.ts` to boost scores for subjects with `requiredRoomId`.
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Heuristics & Prioritization' (Protocol in workflow.md)

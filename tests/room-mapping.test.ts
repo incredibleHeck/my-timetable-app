@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { solveSmart } from '../src/features/generator/scheduler/solver';
+import { calculatePriority } from '../src/features/generator/scheduler/heuristics';
 import { AppData, Teacher, Class, Subject, Room } from '../src/types';
 import { DEFAULT_DATA } from '../src/utils/constants';
 
@@ -235,5 +236,35 @@ describe('Room Mapping Hierarchy', () => {
       expect(ictSlot).not.toBe(0);
       expect(ictSlot).not.toBe(1);
     }
+  });
+
+  it('should calculate higher priority for subjects with requiredRoomId', () => {
+    const unitICT = {
+      subjectId: 's-ict',
+      teacherIds: ['t1'],
+      duration: 1,
+      classIds: ['c1'],
+    } as any;
+
+    const unitMath = {
+      subjectId: 's-math',
+      teacherIds: ['t1'],
+      duration: 1,
+      classIds: ['c1'],
+    } as any;
+
+    const data = {
+      subjects: [
+        { id: 's-ict', requiredRoomId: 'r1' },
+        { id: 's-math', requiredRoomId: null }
+      ],
+      rooms: [{ id: 'r1', type: 'Lab' }],
+      settings: { maxTeacherPeriodsPerDay: 6 }
+    } as any;
+
+    const priorityICT = calculatePriority(unitICT, [], data);
+    const priorityMath = calculatePriority(unitMath, [], data);
+
+    expect(priorityICT).toBeGreaterThan(priorityMath);
   });
 });
