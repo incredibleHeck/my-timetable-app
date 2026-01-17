@@ -1,7 +1,7 @@
 # Implementation Plan: room_mapping_hierarchy_20260117
 
 ## Phase 1: Data Model & Types
-- [x] Task: Update Global Types and Mock Data [70682fa]
+- [x] Task: Update Global Types and Mock Data [f1d2e46]
     - [ ] Add `requiredRoomId` to `Subject` interface in `src/types/index.ts`.
     - [ ] Add `defaultRoomId` to `ClassGroup` interface in `src/types/index.ts`.
     - [ ] Update mock data in tests and services to include these new fields.
