@@ -1,7 +1,7 @@
 # Plan: Project-Wide Refactor and Test Audit
 
 ## Phase 1: Audit and Cleanup
-- [ ] Task: Static Code Analysis & Syntax Fixes
+- [x] Task: Static Code Analysis & Syntax Fixes e6b161f
     - [ ] Run typescript compiler (`tsc --noEmit`) to identify all type errors and syntax issues.
     - [ ] Run linter (if configured) to identify style violations and unused variables.
     - [ ] Fix all identified syntax errors, broken imports, and type mismatches.
