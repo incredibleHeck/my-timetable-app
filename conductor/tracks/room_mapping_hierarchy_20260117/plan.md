@@ -21,12 +21,12 @@
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Heuristics & Prioritization' (Protocol in workflow.md)
 
 ## Phase 4: UI Integration (Modals)
-- [ ] Task: Update Subject Editor Modal
-    - [ ] Write failing tests in `src/features/subjects/SubjectEditorModal.test.tsx` (or similar) for room selection.
-    - [ ] Add Room selection dropdown to Subject Editor UI.
-- [ ] Task: Update Class Editor Modal
-    - [ ] Write failing tests in `tests/ClassEditorModalUI.test.tsx` for default room selection.
-    - [ ] Add Room selection dropdown to Class Editor UI.
+- [x] Task: Update Subject Editor Modal [f1d2e46]
+    - [x] Write failing tests in `tests/SubjectsView.test.tsx` for room selection.
+    - [x] Add Room selection dropdown to Subject Editor UI.
+- [x] Task: Update Class Editor Modal [f1d2e46]
+    - [x] Write failing tests in `tests/ClassEditorModalUI.test.tsx` for default room selection.
+    - [x] Add Room selection dropdown to Class Editor UI.
 - [ ] Task: Conductor - User Manual Verification 'Phase 4: UI Integration (Modals)' (Protocol in workflow.md)
 
 ## Phase 5: Final Integration & Verification

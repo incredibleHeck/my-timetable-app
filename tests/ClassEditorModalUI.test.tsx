@@ -63,4 +63,17 @@ describe('ClassEditorModal UI Reorganization', () => {
       expect(screen.getByText(`P${i}`)).toBeDefined();
     }
   });
+
+  it('shows Home Classroom selection in Basics tab', () => {
+    const dataWithRooms = {
+      ...DEFAULT_DATA,
+      rooms: [{ id: 'r1', name: 'Room 101', type: 'Classroom', capacity: 30 }]
+    };
+    render(<ClassEditorModal {...defaultProps} data={dataWithRooms as any} />);
+    
+    // Check for labels using queryAll if needed or more specific text
+    const labels = screen.getAllByText(/Home Classroom/i);
+    expect(labels.length).toBeGreaterThan(0);
+    expect(screen.getByText(/Room 101/i)).toBeDefined();
+  });
 });

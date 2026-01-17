@@ -29,7 +29,9 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
   const { addActivity } = useProfile();
   const { getSubjectUsage } = useSubjectUsage(data);
   const [modalOpen, setModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
+  const [subjectToDelete, setSubjectToDelete] = useState<Subject | null>(null);
   const [subjName, setSubjName] = useState("");
 
   // Default to first hex code in palette
