@@ -35,12 +35,12 @@
 - [ ] Task: Conductor - User Manual Verification 'Phase 4: Dashboard UI Update' (Protocol in workflow.md)
 
 ## Phase 5: Timetable Time Labels [checkpoint: ]
-- [ ] Task: Add time range labels to `DraggableSlot`
-    - [ ] Update `src/features/generator/components/DraggableSlot.tsx` to display start/end times
-    - [ ] **Strictly enforce visibility:** Only render timestamps when `mode === 'TEACHER'`
-- [ ] Task: Optimize time label calculation and formatting
-- [ ] Task: Verify Print Support for time labels
-    - [ ] Check CSS print styles and verify labels appear in print preview
+- [x] Task: Add time range labels to `DraggableSlot` (3802ad5)
+    - [x] Update `src/features/generator/components/DraggableSlot.tsx` to display start/end times
+    - [x] **Strictly enforce visibility:** Only render timestamps when `mode === 'TEACHER'`
+- [x] Task: Optimize time label calculation and formatting (3802ad5)
+- [x] Task: Verify Print Support for time labels (3802ad5)
+    - [x] Check CSS print styles and verify labels appear in print preview
 - [ ] Task: Conductor - User Manual Verification 'Phase 5: Timetable Time Labels' (Protocol in workflow.md)
 
 ## Phase 6: Final Polish & Regression [checkpoint: ]
