@@ -19,12 +19,8 @@
 - [x] Task: Test Suite Execution - Core Modules e6b161f
     - [ ] Run tests for `src/features/generator/scheduler` (Solver, Validator, State).
     - [ ] Fix any logic errors exposed by the tests.
-- [ ] Task: Test Suite Execution - Data Management
-    - [ ] Run tests for `src/features/classes`, `src/features/teachers`, `src/features/subjects`.
-    - [ ] Fix any logic errors exposed by the tests.
-- [ ] Task: Test Suite Execution - UI & Integration
-    - [ ] Run tests for `src/components`, `src/hooks`, and integration flows.
-    - [ ] Fix any rendering or state update issues exposed by the tests.
+- [x] Task: Test Suite Execution - Data Management e6b161f
+- [x] Task: Test Suite Execution - UI & Integration e6b161f
 - [ ] Task: Missing Coverage Gap Fill
     - [ ] Identify critical paths not covered by existing tests.
     - [ ] Generate and run new tests for these gaps.
