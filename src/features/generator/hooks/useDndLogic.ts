@@ -13,7 +13,7 @@ export const useDndLogic = (
   setHoverConflict?: (c: Conflict | null) => void
 ) => {
   const [activeDragItem, setActiveDragItem] = useState<any>(null);
-  const { pushToHistory } = useProfile();
+  const { pushToHistory, addActivity } = useProfile();
 
   const { settings, schedule, classes, teachers, subjects } = data;
   const currentClass = classes.find((c) => c.id === activeId);
@@ -327,6 +327,20 @@ export const useDndLogic = (
     if (destSlot) {
         setSlot(sD, sP, destSlot, targetDuration);
     }
+
+    // --- LOG ACTIVITY ---
+    const classObj = classes.find(c => c.id === classId);
+    const subjObj = subjects.find(s => s.id === sourceSlot.subjectId);
+    const teacherObj = teachers.find(t => t.id === sourceSlot.teacherId);
+    
+    let message = "";
+    if (destSlot) {
+        const targetSubj = subjects.find(s => s.id === destSlot.subjectId);
+        message = `Swapped ${subjObj?.name} with ${targetSubj?.name} in ${classObj?.name}`;
+    } else {
+        message = `Moved ${subjObj?.name} (${teacherObj?.name}) in ${classObj?.name} to ${DAYS[tD]} P${tP + 1}`;
+    }
+    addActivity("SCHEDULING", message);
 
     pushToHistory(data);
     onUpdate({ ...data, schedule: newSchedule });
