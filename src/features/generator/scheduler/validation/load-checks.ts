@@ -1,6 +1,7 @@
 import { SchedulerState } from "../types";
 import { ValidationContext, ValidationResult } from "./types";
-import { getType, getPrevClassPeriod } from "./utils";
+import { getType } from "./utils";
+import { getPrevClassPeriod } from "../utils";
 
 /**
  * RULE: Teacher Load & Consecutive Limits
