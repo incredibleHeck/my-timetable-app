@@ -4,156 +4,103 @@ import { calculatePriority } from "./heuristics";
 
 export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
   const units: AllocationUnit[] = [];
+  const { classes, jointClasses, subjects, teachers } = data;
 
-  // 1. Pre-compute Lookups (O(1) access speedup)
-  const teacherMap = new Map(data.teachers.map((t) => [t.id, t]));
-  const subjectMap = new Map(data.subjects.map((s) => [s.id, s]));
-  const classMap = new Map(data.classes.map((c) => [c.id, c]));
+  // 1. MAPS FOR SPEED
+  const teacherMap = new Map(teachers.map((t) => [t.id, t]));
+  const subjectMap = new Map(subjects.map((s) => [s.id, s]));
+  const classMap = new Map(classes.map((c) => [c.id, c]));
 
-  // 2. Pre-compute Joint Usage to avoid expensive nested loop checks
-  // Format: "subjectId|classId" -> true
-  const jointUsageSet = new Set<string>();
-  data.jointClasses.forEach((jc) => {
-    jc.classIds.forEach((cid) => jointUsageSet.add(`${jc.subjectId}|${cid}`));
+  // 2. JOINT CLASS LOOKUP
+  // Prevents standard classes from creating separate units for joint subjects
+  const jointLookup = new Set<string>();
+  jointClasses.forEach((jc) => {
+    jc.classIds.forEach((cid) => jointLookup.add(`${jc.subjectId}-${cid}`));
   });
 
-  // 3. Pre-compute Elective Block Lookup
-  // Format: "classId|subjectId" -> electiveBlockId
-  const electiveLookup = new Map<string, string>();
-  if (data.electives) {
-    data.electives.forEach((eb) => {
-      eb.classIds.forEach((cid) => {
-        eb.subjectIds.forEach((sid) => {
-          electiveLookup.set(`${cid}|${sid}`, eb.id);
-        });
-      });
-    });
-  }
-
-  // A. Process Joint Classes
-  data.jointClasses.forEach((jc) => {
-    // Get curriculum from the first class (Representative)
-    // We assume the curriculum is consistent across the joint group
+  // 3. PROCESS JOINT CLASSES
+  jointClasses.forEach((jc) => {
     const repClass = classMap.get(jc.classIds[0]);
     if (!repClass) return;
 
-    const curr = repClass.curriculum.find((x) => x.subjectId === jc.subjectId);
-    if (!curr) return;
-
-    // USE jc.teacherId if present, else fallback to curriculum
-    const teacherId = jc.teacherId || curr.assignedTeacherId;
-    const teacherName = teacherId
-      ? teacherMap.get(teacherId)?.name || "Unknown"
-      : "Unassigned";
-    const subject = subjectMap.get(jc.subjectId);
-    const subjectName = subject?.name || "Unknown";
-    const classNames = jc.classIds.map(
-      (cid) => classMap.get(cid)?.name || "Unknown"
+    // Find the shared curriculum requirements for this joint subject
+    const jointCurr = repClass.curriculum.find(
+      (c) => c.subjectId === jc.subjectId
     );
+    if (!jointCurr) return;
 
-    // Create Double Periods
-    for (let i = 0; i < curr.doubles; i++) {
-      const u: AllocationUnit = {
-        id: `JOINT_${jc.id}_D_${i}`,
-        subjectId: jc.subjectId,
-        subjectName,
-        duration: 2,
-        classIds: jc.classIds,
-        classNames,
-        teacherIds: teacherId ? [teacherId] : [],
-        teacherNames: [teacherName],
-        priority: 0,
-        preferredRoomIds: subject?.preferredRoomIds,
-        requiredRoomType: subject?.requiredRoomType,
-      };
-      u.priority = calculatePriority(u, data.teachers);
-      units.push(u);
-    }
+    const homeroomId =
+      (repClass as any).classroomId || (repClass as any).roomId;
 
-    // Create Single Periods
-    for (let i = 0; i < curr.singles; i++) {
+    const createJointUnit = (idSuffix: string, duration: number) => {
       const u: AllocationUnit = {
-        id: `JOINT_${jc.id}_S_${i}`,
+        id: `JOINT-${jc.id}-${idSuffix}`,
         subjectId: jc.subjectId,
-        subjectName,
-        duration: 1,
+        subjectName: subjectMap.get(jc.subjectId)?.name || "Unknown",
+        duration,
         classIds: jc.classIds,
-        classNames,
-        teacherIds: teacherId ? [teacherId] : [],
-        teacherNames: [teacherName],
+        classNames: jc.classIds.map((id) => classMap.get(id)?.name || ""),
+        teacherIds: jc.teacherId ? [jc.teacherId] : [],
+        teacherNames: [
+          jc.teacherId
+            ? teacherMap.get(jc.teacherId)?.name || "Unknown"
+            : "Unassigned",
+        ],
         priority: 0,
-        preferredRoomIds: subject?.preferredRoomIds,
-        requiredRoomType: subject?.requiredRoomType,
+        defaultRoomId: homeroomId,
+        jointClassId: jc.id,
       };
-      u.priority = calculatePriority(u, data.teachers);
+
+      u.priority = calculatePriority(u, teachers, data);
       units.push(u);
-    }
+    };
+
+    // Use 'jointCurr' here
+    for (let i = 0; i < jointCurr.doubles; i++) createJointUnit(`D-${i}`, 2);
+    for (let i = 0; i < jointCurr.singles; i++) createJointUnit(`S-${i}`, 1);
   });
 
-  // B. Process Standard Classes
-  data.classes.forEach((cls) => {
+  // 4. PROCESS STANDARD CLASSES
+  classes.forEach((cls) => {
+    const homeroomId = (cls as any).classroomId || (cls as any).roomId;
+
     cls.curriculum.forEach((curr) => {
-      // FAST CHECK: Is this handled by a joint class?
-      if (jointUsageSet.has(`${curr.subjectId}|${cls.id}`)) return;
+      // SKIP if this is handled by a joint class
+      if (jointLookup.has(`${curr.subjectId}-${cls.id}`)) return;
 
-      const teacherId = curr.assignedTeacherId;
-      const teacherName = teacherId
-        ? teacherMap.get(teacherId)?.name || "Unknown"
-        : "Unassigned";
-      const subject = subjectMap.get(curr.subjectId);
-      const subjectName = subject?.name || "Unknown";
-      
-      const electiveBlockId = electiveLookup.get(`${cls.id}|${curr.subjectId}`);
-
-      // Create Double Periods
-      for (let i = 0; i < curr.doubles; i++) {
+      const createUnit = (idSuffix: string, duration: number) => {
         const u: AllocationUnit = {
-          id: `${cls.id}_${curr.subjectId}_D_${i}`,
+          id: `${cls.id}-${curr.subjectId}-${idSuffix}`,
           subjectId: curr.subjectId,
-          subjectName,
-          duration: 2,
+          subjectName: subjectMap.get(curr.subjectId)?.name || "Unknown",
+          duration,
           classIds: [cls.id],
           classNames: [cls.name],
-          teacherIds: teacherId ? [teacherId] : [],
-          teacherNames: [teacherName],
+          teacherIds: curr.assignedTeacherId ? [curr.assignedTeacherId] : [],
+          teacherNames: [
+            curr.assignedTeacherId
+              ? teacherMap.get(curr.assignedTeacherId)?.name || "Unknown"
+              : "Unassigned",
+          ],
           priority: 0,
-          electiveBlockId,
-          preferredRoomIds: subject?.preferredRoomIds,
-          requiredRoomType: subject?.requiredRoomType,
+          defaultRoomId: homeroomId,
         };
-        u.priority = calculatePriority(u, data.teachers);
-        units.push(u);
-      }
 
-      // Create Single Periods
-      for (let i = 0; i < curr.singles; i++) {
-        const u: AllocationUnit = {
-          id: `${cls.id}_${curr.subjectId}_S_${i}`,
-          subjectId: curr.subjectId,
-          subjectName,
-          duration: 1,
-          classIds: [cls.id],
-          classNames: [cls.name],
-          teacherIds: teacherId ? [teacherId] : [],
-          teacherNames: [teacherName],
-          priority: 0,
-          electiveBlockId,
-          preferredRoomIds: subject?.preferredRoomIds,
-          requiredRoomType: subject?.requiredRoomType,
-        };
-        u.priority = calculatePriority(u, data.teachers);
+        u.priority = calculatePriority(u, teachers, data);
         units.push(u);
-      }
+      };
+
+      // Use 'curr' here
+      for (let i = 0; i < curr.doubles; i++) createUnit(`D-${i}`, 2);
+      for (let i = 0; i < curr.singles; i++) createUnit(`S-${i}`, 1);
     });
   });
 
-  // Shuffle first to ensure randomness in regeneration for equal-priority items
-  // (Using Fisher-Yates shuffle algorithm)
+  // 5. SHUFFLE AND SORT
   for (let i = units.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [units[i], units[j]] = [units[j], units[i]];
   }
 
-  // Sort by Priority (Highest first)
   return units.sort((a, b) => b.priority - a.priority);
 };

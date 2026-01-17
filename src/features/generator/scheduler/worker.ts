@@ -1,56 +1,79 @@
-import { generateSchedule } from "./index";
+/* eslint-disable no-restricted-globals */
 import { AppData } from "../../../types";
+import { ScheduleResult, Conflict } from "../types";
+import { prepareAllocationUnits } from "./preparation";
+import { solveSmart } from "./solver";
+import { validateFullSchedule } from "./validation";
 
-// Listen for messages from the Main Thread
-self.onmessage = (e: MessageEvent<AppData>) => {
+const ctx: Worker = self as any;
+
+ctx.onmessage = (e: MessageEvent<AppData>) => {
   const data = e.data;
-  const MAX_TIME_MS = 20000; // Increased to 20s since UI won't freeze now
-  const startTime = performance.now();
 
-  let bestSchedule = data.schedule;
-  let bestConflicts = data.conflicts;
-  // Initialize with current conflict count (or infinity if starting fresh)
-  let minConflictCount = data.conflicts.length || Infinity;
-  let iterations = 0;
+  // 1. Prepare Units
+  const units = prepareAllocationUnits(data);
+
+  // CONFIGURATION
+  // A standard run might try 200-400 iterations within 20 seconds
+  const MAX_ITERATIONS = 500;
+  const TIME_LIMIT = 20000; // 20 seconds
+
+  let bestSchedule: ScheduleResult = {};
+  let minConflictCount = Infinity;
+  let bestConflicts: Conflict[] = [];
+
+  const startTime = Date.now();
+  let actualIterations = 0;
 
   try {
-    // The "Optimization Loop"
-    // We run this as fast as possible inside the worker
-    while (performance.now() - startTime < MAX_TIME_MS) {
-      // 1. Generate a candidate
-      const result = generateSchedule(data);
-      const count = result.conflicts.length;
+    // 2. Iteration Loop
+    for (let i = 0; i < MAX_ITERATIONS; i++) {
+      actualIterations = i + 1;
+      // Check Timer
+      if (Date.now() - startTime > TIME_LIMIT && i > 0) break;
 
-      // 2. Is it better?
+      // Run Solver
+      const { schedule, conflicts: solverConflicts } = solveSmart(units, data);
+
+      // Validate (Solver returns placement failures, Validator finds subtle logic errors)
+      // Merge both for a true error count
+      const dataWithSchedule = { ...data, schedule };
+      const validationConflicts = validateFullSchedule(dataWithSchedule);
+      const totalConflicts = [...solverConflicts, ...validationConflicts];
+
+      const count = totalConflicts.length;
+
+      // Keep the BEST result, not the latest
       if (count < minConflictCount) {
         minConflictCount = count;
-        bestSchedule = result.schedule;
-        bestConflicts = result.conflicts;
+        bestSchedule = schedule;
+        bestConflicts = totalConflicts;
 
-        // Optional: Post progress back to UI immediately if we find a big improvement
-        // self.postMessage({ type: 'progress', conflicts: minConflictCount });
+        // If perfect, stop early
+        if (count === 0) break;
       }
 
-      // 3. Perfect score? Stop early.
-      if (count === 0) {
-        break;
+      // Optional: Report progress back to UI every 5 iterations
+      if (i % 5 === 0) {
+        ctx.postMessage({
+          type: "progress",
+          payload: { iteration: i, conflicts: minConflictCount },
+        });
       }
-
-      iterations++;
     }
 
-    // Send the best result back to the Main Thread
-    self.postMessage({
+    // 3. Return BEST Result
+    ctx.postMessage({
       type: "success",
       payload: {
         schedule: bestSchedule,
         conflicts: bestConflicts,
-        iterations,
-        duration: performance.now() - startTime,
+        iterations: actualIterations,
+        duration: Date.now() - startTime,
       },
     });
   } catch (error) {
-    self.postMessage({
+    ctx.postMessage({
       type: "error",
       payload: error,
     });
