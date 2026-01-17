@@ -26,8 +26,11 @@ export function determineRoom(
 
   // 2. AVAILABILITY CHECK (O(1) lookup)
   // Check if the room is occupied by another Unit ID.
-  const isP1Occupied = state.roomOccupancy[targetRoomId]?.[d]?.[p] !== null;
-  const isP2Occupied = unit.duration === 2 && state.roomOccupancy[targetRoomId]?.[d]?.[p2] !== null;
+  const roomGrid = state.roomOccupancy[targetRoomId];
+  if (!roomGrid) return targetRoomId; // If grid missing, assume free (or allow fallback)
+
+  const isP1Occupied = roomGrid[d]?.[p] !== null;
+  const isP2Occupied = unit.duration === 2 && roomGrid[d]?.[p2] !== null;
 
   if (isP1Occupied || isP2Occupied) {
     // If it's a homeroom and it's busy, this lesson cannot be held there currently.

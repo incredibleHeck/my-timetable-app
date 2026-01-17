@@ -45,12 +45,14 @@ export const checkSlotValidity = (
 
   // --- 2. IGNORE LIST SETUP (For Non-Destructive Simulation) ---
   const ignoredSlots = new Set<number>();
+  const scheduleSource = state ? state.schedule : data.schedule;
+
   const populateIgnored = (setting: { day: number; period: number; duration?: number }) => {
     if (targetDay === setting.day) {
       let startP = setting.period;
       let dur = setting.duration ?? duration;
       // If we are looking at the 'tail' of a double, move to the 'head'
-      const entry = data.schedule[classId]?.[targetDay]?.[startP];
+      const entry = scheduleSource[classId]?.[targetDay]?.[startP];
       if (entry && (entry as any).isFixed) startP--; 
 
       let consumed = 0, offset = 0;

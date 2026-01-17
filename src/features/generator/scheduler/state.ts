@@ -124,6 +124,14 @@ export const initializeState = (data: AppData): SchedulerState => {
     state.roomOccupancy[r.id] = createOccupancyGrid(days, maxClassPeriods);
   });
 
+  // Ensure all class homerooms have a grid
+  classes.forEach(c => {
+      const rid = c.defaultRoomId || c.classroomId;
+      if (rid && !state.roomOccupancy[rid]) {
+          state.roomOccupancy[rid] = createOccupancyGrid(days, maxClassPeriods);
+      }
+  });
+
   // Initialize Single Resources (Labs/ICT)
   subjects.filter(s => s.isSingleResource).forEach(s => {
     state.singleResourceUsage[s.id] = createOccupancyGrid(days, maxClassPeriods);

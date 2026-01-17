@@ -257,6 +257,7 @@ export function findUnitsInSlot(
     collectEvictions(state, d, p, p2, unit.subjectId, "SUBJECT", victimIds);
   }
 
+  victimIds.delete("BLOCK");
   return victimIds;
 }
 

@@ -57,12 +57,15 @@ export function calculateRoomPenalty(
 
 /**
  * HELPER: Detect "Swiss Cheese" schedules (1-period gaps) AND large Windows.
+ * Optimized: Only penalizes gaps occurring between the SAME class group
+ * to avoid flagging valid breaks for teachers.
  */
 export const calculateTeacherGapPenalty = (
   state: SchedulerState,
   d: number,
   p: number,
-  teacherIds: string[]
+  teacherIds: string[],
+  currentClassIds: string[]
 ): number => {
   let penalty = 0;
 
@@ -71,37 +74,69 @@ export const calculateTeacherGapPenalty = (
     if (!dailyGrid) continue;
 
     // 1. Swiss Cheese (1-period gap)
-    // Check Previous Gap: [Occupied] [Empty] [Current Assignment]
+    // Check Previous Gap: [Occupied P-2] [Empty P-1] [Current Assignment P]
     if (p >= 2 && !dailyGrid[p - 1] && dailyGrid[p - 2]) {
-      penalty += WEIGHTS.TEACHER_GAP;
+      const prevUnitId = dailyGrid[p - 2];
+      if (prevUnitId && prevUnitId !== "BLOCK") {
+        // Only penalize if the gap is between the SAME class group
+        const isSameClass = currentClassIds.some(cid => 
+          state.classOccupancy[cid]?.[d]?.[p - 2] === prevUnitId
+        );
+        if (isSameClass) {
+          penalty += WEIGHTS.TEACHER_GAP;
+        }
+      }
     }
-    // Check Next Gap: [Current Assignment] [Empty] [Occupied]
+
+    // Check Next Gap: [Current Assignment P] [Empty P+1] [Occupied P+2]
     if (p + 2 < dailyGrid.length && !dailyGrid[p + 1] && dailyGrid[p + 2]) {
-      penalty += WEIGHTS.TEACHER_GAP;
+      const nextUnitId = dailyGrid[p + 2];
+      if (nextUnitId && nextUnitId !== "BLOCK") {
+        const isSameClass = currentClassIds.some(cid => 
+          state.classOccupancy[cid]?.[d]?.[p + 2] === nextUnitId
+        );
+        if (isSameClass) {
+          penalty += WEIGHTS.TEACHER_GAP;
+        }
+      }
     }
 
     // 2. Large Window (Gap > 2 periods)
-    // Check backwards: [Occupied] [Empty] [Empty] [Empty] [Current]
-    // Scan back from p-1. If we find >2 consecutive empties before hitting an Occupied, penalize.
+    // We apply the same "Same Class" logic to windows to avoid penalizing teachers 
+    // who have breaks between different groups.
     let gapSize = 0;
     for (let i = p - 1; i >= 0; i--) {
-        if (dailyGrid[i] !== null) break; // Found occupancy
+        if (dailyGrid[i] !== null) break;
         gapSize++;
     }
-    // Only penalize if we actually found a start block (i.e. we didn't just hit start of day)
-    // AND the gap is > 2
-    if (gapSize > 2 && p - gapSize - 1 >= 0 && dailyGrid[p - gapSize - 1] !== null) {
-        penalty += WEIGHTS.TEACHER_WINDOW;
+    if (gapSize > 2 && p - gapSize - 1 >= 0) {
+        const windowUnitId = dailyGrid[p - gapSize - 1];
+        if (windowUnitId && windowUnitId !== "BLOCK") {
+            const isSameClass = currentClassIds.some(cid => 
+                state.classOccupancy[cid]?.[d]?.[p - gapSize - 1] === windowUnitId
+            );
+            if (isSameClass) {
+                penalty += WEIGHTS.TEACHER_WINDOW;
+            }
+        }
     }
     
-    // Check forwards (for iterative repair context)
+    // Check forwards
     let fwdGapSize = 0;
     for (let i = p + 1; i < dailyGrid.length; i++) {
         if (dailyGrid[i] !== null) break;
         fwdGapSize++;
     }
-    if (fwdGapSize > 2 && p + fwdGapSize + 1 < dailyGrid.length && dailyGrid[p + fwdGapSize + 1] !== null) {
-        penalty += WEIGHTS.TEACHER_WINDOW;
+    if (fwdGapSize > 2 && p + fwdGapSize + 1 < dailyGrid.length) {
+        const windowUnitId = dailyGrid[p + fwdGapSize + 1];
+        if (windowUnitId && windowUnitId !== "BLOCK") {
+            const isSameClass = currentClassIds.some(cid => 
+                state.classOccupancy[cid]?.[d]?.[p + fwdGapSize + 1] === windowUnitId
+            );
+            if (isSameClass) {
+                penalty += WEIGHTS.TEACHER_WINDOW;
+            }
+        }
     }
 
     // REWARD: Continuity (Teaching back-to-back)
@@ -239,7 +274,7 @@ export const calculateScore = (
   score += calculateScarcityPenalty(state, d, unit.teacherIds, data);
 
   // 2. TEACHER WELLBEING (Gaps, Windows, Clusters)
-  score += calculateTeacherGapPenalty(state, d, p, unit.teacherIds);
+  score += calculateTeacherGapPenalty(state, d, p, unit.teacherIds, unit.classIds);
 
   // 3. STUDENT FATIGUE (Subject Distribution)
   const classId = unit.classIds[0];

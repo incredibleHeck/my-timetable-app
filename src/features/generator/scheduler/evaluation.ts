@@ -58,7 +58,7 @@ export class EvaluationEngine {
 
     // 2. QUALITY PENALTIES (Soft Constraints)
     // Absorb scores from scoring.ts. We convert "Bonus Scores" into "Penalty Reductions".
-    const gapPenalty = calculateTeacherGapPenalty(state, d, p, unit.teacherIds);
+    const gapPenalty = calculateTeacherGapPenalty(state, d, p, unit.teacherIds, unit.classIds);
     const varietyPenalty = calculatePedagogicalScore(state, data, d, p, unit);
     
     totalCost += Math.abs(gapPenalty);

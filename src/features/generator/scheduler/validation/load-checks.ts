@@ -164,6 +164,7 @@ export const checkSubjectLimit = (
 /**
  * REFACTORED: Gap Detection (Break/Lunch Aware)
  * Only flags a gap if an empty CLASS period exists between two occupied slots.
+ * This handles both general 'Sandwich' rules and Subject-specific splits.
  */
 export const checkGapDetection = (
   ctx: ValidationContext,
@@ -171,48 +172,87 @@ export const checkGapDetection = (
   ignoredSlots: Set<number>,
   state?: SchedulerState
 ): ValidationResult | null => {
-  const { data, classId, targetDay, maxPeriods, structure } = ctx;
+  const { data, classId, targetDay, maxPeriods, structure, subjectId } = ctx;
 
-  // 1. Collect all periods that will be occupied for this class on this day
-  const occupied: number[] = [];
+  // 1. GENERAL SANDWICH CHECK (Any Lesson)
+  // Flags a gap if ANY empty CLASS period exists between ANY two lessons.
+  const anyOccupied: number[] = [];
   for (let p = 0; p < maxPeriods; p++) {
     if (proposedSlots.has(p)) {
-      occupied.push(p);
+      anyOccupied.push(p);
     } else {
       const isOccupied = state 
         ? state.classOccupancy[classId]?.[targetDay]?.[p] !== null
         : data.schedule[classId]?.[targetDay]?.[p] !== undefined;
 
       if (isOccupied && !ignoredSlots.has(p)) {
-        occupied.push(p);
+        anyOccupied.push(p);
       }
     }
   }
 
-  if (occupied.length < 2) return null;
-  occupied.sort((a, b) => a - b);
+  if (anyOccupied.length >= 2) {
+    anyOccupied.sort((a, b) => a - b);
+    for (let i = 0; i < anyOccupied.length - 1; i++) {
+      const start = anyOccupied[i];
+      const end = anyOccupied[i + 1];
 
-  // 2. Scan the space BETWEEN occupied periods
-  for (let i = 0; i < occupied.length - 1; i++) {
-    const start = occupied[i];
-    const end = occupied[i + 1];
+      for (let p = start + 1; p < end; p++) {
+        const periodType = getType(structure, p);
+        if (periodType === "CLASS" && !proposedSlots.has(p)) {
+          // If the slot is empty (checked via occupancy grid or schedule)
+          // or if it IS one of the slots we are vacating (ignoredSlots)
+          const isActuallyEmpty = state 
+            ? (state.classOccupancy[classId]?.[targetDay]?.[p] === null || ignoredSlots.has(p))
+            : (data.schedule[classId]?.[targetDay]?.[p] === undefined || ignoredSlots.has(p));
 
-    for (let p = start + 1; p < end; p++) {
-      const periodType = getType(structure, p);
-
-      // CRITICAL FIX: 
-      // A gap is ONLY valid if the period type is "CLASS".
-      // If p is a "BREAK" or "LUNCH", it is NOT a gap.
-      if (periodType === "CLASS" && !proposedSlots.has(p)) {
-        return {
-          valid: false,
-          message: "Gap detected",
-          severity: "MEDIUM",
-          penaltyPoints: 400,
-          conflictCount: 0,
-        };
+          if (isActuallyEmpty) {
+            return {
+              valid: false,
+              message: "Gap detected",
+              severity: "MEDIUM",
+              penaltyPoints: 400,
+              conflictCount: 0,
+            };
+          }
+        }
       }
     }
   }
+
+  // 2. SUBJECT-SPECIFIC SPLIT CHECK
+  // (Redundant if check 1 is strict, but kept for clarity on subject integrity)
+  const subjectOccupied: number[] = anyOccupied.filter(p => {
+      if (proposedSlots.has(p)) return true;
+      const entry = state ? state.schedule[classId]?.[targetDay]?.[p] : data.schedule[classId]?.[targetDay]?.[p];
+      return entry?.subjectId === subjectId;
+  });
+
+  if (subjectOccupied.length >= 2) {
+    subjectOccupied.sort((a, b) => a - b);
+    for (let i = 0; i < subjectOccupied.length - 1; i++) {
+      const start = subjectOccupied[i];
+      const end = subjectOccupied[i + 1];
+
+      for (let p = start + 1; p < end; p++) {
+        if (getType(structure, p) === "CLASS" && !proposedSlots.has(p)) {
+           const isActuallyEmpty = state 
+            ? state.classOccupancy[classId]?.[targetDay]?.[p] === null
+            : data.schedule[classId]?.[targetDay]?.[p] === undefined;
+
+           if (isActuallyEmpty) {
+              return {
+                valid: false,
+                message: `Gap detected: ${subjectId} is split by an empty lesson slot.`,
+                severity: "MEDIUM",
+                penaltyPoints: 400,
+                conflictCount: 0
+              };
+           }
+        }
+      }
+    }
+  }
+
   return null;
 };

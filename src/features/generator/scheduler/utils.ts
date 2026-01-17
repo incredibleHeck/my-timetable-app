@@ -19,8 +19,8 @@ export const getPeriodType = (
 };
 
 /**
- * REFACTORED: getNextClassPeriod
- * Ensures a double period can "jump" over non-lesson slots (Break/Lunch).
+ * Ensures the solver looks for the next 'CLASS' slot,
+ * skipping over the breaks we just told the Gap Detector to ignore.
  */
 export function getNextClassPeriod(
   currentP: number,

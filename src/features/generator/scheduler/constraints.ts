@@ -102,6 +102,28 @@ export const checkHardConstraints = (
       }
       if (count + duration > maxSubj) return false;
     }
+
+    // Weekly Curriculum Limit
+    const currItem = cls?.curriculum?.find((curr: any) => curr.subjectId === subjectId);
+    if (currItem) {
+        const totalAllowed = (currItem.singles || 0) + (currItem.doubles || 0) * 2;
+        let totalScheduled = duration;
+        
+        const daysPerWeek = (data.settings as any).daysPerWeek || 5;
+        for (let day = 0; day < daysPerWeek; day++) {
+            const daySched = state.schedule[cid]?.[day];
+            if (!daySched) continue;
+            
+            for (const pStr in daySched) {
+                const slot = daySched[pStr];
+                if (slot && slot.subjectId === subjectId && !slot.isFixed) {
+                    totalScheduled += ((slot as any).duration || 1);
+                }
+            }
+        }
+        
+        if (totalScheduled > totalAllowed) return false;
+    }
   }
 
   // 4. PHYSICAL ROOM INTEGRITY (Your New Requirement)

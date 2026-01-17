@@ -117,12 +117,14 @@ export const GeneratorView: React.FC<ViewProps> = ({
   // --- SOLVER LOGIC (ASYNC WORKER) ---
   const handleGenerate = () => {
     // 0. Clean up existing timetable
-    onUpdate({
+    const clearedData = {
       ...data,
       schedule: {},
       conflicts: [],
       lastGenerated: null,
-    });
+    };
+
+    onUpdate(clearedData);
 
     setIsGenerating(true);
     setStats(null);
@@ -134,8 +136,8 @@ export const GeneratorView: React.FC<ViewProps> = ({
       { type: "module" }
     );
 
-    // 2. Send Data
-    workerRef.current.postMessage(data);
+    // 2. Send Cleared Data
+    workerRef.current.postMessage(clearedData);
 
     // 3. Listen for Results
     workerRef.current.onmessage = (e) => {
