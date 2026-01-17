@@ -12,7 +12,4 @@ This file tracks all major tracks for the project. Each track has its own detail
 ## [x] Track: Class Settings UI Reorganization
 *Link: [./tracks/class_ui_reorg_20260114/](./tracks/class_ui_reorg_20260114/)*
 
----
 
-## [x] Track: Fix: Drag-and-Drop Swapping Validation
-*Link: [./tracks/fix_swap_validation_atomic_20260116/](./tracks/fix_swap_validation_atomic_20260116/)*
