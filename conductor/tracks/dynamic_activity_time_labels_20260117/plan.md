@@ -44,7 +44,7 @@
 - [ ] Task: Conductor - User Manual Verification 'Phase 5: Timetable Time Labels' (Protocol in workflow.md)
 
 ## Phase 6: Final Polish & Regression [checkpoint: ]
-- [ ] Task: Final regression testing
-    - [ ] Run full test suite: `npm test`
-    - [ ] Perform end-to-end manual walkthrough
+- [x] Task: Final regression testing (c010e42)
+    - [x] Run full test suite: `npm test`
+    - [x] Perform end-to-end manual walkthrough
 - [ ] Task: Conductor - User Manual Verification 'Phase 6: Final Polish & Regression' (Protocol in workflow.md)
