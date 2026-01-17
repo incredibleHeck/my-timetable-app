@@ -43,7 +43,7 @@ describe('Vertical Swapping Logic', () => {
   const mockData = {
     ...DEFAULT_DATA,
     classes: [
-      { id: 'c1', name: '10A', level: '10', curriculum: [] },
+      { id: 'c1', name: '10A', level: '10', curriculum: [], defaultRoomId: 'r1' },
       { id: 'c2', name: '10B', level: '10', curriculum: [] }
     ],
     exams: initialExams

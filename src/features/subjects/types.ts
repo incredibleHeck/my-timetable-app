@@ -6,6 +6,7 @@ export interface Subject {
   isSingleResource?: boolean;
   isExaminable?: boolean;
   // Room requirements
+  requiredRoomId?: string | null; 
   preferredRoomIds?: string[];
   requiredRoomType?: string;
 

@@ -15,6 +15,7 @@ export interface ClassGroup {
   name: string;
   level?: string;
   classroomId?: string;
+  defaultRoomId: string; 
   studentCount?: number;
   curriculum: CurriculumItem[];
 

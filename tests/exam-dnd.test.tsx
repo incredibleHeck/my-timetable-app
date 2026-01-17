@@ -42,7 +42,7 @@ describe('ExamGrid DND Integration', () => {
   const mockData = {
     ...DEFAULT_DATA,
     subjects: [{ id: 's1', name: 'Mathematics', color: '#ff0000' }],
-    classes: [{ id: 'c1', name: '10A' }],
+    classes: [{ id: 'c1', name: '10A', defaultRoomId: 'r1' }],
     rooms: [{ id: 'r1', name: 'Hall 1' }]
   };
 

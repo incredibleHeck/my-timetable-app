@@ -17,7 +17,7 @@ describe('checkSlotValidity - Concurrent Daily Load', () => {
     } as any,
     teachers: [{ id: 't1', name: 'Teacher 1', constraints: [[],[],[],[],[]] } as any],
     classes: [
-      { id: 'c1', name: 'Class 1', curriculum: [] },
+      { id: 'c1', name: 'Class 1', curriculum: [], defaultRoomId: 'r1' },
       { id: 'c2', name: 'Class 2', curriculum: [] },
     ] as any,
     subjects: [{ id: 's1', name: 'Subject 1' } as any],

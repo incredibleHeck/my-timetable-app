@@ -1,8 +1,5 @@
 import { AppData, Conflict } from "../../../../types";
-import {
-  calculateClassSchedule,
-  doTimeRangesOverlap,
-} from "../../../../utils/timeUtils";
+import { calculateClassSchedule } from "../../../../utils/timeUtils";
 import { getType } from "./utils";
 import { ValidationContext, ValidationResult } from "./types";
 import {
@@ -10,8 +7,12 @@ import {
   checkResourceAndAvailability,
 } from "./basic-rules";
 import { checkOverlaps } from "./overlap-checks";
-import { checkTeacherLoad } from "./load-checks";
+import { checkTeacherLoad, checkSubjectLimit, checkGapDetection } from "./load-checks";
 
+/**
+ * CORE VALIDATOR: checkSlotValidity
+ * Checks if a specific assignment (or move) is valid within the current schedule state.
+ */
 export const checkSlotValidity = (
   data: AppData,
   targetDay: number,
@@ -32,10 +33,10 @@ export const checkSlotValidity = (
   const structure = cls?.structure || settings.dayStructure;
   const maxPeriods = Math.max(
     cls?.periodCount || settings.periodsPerDay,
-    cls?.structure?.length || 0
+    structure?.length || 0
   );
 
-  // Pre-calculate schedules (Optimization: could be moved out if perf issues arise)
+  // Pre-calculate all class schedules for physical overlap checking
   const allClassSchedules = new Map<string, any[]>();
   classes.forEach((c) => {
     allClassSchedules.set(
@@ -64,11 +65,13 @@ export const checkSlotValidity = (
   let periodsConsumed = 0;
   let currentOffset = 0;
 
+  // We iterate until we've satisfied the duration, skipping non-class slots (Breaks/Lunch)
   while (periodsConsumed < duration) {
     const p = targetPeriod + currentOffset;
     if (p >= maxPeriods)
       return { valid: false, message: "Exceeds daily limit", severity: "HIGH" };
 
+    // Skip Breaks/Lunch but keep looking for the next CLASS slot
     if (getType(structure, p) !== "CLASS") {
       currentOffset++;
       continue;
@@ -76,25 +79,23 @@ export const checkSlotValidity = (
 
     proposedSlots.add(p);
 
-    // Rule A: Global & Class Blocks
+    // Hard Constraint Checks
     const blockError = checkGlobalAndClassBlocks(ctx, p);
     if (blockError) return blockError;
 
-    // Rule B: Resources & Teacher Availability
     const resourceError = checkResourceAndAvailability(ctx, p);
     if (resourceError) return resourceError;
 
-    // Rule C: Complex Overlaps (Teacher & Room with Joint Logic)
     const overlapError = checkOverlaps(ctx, p);
     if (overlapError) return overlapError;
 
-    // Rule D: Room Capacity
+    // Room Capacity Check
     if (roomId) {
       const room = rooms.find((r) => r.id === roomId);
       if (room && cls && (cls.studentCount || 0) > room.capacity) {
         return {
           valid: false,
-          message: `Capacity (${room.capacity}) exceeded by ${cls.name}`,
+          message: `Room capacity exceeded (${cls.studentCount}/${room.capacity})`,
           severity: "MEDIUM",
         };
       }
@@ -104,7 +105,8 @@ export const checkSlotValidity = (
     currentOffset++;
   }
 
-  // --- 3. IGNORE LIST (FOR LOAD CHECKS) ---
+  // --- 3. IGNORE LIST SETUP ---
+  // When validating a 'Move', we must ignore the teacher's current presence in the 'Old' slots
   const ignoredSlots = new Set<number>();
   const daySchedule = data.schedule[classId]?.[targetDay] || {};
 
@@ -113,16 +115,15 @@ export const checkSlotValidity = (
     period: number;
     duration?: number;
   }) => {
-    if (String(targetDay) === String(setting.day)) {
+    if (targetDay === setting.day) {
       let startP = setting.period;
       let dur = setting.duration ?? duration;
-      // Adjust for tails
       const s = daySchedule[startP];
-      if (s && (s as any).isFixed) startP--;
+      if (s && (s as any).isFixed) startP--; // Correctly identify the head of a double
 
       let c = 0,
         o = 0;
-      while (c < (dur === 2 && s && (s as any).isFixed ? 2 : dur)) {
+      while (c < dur) {
         const p = startP + o;
         if (p >= maxPeriods) break;
         if (getType(structure, p) === "CLASS") {
@@ -133,12 +134,19 @@ export const checkSlotValidity = (
       }
     }
   };
+
   if (ignoreSlot) populateIgnored(ignoreSlot);
   if (ignoreTargetSlot) populateIgnored(ignoreTargetSlot as any);
 
-  // --- 4. TEACHER LOAD CHECKS (WHOLE DAY) ---
+  // --- 4. LOAD & PATTERN CHECKS ---
   const loadError = checkTeacherLoad(ctx, proposedSlots, ignoredSlots);
   if (loadError) return loadError;
+
+  const subjectError = checkSubjectLimit(ctx, proposedSlots, ignoredSlots);
+  if (subjectError) return subjectError;
+
+  const gapError = checkGapDetection(ctx, proposedSlots, ignoredSlots);
+  if (gapError) return gapError;
 
   // --- 5. JOINT CLASS INTEGRITY ---
   const isJoint = data.jointClasses?.some(
@@ -147,32 +155,30 @@ export const checkSlotValidity = (
   if (isJoint && !isAuto) {
     return {
       valid: false,
-      message: "Cannot move Joint Class manually",
+      message: "Joint classes must be moved via the Generator",
       severity: "HIGH",
     };
   }
 
-  // --- 6. SWAP LOGIC ---
+  // --- 6. SWAP ANALYSIS ---
   const targetSlot = data.schedule[classId]?.[targetDay]?.[targetPeriod];
   if (targetSlot) {
     if ((targetSlot as any).locked)
-      return { valid: false, message: "Target Locked", severity: "HIGH" };
-    if (targetSlot.electiveBlockId)
-      return { valid: false, message: "Target is Elective", severity: "HIGH" };
+      return {
+        valid: false,
+        message: "Target slot is locked",
+        severity: "HIGH",
+      };
     return { valid: true, isSwap: true, message: "Swap available" };
-  }
-
-  // Check P2 for Swap
-  if (duration === 2) {
-    let nextP = targetPeriod + 1;
-    while (nextP < maxPeriods && getType(structure, nextP) !== "CLASS") nextP++;
-    if (nextP < maxPeriods && data.schedule[classId]?.[targetDay]?.[nextP]) {
-      return { valid: true, isSwap: true, message: "Swap available (P2)" };
-    }
   }
 
   return { valid: true, message: "Available" };
 };
+
+/**
+ * FULL AUDIT: validateFullSchedule
+ * Scans the entire generated schedule and returns a list of all existing conflicts.
+ */
 
 export const validateFullSchedule = (data: AppData): Conflict[] => {
   const { schedule, classes, subjects, teachers } = data;
@@ -189,9 +195,11 @@ export const validateFullSchedule = (data: AppData): Conflict[] => {
       for (const periodStr of Object.keys(daySchedule)) {
         const period = parseInt(periodStr);
         const slot = daySchedule[period];
-        if (slot.isFixed) continue; // Skip tails
 
-        // Calculate duration logic
+        // Skip "Tails" (The second part of a double period) to avoid double-validating
+        if (slot.isFixed) continue;
+
+        // Detect if this is a double period
         let nextP = period + 1;
         const hasNext =
           daySchedule[nextP] &&
@@ -206,7 +214,7 @@ export const validateFullSchedule = (data: AppData): Conflict[] => {
           slot.teacherId,
           classId,
           slot.subjectId,
-          { day, period, duration },
+          { day, period, duration }, // Ignore the current placement to see if it's legally valid
           slot.roomId,
           duration,
           undefined,
@@ -224,7 +232,7 @@ export const validateFullSchedule = (data: AppData): Conflict[] => {
             teacherName: teacher?.name || "Unknown",
             day,
             period,
-            reason: result.message || "Invalid",
+            reason: result.message || "Constraint Violation",
             severity: result.severity || "HIGH",
           });
         }

@@ -2,6 +2,49 @@ import { AppData } from "../../../types";
 import { AllocationUnit } from "./types";
 import { calculatePriority } from "./heuristics";
 
+/**
+ * HELPER: Determine specific room requirements based on Subject metadata.
+ * Bridges the gap between static data and the solver's resource awareness.
+ */
+const resolveRoomRequirement = (subject: any): string | undefined => {
+  if (!subject) return undefined;
+
+  // 1. Explicit constraint in Subject data (Preferred)
+  if (subject.requiredRoomType) return subject.requiredRoomType;
+
+  // 2. Inferred from "Single Resource" flag (Legacy / Fallback)
+  if (subject.isSingleResource) {
+    const name = subject.name.toLowerCase();
+    // Map common subject names to standard room types if not explicitly set
+    if (
+      name.includes("computing") ||
+      name.includes("ict") ||
+      name.includes("information")
+    )
+      return "Computer Lab";
+    if (name.includes("music")) return "Music Room";
+    if (
+      name.includes("physical") ||
+      name.includes("pe") ||
+      name.includes("sport")
+    )
+      return "Field";
+    if (
+      name.includes("science") ||
+      name.includes("physics") ||
+      name.includes("chem") ||
+      name.includes("bio")
+    )
+      return "Science Lab";
+    if (name.includes("art")) return "Art Studio";
+
+    // Default fallback for other single resources
+    return "Specialist Room";
+  }
+
+  return undefined;
+};
+
 export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
   const units: AllocationUnit[] = [];
   const { classes, jointClasses, subjects, teachers } = data;
@@ -30,13 +73,17 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
     if (!jointCurr) return;
 
     const homeroomId =
-      (repClass as any).classroomId || (repClass as any).roomId;
+      repClass.defaultRoomId || repClass.classroomId || (repClass as any).roomId;
+    const subject = subjectMap.get(jc.subjectId);
+
+    // Resolve Room Type
+    const requiredType = resolveRoomRequirement(subject);
 
     const createJointUnit = (idSuffix: string, duration: number) => {
       const u: AllocationUnit = {
         id: `JOINT-${jc.id}-${idSuffix}`,
         subjectId: jc.subjectId,
-        subjectName: subjectMap.get(jc.subjectId)?.name || "Unknown",
+        subjectName: subject?.name || "Unknown",
         duration,
         classIds: jc.classIds,
         classNames: jc.classIds.map((id) => classMap.get(id)?.name || ""),
@@ -48,6 +95,7 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
         ],
         priority: 0,
         defaultRoomId: homeroomId,
+        requiredRoomType: requiredType, // <--- Added
         jointClassId: jc.id,
       };
 
@@ -62,17 +110,21 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
 
   // 4. PROCESS STANDARD CLASSES
   classes.forEach((cls) => {
-    const homeroomId = (cls as any).classroomId || (cls as any).roomId;
+    const homeroomId = cls.defaultRoomId || cls.classroomId || (cls as any).roomId;
 
     cls.curriculum.forEach((curr) => {
       // SKIP if this is handled by a joint class
       if (jointLookup.has(`${curr.subjectId}-${cls.id}`)) return;
 
+      const subject = subjectMap.get(curr.subjectId);
+      // Resolve Room Type
+      const requiredType = resolveRoomRequirement(subject);
+
       const createUnit = (idSuffix: string, duration: number) => {
         const u: AllocationUnit = {
           id: `${cls.id}-${curr.subjectId}-${idSuffix}`,
           subjectId: curr.subjectId,
-          subjectName: subjectMap.get(curr.subjectId)?.name || "Unknown",
+          subjectName: subject?.name || "Unknown",
           duration,
           classIds: [cls.id],
           classNames: [cls.name],
@@ -84,6 +136,8 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
           ],
           priority: 0,
           defaultRoomId: homeroomId,
+          requiredRoomType: requiredType, // <--- Added
+          electiveBlockId: (curr as any).electiveBlockId,
         };
 
         u.priority = calculatePriority(u, teachers, data);
@@ -97,6 +151,8 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
   });
 
   // 5. SHUFFLE AND SORT
+  // We perform a random shuffle first to break ties between equal priority units (e.g. 2 different Math classes)
+  // Then we sort by priority so the constraint-heavy units float to the top.
   for (let i = units.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [units[i], units[j]] = [units[j], units[i]];

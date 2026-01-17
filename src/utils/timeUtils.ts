@@ -2,7 +2,8 @@ import { ClassGroup } from "../features/classes/types";
 import { Settings, PeriodType, PeriodConfig, TimeSlot } from "../types";
 
 /**
- * Resolves the duration for a specific slot type, prioritizing class overrides.
+ * Resolves the duration for a specific slot type.
+ * Priority: Class Override > Global Setting > Hardcoded Default.
  */
 export function getEffectiveDuration(
   classGroup: ClassGroup,
@@ -13,19 +14,25 @@ export function getEffectiveDuration(
     case "CLASS":
       return classGroup.duration ?? globalSettings.defaultClassDuration ?? 40;
     case "BREAK":
-      return classGroup.breakDuration ?? globalSettings.defaultBreakDuration ?? 15;
+      return (
+        classGroup.breakDuration ?? globalSettings.defaultBreakDuration ?? 15
+      );
     case "LUNCH":
-      return classGroup.lunchDuration ?? globalSettings.defaultLunchDuration ?? 45;
+      return (
+        classGroup.lunchDuration ?? globalSettings.defaultLunchDuration ?? 45
+      );
     case "ASSEMBLY":
-      return 40; // Default assembly duration
+      return 40;
     default:
       return 40;
   }
 }
 
 /**
- * Calculates the full schedule for a class based on global and class-specific settings.
+ * Logical-to-Physical Mapper:
+ * Accumulates durations to build a timeline for a class day.
  */
+
 export function calculateClassSchedule(
   classGroup: ClassGroup,
   globalSettings: Settings,
@@ -39,10 +46,13 @@ export function calculateClassSchedule(
   for (const item of dayStructure) {
     const type = typeof item === "string" ? item : item.type;
     const duration = getEffectiveDuration(classGroup, globalSettings, type);
+
     const start = minutesToTime(currentMinutes);
     const end = minutesToTime(currentMinutes + duration);
 
     schedule.push({ start, end });
+
+    // Increment for the next slot
     currentMinutes += duration;
   }
 
@@ -50,39 +60,52 @@ export function calculateClassSchedule(
 }
 
 /**
- * Checks if two time ranges overlap.
- * Touching (end1 === start2) is NOT considered an overlap.
+ * Interval Arithmetic: Overlap Detection
+ * Uses the logic: (StartA < EndB) AND (StartB < EndA).
+ * This correctly treats back-to-back classes (EndA === StartB) as NOT overlapping.
  */
-export function doTimeRangesOverlap(range1: TimeSlot, range2: TimeSlot): boolean {
+
+export function doTimeRangesOverlap(
+  range1: TimeSlot,
+  range2: TimeSlot
+): boolean {
   const s1 = timeToMinutes(range1.start);
   const e1 = timeToMinutes(range1.end);
   const s2 = timeToMinutes(range2.start);
   const e2 = timeToMinutes(range2.end);
 
+  // Standard interval overlap formula
   return s1 < e2 && s2 < e1;
 }
 
 /**
- * Formats a time slot into a (HH:mm - HH:mm) string.
+ * Formats a TimeSlot for UI display or conflict reporting.
  */
 export function getFormattedTimeRange(slot?: TimeSlot): string {
   if (!slot) return "";
-  return `(${slot.start} - ${slot.end})`;
+  return `${slot.start} - ${slot.end}`;
 }
 
 /**
- * Converts "HH:mm" string to total minutes from 00:00.
+ * Time String Parser: Converts "HH:mm" to total minutes.
+ * Includes defensive split to handle malformed strings.
  */
 export function timeToMinutes(time: string): number {
+  if (!time || !time.includes(":")) return 0;
   const [hours, minutes] = time.split(":").map(Number);
-  return hours * 60 + minutes;
+  return (hours || 0) * 60 + (minutes || 0);
 }
 
 /**
- * Converts total minutes from 00:00 to "HH:mm" string.
+ * Time String Generator: Converts total minutes to "HH:mm".
  */
 export function minutesToTime(minutes: number): string {
-  const hours = Math.floor(minutes / 60);
-  const mins = Math.floor(minutes % 60);
-  return `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}`;
+  // Ensure we don't exceed 24 hours
+  const normalizedMinutes = minutes % 1440;
+  const hours = Math.floor(normalizedMinutes / 60);
+  const mins = Math.floor(normalizedMinutes % 60);
+
+  return `${hours.toString().padStart(2, "0")}:${mins
+    .toString()
+    .padStart(2, "0")}`;
 }

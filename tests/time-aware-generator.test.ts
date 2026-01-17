@@ -16,6 +16,7 @@ describe('Time-Aware Generator', () => {
     name: 'Class A',
     curriculum: [{ id: 'curr1', subjectId: 's1', periodsPerWeek: 1, singles: 1, doubles: 0, assignedTeacherId: 't1' }],
     duration: 40, // 08:00 - 08:40, 08:40 - 09:20
+    defaultRoomId: 'r1',
   };
 
   const classB: Class = {
@@ -23,6 +24,7 @@ describe('Time-Aware Generator', () => {
     name: 'Class B',
     curriculum: [{ id: 'curr2', subjectId: 's2', periodsPerWeek: 1, singles: 1, doubles: 0, assignedTeacherId: 't1' }],
     duration: 60, // 08:00 - 09:00, 09:00 - 10:00
+    defaultRoomId: 'r1',
   };
 
   const subjects: Subject[] = [
@@ -42,6 +44,7 @@ describe('Time-Aware Generator', () => {
     teachers: [mockTeacher],
     classes: [classA, classB],
     subjects: subjects,
+    rooms: [{ id: 'r1', name: 'Room 1', capacity: 30, type: 'Classroom' }],
   };
 
   it('should avoid teacher overlap when classes have different durations', () => {

@@ -24,14 +24,16 @@ describe('useWorkloadStats', () => {
         name: 'Class 1',
         curriculum: [
           { id: 'curr1', subjectId: 's1', periodsPerWeek: 2, assignedTeacherId: 't1' }
-        ]
+        ],
+        defaultRoomId: 'r1'
       },
       {
         id: 'c2',
         name: 'Class 2',
         curriculum: [
           { id: 'curr2', subjectId: 's1', periodsPerWeek: 2, assignedTeacherId: 't1' }
-        ]
+        ],
+        defaultRoomId: 'r1'
       }
     ] as any,
     jointClasses: [

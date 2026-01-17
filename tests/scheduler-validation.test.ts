@@ -16,12 +16,14 @@ describe('Scheduler Validation', () => {
     name: '10A',
     curriculum: [],
     studentCount: 30,
+    defaultRoomId: 'r1',
   };
 
   const mockSubject: Subject = {
     id: 's1',
     name: 'Math',
     color: '#ff0000',
+    requiredRoomId: null,
   };
 
   const mockRoom: Room = {
@@ -45,7 +47,7 @@ describe('Scheduler Validation', () => {
   };
 
   it('should detect teacher overlap', () => {
-    const otherClass: Class = { id: 'other-class', name: 'Other', curriculum: [] };
+    const otherClass: Class = { id: 'other-class', name: 'Other', curriculum: [], defaultRoomId: 'r1' };
     const data: AppData = {
       ...baseData,
       classes: [...baseData.classes, otherClass],
@@ -76,7 +78,7 @@ describe('Scheduler Validation', () => {
   });
 
   it('should detect room overlap', () => {
-    const otherClass: Class = { id: 'other-class', name: 'Other', curriculum: [] };
+    const otherClass: Class = { id: 'other-class', name: 'Other', curriculum: [], defaultRoomId: 'r1' };
     const data: AppData = {
       ...baseData,
       classes: [...baseData.classes, otherClass],
@@ -132,7 +134,7 @@ describe('Scheduler Validation', () => {
     );
 
     expect(result.valid).toBe(false);
-    expect(result.message).toContain('not available');
+    expect(result.message).toContain('is unavailable');
   });
 
   it('should enforce subject daily limit (max 2)', () => {
@@ -141,8 +143,8 @@ describe('Scheduler Validation', () => {
       schedule: {
         'c1': {
           0: {
-            0: { subjectId: 's1', teacherId: 't1', classId: 'c1' },
-            1: { subjectId: 's1', teacherId: 't1', classId: 'c1' }
+            0: { subjectId: 's1', teacherId: 't2', classId: 'c1' },
+            1: { subjectId: 's1', teacherId: 't2', classId: 'c1' },
           }
         }
       }
@@ -151,10 +153,10 @@ describe('Scheduler Validation', () => {
     const result = checkSlotValidity(
       data,
       0,
-      3, // Period 3 (CLASS)
+      2,
       't1',
       'c1',
-      's1'
+      's1',
     );
 
     expect(result.valid).toBe(false);
@@ -167,8 +169,9 @@ describe('Scheduler Validation', () => {
       schedule: {
         'c1': {
           0: {
-            0: { subjectId: 's1', teacherId: 't1', classId: 'c1' }
+            0: { subjectId: 's1', teacherId: 't2', classId: 'c1' },
             // Gap at Period 1
+            2: { subjectId: 's2', teacherId: 't3', classId: 'c1' },
           }
         }
       }
@@ -177,10 +180,10 @@ describe('Scheduler Validation', () => {
     const result = checkSlotValidity(
       data,
       0,
-      3, // Period 3 (CLASS), creating a gap at P1 & P2
+      4, // Proposed at P4
       't1',
       'c1',
-      's1'
+      's3',
     );
 
     expect(result.valid).toBe(false);
@@ -216,7 +219,7 @@ describe('Scheduler Validation', () => {
 
   it('should enforce teacher fatigue (consecutive periods)', () => {
     // Max consecutive is 4 by default
-    const otherClass: Class = { id: 'other-class', name: 'Other', curriculum: [] };
+    const otherClass: Class = { id: 'other-class', name: 'Other', curriculum: [], defaultRoomId: 'r1' };
     const data: AppData = {
       ...baseData,
       classes: [...baseData.classes, otherClass],
@@ -242,7 +245,7 @@ describe('Scheduler Validation', () => {
     );
 
     expect(result.valid).toBe(false);
-    expect(result.message).toContain('exceed consecutive period limit');
+    expect(result.message).toContain('Exceeds consecutive limit');
   });
 
   it('should enforce teacher daily load', () => {
@@ -254,7 +257,7 @@ describe('Scheduler Validation', () => {
       structure: Array(10).fill({ type: 'CLASS', label: 'C' })
     };
     
-    const otherClass: Class = { id: 'other-class', name: 'Other', curriculum: [] };
+    const otherClass: Class = { id: 'other-class', name: 'Other', curriculum: [], defaultRoomId: 'r1' };
     // Set global limit to 6
     const data: AppData = {
       ...baseData,
@@ -288,7 +291,7 @@ describe('Scheduler Validation', () => {
     // Note: checkSlotValidity looks up class by ID. 'longDayClass' has id 'c1'.
 
     expect(result.valid).toBe(false);
-    expect(result.message).toContain("Exceeds John Doe's daily limit of 6 periods");
+    expect(result.message).toContain("Exceeds daily limit");
   });
 
   it('should enforce joint class integrity', () => {
@@ -309,7 +312,7 @@ describe('Scheduler Validation', () => {
     );
 
     expect(result.valid).toBe(false);
-    expect(result.message).toContain('Cannot move Joint Class manually');
+    expect(result.message).toContain('Joint classes must be moved via the Generator');
   });
 
   it('should enforce room capacity constraint', () => {

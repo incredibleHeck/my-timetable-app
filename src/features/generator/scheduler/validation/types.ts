@@ -1,4 +1,4 @@
-import { AppData, PeriodConfig, PeriodType } from "../../../../types";
+import { AppData, PeriodConfig, PeriodType, TimeSlot } from "../../../../types";
 
 export type ValidationResult = {
   valid: boolean;
@@ -8,7 +8,10 @@ export type ValidationResult = {
 };
 
 export interface ValidationContext {
+  // Core Data
   data: AppData;
+
+  // Target of the validation
   targetDay: number;
   targetPeriod: number;
   teacherId: string;
@@ -16,9 +19,14 @@ export interface ValidationContext {
   subjectId: string;
   roomId?: string;
   duration: number;
-  // Computed helpers
+
+  // Computed Context (Helpers for performance)
   maxPeriods: number;
   structure: (PeriodConfig | PeriodType)[];
-  classSchedule: any[]; // The specific schedule for the target class
-  allClassSchedules: Map<string, any[]>; // For overlap checking
+
+  /** The calculated time ranges (start/end) for the class being validated */
+  classSchedule: TimeSlot[];
+
+  /** Map of ALL calculated class schedules for O(1) overlap checks */
+  allClassSchedules: Map<string, TimeSlot[]>;
 }

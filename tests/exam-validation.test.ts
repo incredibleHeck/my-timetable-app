@@ -6,7 +6,7 @@ describe('Exam Validation Logic', () => {
   const mockData = {
     ...DEFAULT_DATA,
     classes: [
-      { id: 'c1', name: '10A', studentCount: 30, level: '10' },
+      { id: 'c1', name: '10A', studentCount: 30, level: '10', defaultRoomId: 'r1' },
       { id: 'c2', name: '10B', studentCount: 25, level: '10' }
     ],
     rooms: [

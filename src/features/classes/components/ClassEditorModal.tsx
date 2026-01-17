@@ -22,6 +22,7 @@ export const ClassEditorModal: React.FC<ClassEditorModalProps> = ({
   onSave,
 }) => {
   const [cName, setCName] = useState("");
+  const [cDefaultRoomId, setCDefaultRoomId] = useState<string | null>(null);
   const [cDuration, setCDuration] = useState(50);
   const [cBreakDuration, setCBreakDuration] = useState(20);
   const [cLunchDuration, setCLunchDuration] = useState(60);
@@ -44,6 +45,7 @@ export const ClassEditorModal: React.FC<ClassEditorModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setCName(editingClass?.name || "");
+      setCDefaultRoomId(editingClass?.defaultRoomId || editingClass?.classroomId || null);
       setCDuration(
         editingClass?.duration || data.settings.defaultClassDuration || 50
       );
@@ -175,6 +177,7 @@ export const ClassEditorModal: React.FC<ClassEditorModalProps> = ({
     const newClass: ClassGroup = {
       id: editingClass ? editingClass.id : generateId(),
       name: cName,
+      defaultRoomId: cDefaultRoomId || undefined,
       periodCount: cPeriodCount,
       duration: cDuration,
       breakDuration: cBreakDuration,
@@ -342,6 +345,25 @@ export const ClassEditorModal: React.FC<ClassEditorModalProps> = ({
                   placeholder="e.g. Grade 10A"
                   autoFocus
                 />
+
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-slate-500 uppercase">Home Classroom</label>
+                  <select
+                    className="w-full rounded-md border-slate-300 text-sm p-2 focus:ring-amber-500 focus:border-amber-500"
+                    value={cDefaultRoomId || ""}
+                    onChange={(e) => setCDefaultRoomId(e.target.value || null)}
+                  >
+                    <option value="">No Home Classroom Assigned</option>
+                    {(data.rooms || []).map(room => (
+                      <option key={room.id} value={room.id}>
+                        {room.name} ({room.type})
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-slate-400 italic">
+                    Most lessons will be scheduled in this room unless the subject requires a special facility.
+                  </p>
+                </div>
 
                 {/* RESERVATIONS GRID */}
                 <div>

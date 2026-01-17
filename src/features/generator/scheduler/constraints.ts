@@ -1,28 +1,31 @@
 import { AppData } from "../../../types";
 import { AllocationUnit, SchedulerState } from "./types";
-import { doTimeRangesOverlap } from "../../../utils/timeUtils";
 
-// NEW HELPER: Check Consecutive Slots
+/**
+ * OPTIMIZED HELPER: Check Consecutive Limit (No Array Cloning)
+ * Iterates the existing grid and virtually simulates occupancy.
+ */
 const checkConsecutiveLimit = (
   state: SchedulerState,
   d: number,
   p: number,
+  p2: number,
   duration: number,
   teacherId: string,
   maxConsecutive: number
 ): boolean => {
-  // We need to simulate the day as if we added this lesson
-  const dayGrid = [...state.teacherOccupancy[teacherId][d]]; // Copy current day
-  
-  // Mark proposed slots
-  dayGrid[p] = true;
-  if (duration === 2) dayGrid[p + 1] = true; // Simplified p+1, ideally use p2 logic
+  const dailyGrid = state.teacherOccupancy[teacherId][d];
+  const gridLen = dailyGrid.length;
 
   let currentRun = 0;
-  for (let i = 0; i < dayGrid.length; i++) {
-    if (dayGrid[i]) {
+
+  for (let i = 0; i < gridLen; i++) {
+    // Virtual Check: Is this slot occupied physically OR by our proposed move?
+    const isOccupied = dailyGrid[i] || i === p || (duration === 2 && i === p2);
+
+    if (isOccupied) {
       currentRun++;
-      if (currentRun > maxConsecutive) return false; // Fail
+      if (currentRun > maxConsecutive) return false; // Hard Stop
     } else {
       currentRun = 0;
     }
@@ -30,34 +33,46 @@ const checkConsecutiveLimit = (
   return true;
 };
 
+/**
+ * HELPER: Checks if a global fixed occasion value constitutes a block.
+ * Handles both Strings ("Worship") and Legacy Objects ({ name: "..." }).
+ */
+const isGlobalSlotBlocked = (val: any): boolean => {
+  if (!val) return false;
+  if (typeof val === "string") return val.trim().length > 0;
+  if (typeof val === "object") return true; // Legacy object blocks
+  return false;
+};
+
 export const checkHardConstraints = (
   state: SchedulerState,
   data: AppData,
   d: number,
   p: number,
-  p2: number,
+  p2: number, // Explicitly receive p2 for accurate break handling
   unit: AllocationUnit,
   classes: any[]
 ): boolean => {
   const duration = unit.duration;
 
-  // 1. GLOBAL FIXED OCCASIONS (Strict Check)
-  // Any text value (e.g., "Worship") blocks the slot. Only "" or null/undefined is open.
+  // 1. GLOBAL FIXED OCCASIONS (Strict Check & Legacy Support)
+  // Matches Validator logic: Strings or Objects block the slot.
   const globalP1 = data.settings.fixedOccasions?.[d]?.[p];
-  if (globalP1 && typeof globalP1 === "string" && globalP1.trim().length > 0)
-    return false;
+  if (isGlobalSlotBlocked(globalP1)) return false;
 
   if (duration === 2) {
+    // Ensure p2 is valid (not -1) before checking
+    if (p2 === -1) return false;
     const globalP2 = data.settings.fixedOccasions?.[d]?.[p2];
-    if (globalP2 && typeof globalP2 === "string" && globalP2.trim().length > 0)
-      return false;
+    if (isGlobalSlotBlocked(globalP2)) return false;
   }
 
   // 2. TEACHER CONSTRAINTS
+  // Hoist setting lookup out of loop if possible, or keep here for safety
+  const maxConsecutive = data.settings.maxConsecutivePeriods || 4;
+
   for (const tid of unit.teacherIds) {
     // A. Availability (Grid Check)
-    // This grid is initialized with teacher.constraints in state.ts.
-    // If it's true, the teacher is either busy teaching OR blocked by constraint.
     if (state.teacherOccupancy[tid]?.[d]?.[p]) return false;
     if (duration === 2 && state.teacherOccupancy[tid]?.[d]?.[p2]) return false;
 
@@ -66,13 +81,17 @@ export const checkHardConstraints = (
     const teacher = data.teachers.find((t) => t.id === tid);
     const maxLoad =
       teacher?.maxPeriodsPerDay ?? (data.settings.maxTeacherPeriodsPerDay || 6);
+
     if (currentLoad + duration > maxLoad) return false;
 
-    // C. CONSECUTIVE LIMIT (FIX 2)
-    const maxConsecutive = data.settings.maxConsecutivePeriods || 4;
-    // Only check if we are approaching the limit
-    if (!checkConsecutiveLimit(state, d, p, duration, tid, maxConsecutive)) {
+    // C. CONSECUTIVE LIMIT (Optimized Fix)
+    // Only check if we are approaching the limit to save cycles
+    if (currentLoad + duration >= maxConsecutive) {
+      if (
+        !checkConsecutiveLimit(state, d, p, p2, duration, tid, maxConsecutive)
+      ) {
         return false;
+      }
     }
   }
 
@@ -86,19 +105,28 @@ export const checkHardConstraints = (
 
     // B. Fixed Sessions (Class Specific)
     const cls = classes.find((c) => c.id === cid);
-    if (cls?.fixedSessions?.[d]?.[p]) return false;
-    if (duration === 2 && cls?.fixedSessions?.[d]?.[p2]) return false;
+    if (cls?.fixedSessions) {
+      if (cls.fixedSessions[d]?.[p]) return false;
+      if (duration === 2 && cls.fixedSessions[d]?.[p2]) return false;
+    }
 
     // C. MAX SUBJECT PER DAY CHECK
-    // Only run this check if the class has this subject today
     if (state.classDailySubjects[cid]?.[d]?.has(unit.subjectId)) {
       let count = 0;
       const sched = state.schedule[cid]?.[d];
+
       if (sched) {
+        // Fast iteration over object keys
         for (const key in sched) {
-          if (sched[key].subjectId === unit.subjectId) count++;
+          // Count existing periods for this subject
+          if (sched[key].subjectId === unit.subjectId) {
+            // Determine if this existing slot is part of a double or single
+            // (Simplified: assuming 1 slot = 1 duration unit for this check)
+            count++;
+          }
         }
       }
+
       // If adding this unit exceeds the limit
       if (count + duration > maxSubj) return false;
     }

@@ -10,13 +10,11 @@ const ctx: Worker = self as any;
 ctx.onmessage = (e: MessageEvent<AppData>) => {
   const data = e.data;
 
-  // 1. Prepare Units
-  const units = prepareAllocationUnits(data);
+  // 1. Prepare Units ONCE (flatten curriculum)
+  const baseUnits = prepareAllocationUnits(data);
 
-  // CONFIGURATION
-  // A standard run might try 200-400 iterations within 20 seconds
   const MAX_ITERATIONS = 500;
-  const TIME_LIMIT = 20000; // 20 seconds
+  const TIME_LIMIT = 20000;
 
   let bestSchedule: ScheduleResult = {};
   let minConflictCount = Infinity;
@@ -26,35 +24,59 @@ ctx.onmessage = (e: MessageEvent<AppData>) => {
   let actualIterations = 0;
 
   try {
-    // 2. Iteration Loop
     for (let i = 0; i < MAX_ITERATIONS; i++) {
       actualIterations = i + 1;
-      // Check Timer
       if (Date.now() - startTime > TIME_LIMIT && i > 0) break;
 
-      // Run Solver
-      const { schedule, conflicts: solverConflicts } = solveSmart(units, data);
+      // 2. STOCHASTIC PERTURBATION
+      // Shuffle the units slightly differently each time to explore new paths.
+      // We keep the priority sort but shuffle items with EQUAL priority.
+      const iterationUnits = [...baseUnits]; // Clone
 
-      // Validate (Solver returns placement failures, Validator finds subtle logic errors)
-      // Merge both for a true error count
+      // "Soft Shuffle": Randomize order but respect High Priority groups
+      // (Simple approach: full shuffle then re-sort by priority)
+      for (let j = iterationUnits.length - 1; j > 0; j--) {
+        const r = Math.floor(Math.random() * (j + 1));
+        [iterationUnits[j], iterationUnits[r]] = [
+          iterationUnits[r],
+          iterationUnits[j],
+        ];
+      }
+      // Re-apply the heuristic sort so hard stuff is still first,
+      // but "Math 2A" vs "English 2A" order might flip.
+      iterationUnits.sort((a, b) => b.priority - a.priority);
+
+      // 3. Run Solver
+      const { schedule, conflicts: solverConflicts } = solveSmart(
+        iterationUnits,
+        data
+      );
+
+      // 4. Validate
       const dataWithSchedule = { ...data, schedule };
       const validationConflicts = validateFullSchedule(dataWithSchedule);
-      const totalConflicts = [...solverConflicts, ...validationConflicts];
 
+      // Filter out duplicate conflicts if any
+      const totalConflicts = [...solverConflicts, ...validationConflicts];
       const count = totalConflicts.length;
 
-      // Keep the BEST result, not the latest
+      // 5. Keep Best
       if (count < minConflictCount) {
         minConflictCount = count;
         bestSchedule = schedule;
         bestConflicts = totalConflicts;
 
-        // If perfect, stop early
+        // Progress update on improvement
+        ctx.postMessage({
+          type: "progress",
+          payload: { iteration: i, conflicts: minConflictCount },
+        });
+
         if (count === 0) break;
       }
 
-      // Optional: Report progress back to UI every 5 iterations
-      if (i % 5 === 0) {
+      // Periodic update
+      if (i % 50 === 0) {
         ctx.postMessage({
           type: "progress",
           payload: { iteration: i, conflicts: minConflictCount },
@@ -62,7 +84,6 @@ ctx.onmessage = (e: MessageEvent<AppData>) => {
       }
     }
 
-    // 3. Return BEST Result
     ctx.postMessage({
       type: "success",
       payload: {

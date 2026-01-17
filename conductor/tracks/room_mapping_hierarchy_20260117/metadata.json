@@ -1,0 +1,8 @@
+{
+  "track_id": "room_mapping_hierarchy_20260117",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-01-17T12:38:00Z",
+  "updated_at": "2026-01-17T12:38:00Z",
+  "description": "Shift engine from Dynamic Room Discovery to Determined Room Mapping Hierarchy (Subject Lab > Class Home Room)."
+}

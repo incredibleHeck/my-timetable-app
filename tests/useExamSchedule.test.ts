@@ -41,7 +41,7 @@ describe('useExamSchedule', () => {
 
   const mockData = {
     ...DEFAULT_DATA,
-    classes: [{ id: 'c1', name: '10A', level: '10' }],
+    classes: [{ id: 'c1', name: '10A', level: '10', defaultRoomId: 'r1' }],
     exams: initialExams
   };
 
