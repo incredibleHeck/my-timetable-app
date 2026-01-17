@@ -104,28 +104,29 @@ export const checkSubjectLimit = (
   const { data, classId, subjectId, targetDay, maxPeriods } = ctx;
   const maxSubj = data.settings.maxSubjectPeriodsPerDay || 2;
 
-  let count = 0;
+  // 1. Daily Limit Check
+  let dailyCount = 0;
   for (let p = 0; p < maxPeriods; p++) {
     if (proposedSlots.has(p)) {
-      count++;
+      dailyCount++;
     } else {
       // O(1) check via state if available
       if (state) {
         const entry = state.schedule[classId]?.[targetDay]?.[p];
         if (entry && entry.subjectId === subjectId && !ignoredSlots.has(p)) {
-          count++;
+          dailyCount++;
         }
       } else {
         const slot = data.schedule[classId]?.[targetDay]?.[p];
         if (slot && slot.subjectId === subjectId && !ignoredSlots.has(p)) {
-          count++;
+          dailyCount++;
         }
       }
     }
   }
 
-  if (count > maxSubj) {
-    const overflow = count - maxSubj;
+  if (dailyCount > maxSubj) {
+    const overflow = dailyCount - maxSubj;
     return {
       valid: false,
       message: `Max ${maxSubj} periods per day`,
@@ -134,6 +135,41 @@ export const checkSubjectLimit = (
       conflictCount: 1,
     };
   }
+
+  // 2. Weekly/Total Curriculum Limit Check
+  const cls = data.classes.find((c) => c.id === classId);
+  const curr = cls?.curriculum.find((c) => c.subjectId === subjectId);
+  if (curr) {
+    const totalAllowed = (curr.singles || 0) + (curr.doubles || 0) * 2;
+    let totalScheduled = proposedSlots.size;
+
+    // Iterate over all days to count existing placements
+    for (let d = 0; d < (data.settings as any).daysPerWeek || 5; d++) {
+      for (let p = 0; p < maxPeriods; p++) {
+        // Skip current day's proposed slots as we already added them to totalScheduled
+        if (d === targetDay && proposedSlots.has(p)) continue;
+
+        const slot = data.schedule[classId]?.[d]?.[p];
+        // If it's a move, ignore the slot we are moving FROM
+        const isIgnored = d === ctx.targetDay && ignoredSlots.has(p);
+
+        if (slot && slot.subjectId === subjectId && !isIgnored) {
+          totalScheduled++;
+        }
+      }
+    }
+
+    if (totalScheduled > totalAllowed) {
+      return {
+        valid: false,
+        message: `Exceeds curriculum limit (${totalScheduled}/${totalAllowed})`,
+        severity: "HIGH",
+        penaltyPoints: 2000,
+        conflictCount: 1,
+      };
+    }
+  }
+
   return null;
 };
 
