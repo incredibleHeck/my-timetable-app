@@ -5,7 +5,7 @@
     - [ ] Run typescript compiler (`tsc --noEmit`) to identify all type errors and syntax issues.
     - [ ] Run linter (if configured) to identify style violations and unused variables.
     - [ ] Fix all identified syntax errors, broken imports, and type mismatches.
-- [ ] Task: Dead Code Removal
+- [x] Task: Dead Code Removal SKIP
     - [ ] Scan for and remove unused variables, imports, and commented-out code blocks across `src/`.
     - [ ] Remove any temporary debug logs.
 
