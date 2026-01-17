@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import { Profile, ProfileManifest } from '../types/profile';
-import { AppData } from '../types';
+import { AppData, Activity, ActivityType } from '../types';
 import * as ProfileStorage from '../services/profile/profileStorage';
 import * as Migration from '../services/profile/migration';
 import { generateId, deepClone, mergeWithDefaults } from '../utils/utils';
@@ -17,6 +17,7 @@ interface ProfileContextType {
   createNewProfile: (name: string, templateData?: AppData) => Promise<void>;
   switchProfile: (id: string) => Promise<void>;
   updateActiveProfile: (data: AppData) => void;
+  addActivity: (type: ActivityType, message: string) => void;
   reloadProfiles: () => Promise<void>;
   undo: () => void;
   redo: () => void;
@@ -182,6 +183,24 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     applyState(data);
   };
 
+  const addActivity = (type: ActivityType, message: string) => {
+    if (!activeProfile) return;
+
+    const newActivity: Activity = {
+      id: generateId(),
+      type,
+      message,
+      timestamp: new Date().toISOString(),
+    };
+
+    const updatedData = {
+      ...activeProfile.data,
+      recentActivity: [newActivity, ...(activeProfile.data.recentActivity || [])].slice(0, 50),
+    };
+
+    updateActiveProfile(updatedData);
+  };
+
   const triggerSave = (updatedProfile: Profile) => {
     setIsSaving(true);
     // Debounce Save
@@ -214,6 +233,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
       createNewProfile,
       switchProfile,
       updateActiveProfile,
+      addActivity,
       reloadProfiles,
       undo,
       redo,

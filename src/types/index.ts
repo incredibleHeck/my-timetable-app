@@ -65,6 +65,15 @@ export interface Settings {
 // 6. GLOBAL APP STATE
 // ----------------------------------------------------------------------
 
+export type ActivityType = "SCHEDULING" | "ACADEMIC" | "SYSTEM";
+
+export interface Activity {
+  id: string;
+  type: ActivityType;
+  message: string;
+  timestamp: string;
+}
+
 export interface AppData {
   settings: Settings;
   subjects: Subject[];
@@ -81,6 +90,7 @@ export interface AppData {
   schedule: ScheduleResult;
   conflicts: Conflict[];
   lastGenerated: string | null;
+  recentActivity: Activity[];
 }
 
 export interface Profile {

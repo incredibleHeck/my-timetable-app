@@ -150,6 +150,7 @@ export const DEFAULT_DATA: AppData = {
   schedule: {},
   conflicts: [],
   lastGenerated: null,
+  recentActivity: [],
 };
 
 export const DEFAULT_PROFILE: Profile = {
