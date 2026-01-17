@@ -87,16 +87,19 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
     };
 
     let newSubjects = [...data.subjects];
+    let msg = "";
     if (editingSubject) {
-      addActivity("ACADEMIC", `Updated Subject: ${newSubj.name}`);
+      msg = `Updated Subject: ${newSubj.name}`;
       newSubjects = newSubjects.map((s) =>
         s.id === editingSubject.id ? newSubj : s
       );
     } else {
-      addActivity("ACADEMIC", `Added Subject: ${newSubj.name}`);
+      msg = `Added Subject: ${newSubj.name}`;
       newSubjects.push(newSubj);
     }
-    onUpdate({ ...data, subjects: newSubjects });
+    const nextData = { ...data, subjects: newSubjects };
+    addActivity("ACADEMIC", msg, nextData);
+
     setModalOpen(false);
   };
 
@@ -110,7 +113,6 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
     const id = subjectToDelete.id;
 
     try {
-      addActivity("ACADEMIC", `Deleted Subject: ${subjectToDelete.name}`);
       const updatedSubjects = data.subjects.filter((s) => s.id !== id);
       const updatedTeachers = data.teachers.map((t) => ({
         ...t,
@@ -120,12 +122,15 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
         ...c,
         curriculum: c.curriculum.filter((curr) => curr.subjectId !== id),
       }));
-      onUpdate({
+      
+      const nextData = {
         ...data,
         subjects: updatedSubjects,
         teachers: updatedTeachers,
         classes: updatedClasses,
-      });
+      };
+      addActivity("ACADEMIC", `Deleted Subject: ${subjectToDelete.name}`, nextData);
+
     } catch (e) {
       console.error(e);
     }

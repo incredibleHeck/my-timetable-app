@@ -17,7 +17,7 @@ interface ProfileContextType {
   createNewProfile: (name: string, templateData?: AppData) => Promise<void>;
   switchProfile: (id: string) => Promise<void>;
   updateActiveProfile: (data: AppData) => void;
-  addActivity: (type: ActivityType, message: string) => void;
+  addActivity: (type: ActivityType, message: string, dataToUpdate?: AppData) => void;
   reloadProfiles: () => Promise<void>;
   undo: () => void;
   redo: () => void;
@@ -183,7 +183,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     applyState(data);
   };
 
-  const addActivity = (type: ActivityType, message: string) => {
+  const addActivity = (type: ActivityType, message: string, dataToUpdate?: AppData) => {
     if (!activeProfile) return;
 
     const newActivity: Activity = {
@@ -193,9 +193,11 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
       timestamp: new Date().toISOString(),
     };
 
+    const currentData = dataToUpdate || activeProfile.data;
+    
     const updatedData = {
-      ...activeProfile.data,
-      recentActivity: [newActivity, ...(activeProfile.data.recentActivity || [])].slice(0, 50),
+      ...currentData,
+      recentActivity: [newActivity, ...(currentData.recentActivity || [])].slice(0, 50),
     };
 
     updateActiveProfile(updatedData);

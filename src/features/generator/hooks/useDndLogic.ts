@@ -328,6 +328,8 @@ export const useDndLogic = (
         setSlot(sD, sP, destSlot, targetDuration);
     }
 
+    const nextData = { ...data, schedule: newSchedule };
+
     // --- LOG ACTIVITY ---
     const classObj = classes.find(c => c.id === classId);
     const subjObj = subjects.find(s => s.id === sourceSlot.subjectId);
@@ -340,10 +342,10 @@ export const useDndLogic = (
     } else {
         message = `Moved ${subjObj?.name} (${teacherObj?.name}) in ${classObj?.name} to ${DAYS[tD]} P${tP + 1}`;
     }
-    addActivity("SCHEDULING", message);
+    addActivity("SCHEDULING", message, nextData);
 
     pushToHistory(data);
-    onUpdate({ ...data, schedule: newSchedule });
+    onUpdate(nextData);
   };
 
   return {

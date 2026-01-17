@@ -107,7 +107,8 @@ describe('Scheduling Activity Logging', () => {
 
     expect(mockAddActivity).toHaveBeenCalledWith(
       "SCHEDULING",
-      "Moved Math (John Doe) in 10A to Monday P2"
+      "Moved Math (John Doe) in 10A to Monday P2",
+      expect.any(Object)
     );
   });
 
@@ -173,7 +174,8 @@ describe('Scheduling Activity Logging', () => {
 
     expect(mockAddActivity).toHaveBeenCalledWith(
       "SCHEDULING",
-      "Swapped Math with Science in 10A"
+      "Swapped Math with Science in 10A",
+      expect.any(Object)
     );
   });
 });

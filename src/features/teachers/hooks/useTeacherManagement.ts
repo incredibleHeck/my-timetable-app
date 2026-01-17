@@ -55,13 +55,9 @@ export const useTeacherManagement = (
       ? data.teachers.map((t) => (t.id === editingTeacher.id ? newT : t))
       : [...data.teachers, newT];
     
-    if (editingTeacher) {
-      addActivity("ACADEMIC", `Updated Teacher: ${newT.name}`);
-    } else {
-      addActivity("ACADEMIC", `Added Teacher: ${newT.name}`);
-    }
-
-    onUpdate({ ...data, teachers: newTeachers });
+    const nextData = { ...data, teachers: newTeachers };
+    const msg = editingTeacher ? `Updated Teacher: ${newT.name}` : `Added Teacher: ${newT.name}`;
+    addActivity("ACADEMIC", msg, nextData);
   };
 
   const duplicateTeacher = (t: Teacher) => {
@@ -71,8 +67,8 @@ export const useTeacherManagement = (
       name: `${t.name} (Copy)`,
       constraints: JSON.parse(JSON.stringify(t.constraints || [])),
     };
-    addActivity("ACADEMIC", `Duplicated Teacher: ${t.name}`);
-    onUpdate({ ...data, teachers: [...data.teachers, copy] });
+    const nextData = { ...data, teachers: [...data.teachers, copy] };
+    addActivity("ACADEMIC", `Duplicated Teacher: ${t.name}`, nextData);
   };
 
   const initiateDelete = (t: Teacher) => {
@@ -83,9 +79,9 @@ export const useTeacherManagement = (
   const confirmDelete = () => {
     if (!teacherToDelete) return;
     const id = teacherToDelete.id;
-    addActivity("ACADEMIC", `Deleted Teacher: ${teacherToDelete.name}`);
+    
     // Remove teacher and strip assignments from classes
-    onUpdate({
+    const nextData = {
       ...data,
       teachers: data.teachers.filter((t) => t.id !== id),
       classes: data.classes.map((c) => ({
@@ -96,7 +92,10 @@ export const useTeacherManagement = (
             : i
         ),
       })),
-    });
+    };
+
+    addActivity("ACADEMIC", `Deleted Teacher: ${teacherToDelete.name}`, nextData);
+    
     setDeleteModalOpen(false);
     setTeacherToDelete(null);
   };
@@ -109,6 +108,7 @@ export const useTeacherManagement = (
     );
 
     let newTeachers = [...data.teachers];
+    let msg = "";
 
     if (existingTeacher) {
       if (!existingTeacher.specialtyIds.includes(subjectId)) {
@@ -118,7 +118,7 @@ export const useTeacherManagement = (
             : t
         );
         const subj = data.subjects.find(s => s.id === subjectId);
-        addActivity("ACADEMIC", `Added ${existingTeacher.name} to ${subj?.name} faculty`);
+        msg = `Added ${existingTeacher.name} to ${subj?.name} faculty`;
       }
     } else {
       // Create new teacher
@@ -131,10 +131,13 @@ export const useTeacherManagement = (
       };
       newTeachers.push(newT);
       const subj = data.subjects.find(s => s.id === subjectId);
-      addActivity("ACADEMIC", `Added Teacher: ${newT.name} (${subj?.name})`);
+      msg = `Added Teacher: ${newT.name} (${subj?.name})`;
     }
 
-    onUpdate({ ...data, teachers: newTeachers });
+    if (msg) {
+        const nextData = { ...data, teachers: newTeachers };
+        addActivity("ACADEMIC", msg, nextData);
+    }
   };
 
   return {

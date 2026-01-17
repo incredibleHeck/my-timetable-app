@@ -55,22 +55,25 @@ export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
     newClass.id = generateId();
     newClass.name = `${cls.name} (Copy)`;
     newClass.curriculum.forEach((c) => (c.id = generateId()));
-    addActivity("ACADEMIC", `Duplicated Class: ${cls.name}`);
-    onUpdate({ ...data, classes: [...data.classes, newClass] });
+    
+    const nextData = { ...data, classes: [...data.classes, newClass] };
+    addActivity("ACADEMIC", `Duplicated Class: ${cls.name}`, nextData);
   };
 
   const handleSaveClass = (newClass: ClassGroup) => {
     let newClasses = [...data.classes];
+    let msg = "";
     if (editingClass) {
-      addActivity("ACADEMIC", `Updated Class: ${newClass.name}`);
+      msg = `Updated Class: ${newClass.name}`;
       newClasses = newClasses.map((c) =>
         c.id === editingClass.id ? newClass : c
       );
     } else {
-      addActivity("ACADEMIC", `Added Class: ${newClass.name}`);
+      msg = `Added Class: ${newClass.name}`;
       newClasses.push(newClass);
     }
-    onUpdate({ ...data, classes: newClasses });
+    const nextData = { ...data, classes: newClasses };
+    addActivity("ACADEMIC", msg, nextData);
   };
 
   const initiateDelete = (cls: ClassGroup) => {
@@ -80,7 +83,7 @@ export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
 
   const confirmDelete = () => {
     if (!classToDelete) return;
-    addActivity("ACADEMIC", `Deleted Class: ${classToDelete.name}`);
+    
     const newClasses = data.classes.filter((c) => c.id !== classToDelete.id);
     const newJoints = data.jointClasses
       .map((j) => ({
@@ -94,12 +97,15 @@ export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
         classIds: e.classIds.filter((id) => id !== classToDelete.id),
       }))
       .filter((e) => e.classIds.length > 0);
-    onUpdate({
+
+    const nextData = {
       ...data,
       classes: newClasses,
       jointClasses: newJoints,
       electives: newElectives,
-    });
+    };
+    addActivity("ACADEMIC", `Deleted Class: ${classToDelete.name}`, nextData);
+
     setDeleteModalOpen(false);
     setClassToDelete(null);
   };
@@ -108,32 +114,33 @@ export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
   //  GROUP HANDLERS
   // ------------------------------------------------------------------
   const handleSaveLink = (newJoint: JointClass) => {
-    addActivity("ACADEMIC", `Created Joint Class: ${newJoint.name}`);
-    onUpdate({ ...data, jointClasses: [...data.jointClasses, newJoint] });
+    const nextData = { ...data, jointClasses: [...data.jointClasses, newJoint] };
+    addActivity("ACADEMIC", `Created Joint Class: ${newJoint.name}`, nextData);
   };
 
   const handleSaveElective = (newElec: ElectiveBlock) => {
     const safeElectives = data.electives || [];
-    addActivity("ACADEMIC", `Created Elective Block: ${newElec.name}`);
-    onUpdate({ ...data, electives: [...safeElectives, newElec] });
+    const nextData = { ...data, electives: [...safeElectives, newElec] };
+    addActivity("ACADEMIC", `Created Elective Block: ${newElec.name}`, nextData);
   };
 
   const handleRemoveJoint = (id: string) => {
     const joint = data.jointClasses.find(j => j.id === id);
-    addActivity("ACADEMIC", `Deleted Joint Class: ${joint?.name}`);
-    onUpdate({
+    const nextData = {
       ...data,
       jointClasses: data.jointClasses.filter((j) => j.id !== id),
-    });
-  }
+    };
+    addActivity("ACADEMIC", `Deleted Joint Class: ${joint?.name}`, nextData);
+  };
+
   const handleRemoveElective = (id: string) => {
     const elec = (data.electives || []).find(e => e.id === id);
-    addActivity("ACADEMIC", `Deleted Elective Block: ${elec?.name}`);
-    onUpdate({
+    const nextData = {
       ...data,
       electives: (data.electives || []).filter((e) => e.id !== id),
-    });
-  }
+    };
+    addActivity("ACADEMIC", `Deleted Elective Block: ${elec?.name}`, nextData);
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto p-8">

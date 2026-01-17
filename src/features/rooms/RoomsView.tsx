@@ -57,16 +57,19 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
     };
 
     let newRooms = [...data.rooms];
+    let msg = "";
     if (editingRoom) {
-      addActivity("ACADEMIC", `Updated Room: ${newRoom.name}`);
+      msg = `Updated Room: ${newRoom.name}`;
       newRooms = newRooms.map((r) =>
         r.id === editingRoom.id ? newRoom : r
       );
     } else {
-      addActivity("ACADEMIC", `Added Room: ${newRoom.name}`);
+      msg = `Added Room: ${newRoom.name}`;
       newRooms.push(newRoom);
     }
-    onUpdate({ ...data, rooms: newRooms });
+    const nextData = { ...data, rooms: newRooms };
+    addActivity("ACADEMIC", msg, nextData);
+
     setModalOpen(false);
     resetForm();
   };
@@ -88,13 +91,9 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
     const id = roomToDelete.id;
 
     try {
-      addActivity("ACADEMIC", `Deleted Room: ${roomToDelete.name}`);
       const updatedRooms = data.rooms.filter((r) => r.id !== id);
-      // Future: Remove references from schedule if assigned
-      onUpdate({
-        ...data,
-        rooms: updatedRooms,
-      });
+      const nextData = { ...data, rooms: updatedRooms };
+      addActivity("ACADEMIC", `Deleted Room: ${roomToDelete.name}`, nextData);
     } catch (e) {
       console.error(e);
     }

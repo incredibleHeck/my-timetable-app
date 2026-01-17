@@ -36,7 +36,7 @@ describe('Academic Activity Logging', () => {
     const duplicateButton = screen.getByTitle('Duplicate');
     fireEvent.click(duplicateButton);
 
-    expect(mockAddActivity).toHaveBeenCalledWith('ACADEMIC', 'Duplicated Teacher: John Doe');
+    expect(mockAddActivity).toHaveBeenCalledWith('ACADEMIC', 'Duplicated Teacher: John Doe', expect.any(Object));
   });
 
   it('should log an activity when a room is added', async () => {
@@ -53,6 +53,6 @@ describe('Academic Activity Logging', () => {
     // Save
     fireEvent.click(screen.getByText('Save Room'));
 
-    expect(mockAddActivity).toHaveBeenCalledWith('ACADEMIC', 'Added Room: New Room');
+    expect(mockAddActivity).toHaveBeenCalledWith('ACADEMIC', 'Added Room: New Room', expect.any(Object));
   });
 });
