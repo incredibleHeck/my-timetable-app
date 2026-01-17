@@ -75,13 +75,17 @@ export const calculateTeacherGapPenalty = (
     if (!dailyGrid) continue;
 
     // --- BRIDGE & IGNORE BREAKS LOGIC (Look Backwards) ---
+    // Rule: Skip breaks/lunches and compare the last teaching period with this one.
     const prevInstructionalP = getPrevClassPeriod(p, structure);
     if (prevInstructionalP !== null) {
+      // If the immediate instructional neighbor is empty, we check for a gap
       if (!dailyGrid[prevInstructionalP]) {
+        // Look for the source lesson before the gap
         const sourceInstructionalP = getPrevClassPeriod(prevInstructionalP, structure);
         if (sourceInstructionalP !== null) {
           const prevUnitId = dailyGrid[sourceInstructionalP];
           if (prevUnitId && prevUnitId !== "BLOCK") {
+            // THE 'SAME CLASS' RULE: Only penalize if the gap fragments the same class group
             const isSameClass = currentClassIds.some(cid => 
               state.classOccupancy[cid]?.[d]?.[sourceInstructionalP] === prevUnitId
             );
@@ -93,9 +97,9 @@ export const calculateTeacherGapPenalty = (
       }
     }
 
-    // REWARD: Continuity (Teaching back-to-back)
-    const immediatePrevP = getPrevClassPeriod(p, structure);
-    if (immediatePrevP !== null && dailyGrid[immediatePrevP]) {
+    // REWARD: Continuity (Teaching instructional neighbors)
+    const immediatePrevInstructional = getPrevClassPeriod(p, structure);
+    if (immediatePrevInstructional !== null && dailyGrid[immediatePrevInstructional]) {
       penalty += WEIGHTS.TEACHER_CLUSTER;
     }
   }

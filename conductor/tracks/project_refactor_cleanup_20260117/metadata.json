@@ -1,8 +1,0 @@
-{
-  "track_id": "project_refactor_cleanup_20260117",
-  "type": "chore",
-  "status": "new",
-  "created_at": "2026-01-17T00:00:00Z",
-  "updated_at": "2026-01-17T00:00:00Z",
-  "description": "End-to-end refactor, cleanup, and verification of the EduScheduler Pro codebase."
-}

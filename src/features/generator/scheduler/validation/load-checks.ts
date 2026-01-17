@@ -163,9 +163,9 @@ export const checkSubjectLimit = (
 };
 
 /**
- * REFACTORED: Gap Detection (Break/Lunch Aware)
- * Only flags a gap if an empty CLASS period exists between two occupied slots.
- * This handles both general 'Sandwich' rules and Subject-specific splits.
+ * REFACTORED: Gap Detection (Break/Lunch Aware & Class-Sensitive)
+ * 1. Ignores BREAK and LUNCH periods (Bridge Logic).
+ * 2. Only flags gaps if the empty slot occurs between sessions of the SAME class group (Same Class Rule).
  */
 export const checkGapDetection = (
   ctx: ValidationContext,
@@ -173,41 +173,28 @@ export const checkGapDetection = (
   ignoredSlots: Set<number>,
   state?: SchedulerState
 ): ValidationResult | null => {
-  const { data, classId, teacherId, targetDay, maxPeriods, structure, subjectId } = ctx;
+  const { data, classId, teacherId, targetDay, structure, subjectId } = ctx;
 
-  // 1. GENERAL SANDWICH CHECK (Any Lesson)
-  // Flags a gap if ANY empty CLASS period exists between ANY two lessons.
-  const anyOccupied: number[] = [];
-  for (let p = 0; p < maxPeriods; p++) {
-    if (proposedSlots.has(p)) {
-      anyOccupied.push(p);
-    } else {
-      const isOccupied = state 
-        ? state.classOccupancy[classId]?.[targetDay]?.[p] !== null
-        : data.schedule[classId]?.[targetDay]?.[p] !== undefined;
+  // 1. CLASS GAP DETECTION
+  // We only care about gaps for THIS class on THIS day.
+  for (const p of Array.from(proposedSlots)) {
+    // Look Backwards for a Gap in this Class's schedule
+    const prevInstructionalP = getPrevClassPeriod(p, structure);
+    if (prevInstructionalP !== null) {
+      // Check if the instructional neighbor is empty
+      const isNeighborEmpty = state
+        ? (state.classOccupancy[classId]?.[targetDay]?.[prevInstructionalP] === null || ignoredSlots.has(prevInstructionalP))
+        : (data.schedule[classId]?.[targetDay]?.[prevInstructionalP] === undefined || ignoredSlots.has(prevInstructionalP));
 
-      if (isOccupied && !ignoredSlots.has(p)) {
-        anyOccupied.push(p);
-      }
-    }
-  }
+      if (isNeighborEmpty) {
+        // If empty, look for the instructional slot BEFORE it
+        const sourceInstructionalP = getPrevClassPeriod(prevInstructionalP, structure);
+        if (sourceInstructionalP !== null) {
+          const isSourceOccupied = state
+            ? (state.classOccupancy[classId]?.[targetDay]?.[sourceInstructionalP] !== null && !ignoredSlots.has(sourceInstructionalP))
+            : (data.schedule[classId]?.[targetDay]?.[sourceInstructionalP] !== undefined && !ignoredSlots.has(sourceInstructionalP));
 
-  if (anyOccupied.length >= 2) {
-    anyOccupied.sort((a, b) => a - b);
-    for (let i = 0; i < anyOccupied.length - 1; i++) {
-      const start = anyOccupied[i];
-      const end = anyOccupied[i + 1];
-
-      for (let p = start + 1; p < end; p++) {
-        const periodType = getType(structure, p);
-        if (periodType === "CLASS" && !proposedSlots.has(p)) {
-          // If the slot is empty (checked via occupancy grid or schedule)
-          // or if it IS one of the slots we are vacating (ignoredSlots)
-          const isActuallyEmpty = state 
-            ? (state.classOccupancy[classId]?.[targetDay]?.[p] === null || ignoredSlots.has(p))
-            : (data.schedule[classId]?.[targetDay]?.[p] === undefined || ignoredSlots.has(p));
-
-          if (isActuallyEmpty) {
+          if (isSourceOccupied) {
             return {
               valid: false,
               message: "Gap detected",
@@ -221,53 +208,20 @@ export const checkGapDetection = (
     }
   }
 
-  // 2. SUBJECT-SPECIFIC SPLIT CHECK
-  // (Redundant if check 1 is strict, but kept for clarity on subject integrity)
-  const subjectOccupied: number[] = anyOccupied.filter(p => {
-      if (proposedSlots.has(p)) return true;
-      const entry = state ? state.schedule[classId]?.[targetDay]?.[p] : data.schedule[classId]?.[targetDay]?.[p];
-      return entry?.subjectId === subjectId;
-  });
-
-  if (subjectOccupied.length >= 2) {
-    subjectOccupied.sort((a, b) => a - b);
-    for (let i = 0; i < subjectOccupied.length - 1; i++) {
-      const start = subjectOccupied[i];
-      const end = subjectOccupied[i + 1];
-
-      for (let p = start + 1; p < end; p++) {
-        if (getType(structure, p) === "CLASS" && !proposedSlots.has(p)) {
-           const isActuallyEmpty = state 
-            ? state.classOccupancy[classId]?.[targetDay]?.[p] === null
-            : data.schedule[classId]?.[targetDay]?.[p] === undefined;
-
-           if (isActuallyEmpty) {
-              return {
-                valid: false,
-                message: `Gap detected: ${subjectId} is split by an empty lesson slot.`,
-                severity: "MEDIUM",
-                penaltyPoints: 400,
-                conflictCount: 0
-              };
-           }
-        }
-      }
-    }
-  }
-
-  // 3. TEACHER GAP DETECTION (Class-Sensitive & Break-Aware)
+  // 2. TEACHER GAP DETECTION (Same Class Rule)
   // Flags cases where a teacher has Class 1 at P1, Free at P2, and Class 1 at P3.
-  // Breaks and Lunches are transparent and do not break continuity.
   if (state) {
     const teacherGrid = state.teacherOccupancy[teacherId]?.[targetDay];
     if (teacherGrid) {
       for (const p of Array.from(proposedSlots)) {
         const prevInstructionalP = getPrevClassPeriod(p, structure);
         if (prevInstructionalP !== null) {
+          // If the instructional neighbor is empty for the teacher
           if (!teacherGrid[prevInstructionalP] || ignoredSlots.has(prevInstructionalP)) {
             const sourceInstructionalP = getPrevClassPeriod(prevInstructionalP, structure);
             if (sourceInstructionalP !== null) {
               const prevUnitId = teacherGrid[sourceInstructionalP];
+              // Only flag if the source lesson belongs to the SAME class group
               if (prevUnitId && prevUnitId !== "BLOCK" && !ignoredSlots.has(sourceInstructionalP)) {
                 const isSameClass = state.classOccupancy[classId]?.[targetDay]?.[sourceInstructionalP] === prevUnitId;
                 if (isSameClass) {
