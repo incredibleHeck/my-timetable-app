@@ -2,6 +2,7 @@
 
 import { AppData, PeriodConfig, Profile } from "../types"; // UPDATED IMPORT
 import { generateId } from "./utils";
+import { generateDefaultTimeSlots } from "./timeUtils";
 
 // --- PRO COLOR PALETTE (Hex + Name) ---
 // Used by SubjectsView for tooltips
@@ -88,33 +89,6 @@ export const DEFAULT_STRUCTURE: PeriodConfig[] = [
   { type: "CLASS", label: "6" },
 ];
 
-const generateDefaultTimeSlots = () => {
-  const slots = [];
-  let currentHour = 8;
-  let currentMinute = 0;
-
-  for (const block of DEFAULT_STRUCTURE) {
-    let duration = 50; // Default Class
-    if (block.type === "BREAK") duration = 20;
-    if (block.type === "LUNCH") duration = 60;
-
-    const start = `${String(currentHour).padStart(2, "0")}:${String(
-      currentMinute
-    ).padStart(2, "0")}`;
-
-    // Add duration
-    let totalMins = currentHour * 60 + currentMinute + duration;
-    currentHour = Math.floor(totalMins / 60);
-    currentMinute = totalMins % 60;
-
-    const end = `${String(currentHour).padStart(2, "0")}:${String(
-      currentMinute
-    ).padStart(2, "0")}`;
-    slots.push({ start, end });
-  }
-  return slots;
-};
-
 export const DEFAULT_DATA: AppData = {
   settings: {
     periodsPerDay: DEFAULT_PERIODS,
@@ -126,7 +100,7 @@ export const DEFAULT_DATA: AppData = {
     // Pro Defaults
     schoolName: "My Awesome School",
     academicYear: new Date().getFullYear().toString(),
-    timeSlots: generateDefaultTimeSlots(),
+    timeSlots: generateDefaultTimeSlots(DEFAULT_STRUCTURE),
     maxConsecutivePeriods: 4,
 
     // Automation Defaults

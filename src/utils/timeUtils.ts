@@ -29,23 +29,20 @@ export function getEffectiveDuration(
 }
 
 /**
- * Logical-to-Physical Mapper:
- * Accumulates durations to build a timeline for a class day.
+ * Core Schedule Calculator
+ * Generates time slots based on a start time, structure, and duration resolver.
  */
-
-export function calculateClassSchedule(
-  classGroup: ClassGroup,
-  globalSettings: Settings,
-  dayStructure: (PeriodType | PeriodConfig)[]
+export function calculateSchedule(
+  startTime: string,
+  structure: (PeriodType | PeriodConfig)[],
+  durationResolver: (type: PeriodType) => number
 ): TimeSlot[] {
-  const startTime = globalSettings.schoolStartTime || "08:00";
   const schedule: TimeSlot[] = [];
-
   let currentMinutes = timeToMinutes(startTime);
 
-  for (const item of dayStructure) {
+  for (const item of structure) {
     const type = typeof item === "string" ? item : item.type;
-    const duration = getEffectiveDuration(classGroup, globalSettings, type);
+    const duration = durationResolver(type);
 
     const start = minutesToTime(currentMinutes);
     const end = minutesToTime(currentMinutes + duration);
@@ -60,11 +57,37 @@ export function calculateClassSchedule(
 }
 
 /**
+ * Logical-to-Physical Mapper:
+ * Accumulates durations to build a timeline for a class day.
+ */
+export function calculateClassSchedule(
+  classGroup: ClassGroup,
+  globalSettings: Settings,
+  dayStructure: (PeriodType | PeriodConfig)[]
+): TimeSlot[] {
+  const startTime = globalSettings.schoolStartTime || "08:00";
+  return calculateSchedule(startTime, dayStructure, (type) => 
+    getEffectiveDuration(classGroup, globalSettings, type)
+  );
+}
+
+/**
+ * Generates default time slots for initial app state.
+ */
+export function generateDefaultTimeSlots(structure: (PeriodType | PeriodConfig)[]): TimeSlot[] {
+  // Hardcoded defaults to match original constants.ts logic
+  return calculateSchedule("08:00", structure, (type) => {
+    if (type === "BREAK") return 20;
+    if (type === "LUNCH") return 60;
+    return 50; // Default Class
+  });
+}
+
+/**
  * Interval Arithmetic: Overlap Detection
  * Uses the logic: (StartA < EndB) AND (StartB < EndA).
  * This correctly treats back-to-back classes (EndA === StartB) as NOT overlapping.
  */
-
 export function doTimeRangesOverlap(
   range1: TimeSlot,
   range2: TimeSlot
