@@ -16,7 +16,7 @@
     - [ ] Update call sites to use the consolidated functions.
 
 ## Phase 3: Verification (Test-Driven Repair)
-- [ ] Task: Test Suite Execution - Core Modules
+- [x] Task: Test Suite Execution - Core Modules e6b161f
     - [ ] Run tests for `src/features/generator/scheduler` (Solver, Validator, State).
     - [ ] Fix any logic errors exposed by the tests.
 - [ ] Task: Test Suite Execution - Data Management
