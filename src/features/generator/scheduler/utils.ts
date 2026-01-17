@@ -30,7 +30,7 @@ export function getNextClassPeriod(
   let nextP = currentP + 1;
 
   while (nextP < maxPeriods) {
-    const type = getType(structure, nextP);
+    const type = getPeriodType(structure, nextP);
     
     if (type === "CLASS") {
       return nextP; // Found the second half of the double lesson

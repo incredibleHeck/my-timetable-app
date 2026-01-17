@@ -116,7 +116,7 @@ export const checkSlotValidity = (
     // B. Resource Availability (Teacher/Resource grids)
     const resourceError = checkResourceAndAvailability(ctx, p, state);
     if (resourceError) {
-      if (resourceError.message.includes("Teacher Busy")) {
+      if (resourceError.message && resourceError.message.includes("Teacher Busy")) {
         return { ...resourceError, message: "Teacher is busy", penaltyPoints: 1000, conflictCount: 1 };
       }
       return { ...resourceError, penaltyPoints: 1000, conflictCount: 1 };
