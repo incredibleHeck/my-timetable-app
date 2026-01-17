@@ -8,7 +8,7 @@
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Data Model & Types' (Protocol in workflow.md)
 
 ## Phase 2: Solver Engine Refactor
-- [ ] Task: Implement `determineRoom` Hierarchy
+- [x] Task: Implement `determineRoom` Hierarchy [956df12]
     - [ ] Write failing tests in `tests/scheduler-validation.test.ts` for hierarchy-based room assignment.
     - [ ] Refactor `determineRoom` in `src/features/generator/solver.ts` to implement Subject-Priority fallback logic.
     - [ ] Ensure room occupancy checks account for double periods.
