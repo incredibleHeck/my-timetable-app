@@ -35,6 +35,19 @@ export const useDndLogic = (
     return null;
   };
 
+  const getPrevClassIndex = (p: number, classId: string): number | null => {
+    const cls = classes.find((c) => c.id === classId);
+    const struct = cls?.structure || settings.dayStructure;
+    
+    // Loop backwards to find the previous CLASS period
+    for (let i = p - 1; i >= 0; i--) {
+      const item = struct[i];
+      const type = getSafeType(item);
+      if (type === "CLASS") return i;
+    }
+    return null;
+  };
+
   const getDuration = (classId: string, d: number, p: number): number => {
     const slot = schedule[classId]?.[d]?.[p];
     if (!slot) return 1;
@@ -50,12 +63,21 @@ export const useDndLogic = (
   const checkDragValidity = (targetDay: number, targetPeriod: number, isHoverCheck = false): boolean => {
     if (!activeDragItem) return true;
     
-    if (activeDragItem.day === targetDay && activeDragItem.period === targetPeriod) {
+    // --- NORMALIZE SOURCE: If dragging the TAIL (isFixed), shift start to HEAD ---
+    let sourcePeriod = activeDragItem.period;
+    let sourceDay = activeDragItem.day;
+    const sourceClassId = mode === "CLASS" ? activeId : activeDragItem.classGroup?.id;
+
+    if (activeDragItem.slot.isFixed && sourceClassId) {
+        const prev = getPrevClassIndex(sourcePeriod, sourceClassId);
+        if (prev !== null) sourcePeriod = prev;
+    }
+
+    if (sourceDay === targetDay && sourcePeriod === targetPeriod) {
         if (isHoverCheck && setHoverConflict) setHoverConflict(null);
         return true;
     }
 
-    const sourceClassId = mode === "CLASS" ? activeId : activeDragItem.classGroup?.id;
     if (!sourceClassId) return false;
 
     let targetClassId = sourceClassId;
@@ -94,7 +116,7 @@ export const useDndLogic = (
         return `${reason} for ${subj?.name} (${teach?.name}) at ${time}`;
     };
 
-    const sourceDuration = getDuration(classId, activeDragItem.day, activeDragItem.period);
+    const sourceDuration = getDuration(classId, sourceDay, sourcePeriod);
     const targetSlot = schedule[classId]?.[targetDay]?.[targetPeriod];
     const targetDuration = targetSlot ? getDuration(classId, targetDay, targetPeriod) : 1;
 
@@ -146,7 +168,7 @@ export const useDndLogic = (
 
     const valMove = checkSlotValidity(
         data, targetDay, targetPeriod, activeDragItem.slot.teacherId, classId, activeDragItem.slot.subjectId,
-        { day: activeDragItem.day, period: activeDragItem.period },
+        { day: sourceDay, period: sourcePeriod, duration: sourceDuration },
         activeDragItem.slot.roomId,
         sourceDuration,
         targetSlot ? { day: targetDay, period: targetPeriod, duration: targetDuration } : undefined
@@ -167,7 +189,7 @@ export const useDndLogic = (
     if (targetSlot) {
          const valSwap = checkSlotValidity(
             data, activeDragItem.day, activeDragItem.period, targetSlot.teacherId, classId, targetSlot.subjectId,
-            { day: targetDay, period: targetPeriod },
+            { day: targetDay, period: targetPeriod, duration: targetDuration },
             targetSlot.roomId,
             targetDuration,
             { day: activeDragItem.day, period: activeDragItem.period, duration: sourceDuration }
@@ -220,8 +242,16 @@ export const useDndLogic = (
     const classId = mode === "CLASS" ? activeId : sData.classGroup?.id;
     if (!classId) return;
 
+    // --- NORMALIZE SOURCE: If dragging the TAIL, shift reference to the HEAD ---
+    let sP = sData.period;
     const sD = sData.day;
-    const sP = sData.period;
+    if (sData.slot.isFixed) {
+        const prev = getPrevClassIndex(sP, classId);
+        if (prev !== null) sP = prev;
+    }
+
+    if (sD === tData.day && sP === tData.period) return;
+
     const tD = tData.day;
     const tP = tData.period;
 
@@ -243,7 +273,7 @@ export const useDndLogic = (
 
     const valMove = checkSlotValidity(
         data, tD, tP, sData.slot.teacherId, classId, sData.slot.subjectId,
-        { day: sD, period: sP },
+        { day: sD, period: sP, duration: sourceDuration },
         sData.slot.roomId,
         sourceDuration,
         targetSlot ? { day: tD, period: tP, duration: targetDuration } : undefined
@@ -253,7 +283,7 @@ export const useDndLogic = (
     if (targetSlot) {
         const valSwap = checkSlotValidity(
             data, sD, sP, targetSlot.teacherId, classId, targetSlot.subjectId,
-            { day: tD, period: tP },
+            { day: tD, period: tP, duration: targetDuration },
             targetSlot.roomId,
             targetDuration,
             { day: sD, period: sP, duration: sourceDuration }
@@ -277,7 +307,8 @@ export const useDndLogic = (
 
     const setSlot = (d: number, p: number, slot: ScheduleSlot, dur: number) => {
         if (!newSchedule[classId][d]) newSchedule[classId][d] = {};
-        newSchedule[classId][d][p] = slot;
+        // Ensure Head is NOT fixed
+        newSchedule[classId][d][p] = { ...slot, isFixed: false };
         if (dur === 2) {
             const p2 = getNextClassIndex(p, classId);
             if (p2 !== null) {
