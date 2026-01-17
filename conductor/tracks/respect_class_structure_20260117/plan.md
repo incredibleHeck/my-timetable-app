@@ -6,5 +6,5 @@ Classes were being scheduled on break and lunch times because the generator's so
 - [x] Task: Create reproduction test case `tests/class-structure-fixed-slots.test.ts`. [6f96abe]
 - [x] Task: Update `src/features/generator/scheduler/search.ts` to respect class-specific structures in `findValidMoves` and `findMinConflictMove`. [0c99841]
 - [x] Task: Update `src/features/generator/scheduler/heuristics.ts` to respect class-specific structures in `countValidSlots`. [635f735]
-- [ ] Task: Update `src/features/generator/scheduler/validation/load-checks.ts` to enforce total curriculum subject limits.
+- [x] Task: Update `src/features/generator/scheduler/validation/load-checks.ts` to enforce total curriculum subject limits. [b11ddc9]
 - [ ] Task: Verify fix with reproduction test and existing test suite.
