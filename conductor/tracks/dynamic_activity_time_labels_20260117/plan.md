@@ -20,11 +20,11 @@
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Scheduling Activity Integration' (Protocol in workflow.md)
 
 ## Phase 3: Academic Data & Settings Integration [checkpoint: ]
-- [ ] Task: Integrate activity tracking into Academic Data editors
-    - [ ] Add logging to Teacher, Class, Room, and Subject create/update/delete handlers
-- [ ] Task: Integrate activity tracking into Global Settings
-    - [ ] Add logging to settings modification handlers
-- [ ] Task: Verify academic/system activities with unit tests
+- [x] Task: Integrate activity tracking into Academic Data editors (046b96d)
+    - [x] Add logging to Teacher, Class, Room, and Subject create/update/delete handlers
+- [x] Task: Integrate activity tracking into Global Settings (046b96d)
+    - [x] Add logging to settings modification handlers
+- [x] Task: Verify academic/system activities with unit tests (046b96d)
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Academic Data & Settings Integration' (Protocol in workflow.md)
 
 ## Phase 4: Dashboard UI Update [checkpoint: ]
