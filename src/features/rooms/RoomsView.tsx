@@ -12,6 +12,7 @@ import { AppData } from "../../types";
 import { Room } from "./types";
 import { Button, Modal, Input, Select } from "../../components/ui";
 import { generateId } from "../../utils/utils";
+import { useProfile } from "../../contexts/ProfileContext";
 
 interface ViewProps {
   data: AppData;
@@ -30,6 +31,7 @@ const ROOM_TYPES = [
 ];
 
 export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
+  const { addActivity } = useProfile();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [roomName, setRoomName] = useState("");
@@ -56,10 +58,12 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
 
     let newRooms = [...data.rooms];
     if (editingRoom) {
+      addActivity("ACADEMIC", `Updated Room: ${newRoom.name}`);
       newRooms = newRooms.map((r) =>
         r.id === editingRoom.id ? newRoom : r
       );
     } else {
+      addActivity("ACADEMIC", `Added Room: ${newRoom.name}`);
       newRooms.push(newRoom);
     }
     onUpdate({ ...data, rooms: newRooms });
@@ -84,6 +88,7 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
     const id = roomToDelete.id;
 
     try {
+      addActivity("ACADEMIC", `Deleted Room: ${roomToDelete.name}`);
       const updatedRooms = data.rooms.filter((r) => r.id !== id);
       // Future: Remove references from schedule if assigned
       onUpdate({

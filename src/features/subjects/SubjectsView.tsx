@@ -18,6 +18,7 @@ import { Button, Modal, Input } from "../../components/ui";
 import { generateId } from "../../utils/utils";
 import { COLOR_PALETTE } from "../../utils/constants";
 import { useSubjectUsage } from "./hooks/useSubjectUsage";
+import { useProfile } from "../../contexts/ProfileContext";
 
 interface ViewProps {
   data: AppData;
@@ -25,6 +26,7 @@ interface ViewProps {
 }
 
 export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
+  const { addActivity } = useProfile();
   const { getSubjectUsage } = useSubjectUsage(data);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
@@ -86,10 +88,12 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
 
     let newSubjects = [...data.subjects];
     if (editingSubject) {
+      addActivity("ACADEMIC", `Updated Subject: ${newSubj.name}`);
       newSubjects = newSubjects.map((s) =>
         s.id === editingSubject.id ? newSubj : s
       );
     } else {
+      addActivity("ACADEMIC", `Added Subject: ${newSubj.name}`);
       newSubjects.push(newSubj);
     }
     onUpdate({ ...data, subjects: newSubjects });
@@ -106,6 +110,7 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
     const id = subjectToDelete.id;
 
     try {
+      addActivity("ACADEMIC", `Deleted Subject: ${subjectToDelete.name}`);
       const updatedSubjects = data.subjects.filter((s) => s.id !== id);
       const updatedTeachers = data.teachers.map((t) => ({
         ...t,

@@ -2,11 +2,13 @@ import { useState, useMemo } from "react";
 import { AppData } from "../../../types";
 import { Teacher } from "../types";
 import { generateId } from "../../../utils/utils";
+import { useProfile } from "../../../contexts/ProfileContext";
 
 export const useTeacherManagement = (
   data: AppData,
   onUpdate: (d: AppData) => void
 ) => {
+  const { addActivity } = useProfile();
   const [activeTab, setActiveTab] = useState<"LIST" | "FACULTIES">("LIST");
 
   // Search / Filter State
@@ -52,6 +54,13 @@ export const useTeacherManagement = (
     const newTeachers = editingTeacher
       ? data.teachers.map((t) => (t.id === editingTeacher.id ? newT : t))
       : [...data.teachers, newT];
+    
+    if (editingTeacher) {
+      addActivity("ACADEMIC", `Updated Teacher: ${newT.name}`);
+    } else {
+      addActivity("ACADEMIC", `Added Teacher: ${newT.name}`);
+    }
+
     onUpdate({ ...data, teachers: newTeachers });
   };
 
@@ -62,6 +71,7 @@ export const useTeacherManagement = (
       name: `${t.name} (Copy)`,
       constraints: JSON.parse(JSON.stringify(t.constraints || [])),
     };
+    addActivity("ACADEMIC", `Duplicated Teacher: ${t.name}`);
     onUpdate({ ...data, teachers: [...data.teachers, copy] });
   };
 
@@ -73,6 +83,7 @@ export const useTeacherManagement = (
   const confirmDelete = () => {
     if (!teacherToDelete) return;
     const id = teacherToDelete.id;
+    addActivity("ACADEMIC", `Deleted Teacher: ${teacherToDelete.name}`);
     // Remove teacher and strip assignments from classes
     onUpdate({
       ...data,
@@ -106,6 +117,8 @@ export const useTeacherManagement = (
             ? { ...t, specialtyIds: [...t.specialtyIds, subjectId] }
             : t
         );
+        const subj = data.subjects.find(s => s.id === subjectId);
+        addActivity("ACADEMIC", `Added ${existingTeacher.name} to ${subj?.name} faculty`);
       }
     } else {
       // Create new teacher
@@ -117,6 +130,8 @@ export const useTeacherManagement = (
         constraints: Array(5).fill(null).map(() => Array(maxP).fill(false)),
       };
       newTeachers.push(newT);
+      const subj = data.subjects.find(s => s.id === subjectId);
+      addActivity("ACADEMIC", `Added Teacher: ${newT.name} (${subj?.name})`);
     }
 
     onUpdate({ ...data, teachers: newTeachers });

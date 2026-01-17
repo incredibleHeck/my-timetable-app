@@ -16,6 +16,7 @@ import { AppData } from "../../types";
 import { Button, Card, Modal, Input } from "../../components/ui";
 import { DAYS } from "../../utils/constants";
 import { useGlobalConfig } from "./hooks/useGlobalConfig";
+import { useProfile } from "../../contexts/ProfileContext";
 
 interface ViewProps {
   data: AppData;
@@ -23,6 +24,7 @@ interface ViewProps {
 }
 
 export const GlobalConfigView: React.FC<ViewProps> = ({ data, onUpdate }) => {
+  const { addActivity } = useProfile();
   const {
     editingSlot,
     setEditingSlot,
@@ -77,9 +79,10 @@ export const GlobalConfigView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                 label="Institution Name"
                 placeholder="e.g. St. Mary's High School"
                 value={data.settings.schoolName || ""}
-                onChange={(e) =>
-                  handleIdentityUpdate("schoolName", e.target.value)
-                }
+                onChange={(e) => {
+                  handleIdentityUpdate("schoolName", e.target.value);
+                  addActivity("SYSTEM", `Updated School Name: ${e.target.value}`);
+                }}
               />
             </div>
             <div className="w-40">
@@ -87,9 +90,10 @@ export const GlobalConfigView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                 label="Academic Term"
                 placeholder="e.g. 2024-2025"
                 value={data.settings.academicYear || ""}
-                onChange={(e) =>
-                  handleIdentityUpdate("academicYear", e.target.value)
-                }
+                onChange={(e) => {
+                  handleIdentityUpdate("academicYear", e.target.value);
+                  addActivity("SYSTEM", `Updated Academic Year: ${e.target.value}`);
+                }}
               />
             </div>
           </div>
@@ -134,12 +138,11 @@ export const GlobalConfigView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                 min="10"
                 max="120"
                 value={classDur || 50}
-                onChange={(e) =>
-                  handleDurationChange(
-                    "defaultClassDuration",
-                    parseInt(e.target.value)
-                  )
-                }
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  handleDurationChange("defaultClassDuration", val);
+                  addActivity("SYSTEM", `Updated Class Duration: ${val}m`);
+                }}
                 className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 focus:border-amber-500 outline-none"
               />
             </div>
@@ -152,12 +155,11 @@ export const GlobalConfigView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                 min="5"
                 max="60"
                 value={breakDur || 15}
-                onChange={(e) =>
-                  handleDurationChange(
-                    "defaultBreakDuration",
-                    parseInt(e.target.value)
-                  )
-                }
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  handleDurationChange("defaultBreakDuration", val);
+                  addActivity("SYSTEM", `Updated Break Duration: ${val}m`);
+                }}
                 className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 focus:border-amber-500 outline-none"
               />
             </div>
@@ -170,12 +172,11 @@ export const GlobalConfigView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                 min="20"
                 max="120"
                 value={lunchDur || 60}
-                onChange={(e) =>
-                  handleDurationChange(
-                    "defaultLunchDuration",
-                    parseInt(e.target.value)
-                  )
-                }
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  handleDurationChange("defaultLunchDuration", val);
+                  addActivity("SYSTEM", `Updated Lunch Duration: ${val}m`);
+                }}
                 className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 focus:border-amber-500 outline-none"
               />
             </div>
@@ -216,7 +217,11 @@ export const GlobalConfigView: React.FC<ViewProps> = ({ data, onUpdate }) => {
             min="4"
             max="15"
             value={data.settings.periodsPerDay}
-            onChange={(e) => handlePeriodCountChange(parseInt(e.target.value))}
+            onChange={(e) => {
+              const val = parseInt(e.target.value);
+              handlePeriodCountChange(val);
+              addActivity("SYSTEM", `Updated daily period count to ${val}`);
+            }}
             className="w-full accent-amber-500 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
           />
         </div>
@@ -355,11 +360,11 @@ export const GlobalConfigView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                 </p>
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={() =>
-                      updateMaxConsecutive(
-                        Math.max(2, (maxConsecutive || 4) - 1)
-                      )
-                    }
+                    onClick={() => {
+                      const val = Math.max(2, (maxConsecutive || 4) - 1);
+                      updateMaxConsecutive(val);
+                      addActivity("SYSTEM", `Updated Fatigue Guard to ${val} periods`);
+                    }}
                     className="w-8 h-8 rounded bg-white border border-slate-300 font-bold hover:bg-slate-100"
                   >
                     -
@@ -368,11 +373,11 @@ export const GlobalConfigView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                     {maxConsecutive || 4}
                   </span>
                   <button
-                    onClick={() =>
-                      updateMaxConsecutive(
-                        Math.min(8, (maxConsecutive || 4) + 1)
-                      )
-                    }
+                    onClick={() => {
+                      const val = Math.min(8, (maxConsecutive || 4) + 1);
+                      updateMaxConsecutive(val);
+                      addActivity("SYSTEM", `Updated Fatigue Guard to ${val} periods`);
+                    }}
                     className="w-8 h-8 rounded bg-white border border-slate-300 font-bold hover:bg-slate-100"
                   >
                     +
@@ -395,11 +400,11 @@ export const GlobalConfigView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                 </p>
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={() =>
-                      updateMaxSubjectPeriods(
-                        Math.max(1, (maxSubject || 2) - 1)
-                      )
-                    }
+                    onClick={() => {
+                      const val = Math.max(1, (maxSubject || 2) - 1);
+                      updateMaxSubjectPeriods(val);
+                      addActivity("SYSTEM", `Updated Subject Daily Limit to ${val}`);
+                    }}
                     className="w-8 h-8 rounded bg-white border border-slate-300 font-bold hover:bg-slate-100"
                   >
                     -
@@ -408,11 +413,11 @@ export const GlobalConfigView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                     {maxSubject || 2}
                   </span>
                   <button
-                    onClick={() =>
-                      updateMaxSubjectPeriods(
-                        Math.min(4, (maxSubject || 2) + 1)
-                      )
-                    }
+                    onClick={() => {
+                      const val = Math.min(4, (maxSubject || 2) + 1);
+                      updateMaxSubjectPeriods(val);
+                      addActivity("SYSTEM", `Updated Subject Daily Limit to ${val}`);
+                    }}
                     className="w-8 h-8 rounded bg-white border border-slate-300 font-bold hover:bg-slate-100"
                   >
                     +
@@ -435,11 +440,11 @@ export const GlobalConfigView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                 </p>
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={() =>
-                      updateMaxTeacherPeriods(
-                        Math.max(1, (maxTeacher || 6) - 1)
-                      )
-                    }
+                    onClick={() => {
+                      const val = Math.max(1, (maxTeacher || 6) - 1);
+                      updateMaxTeacherPeriods(val);
+                      addActivity("SYSTEM", `Updated Teacher Daily Load to ${val}`);
+                    }}
                     className="w-8 h-8 rounded bg-white border border-slate-300 font-bold hover:bg-slate-100"
                   >
                     -
@@ -448,11 +453,11 @@ export const GlobalConfigView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                     {maxTeacher || 6}
                   </span>
                   <button
-                    onClick={() =>
-                      updateMaxTeacherPeriods(
-                        Math.min(15, (maxTeacher || 6) + 1)
-                      )
-                    }
+                    onClick={() => {
+                      const val = Math.min(15, (maxTeacher || 6) + 1);
+                      updateMaxTeacherPeriods(val);
+                      addActivity("SYSTEM", `Updated Teacher Daily Load to ${val}`);
+                    }}
                     className="w-8 h-8 rounded bg-white border border-slate-300 font-bold hover:bg-slate-100"
                   >
                     +

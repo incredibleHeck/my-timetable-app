@@ -17,6 +17,7 @@ import { ClassEditorModal } from "./components/ClassEditorModal";
 import { JointClassModal, ElectiveBlockModal } from "./components/GroupModals";
 import { ClassAssignmentsPanel } from "./components/ClassAssignmentsPanel";
 import { useClassMetrics } from "./hooks/useClassMetrics";
+import { useProfile } from "../../contexts/ProfileContext";
 
 interface ViewProps {
   data: AppData;
@@ -24,6 +25,7 @@ interface ViewProps {
 }
 
 export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
+  const { addActivity } = useProfile();
   const [activeTab, setActiveTab] = useState<
     "LIST" | "LINKED" | "ELECTIVES" | "ASSIGNMENTS"
   >("LIST");
@@ -53,16 +55,19 @@ export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
     newClass.id = generateId();
     newClass.name = `${cls.name} (Copy)`;
     newClass.curriculum.forEach((c) => (c.id = generateId()));
+    addActivity("ACADEMIC", `Duplicated Class: ${cls.name}`);
     onUpdate({ ...data, classes: [...data.classes, newClass] });
   };
 
   const handleSaveClass = (newClass: ClassGroup) => {
     let newClasses = [...data.classes];
     if (editingClass) {
+      addActivity("ACADEMIC", `Updated Class: ${newClass.name}`);
       newClasses = newClasses.map((c) =>
         c.id === editingClass.id ? newClass : c
       );
     } else {
+      addActivity("ACADEMIC", `Added Class: ${newClass.name}`);
       newClasses.push(newClass);
     }
     onUpdate({ ...data, classes: newClasses });
@@ -75,6 +80,7 @@ export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
 
   const confirmDelete = () => {
     if (!classToDelete) return;
+    addActivity("ACADEMIC", `Deleted Class: ${classToDelete.name}`);
     const newClasses = data.classes.filter((c) => c.id !== classToDelete.id);
     const newJoints = data.jointClasses
       .map((j) => ({
@@ -102,24 +108,32 @@ export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
   //  GROUP HANDLERS
   // ------------------------------------------------------------------
   const handleSaveLink = (newJoint: JointClass) => {
+    addActivity("ACADEMIC", `Created Joint Class: ${newJoint.name}`);
     onUpdate({ ...data, jointClasses: [...data.jointClasses, newJoint] });
   };
 
   const handleSaveElective = (newElec: ElectiveBlock) => {
     const safeElectives = data.electives || [];
+    addActivity("ACADEMIC", `Created Elective Block: ${newElec.name}`);
     onUpdate({ ...data, electives: [...safeElectives, newElec] });
   };
 
-  const handleRemoveJoint = (id: string) =>
+  const handleRemoveJoint = (id: string) => {
+    const joint = data.jointClasses.find(j => j.id === id);
+    addActivity("ACADEMIC", `Deleted Joint Class: ${joint?.name}`);
     onUpdate({
       ...data,
       jointClasses: data.jointClasses.filter((j) => j.id !== id),
     });
-  const handleRemoveElective = (id: string) =>
+  }
+  const handleRemoveElective = (id: string) => {
+    const elec = (data.electives || []).find(e => e.id === id);
+    addActivity("ACADEMIC", `Deleted Elective Block: ${elec?.name}`);
     onUpdate({
       ...data,
       electives: (data.electives || []).filter((e) => e.id !== id),
     });
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto p-8">
