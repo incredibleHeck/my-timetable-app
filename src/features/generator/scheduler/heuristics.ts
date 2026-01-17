@@ -142,18 +142,26 @@ export function countValidSlots(state: SchedulerState, data: AppData, gang: Allo
 
   for (let d = 0; d < days; d++) {
     for (let p = 0; p < globalPeriods; p++) {
-      const struct = data.settings.dayStructure;
-      if (getPeriodType(struct, p) !== "CLASS") continue;
-
-      let p2 = -1;
-      if (gang[0].duration === 2) {
-        const next = getNextClassPeriod(p, struct, globalPeriods);
-        if (next === null) continue;
-        p2 = next;
-      }
-
       let gangValid = true;
       for (const u of gang) {
+         const cls = data.classes.find(c => c.id === u.classIds[0]);
+         const struct = cls?.structure || data.settings.dayStructure;
+
+         if (getPeriodType(struct, p) !== "CLASS") {
+             gangValid = false;
+             break;
+         }
+
+         let p2 = -1;
+         if (u.duration === 2) {
+           const next = getNextClassPeriod(p, struct, globalPeriods);
+           if (next === null) {
+               gangValid = false;
+               break;
+           }
+           p2 = next;
+         }
+
          const involvedClasses = u.classIds.map(cid => data.classes.find(c => c.id === cid));
          if (!checkHardConstraints(state, data, d, p, p2, u, involvedClasses)) {
              gangValid = false;
