@@ -1,5 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { validateFullSchedule } from '../src/features/generator/scheduler/validation';
+import { initializeState } from '../src/features/generator/scheduler/state';
 import { AppData, Teacher, Class, Subject } from '../src/types';
 import { DEFAULT_DATA } from '../src/utils/constants';
 
@@ -8,7 +9,7 @@ describe('Real-time Validation Integration', () => {
     id: 't1',
     name: 'John Doe',
     specialtyIds: ['s1'],
-    constraints: Array(5).fill(null).map(() => Array(10).fill(false)),
+    constraints: Array(5).fill(null).map(() => Array(8).fill(false)),
   };
 
   const mockClass: Class = {
@@ -18,15 +19,18 @@ describe('Real-time Validation Integration', () => {
   };
 
   const mockSubject: Subject = {
-      id: 's1',
-      name: 'Math'
+    id: 's1',
+    name: 'Math',
+    color: '#ff0000',
   };
 
   const baseData: AppData = {
     ...DEFAULT_DATA,
     settings: {
-        ...DEFAULT_DATA.settings,
-        maxTeacherPeriodsPerDay: 6,
+      ...DEFAULT_DATA.settings,
+      periodsPerDay: 8,
+      dayStructure: Array(8).fill({ type: 'CLASS', label: 'C' }),
+      maxTeacherPeriodsPerDay: 4,
     },
     teachers: [mockTeacher],
     classes: [mockClass],
@@ -35,49 +39,56 @@ describe('Real-time Validation Integration', () => {
       'c1': {
         0: {
           0: { subjectId: 's1', teacherId: 't1', classId: 'c1' },
-          1: { subjectId: 's2', teacherId: 't1', classId: 'c1' },
-          2: { subjectId: 's3', teacherId: 't1', classId: 'c1' }
+          1: { subjectId: 's1', teacherId: 't1', classId: 'c1' },
+          2: { subjectId: 's1', teacherId: 't1', classId: 'c1' },
         }
       }
-    }
+    },
+    recentActivity: [],
   };
 
   it('should detect new conflicts when a teacher limit is lowered', () => {
-    // Current state: 3 periods for John Doe. Max global is 6.
-    const initialConflicts = validateFullSchedule(baseData);
+    const stateInitial = initializeState(baseData);
+    const initialConflicts = validateFullSchedule(baseData, stateInitial);
     expect(initialConflicts.length).toBe(0);
 
-    // Update teacher to have limit of 2
-    const updatedTeacher = { ...mockTeacher, maxPeriodsPerDay: 2 };
-    const updatedData: AppData = {
+    const updatedData = {
       ...baseData,
-      teachers: [updatedTeacher]
+      settings: {
+        ...baseData.settings,
+        maxTeacherPeriodsPerDay: 2,
+      }
     };
 
-    const newConflicts = validateFullSchedule(updatedData);
+    const stateUpdated = initializeState(updatedData);
+    const newConflicts = validateFullSchedule(updatedData, stateUpdated);
     expect(newConflicts.length).toBeGreaterThan(0);
-    expect(newConflicts[0].reason).toContain("Exceeds daily limit");
+    expect(newConflicts[0].reason).toContain('Exceeds daily limit');
   });
 
   it('should clear conflicts when a teacher limit is raised', () => {
-     // Start with a conflict (Limit 2, 3 periods assigned)
-    const updatedTeacher = { ...mockTeacher, maxPeriodsPerDay: 2 };
-    const badData: AppData = {
+    const dataForLimit = {
       ...baseData,
-      teachers: [updatedTeacher]
+      settings: {
+        ...baseData.settings,
+        maxTeacherPeriodsPerDay: 2,
+      }
     };
 
-    const initialConflicts = validateFullSchedule(badData);
+    const stateInitial = initializeState(dataForLimit);
+    const initialConflicts = validateFullSchedule(dataForLimit, stateInitial);
     expect(initialConflicts.length).toBeGreaterThan(0);
 
-    // Raise limit to 4
-    const fixedTeacher = { ...mockTeacher, maxPeriodsPerDay: 4 };
-    const fixedData: AppData = {
-      ...baseData,
-      teachers: [fixedTeacher]
+    const fixedData = {
+      ...dataForLimit,
+      settings: {
+        ...dataForLimit.settings,
+        maxTeacherPeriodsPerDay: 4,
+      }
     };
 
-    const finalConflicts = validateFullSchedule(fixedData);
+    const stateFinal = initializeState(fixedData);
+    const finalConflicts = validateFullSchedule(fixedData, stateFinal);
     expect(finalConflicts.length).toBe(0);
   });
 });

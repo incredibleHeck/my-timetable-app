@@ -1,7 +1,7 @@
 import { AppData, TimeSlot } from "../../../types";
 import { AllocationUnit, SchedulerState, ScheduleEntry } from "./types";
 import { calculateClassSchedule } from "../../../utils/timeUtils";
-import { getNextClassPeriod } from "./utils";
+import { getType } from "./validation/utils";
 
 /**
  * Helper to create a 2D grid (Days x Periods) initialized with null
@@ -12,97 +12,163 @@ const createOccupancyGrid = (days: number, periods: number): (string | null)[][]
     .map(() => Array(periods).fill(null));
 };
 
+/**
+ * INITIALIZE STATE: The Foundation of the Solver
+ * Pre-calculates navigation maps to ensure O(1) jumps over non-lesson slots.
+ */
 export const initializeState = (data: AppData): SchedulerState => {
-  const days = (data.settings as any).daysPerWeek || 5;
+  const { classes, teachers, subjects, rooms, settings } = data;
+  const days = (settings as any).daysPerWeek || 5;
+  const periods = settings.periodsPerDay;
 
-  // 1. CALCULATE DIMENSIONS
-  const globalPeriods = data.settings.periodsPerDay;
-  const maxClassPeriods = Math.max(
-    0,
-    ...data.classes.map((c) => c.periodCount || 0)
-  );
-  const maxPeriods = Math.max(globalPeriods, maxClassPeriods);
+  // 1. Storage for Pre-Calculated Navigation
+  const classTimeRanges = new Map<string, TimeSlot[]>();
+  const lessonNavigation = new Map<string, number[]>(); // Maps currentP -> nextClassP
 
-  // 2. INITIALIZE EMPTY CONTAINERS
+  // 2. Build Occupancy Grids
   const state: SchedulerState = {
     schedule: {},
-    teacherOccupancy: {},
     classOccupancy: {},
+    teacherOccupancy: {},
     roomOccupancy: {},
-    classDailySubjects: {},
-    teacherDailyLoad: {},
     singleResourceUsage: {},
-    classTimeRanges: new Map(),
+    teacherDailyLoad: {},
+    classDailySubjects: {},
+    classTimeRanges,
+    lessonNavigation,
     unitPlacements: new Map(),
   };
 
-  // 3. INITIALIZE TEACHERS
-  data.teachers.forEach((t) => {
-    state.teacherOccupancy[t.id] = createOccupancyGrid(days, maxPeriods);
-    state.teacherDailyLoad[t.id] = {};
-    for (let d = 0; d < days; d++) state.teacherDailyLoad[t.id][d] = 0;
-
-    // PRE-FILL: Teacher Constraints
-    if (t.constraints) {
-      t.constraints.forEach((row, d) => {
-        if (d >= days) return;
-        row.forEach((isBlocked, p) => {
-          if (isBlocked && p < maxPeriods) {
-            state.teacherOccupancy[t.id][d][p] = "BLOCK"; 
+  // Initialize Teachers
+  teachers.forEach((t) => {
+    state.teacherOccupancy[t.id] = createOccupancyGrid(days, periods); 
+    state.teacherDailyLoad[t.id] = Array.from({ length: days }, () => 0);
+  });
+  
+  // Calculate true max periods across all classes to handle extended days
+  const maxClassPeriods = Math.max(
+    periods,
+    ...classes.map((c) => c.periodCount || 0)
+  );
+  
+  // Re-initialize grids with maxPeriods to be safe
+  teachers.forEach((t) => {
+      state.teacherOccupancy[t.id] = createOccupancyGrid(days, maxClassPeriods);
+      
+      // Apply Static Blocks (Teacher Unavailability)
+      if (t.constraints) {
+        for (let d = 0; d < days; d++) {
+          if (d >= t.constraints.length) continue;
+          for (let p = 0; p < maxClassPeriods; p++) {
+            if (p < t.constraints[d].length && t.constraints[d][p]) {
+              state.teacherOccupancy[t.id][d][p] = "BLOCK";
+            }
           }
-        });
-      });
-    }
+        }
+      }
   });
 
-  // 4. INITIALIZE ROOMS
-  (data.rooms || []).forEach((r) => {
-    state.roomOccupancy[r.id] = createOccupancyGrid(days, maxPeriods);
-  });
-
-  // 5. INITIALIZE SINGLE RESOURCES
-  data.subjects
-    .filter((s) => s.isSingleResource)
-    .forEach((s) => {
-      state.singleResourceUsage[s.id] = createOccupancyGrid(days, maxPeriods);
-    });
-
-  // 6. INITIALIZE CLASSES & BURN IN FIXED SESSIONS
-  data.classes.forEach((c) => {
-    const structure = c.structure || data.settings.dayStructure;
-    const ranges: TimeSlot[] = calculateClassSchedule(
-      c,
-      data.settings,
-      structure
-    );
-    state.classTimeRanges.set(c.id, ranges);
-
-    state.schedule[c.id] = {};
-    state.classOccupancy[c.id] = createOccupancyGrid(days, maxPeriods);
+  // Initialize Classes & Pre-calculate Navigation
+  classes.forEach((c) => {
+    state.classOccupancy[c.id] = createOccupancyGrid(days, maxClassPeriods);
     state.classDailySubjects[c.id] = {};
-    for (let d = 0; d < days; d++)
-      state.classDailySubjects[c.id][d] = new Set();
+    for (let d = 0; d < days; d++) state.classDailySubjects[c.id][d] = new Set();
+    state.schedule[c.id] = {};
 
+    // A. Pre-calculate Time Slots (e.g., P1 is 08:00 - 09:00)
+    const structure = c.structure || settings.dayStructure;
+    const timeSlots = calculateClassSchedule(c, settings, structure);
+    classTimeRanges.set(c.id, timeSlots);
+
+    // B. Pre-calculate Lesson Navigation (Skip Breaks/Lunch)
+    // We scan up to maxClassPeriods
+    const nextLessonMap: number[] = new Array(maxClassPeriods).fill(-1);
+    for (let p = 0; p < maxClassPeriods; p++) {
+      let lookAhead = p + 1;
+      while (lookAhead < maxClassPeriods) {
+        if (getType(structure, lookAhead) === "CLASS") {
+          nextLessonMap[p] = lookAhead;
+          break;
+        }
+        lookAhead++;
+      }
+    }
+    lessonNavigation.set(c.id, nextLessonMap);
+    
+    // Fixed Sessions
     if (c.fixedSessions) {
       Object.keys(c.fixedSessions).forEach((dayStr) => {
         const d = parseInt(dayStr);
         if (isNaN(d) || d >= days) return;
-
+        
         const daySessions = c.fixedSessions![d];
         if (!daySessions) return;
 
         Object.keys(daySessions).forEach((pStr) => {
-          const p = parseInt(pStr);
-          if (isNaN(p) || p >= maxPeriods) return;
-
-          const val = daySessions[p];
-          if (val) {
-            state.classOccupancy[c.id][d][p] = "BLOCK";
-          }
+            const p = parseInt(pStr);
+            if (isNaN(p) || p >= maxClassPeriods) return;
+            if (daySessions[p]) {
+                state.classOccupancy[c.id][d][p] = "BLOCK";
+            }
         });
       });
     }
   });
+
+  // Initialize Rooms
+  rooms.forEach((r) => {
+    state.roomOccupancy[r.id] = createOccupancyGrid(days, maxClassPeriods);
+  });
+
+  // Initialize Single Resources (Labs/ICT)
+  subjects.filter(s => s.isSingleResource).forEach(s => {
+    state.singleResourceUsage[s.id] = createOccupancyGrid(days, maxClassPeriods);
+  });
+  
+  // NEW: Burn in existing schedule
+  if (data.schedule) {
+      Object.keys(data.schedule).forEach(cId => {
+          const clsSched = data.schedule[cId];
+          if (!clsSched) return;
+          
+          Object.keys(clsSched).forEach(dStr => {
+              const d = parseInt(dStr);
+              if (isNaN(d) || d >= days) return;
+              
+              Object.keys(clsSched[d]).forEach(pStr => {
+                  const p = parseInt(pStr);
+                  if (isNaN(p) || p >= maxClassPeriods) return;
+                  
+                  const slot = clsSched[d][p];
+                  if (!slot) return;
+                  
+                  const unitId = slot.unitId || `LEGACY-${slot.subjectId}`;
+                  
+                  // 1. Class
+                  if (state.classOccupancy[cId]) {
+                      state.classOccupancy[cId][d][p] = unitId;
+                      state.classDailySubjects[cId][d].add(slot.subjectId);
+                  }
+                  
+                  // 2. Teacher
+                  if (slot.teacherId && state.teacherOccupancy[slot.teacherId]) {
+                      state.teacherOccupancy[slot.teacherId][d][p] = unitId;
+                      state.teacherDailyLoad[slot.teacherId][d]++;
+                  }
+                  
+                  // 3. Room
+                  if (slot.roomId && state.roomOccupancy[slot.roomId]) {
+                      state.roomOccupancy[slot.roomId][d][p] = unitId;
+                  }
+                  
+                  // 4. Single Resource
+                  if (state.singleResourceUsage[slot.subjectId]) {
+                      state.singleResourceUsage[slot.subjectId][d][p] = unitId;
+                  }
+              });
+          });
+      });
+  }
 
   return state;
 };
@@ -128,6 +194,7 @@ export function applyMove(
       classId: cid,
       roomId: rooms[unit.id],
       isFixed: false,
+      duration: unit.duration,
     };
 
     state.schedule[cid][d][p] = entry;
@@ -225,4 +292,3 @@ export function unassignUnit(state: SchedulerState, unit: AllocationUnit) {
 
   state.unitPlacements.delete(unit.id);
 }
-

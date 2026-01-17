@@ -1,36 +1,61 @@
 import { AppData } from "../../../types";
 import { AllocationUnit, SchedulerState } from "./types";
 
-export function determineRoom(d: number, p: number, p2: number, unit: AllocationUnit, state: SchedulerState, data: AppData): string | undefined {
+/**
+ * determineRoom: Used in Phase 1 (Greedy).
+ * Strictly checks for availability before returning a room ID.
+ */
+export function determineRoom(
+  d: number, 
+  p: number, 
+  p2: number, 
+  unit: AllocationUnit, 
+  state: SchedulerState, 
+  data: AppData
+): string | undefined {
   const subject = data.subjects.find((s) => s.id === unit.subjectId);
   const classGroup = data.classes.find((c) => c.id === unit.classIds[0]);
 
   if (!subject || !classGroup) return undefined;
 
-  const subjectRequiredRoomId = subject.requiredRoomId;
-  if (subjectRequiredRoomId) {
-    // Check occupied via new nullability check
-    const isOccupied = state.roomOccupancy[subjectRequiredRoomId]?.[d]?.[p] !== null ||
-                      (unit.duration === 2 && state.roomOccupancy[subjectRequiredRoomId]?.[d]?.[p2] !== null);
-    if (isOccupied) return undefined; 
-    return subjectRequiredRoomId;
+  // 1. RESOLVE TARGET ROOM
+  // Priority: Subject-specific Specialist Room > Class Homeroom
+  const targetRoomId = subject.requiredRoomId || classGroup.defaultRoomId;
+
+  if (!targetRoomId) return undefined;
+
+  // 2. AVAILABILITY CHECK (O(1) lookup)
+  // Check if the room is occupied by another Unit ID.
+  const isP1Occupied = state.roomOccupancy[targetRoomId]?.[d]?.[p] !== null;
+  const isP2Occupied = unit.duration === 2 && state.roomOccupancy[targetRoomId]?.[d]?.[p2] !== null;
+
+  if (isP1Occupied || isP2Occupied) {
+    // If it's a homeroom and it's busy, this lesson cannot be held there currently.
+    return undefined; 
   }
 
-  const homeRoomId = classGroup.defaultRoomId;
-  if (homeRoomId) {
-    const isOccupied = state.roomOccupancy[homeRoomId]?.[d]?.[p] !== null ||
-                      (unit.duration === 2 && state.roomOccupancy[homeRoomId]?.[d]?.[p2] !== null);
-    if (isOccupied) return undefined; 
-    return homeRoomId;
-  }
-  return undefined;
+  return targetRoomId;
 }
 
-export function forceDetermineRoom(d: number, p: number, p2: number, unit: AllocationUnit, state: SchedulerState, data: AppData): string | undefined {
+/**
+ * forceDetermineRoom: Used in Phase 2 (Repair).
+ * Returns the intended room regardless of occupancy.
+ * The solver will then identify the occupant and EVICT them.
+ */
+export function forceDetermineRoom(
+  d: number, 
+  p: number, 
+  p2: number, 
+  unit: AllocationUnit, 
+  state: SchedulerState, 
+  data: AppData
+): string | undefined {
   const subject = data.subjects.find((s) => s.id === unit.subjectId);
   const classGroup = data.classes.find((c) => c.id === unit.classIds[0]);
+
   if (!subject || !classGroup) return undefined;
-  if (subject.requiredRoomId) return subject.requiredRoomId;
-  if (classGroup.defaultRoomId) return classGroup.defaultRoomId;
-  return undefined;
+
+  // Specialists like Labs/Studios/Fields take precedence.
+  // Otherwise, default to the designated classroom (Homeroom).
+  return subject.requiredRoomId || classGroup.defaultRoomId;
 }

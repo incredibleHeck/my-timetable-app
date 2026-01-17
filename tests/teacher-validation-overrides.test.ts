@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { checkSlotValidity } from '../src/features/generator/scheduler/validation';
+import { initializeState } from '../src/features/generator/scheduler/state';
 import { AppData, Teacher, Class, Subject } from '../src/types';
 import { DEFAULT_DATA } from '../src/utils/constants';
 
@@ -47,7 +48,8 @@ describe('Teacher Daily Limit Overrides', () => {
             5: { subjectId: 's1', teacherId: 't1', classId: 'c1' }
           }
         }
-    }
+    },
+    recentActivity: [],
   };
 
   it('should respect a STRICTER teacher-specific limit (e.g. 4 vs global 6)', () => {
@@ -61,15 +63,15 @@ describe('Teacher Daily Limit Overrides', () => {
       teachers: [strictTeacher]
     };
 
-    // Teacher already has 4 periods at P2, P3, P4, P5.
-    // Adding 5th period at P0 should FAIL.
+    const state = initializeState(data);
     const result = checkSlotValidity(
       data,
       0, // Monday
       0, // Period 0
       't1',
       'c1',
-      's1'
+      's1',
+      state
     );
 
     expect(result.valid).toBe(false);
@@ -103,15 +105,17 @@ describe('Teacher Daily Limit Overrides', () => {
                 }
             }
         }
-    };
+    } as AppData;
 
+    const state = initializeState(busyData);
     const result = checkSlotValidity(
         busyData,
         0,
         6, // Adding 7th period
         't1',
         'c1',
-        's7'
+        's7',
+        state
     );
 
     expect(result.valid).toBe(true);
@@ -134,15 +138,17 @@ describe('Teacher Daily Limit Overrides', () => {
                 }
             }
         }
-    };
+    } as AppData;
 
+    const state = initializeState(busyData);
     const result = checkSlotValidity(
         busyData,
         0,
         6, // Adding 7th period
         't1',
         'c1',
-        's7'
+        's7',
+        state
     );
 
     expect(result.valid).toBe(false);

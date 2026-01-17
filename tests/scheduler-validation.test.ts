@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { checkSlotValidity } from '../src/features/generator/scheduler/validation';
+import { initializeState } from '../src/features/generator/scheduler/state';
 import { AppData, Teacher, Class, Subject, Room } from '../src/types';
 import { DEFAULT_DATA } from '../src/utils/constants';
 
@@ -8,7 +9,7 @@ describe('Scheduler Validation', () => {
     id: 't1',
     name: 'John Doe',
     specialtyIds: ['s1'],
-    constraints: Array(5).fill(null).map(() => Array(8).fill(false)),
+    constraints: Array(5).fill(null).map(() => Array(10).fill(false)),
   };
 
   const mockClass: Class = {
@@ -64,6 +65,7 @@ describe('Scheduler Validation', () => {
       }
     };
 
+    const state = initializeState(data);
     const result = checkSlotValidity(
       data,
       0, // day
@@ -71,10 +73,11 @@ describe('Scheduler Validation', () => {
       't1', // teacherId
       'c1', // classId
       's1', // subjectId
+      state
     );
 
     expect(result.valid).toBe(false);
-    expect(result.message).toContain('Teacher is busy');
+    expect(result.message).toContain('Teacher Busy');
   });
 
   it('should detect room overlap', () => {
@@ -96,6 +99,7 @@ describe('Scheduler Validation', () => {
       }
     };
 
+    const state = initializeState(data);
     const result = checkSlotValidity(
       data,
       0, // day
@@ -103,6 +107,7 @@ describe('Scheduler Validation', () => {
       't1', // teacherId
       'c1', // classId
       's1', // subjectId
+      state,
       undefined,
       'r1' // roomId
     );
@@ -115,7 +120,7 @@ describe('Scheduler Validation', () => {
     const restrictedTeacher = {
       ...mockTeacher,
       constraints: Array(5).fill(null).map((_, d) => 
-        Array(8).fill(null).map((_, p) => d === 0 && p === 0)
+        Array(10).fill(null).map((_, p) => d === 0 && p === 0)
       )
     };
 
@@ -124,13 +129,15 @@ describe('Scheduler Validation', () => {
       teachers: [restrictedTeacher]
     };
 
+    const state = initializeState(data);
     const result = checkSlotValidity(
       data,
       0, // Monday
       0, // Period 0
       't1',
       'c1',
-      's1'
+      's1',
+      state
     );
 
     expect(result.valid).toBe(false);
@@ -150,6 +157,7 @@ describe('Scheduler Validation', () => {
       }
     };
 
+    const state = initializeState(data);
     const result = checkSlotValidity(
       data,
       0,
@@ -157,6 +165,7 @@ describe('Scheduler Validation', () => {
       't1',
       'c1',
       's1',
+      state
     );
 
     expect(result.valid).toBe(false);
@@ -177,6 +186,7 @@ describe('Scheduler Validation', () => {
       }
     };
 
+    const state = initializeState(data);
     const result = checkSlotValidity(
       data,
       0,
@@ -184,6 +194,7 @@ describe('Scheduler Validation', () => {
       't1',
       'c1',
       's3',
+      state
     );
 
     expect(result.valid).toBe(false);
@@ -191,30 +202,32 @@ describe('Scheduler Validation', () => {
   });
 
   it('should enforce single resource subject constraint', () => {
-    const singleSubject = { ...mockSubject, isSingleResource: true };
+    const singleSubject = { ...mockSubject, id: 's1_res', name: 'S1 Res', isSingleResource: true };
     const data: AppData = {
       ...baseData,
       subjects: [singleSubject],
       schedule: {
         'other-class': {
           0: {
-            0: { subjectId: 's1', teacherId: 't2', classId: 'other-class' }
+            0: { subjectId: 's1_res', teacherId: 't2', classId: 'other-class' }
           }
         }
       }
     };
 
+    const state = initializeState(data);
     const result = checkSlotValidity(
       data,
       0,
       0,
       't1',
       'c1',
-      's1'
+      's1_res',
+      state
     );
 
     expect(result.valid).toBe(false);
-    expect(result.message).toContain('already being taught elsewhere');
+    expect(result.message).toContain('Resource bottleneck');
   });
 
   it('should enforce teacher fatigue (consecutive periods)', () => {
@@ -235,13 +248,15 @@ describe('Scheduler Validation', () => {
       }
     };
 
+    const state = initializeState(data);
     const result = checkSlotValidity(
       data,
       0,
       2, // Filling the gap at P2 to make 5 consecutive periods (P0, P1, P2, P3, P4)
       't1',
       'c1',
-      's1'
+      's1',
+      state
     );
 
     expect(result.valid).toBe(false);
@@ -249,8 +264,6 @@ describe('Scheduler Validation', () => {
   });
 
   it('should enforce teacher daily load', () => {
-    // Max daily load is 6 (settings.periodsPerDay).
-    // We need the Class to have MORE slots than the Daily Limit to simulate overload.
     const longDayClass: Class = {
       ...mockClass,
       periodCount: 10, // Class runs for 10 periods
@@ -280,15 +293,16 @@ describe('Scheduler Validation', () => {
       }
     };
 
+    const state = initializeState(data);
     const result = checkSlotValidity(
       data,
       0,
       1, // Adding 7th period (Proposed) at P1.
       't1',
-      'c1', // Using mockClass id 'c1' but we updated classes list? Wait, mockClass.id is 'c1'.
-      's1'
+      'c1',
+      's1',
+      state
     );
-    // Note: checkSlotValidity looks up class by ID. 'longDayClass' has id 'c1'.
 
     expect(result.valid).toBe(false);
     expect(result.message).toContain("Exceeds daily limit");
@@ -302,13 +316,15 @@ describe('Scheduler Validation', () => {
       ]
     };
 
+    const state = initializeState(data);
     const result = checkSlotValidity(
       data,
       0,
       0,
       't1',
       'c1',
-      's1'
+      's1',
+      state
     );
 
     expect(result.valid).toBe(false);
@@ -333,6 +349,7 @@ describe('Scheduler Validation', () => {
       classes: [largeClass]
     };
 
+    const state = initializeState(data);
     const result = checkSlotValidity(
       data,
       0,
@@ -340,19 +357,16 @@ describe('Scheduler Validation', () => {
       't1',
       'c1',
       's1',
+      state,
       undefined,
       'r_small'
     );
 
-    // This is expected to FAIL currently as it's not implemented
     expect(result.valid).toBe(false);
     expect(result.message).toContain('capacity');
   });
 
   it('should detect teacher overlap across different class schedules (staggered)', () => {
-    // Class A (c1): Default 40m slots starting at 08:00
-    // Class B (c2): Custom 60m slots starting at 08:00
-    
     const classB: Class = {
       id: 'c2',
       name: '10B',
@@ -376,8 +390,7 @@ describe('Scheduler Validation', () => {
       }
     };
 
-    // Checking Period 1 for Class A (08:40 - 09:20)
-    // This SHOULD overlap with Class B's Period 0 (08:00 - 09:00)
+    const state = initializeState(data);
     const result = checkSlotValidity(
       data,
       0, // Monday
@@ -385,9 +398,10 @@ describe('Scheduler Validation', () => {
       't1',
       'c1',
       's1',
+      state
     );
 
     expect(result.valid).toBe(false);
-    expect(result.message).toContain('Teacher is busy');
+    expect(result.message).toContain('Teacher Busy');
   });
 });

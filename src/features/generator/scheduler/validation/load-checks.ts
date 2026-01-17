@@ -3,7 +3,8 @@ import { ValidationContext, ValidationResult } from "./types";
 import { getType } from "./utils";
 
 /**
- * RULE: Teacher Load (with Gradient Penalty)
+ * RULE: Teacher Load & Consecutive Limits
+ * Uses a Gradient Penalty: Small violations cost points, large ones trigger repair.
  */
 export const checkTeacherLoad = (
   ctx: ValidationContext,
@@ -12,11 +13,9 @@ export const checkTeacherLoad = (
   state?: SchedulerState
 ): ValidationResult | null => {
   const { data, teacherId, targetDay, maxPeriods } = ctx;
-
   const teacher = data.teachers.find((t) => t.id === teacherId);
 
-  const maxDailyLoad =
-    teacher?.maxPeriodsPerDay ?? (data.settings.maxTeacherPeriodsPerDay || 6);
+  const maxDailyLoad = teacher?.maxPeriodsPerDay ?? (data.settings.maxTeacherPeriodsPerDay || 6);
   const maxConsecutive = data.settings.maxConsecutivePeriods || 4;
 
   let currentDailyLoad = 0;
@@ -27,24 +26,15 @@ export const checkTeacherLoad = (
 
     if (proposedSlots.has(p)) {
       isOccupied = true;
-    }
-    else {
-      // O(1) check if state is provided
+    } else if (!ignoredSlots.has(p)) {
+      // O(1) Lookup: Check if teacher is busy elsewhere
       if (state) {
-        const occupier = state.teacherOccupancy[teacherId]?.[targetDay]?.[p];
-        if (occupier && (ctx.classId !== ctx.classId || !ignoredSlots.has(p))) {
-            // Wait, logic for ignoredSlots with state:
-            // If the unit in the slot is the one we are moving, skip it.
-            // But we don't have unitId here easily without scanning ctx.
-            // Actually, if it's the SAME teacher and SAME slot index we are vacating...
-            // Let's stick to the binary 'ignoredSlots' for now.
-            if (!ignoredSlots.has(p)) isOccupied = true;
+        if (state.teacherOccupancy[teacherId]?.[targetDay]?.[p] !== null) {
+          isOccupied = true;
         }
       } else {
-        // Fallback: O(N) scan
+        // Fallback for manual UI validation
         for (const cId of Object.keys(data.schedule)) {
-          if (cId === ctx.classId && ignoredSlots.has(p)) continue;
-
           const slot = data.schedule[cId]?.[targetDay]?.[p];
           if (slot && slot.teacherId === teacherId) {
             isOccupied = true;
@@ -59,12 +49,13 @@ export const checkTeacherLoad = (
       consecutiveCount++;
 
       if (consecutiveCount > maxConsecutive) {
+        const overflow = consecutiveCount - maxConsecutive;
         return {
           valid: false,
           message: `Exceeds consecutive limit (${maxConsecutive})`,
           severity: "MEDIUM",
-          penaltyPoints: 50 + (consecutiveCount - maxConsecutive) * 100,
-          conflictCount: 1,
+          penaltyPoints: 500 + (overflow * 200), // Escalating penalty
+          conflictCount: 0, // Soft conflict: repairable via shuffling
         };
       }
     } else {
@@ -72,29 +63,24 @@ export const checkTeacherLoad = (
     }
   }
 
-  // GRADIENT PENALTY CALCULATION
   if (currentDailyLoad > maxDailyLoad) {
     const overflow = currentDailyLoad - maxDailyLoad;
     return {
       valid: false,
-      message: `Exceeds daily limit (${maxDailyLoad})`,
+      message: `Teacher daily limit exceeded (${currentDailyLoad}/${maxDailyLoad})`,
       severity: "MEDIUM",
-      penaltyPoints: overflow * 500, // High cost for each period over limit
-      conflictCount: 1,
+      penaltyPoints: 1000 + (overflow * 500),
+      conflictCount: 1, // Triggers Min-Conflicts eviction
     };
-  }
-
-  // LCV: Reward keeping teachers below their max
-  if (currentDailyLoad === maxDailyLoad) {
-      // Not an error per se, but we can report it as a "Soft Constraint" with points
-      // However, checkSlotValidity returns null for success. 
-      // We might need to return a successful result with points?
-      // For now, we only use this for 'valid: false' cases in the solver.
   }
 
   return null;
 };
 
+/**
+ * RULE: Subject Limits & Total Curriculum Allocation
+ * Ensures we don't exceed daily pedagogical limits OR the total weekly curriculum.
+ */
 export const checkSubjectLimit = (
   ctx: ValidationContext,
   proposedSlots: Set<number>,
@@ -102,69 +88,69 @@ export const checkSubjectLimit = (
   state?: SchedulerState
 ): ValidationResult | null => {
   const { data, classId, subjectId, targetDay, maxPeriods } = ctx;
-  const maxSubj = data.settings.maxSubjectPeriodsPerDay || 2;
-
-  // 1. Daily Limit Check
+  
+  // 1. DAILY LIMIT (Pedagogical Variety)
+  const maxDaily = data.settings.maxSubjectPeriodsPerDay || 2;
   let dailyCount = 0;
+
   for (let p = 0; p < maxPeriods; p++) {
     if (proposedSlots.has(p)) {
       dailyCount++;
-    } else {
-      // O(1) check via state if available
-      if (state) {
-        const entry = state.schedule[classId]?.[targetDay]?.[p];
-        if (entry && entry.subjectId === subjectId && !ignoredSlots.has(p)) {
-          dailyCount++;
-        }
-      } else {
-        const slot = data.schedule[classId]?.[targetDay]?.[p];
-        if (slot && slot.subjectId === subjectId && !ignoredSlots.has(p)) {
-          dailyCount++;
-        }
-      }
+    } else if (!ignoredSlots.has(p)) {
+      const entry = state ? state.schedule[classId]?.[targetDay]?.[p] : data.schedule[classId]?.[targetDay]?.[p];
+      if (entry && entry.subjectId === subjectId) dailyCount++;
     }
   }
 
-  if (dailyCount > maxSubj) {
-    const overflow = dailyCount - maxSubj;
+  if (dailyCount > maxDaily) {
     return {
       valid: false,
-      message: `Max ${maxSubj} periods per day`,
-      severity: "MEDIUM",
-      penaltyPoints: overflow * 100,
-      conflictCount: 1,
+      message: `Subject daily variety limit exceeded (${maxDaily})`,
+      severity: "LOW",
+      penaltyPoints: 300, 
+      conflictCount: 0,
     };
   }
 
-  // 2. Weekly/Total Curriculum Limit Check
+  // 2. TOTAL CURRICULUM ALLOCATION (The "Hard Wall")
   const cls = data.classes.find((c) => c.id === classId);
-  const curr = cls?.curriculum.find((c) => c.subjectId === subjectId);
-  if (curr) {
-    const totalAllowed = (curr.singles || 0) + (curr.doubles || 0) * 2;
+  const curriculumItem = cls?.curriculum?.find((curr) => curr.subjectId === subjectId);
+  
+  if (curriculumItem) {
+    const totalAllowed = (curriculumItem.singles || 0) + (curriculumItem.doubles || 0) * 2;
     let totalScheduled = proposedSlots.size;
 
-    // Iterate over all days to count existing placements
-    for (let d = 0; d < (data.settings as any).daysPerWeek || 5; d++) {
-      for (let p = 0; p < maxPeriods; p++) {
-        // Skip current day's proposed slots as we already added them to totalScheduled
-        if (d === targetDay && proposedSlots.has(p)) continue;
+    // We must count across the ENTIRE week
+    // Safe cast for settings, fallback to 5 days if missing
+    const daysPerWeek = (data.settings as any).daysPerWeek || 5;
+    
+    for (let d = 0; d < daysPerWeek; d++) {
+      const daySched = state ? state.schedule[classId]?.[d] : data.schedule[classId]?.[d];
+      if (!daySched) continue;
 
-        const slot = data.schedule[classId]?.[d]?.[p];
-        // If it's a move, ignore the slot we are moving FROM
-        const isIgnored = d === ctx.targetDay && ignoredSlots.has(p);
+      Object.keys(daySched).forEach((pStr) => {
+        const p = parseInt(pStr);
+        const slot = daySched[p];
+        
+        // Skip current day if we're simulating/ignoring or it's a fixed 'tail'
+        const isCurrentSimulation = (d === targetDay && (proposedSlots.has(p) || ignoredSlots.has(p)));
+        if (isCurrentSimulation || (slot as any).isFixed) return;
 
-        if (slot && slot.subjectId === subjectId && !isIgnored) {
-          totalScheduled++;
+        if (slot && slot.subjectId === subjectId) {
+          const nextSlot = daySched[p+1];
+          const isDouble = nextSlot && (nextSlot as any).isFixed && nextSlot.subjectId === subjectId;
+          
+          totalScheduled += (isDouble ? 2 : 1);
         }
-      }
+      });
     }
 
     if (totalScheduled > totalAllowed) {
       return {
         valid: false,
-        message: `Exceeds curriculum limit (${totalScheduled}/${totalAllowed})`,
+        message: `Curriculum Over-Allocation: ${totalScheduled}/${totalAllowed} periods`,
         severity: "HIGH",
-        penaltyPoints: 2000,
+        penaltyPoints: 5000, // Absolute wall: Solver must evict this move
         conflictCount: 1,
       };
     }
@@ -173,6 +159,10 @@ export const checkSubjectLimit = (
   return null;
 };
 
+/**
+ * REFACTORED: Gap Detection (Break/Lunch Aware)
+ * Only flags a gap if an empty CLASS period exists between two occupied slots.
+ */
 export const checkGapDetection = (
   ctx: ValidationContext,
   proposedSlots: Set<number>,
@@ -181,6 +171,7 @@ export const checkGapDetection = (
 ): ValidationResult | null => {
   const { data, classId, targetDay, maxPeriods, structure } = ctx;
 
+  // 1. Collect all periods that will be occupied for this class on this day
   const occupied: number[] = [];
   for (let p = 0; p < maxPeriods; p++) {
     if (proposedSlots.has(p)) {
@@ -199,18 +190,24 @@ export const checkGapDetection = (
   if (occupied.length < 2) return null;
   occupied.sort((a, b) => a - b);
 
+  // 2. Scan the space BETWEEN occupied periods
   for (let i = 0; i < occupied.length - 1; i++) {
     const start = occupied[i];
     const end = occupied[i + 1];
 
     for (let p = start + 1; p < end; p++) {
-      if (getType(structure, p) === "CLASS" && !proposedSlots.has(p)) {
+      const periodType = getType(structure, p);
+
+      // CRITICAL FIX: 
+      // A gap is ONLY valid if the period type is "CLASS".
+      // If p is a "BREAK" or "LUNCH", it is NOT a gap.
+      if (periodType === "CLASS" && !proposedSlots.has(p)) {
         return {
           valid: false,
-          message: "Gap detected (Sandwich rule)",
+          message: "Empty lesson slot detected between classes",
           severity: "MEDIUM",
-          penaltyPoints: 50,
-          conflictCount: 1,
+          penaltyPoints: 400,
+          conflictCount: 0,
         };
       }
     }

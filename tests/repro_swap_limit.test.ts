@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { checkSlotValidity } from '../src/features/generator/scheduler/validation';
+import { initializeState } from '../src/features/generator/scheduler/state';
 import { AppData, Teacher, Class, Subject, Room } from '../src/types';
 import { DEFAULT_DATA } from '../src/utils/constants';
 
@@ -48,10 +49,10 @@ describe('Reproduction: Swap Daily Limit Logic', () => {
       schedule: {
         'c1': {
           0: { // Monday
-            0: { subjectId: 'math', teacherId: 't1', classId: 'c1', duration: 2 },
-            1: { subjectId: 'math', teacherId: 't1', classId: 'c1', duration: 2 }, 
-            2: { subjectId: 'eng', teacherId: 't1', classId: 'c1', duration: 2 },
-            3: { subjectId: 'eng', teacherId: 't1', classId: 'c1', duration: 2 },
+            0: { subjectId: 'math', teacherId: 't1', classId: 'c1', duration: 2, isFixed: false },
+            1: { subjectId: 'math', teacherId: 't1', classId: 'c1', duration: 2, isFixed: true }, 
+            2: { subjectId: 'eng', teacherId: 't1', classId: 'c1', duration: 2, isFixed: false },
+            3: { subjectId: 'eng', teacherId: 't1', classId: 'c1', duration: 2, isFixed: true },
           }
         }
       }
@@ -59,6 +60,7 @@ describe('Reproduction: Swap Daily Limit Logic', () => {
 
     // Action: Swap Math (P0-P1) to P2 (English).
     // Validate Math move.
+    const state = initializeState(data);
     const result = checkSlotValidity(
       data,
       0, // day
@@ -66,7 +68,8 @@ describe('Reproduction: Swap Daily Limit Logic', () => {
       't1', // teacherId
       'c1', // classId
       'math', // subjectId
-      { day: 0, period: 0 }, // ignoreSlot (P0)
+      state,
+      { day: 0, period: 0, duration: 2 }, // ignoreSlot (P0)
       undefined,
       2 // duration
     );

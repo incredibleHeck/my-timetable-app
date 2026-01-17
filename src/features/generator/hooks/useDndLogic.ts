@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { AppData, ScheduleSlot, Conflict } from "../../../types";
 import { checkSlotValidity } from "../scheduler/validation";
+import { initializeState } from "../scheduler/state";
 import { useProfile } from "../../../contexts/ProfileContext";
 import { DAYS } from "../../../utils/constants";
 
@@ -14,6 +15,8 @@ export const useDndLogic = (
 ) => {
   const [activeDragItem, setActiveDragItem] = useState<any>(null);
   const { pushToHistory, addActivity } = useProfile();
+
+  const schedulerState = useMemo(() => initializeState(data), [data]);
 
   const { settings, schedule, classes, teachers, subjects } = data;
   const currentClass = classes.find((c) => c.id === activeId);
@@ -168,6 +171,7 @@ export const useDndLogic = (
 
     const valMove = checkSlotValidity(
         data, targetDay, targetPeriod, activeDragItem.slot.teacherId, classId, activeDragItem.slot.subjectId,
+        schedulerState,
         { day: sourceDay, period: sourcePeriod, duration: sourceDuration },
         activeDragItem.slot.roomId,
         sourceDuration,
@@ -189,6 +193,7 @@ export const useDndLogic = (
     if (targetSlot) {
          const valSwap = checkSlotValidity(
             data, activeDragItem.day, activeDragItem.period, targetSlot.teacherId, classId, targetSlot.subjectId,
+            schedulerState,
             { day: targetDay, period: targetPeriod, duration: targetDuration },
             targetSlot.roomId,
             targetDuration,
@@ -273,6 +278,7 @@ export const useDndLogic = (
 
     const valMove = checkSlotValidity(
         data, tD, tP, sData.slot.teacherId, classId, sData.slot.subjectId,
+        schedulerState,
         { day: sD, period: sP, duration: sourceDuration },
         sData.slot.roomId,
         sourceDuration,
@@ -283,6 +289,7 @@ export const useDndLogic = (
     if (targetSlot) {
         const valSwap = checkSlotValidity(
             data, sD, sP, targetSlot.teacherId, classId, targetSlot.subjectId,
+            schedulerState,
             { day: tD, period: tP, duration: targetDuration },
             targetSlot.roomId,
             targetDuration,

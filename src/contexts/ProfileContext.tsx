@@ -8,6 +8,7 @@ import { DEFAULT_DATA } from '../utils/constants';
 import { calculateClassSchedule } from '../utils/timeUtils';
 import { TimeSlot } from '../types';
 import { validateFullSchedule } from '../features/generator/scheduler/validation';
+import { initializeState } from '../features/generator/scheduler/state';
 
 interface ProfileContextType {
   profiles: ProfileManifest['profiles'];
@@ -166,7 +167,8 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     if (!activeProfile) return;
 
     // Trigger validation
-    const conflicts = validateFullSchedule(data);
+    const state = initializeState(data);
+    const conflicts = validateFullSchedule(data, state);
     const validatedData = { ...data, conflicts };
 
     const updated = { 

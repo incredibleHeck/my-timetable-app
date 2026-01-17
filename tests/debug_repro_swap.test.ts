@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { checkSlotValidity } from "../src/features/generator/scheduler/validation";
+import { initializeState } from "../src/features/generator/scheduler/state";
 import { AppData, ClassGroup, Teacher, Subject } from "../src/types";
 
 describe("Debug Repro: Single Swap Same Teacher", () => {
@@ -35,23 +36,11 @@ describe("Debug Repro: Single Swap Same Teacher", () => {
     dutyLocations: [],
     dutyAssignments: [],
     lastGenerated: null,
+    recentActivity: [],
   };
 
   it("should validly move P0 (Math) to P1 (Science) - Swap", () => {
-    // This is effectively swapping P0 and P1. 
-    // We test the validity of moving P0 -> P1.
-    // Target P1 is occupied by T1 (Science).
-    // Validation should see P1 as the "Proposed" slot (Busy)
-    // And P0 as the "Ignored" slot (Free).
-    // Total load should remain 2.
-    // Consecutive should be 2 (P0 free, but P1 busy... wait).
-    
-    // If P0 is moved to P1.
-    // P0 becomes Free.
-    // P1 becomes Busy (Math).
-    // But P1 was ALREADY Busy (Science).
-    // So load is constant.
-    
+    const state = initializeState(mockData);
     const result = checkSlotValidity(
       mockData,
       0, // Target Day
@@ -59,6 +48,7 @@ describe("Debug Repro: Single Swap Same Teacher", () => {
       "t1", // Teacher
       "c1", // Class
       "s1", // Subject
+      state,
       { day: 0, period: 0 }, // Ignore Slot (Source P0)
       undefined, // Room
       1 // Duration (Single)

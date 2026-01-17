@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { checkSlotValidity } from '../src/features/generator/scheduler/validation';
+import { initializeState } from '../src/features/generator/scheduler/state';
 import { AppData } from '../src/types';
 
 describe('checkSlotValidity - Concurrent Daily Load', () => {
@@ -34,6 +35,7 @@ describe('checkSlotValidity - Concurrent Daily Load', () => {
         }
       }
     },
+    recentActivity: [],
   };
 
   it('should NOT fail daily load check when assigning same teacher to a concurrent slot', () => {
@@ -48,6 +50,7 @@ describe('checkSlotValidity - Concurrent Daily Load', () => {
         settings: { ...mockData.settings, maxTeacherPeriodsPerDay: 2 }
     } as AppData;
 
+    const state = initializeState(data);
     const result = checkSlotValidity(
       data,
       0, // day
@@ -55,6 +58,7 @@ describe('checkSlotValidity - Concurrent Daily Load', () => {
       't1',
       'c1',
       's1',
+      state,
       undefined,
       undefined,
       1,
@@ -76,6 +80,7 @@ describe('checkSlotValidity - Concurrent Daily Load', () => {
     } as AppData;
 
     // Try to assign to P2. Unique periods would be P0, P1, P2 = 3. 3 > 2.
+    const state = initializeState(data);
     const result = checkSlotValidity(
       data,
       0,
@@ -83,6 +88,7 @@ describe('checkSlotValidity - Concurrent Daily Load', () => {
       't1',
       'c1',
       's1',
+      state,
       undefined,
       undefined,
       1,

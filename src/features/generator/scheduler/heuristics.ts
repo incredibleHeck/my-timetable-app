@@ -138,13 +138,14 @@ export function findMostConstrainedGangIdx(
 export function countValidSlots(state: SchedulerState, data: AppData, gang: AllocationUnit[]): number {
   const globalPeriods = data.settings.periodsPerDay;
   const days = (data.settings as any).daysPerWeek || 5;
+  const classMap = new Map(data.classes.map(c => [c.id, c]));
   let count = 0;
 
   for (let d = 0; d < days; d++) {
     for (let p = 0; p < globalPeriods; p++) {
       let gangValid = true;
       for (const u of gang) {
-         const cls = data.classes.find(c => c.id === u.classIds[0]);
+         const cls = classMap.get(u.classIds[0]);
          const struct = cls?.structure || data.settings.dayStructure;
 
          if (getPeriodType(struct, p) !== "CLASS") {
@@ -162,8 +163,8 @@ export function countValidSlots(state: SchedulerState, data: AppData, gang: Allo
            p2 = next;
          }
 
-         const involvedClasses = u.classIds.map(cid => data.classes.find(c => c.id === cid));
-         if (!checkHardConstraints(state, data, d, p, p2, u, involvedClasses)) {
+         const involvedClasses = u.classIds.map(cid => classMap.get(cid));
+         if (!checkHardConstraints(state, data, d, p, p2, u, involvedClasses as any[])) {
              gangValid = false;
              break;
          }

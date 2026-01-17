@@ -19,25 +19,27 @@ export const getPeriodType = (
 };
 
 /**
- * UTILITY: getNextClassPeriod
- * Finds the next available CLASS period index, skipping Breaks/Lunches/Assemblies.
- * Critical for scheduling Double Periods (Duration = 2).
+ * REFACTORED: getNextClassPeriod
+ * Ensures a double period can "jump" over non-lesson slots (Break/Lunch).
  */
-export const getNextClassPeriod = (
-  startIndex: number,
-  structure: (PeriodConfig | PeriodType)[],
+export function getNextClassPeriod(
+  currentP: number,
+  structure: (PeriodType | PeriodConfig)[],
   maxPeriods: number
-): number | null => {
-  // Look ahead starting from the immediate next slot
-  for (let i = startIndex + 1; i < maxPeriods; i++) {
-    // If we find a teaching slot, that's our p2
-    if (getPeriodType(structure, i) === "CLASS") {
-      return i;
+): number | null {
+  let nextP = currentP + 1;
+
+  while (nextP < maxPeriods) {
+    const type = getType(structure, nextP);
+    
+    if (type === "CLASS") {
+      return nextP; // Found the second half of the double lesson
     }
-    // If it's a BREAK or LUNCH, the loop continues to the next index
-    // effectively "bridging" the gap.
+    
+    // If it's a BREAK, LUNCH, or ASSEMBLY, the solver skips it 
+    // but the clock keeps ticking in the background.
+    nextP++;
   }
 
-  // If we run out of day without finding a class slot, the double period cannot fit.
-  return null;
-};
+  return null; // Day ended before finding another lesson slot
+}

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { checkSlotValidity } from "../src/features/generator/scheduler/validation";
+import { initializeState } from "../src/features/generator/scheduler/state";
 import { AppData } from "../src/types";
 
 describe("Repro: Max Daily Load Hardcoded Limit", () => {
@@ -49,9 +50,11 @@ describe("Repro: Max Daily Load Hardcoded Limit", () => {
     dutyLocations: [],
     dutyAssignments: [],
     lastGenerated: null,
+    recentActivity: [],
   };
 
   it("should pass moving P0 to P7 if max load is dynamic", () => {
+    const state = initializeState(mockData);
     const result = checkSlotValidity(
       mockData,
       0, // Target Day
@@ -59,6 +62,7 @@ describe("Repro: Max Daily Load Hardcoded Limit", () => {
       "t1", // Teacher
       "c1", // Class
       "s1", // Subject
+      state,
       { day: 0, period: 0 }, // Ignore Slot (Source P0)
       undefined, // Room
       1 // Duration

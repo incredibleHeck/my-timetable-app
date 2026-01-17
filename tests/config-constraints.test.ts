@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { checkSlotValidity } from '../src/features/generator/scheduler/validation';
+import { initializeState } from '../src/features/generator/scheduler/state';
 import { AppData, Teacher, Class, Subject } from '../src/types';
 import { DEFAULT_DATA } from '../src/utils/constants';
 
@@ -53,6 +54,7 @@ describe('Configurable Constraints', () => {
       }
     };
 
+    const state = initializeState(data);
     const result = checkSlotValidity(
       data,
       0, // day
@@ -60,6 +62,7 @@ describe('Configurable Constraints', () => {
       't1',
       'c1',
       's1',
+      state
     );
 
     expect(result.valid).toBe(false);
@@ -85,6 +88,7 @@ describe('Configurable Constraints', () => {
       }
     };
 
+    const state = initializeState(data);
     const result = checkSlotValidity(
       data,
       0,
@@ -92,6 +96,7 @@ describe('Configurable Constraints', () => {
       't1',
       'c1',
       's1',
+      state
     );
 
     expect(result.valid).toBe(false);

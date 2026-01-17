@@ -38,6 +38,7 @@ export interface ScheduleEntry {
   classId: string;
   roomId?: string;
   isFixed: boolean; // True for the "tail" of a double period
+  duration: number; // 1 or 2
 }
 
 export interface SchedulerState {
@@ -73,4 +74,11 @@ export interface SchedulerState {
   // --- 3. METADATA ---
   /** Cached time ranges for validation alignment */
   classTimeRanges: Map<string, TimeSlot[]>;
+
+  /** 
+   * Pre-calculated navigation map for skipping breaks/lunches efficiently.
+   * Maps [classId][currentPeriodIndex] -> nextClassPeriodIndex (or -1 if none)
+   * This enables O(1) "Next Lesson" lookups for double periods.
+   */
+  lessonNavigation: Map<string, number[]>;
 }

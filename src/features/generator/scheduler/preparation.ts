@@ -1,162 +1,120 @@
-import { AppData } from "../../../types";
+import { AppData, Teacher, Subject, ClassGroup } from "../../../types";
 import { AllocationUnit } from "./types";
 import { calculatePriority } from "./heuristics";
 
 /**
- * HELPER: Determine specific room requirements based on Subject metadata.
- * Bridges the gap between static data and the solver's resource awareness.
+ * REFACTORED: Preparation Layer
+ * Ensures 100% Curriculum Respect and prepares metadata for MRV/LCV.
  */
-const resolveRoomRequirement = (subject: any): string | undefined => {
-  if (!subject) return undefined;
-
-  // 1. Explicit constraint in Subject data (Preferred)
-  if (subject.requiredRoomType) return subject.requiredRoomType;
-
-  // 2. Inferred from "Single Resource" flag (Legacy / Fallback)
-  if (subject.isSingleResource) {
-    const name = subject.name.toLowerCase();
-    // Map common subject names to standard room types if not explicitly set
-    if (
-      name.includes("computing") ||
-      name.includes("ict") ||
-      name.includes("information")
-    )
-      return "Computer Lab";
-    if (name.includes("music")) return "Music Room";
-    if (
-      name.includes("physical") ||
-      name.includes("pe") ||
-      name.includes("sport")
-    )
-      return "Field";
-    if (
-      name.includes("science") ||
-      name.includes("physics") ||
-      name.includes("chem") ||
-      name.includes("bio")
-    )
-      return "Science Lab";
-    if (name.includes("art")) return "Art Studio";
-
-    // Default fallback for other single resources
-    return "Specialist Room";
-  }
-
-  return undefined;
-};
-
 export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
   const units: AllocationUnit[] = [];
   const { classes, jointClasses, subjects, teachers } = data;
 
-  // 1. MAPS FOR SPEED
   const teacherMap = new Map(teachers.map((t) => [t.id, t]));
   const subjectMap = new Map(subjects.map((s) => [s.id, s]));
   const classMap = new Map(classes.map((c) => [c.id, c]));
 
-  // 2. JOINT CLASS LOOKUP
-  // Prevents standard classes from creating separate units for joint subjects
-  const jointLookup = new Set<string>();
+  // 1. TRACKER: Ensure we don't double-count joint/elective subjects
+  const processedCurriculumItems = new Set<string>(); // "classId-subjectId"
+
+  // 2. HELPERS
+  const resolveRoomRequirement = (subject: Subject | undefined): string | undefined => {
+    if (!subject) return undefined;
+    return subject.requiredRoomType || (subject.isSingleResource ? "Specialist Room" : undefined);
+  };
+
+  const getCommonRoomId = (classIds: string[]) => {
+    const firstClass = classMap.get(classIds[0]);
+    return firstClass?.defaultRoomId || firstClass?.classroomId;
+  };
+
+  // 3. PROCESS JOINT CLASSES (High Constraint Atoms)
   jointClasses.forEach((jc) => {
-    jc.classIds.forEach((cid) => jointLookup.add(`${jc.subjectId}-${cid}`));
-  });
-
-  // 3. PROCESS JOINT CLASSES
-  jointClasses.forEach((jc) => {
-    const repClass = classMap.get(jc.classIds[0]);
-    if (!repClass) return;
-
-    // Find the shared curriculum requirements for this joint subject
-    const jointCurr = repClass.curriculum.find(
-      (c) => c.subjectId === jc.subjectId
-    );
-    if (!jointCurr) return;
-
-    const homeroomId =
-      repClass.defaultRoomId || repClass.classroomId || (repClass as any).roomId;
     const subject = subjectMap.get(jc.subjectId);
+    const requiredRoomType = resolveRoomRequirement(subject);
+    const defaultRoomId = getCommonRoomId(jc.classIds);
 
-    // Resolve Room Type
-    const requiredType = resolveRoomRequirement(subject);
+    // Find curriculum counts from the first class (assumed identical for partners)
+    const repClass = classMap.get(jc.classIds[0]);
+    const curr = repClass?.curriculum.find(c => c.subjectId === jc.subjectId);
+    
+    if (!curr) return;
 
-    const createJointUnit = (idSuffix: string, duration: number) => {
+    const createJoint = (suffix: string, duration: number) => {
       const u: AllocationUnit = {
-        id: `JOINT-${jc.id}-${idSuffix}`,
+        id: `JOINT-${jc.id}-${suffix}`,
         subjectId: jc.subjectId,
         subjectName: subject?.name || "Unknown",
         duration,
         classIds: jc.classIds,
-        classNames: jc.classIds.map((id) => classMap.get(id)?.name || ""),
+        classNames: jc.classIds.map(id => classMap.get(id)?.name || ""),
         teacherIds: jc.teacherId ? [jc.teacherId] : [],
-        teacherNames: [
-          jc.teacherId
-            ? teacherMap.get(jc.teacherId)?.name || "Unknown"
-            : "Unassigned",
-        ],
+        teacherNames: [jc.teacherId ? teacherMap.get(jc.teacherId)?.name || "Unknown" : "Unassigned"],
         priority: 0,
-        defaultRoomId: homeroomId,
-        requiredRoomType: requiredType, // <--- Added
-        jointClassId: jc.id,
+        defaultRoomId,
+        requiredRoomType,
+        jointClassId: jc.id
       };
-
       u.priority = calculatePriority(u, teachers, data);
       units.push(u);
     };
 
-    // Use 'jointCurr' here
-    for (let i = 0; i < jointCurr.doubles; i++) createJointUnit(`D-${i}`, 2);
-    for (let i = 0; i < jointCurr.singles; i++) createJointUnit(`S-${i}`, 1);
+    for (let i = 0; i < (curr.doubles || 0); i++) createJoint(`D-${i}`, 2);
+    for (let i = 0; i < (curr.singles || 0); i++) createJoint(`S-${i}`, 1);
+
+    // Mark as processed
+    jc.classIds.forEach(cid => processedCurriculumItems.add(`${cid}-${jc.subjectId}`));
   });
 
-  // 4. PROCESS STANDARD CLASSES
+  // 4. PROCESS STANDARD CLASSES & ELECTIVE BLOCKS
   classes.forEach((cls) => {
-    const homeroomId = cls.defaultRoomId || cls.classroomId || (cls as any).roomId;
-
     cls.curriculum.forEach((curr) => {
-      // SKIP if this is handled by a joint class
-      if (jointLookup.has(`${curr.subjectId}-${cls.id}`)) return;
+      const compositeKey = `${cls.id}-${curr.subjectId}`;
+      if (processedCurriculumItems.has(compositeKey)) return;
 
       const subject = subjectMap.get(curr.subjectId);
-      // Resolve Room Type
-      const requiredType = resolveRoomRequirement(subject);
-
-      const createUnit = (idSuffix: string, duration: number) => {
+      const requiredRoomType = resolveRoomRequirement(subject);
+      
+      const createUnit = (suffix: string, duration: number) => {
         const u: AllocationUnit = {
-          id: `${cls.id}-${curr.subjectId}-${idSuffix}`,
+          id: `${cls.id}-${curr.subjectId}-${suffix}`,
           subjectId: curr.subjectId,
           subjectName: subject?.name || "Unknown",
           duration,
           classIds: [cls.id],
           classNames: [cls.name],
           teacherIds: curr.assignedTeacherId ? [curr.assignedTeacherId] : [],
-          teacherNames: [
-            curr.assignedTeacherId
-              ? teacherMap.get(curr.assignedTeacherId)?.name || "Unknown"
-              : "Unassigned",
-          ],
+          teacherNames: [curr.assignedTeacherId ? teacherMap.get(curr.assignedTeacherId)?.name || "Unknown" : "Unassigned"],
           priority: 0,
-          defaultRoomId: homeroomId,
-          requiredRoomType: requiredType, // <--- Added
+          defaultRoomId: cls.defaultRoomId || cls.classroomId,
+          requiredRoomType,
           electiveBlockId: (curr as any).electiveBlockId,
         };
-
         u.priority = calculatePriority(u, teachers, data);
         units.push(u);
       };
 
-      // Use 'curr' here
-      for (let i = 0; i < curr.doubles; i++) createUnit(`D-${i}`, 2);
-      for (let i = 0; i < curr.singles; i++) createUnit(`S-${i}`, 1);
+      for (let i = 0; i < (curr.doubles || 0); i++) createUnit(`D-${i}`, 2);
+      for (let i = 0; i < (curr.singles || 0); i++) createUnit(`S-${i}`, 1);
+      
+      processedCurriculumItems.add(compositeKey);
     });
   });
 
-  // 5. SHUFFLE AND SORT
-  // We perform a random shuffle first to break ties between equal priority units (e.g. 2 different Math classes)
-  // Then we sort by priority so the constraint-heavy units float to the top.
-  for (let i = units.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [units[i], units[j]] = [units[j], units[i]];
+  // 5. FINAL CURRICULUM AUDIT
+  const totalRequiredPeriods = classes.reduce((acc, c) => 
+    acc + c.curriculum.reduce((sum, curr) => sum + (curr.singles || 0) + (curr.doubles || 0) * 2, 0), 0
+  );
+  
+  // Note: For Joint units, we must count them for EACH class they serve.
+  const totalGeneratedPeriods = units.reduce((acc, u) => acc + (u.duration * u.classIds.length), 0);
+
+  if (totalRequiredPeriods !== totalGeneratedPeriods) {
+    console.warn(`Curriculum Mismatch: Required ${totalRequiredPeriods}, Generated ${totalGeneratedPeriods}`);
   }
 
-  return units.sort((a, b) => b.priority - a.priority);
+  // 6. SHUFFLE & STATIC MRV SORT
+  return units
+    .sort(() => Math.random() - 0.5)
+    .sort((a, b) => b.priority - a.priority);
 };

@@ -25,59 +25,22 @@ export const checkOverlaps = (
   const targetTime = targetTimeRange[p];
   if (!targetTime) return null;
 
-  // --- OPTIMIZED PATH: O(1) Check using Unit Registry ---
-  if (state) {
-    // 1. Teacher Overlap (O(1))
-    const teacherVictim = state.teacherOccupancy[teacherId]?.[targetDay]?.[p];
-    if (teacherVictim && !ignoredSlots.has(p)) {
-        // Need to check if it's a joint class
-        const isJoint = data.jointClasses?.some(jc => 
-            jc.subjectId === subjectId && 
-            jc.classIds.includes(classId) && 
-            state.schedule[jc.classIds.find(id => id !== classId) || ""]?.[targetDay]?.[p]?.unitId === teacherVictim
-        );
-        if (!isJoint) {
-            return {
-                valid: false,
-                message: `Teacher is busy elsewhere`,
-                severity: "HIGH",
-                penaltyPoints: 1000,
-                conflictCount: 1
-            };
-        }
-    }
+  // --- TIME-AWARE VALIDATION ---
+  // We explicitly skip the O(1) "Optimized Path" (Index-Based) because it fails
+  // when classes have different start/end times for the same period index.
+  // Instead, we scan the schedule (O(N)) using strict Time-Range Overlap.
 
-    // 2. Room Overlap (O(1))
-    if (roomId) {
-        const roomVictim = state.roomOccupancy[roomId]?.[targetDay]?.[p];
-        if (roomVictim && !ignoredSlots.has(p)) {
-            const isJoint = data.jointClasses?.some(jc => 
-                jc.subjectId === subjectId && 
-                jc.classIds.includes(classId)
-            );
-            if (!isJoint) {
-                return {
-                    valid: false,
-                    message: `Room occupied`,
-                    severity: "HIGH",
-                    penaltyPoints: 1000,
-                    conflictCount: 1
-                };
-            }
-        }
-    }
-    
-    return null;
-  }
+  // Use current Solver state if available, otherwise static data (UI mode)
+  const scheduleSource = state ? state.schedule : data.schedule;
 
-  // --- FALLBACK PATH: O(N) Scan (Legacy/UI) ---
-  for (const cId of Object.keys(data.schedule)) {
+  // --- O(N) Scan for Physical Overlaps ---
+  for (const cId of Object.keys(scheduleSource)) {
     if (cId === classId) continue;
 
     const otherClassSchedule = allClassSchedules.get(cId);
     if (!otherClassSchedule) continue;
 
-    const otherDaySlots = data.schedule[cId]?.[targetDay] || {};
+    const otherDaySlots = scheduleSource[cId]?.[targetDay] || {};
 
     for (const otherPStr in otherDaySlots) {
       const otherP = parseInt(otherPStr);
@@ -89,8 +52,10 @@ export const checkOverlaps = (
       const otherTime = otherClassSchedule[otherP];
       if (!otherTime) continue;
 
+      // CRITICAL: Strict Time-Overlap Check
       if (!doTimeRangesOverlap(targetTime, otherTime)) continue;
 
+      // 1. Teacher Overlap
       if (teacherId && slot.teacherId === teacherId) {
         const isJointSession = data.jointClasses?.some(
           (jc) =>
@@ -111,6 +76,7 @@ export const checkOverlaps = (
         }
       }
 
+      // 2. Room Overlap
       if (roomId && slot.roomId === roomId) {
         const isJointPartner = data.jointClasses?.some(
           (jc) =>
@@ -129,6 +95,29 @@ export const checkOverlaps = (
             conflictCount: 1,
           };
         }
+      }
+
+      // 3. Single Resource Overlap (e.g. Science Labs, Fields)
+      const subject = data.subjects.find(s => s.id === subjectId);
+      if (subject?.isSingleResource && slot.subjectId === subjectId) {
+          // No Joint Check needed? Joint classes share the subject, so they are allowed to overlap?
+          // YES. Joint classes are the *same* lesson.
+          const isJointSession = data.jointClasses?.some(
+              (jc) =>
+                jc.subjectId === subjectId &&
+                jc.classIds.includes(classId) &&
+                jc.classIds.includes(cId)
+          );
+
+          if (!isJointSession) {
+             return {
+                 valid: false,
+                 message: `${subject.name} is already being taught elsewhere`,
+                 severity: "HIGH",
+                 penaltyPoints: 1000,
+                 conflictCount: 1,
+             };
+          }
       }
     }
   }

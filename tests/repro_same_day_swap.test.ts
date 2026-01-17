@@ -1,18 +1,19 @@
 import { describe, it, expect } from "vitest";
 import { checkSlotValidity } from "../src/features/generator/scheduler/validation";
+import { initializeState } from "../src/features/generator/scheduler/state";
 import { AppData } from "../src/types";
 
 describe("Reproduction: Same-Day Double Swap False Positive", () => {
   const mockData: AppData = {
     settings: {
       periodsPerDay: 8,
-      dayStructure: Array(8).fill("CLASS"),
+      dayStructure: Array(8).fill({ type: 'CLASS', label: 'C' }),
       timeSlots: [],
       maxConsecutivePeriods: 4,
       fixedOccasions: [],
     },
     classes: [
-      { id: "c1", name: "Class 1", periodCount: 8, structure: Array(8).fill("CLASS") } as any,
+      { id: "c1", name: "Class 1", periodCount: 8, structure: Array(8).fill({ type: 'CLASS', label: 'C' }), curriculum: [] } as any,
     ],
     teachers: [{ id: "t1", name: "Teacher 1", constraints: [] }] as any,
     subjects: [
@@ -37,9 +38,11 @@ describe("Reproduction: Same-Day Double Swap False Positive", () => {
     dutyLocations: [],
     dutyAssignments: [],
     lastGenerated: null,
+    recentActivity: [],
   };
 
   it("should allow moving English (P0,1) to Math (P2,3)", () => {
+    const state = initializeState(mockData);
     const result = checkSlotValidity(
       mockData,
       0, // Target Day
@@ -47,7 +50,8 @@ describe("Reproduction: Same-Day Double Swap False Positive", () => {
       "t1", // Teacher
       "c1", // Class
       "s1", // Subject (English)
-      { day: 0, period: 0 }, // Source (P0)
+      state,
+      { day: 0, period: 0, duration: 2 }, // Source (P0)
       undefined,
       2 // Duration
     );
@@ -56,10 +60,12 @@ describe("Reproduction: Same-Day Double Swap False Positive", () => {
   });
 
   it("should allow moving Math (P2,3) to English (P0,1) - The Swap Back", () => {
+    const state = initializeState(mockData);
     const result = checkSlotValidity(
       mockData,
       0, 0, "t1", "c1", "s2",
-      { day: 0, period: 2 }, // Source (P2)
+      state,
+      { day: 0, period: 2, duration: 2 }, // Source (P2)
       undefined,
       2,
       { day: 0, period: 0, duration: 2 } // Ignore Target (English)
@@ -77,18 +83,12 @@ describe("Reproduction: Same-Day Double Swap False Positive", () => {
       },
     };
 
-    // Teacher has English(0,1) and Math(2,3).
-    // Total 4 consecutive.
-    // Swap English(0,1) with Math(2,3).
-    // During English move to (2,3):
-    // It should NOT see 4 consecutive because 0,1 are ignored and 2,3 are the proposed.
-    // Wait, if it sees 2,3 as busy (proposed) and 0,1 as ignored.
-    // Then load is 2.
-    
+    const state = initializeState(dataWithTightConstraint);
     const result = checkSlotValidity(
       dataWithTightConstraint,
       0, 2, "t1", "c1", "s1",
-      { day: 0, period: 0 },
+      state,
+      { day: 0, period: 0, duration: 2 },
       undefined,
       2
     );
@@ -103,10 +103,12 @@ describe("Reproduction: Same-Day Double Swap False Positive", () => {
     // Add a 3rd English period at P4
     mockData.schedule.c1[0][4] = { subjectId: "s1", teacherId: "t1", duration: 1, isFixed: false };
     
+    const state = initializeState(mockData);
     const result = checkSlotValidity(
       mockData,
       0, 2, "t1", "c1", "s1",
-      { day: 0, period: 0 },
+      state,
+      { day: 0, period: 0, duration: 2 },
       undefined,
       2,
       { day: 0, period: 2, duration: 2 } // Ignore Target (Math)

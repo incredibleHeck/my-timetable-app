@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { validateFullSchedule } from '../src/features/generator/scheduler/validation';
+import { initializeState } from '../src/features/generator/scheduler/state';
 import { AppData, Class, Subject, Teacher } from '../src/types';
 import { DEFAULT_DATA } from '../src/utils/constants';
 
@@ -45,7 +46,8 @@ describe('Global Re-validation', () => {
         maxSubjectPeriodsPerDay: 2
       }
     };
-    const conflicts = validateFullSchedule(data);
+    const state = initializeState(data);
+    const conflicts = validateFullSchedule(data, state);
     expect(conflicts).toHaveLength(0);
   });
 
@@ -57,7 +59,8 @@ describe('Global Re-validation', () => {
         maxSubjectPeriodsPerDay: 1
       }
     };
-    const conflicts = validateFullSchedule(data);
+    const state = initializeState(data);
+    const conflicts = validateFullSchedule(data, state);
     expect(conflicts.length).toBeGreaterThan(0);
     expect(conflicts[0].reason).toContain('Max 1 periods');
   });

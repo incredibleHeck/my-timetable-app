@@ -1,8 +1,0 @@
-{
-  "track_id": "class_ui_reorg_20260114",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-01-14T10:50:00Z",
-  "updated_at": "2026-01-14T10:50:00Z",
-  "description": "UI Reorganization: Move Periods Per Day and Duration to Structure section in Class Settings. Add Break and Lunch Duration fields."
-}

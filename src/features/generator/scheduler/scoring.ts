@@ -23,6 +23,39 @@ const WEIGHTS = {
 };
 
 /**
+ * HOMEROOM INTEGRITY CHECK
+ * Penalizes moves that displace a class from its designated base.
+ */
+export function calculateRoomPenalty(
+  state: SchedulerState,
+  unit: AllocationUnit,
+  d: number,
+  p: number,
+  targetRoomId: string
+): number {
+  let penalty = 0;
+
+  // 1. DISPLACEMENT PENALTY
+  // If we are forcing an eviction in this room, check who we are kicking out.
+  const victimId = state.roomOccupancy[targetRoomId]?.[d]?.[p];
+  if (victimId && victimId !== "BLOCK") {
+    // Kicking a class out of its OWN homeroom is a high penalty (800)
+    // Kicking a class out of a specialist room they are using is a medium penalty (300)
+    // For now, simpler: Evicting ANYONE is costly.
+    penalty += 800; 
+  }
+
+  // 2. WANDERING PENALTY
+  // If this subject doesn't REQUIRE a specialist lab, 
+  // but we are placing it somewhere other than the Class Homeroom.
+  if (!unit.requiredRoomType && targetRoomId !== unit.defaultRoomId) {
+    penalty += 500; // Encourage staying in the "Home Base"
+  }
+
+  return penalty;
+}
+
+/**
  * HELPER: Detect "Swiss Cheese" schedules (1-period gaps) AND large Windows.
  */
 export const calculateTeacherGapPenalty = (

@@ -12,13 +12,13 @@ export const generateSchedule = (
 
   // 2. Solve (Constraint Satisfaction Phase)
   // Attempts to place every unit using LCV and Hard Constraints
-  const { schedule, conflicts: solverConflicts } = solveSmart(units, data);
+  const { schedule, conflicts: solverConflicts, state } = solveSmart(units, data);
 
   // 3. Verify (Validation Phase)
   // The Solver knows *why* it couldn't place something (solverConflicts).
   // The Validator ensures what *was* placed is legal (validationConflicts).
   const dataWithSchedule = { ...data, schedule };
-  const validationConflicts = validateFullSchedule(dataWithSchedule);
+  const validationConflicts = validateFullSchedule(dataWithSchedule, state);
 
   // 4. Merge Conflicts
   // Combine "Unplaced Lessons" (Solver) with "Illegal Placements" (Validator)

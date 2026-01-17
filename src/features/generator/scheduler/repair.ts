@@ -26,7 +26,7 @@ export function runMinConflictsRepair(
 
         if (queue.length === 0) {
             // If queue is empty, check if any NEW conflicts arose from validation
-            const globalConflicts = validateFullSchedule({ ...data, schedule: state.schedule });
+            const globalConflicts = validateFullSchedule({ ...data, schedule: state.schedule }, state);
             if (globalConflicts.length === 0) break;
 
             // Add random conflicted unit to queue

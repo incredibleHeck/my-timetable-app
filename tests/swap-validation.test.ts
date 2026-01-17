@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { checkSlotValidity } from '../src/features/generator/scheduler/validation';
+import { initializeState } from '../src/features/generator/scheduler/state';
 import { AppData, Teacher, Class, Subject } from '../src/types';
 import { DEFAULT_DATA } from '../src/utils/constants';
 
@@ -44,13 +45,11 @@ describe('Swap Validation Reproduction', () => {
         }
       }
     },
+    recentActivity: [],
   };
 
   it('FAIL: should NOT trigger "Max Subject Periods" error when moving a Double Period to an empty slot on same day', () => {
-    // Current state: P0 and P1 are 's1'. Total = 2.
-    // Subject limit = 2.
-    // Moving P0 & P1 to P3 & P4 should be valid if we ignore the source.
-    
+    const state = initializeState(baseData);
     const result = checkSlotValidity(
       baseData,
       0, // day
@@ -58,6 +57,7 @@ describe('Swap Validation Reproduction', () => {
       't1',
       'c1',
       's1',
+      state,
       { day: 0, period: 0, duration: 2 }, // ignore source (P0, P1)
       undefined,
       2, // duration = 2
@@ -75,9 +75,7 @@ describe('Swap Validation Reproduction', () => {
         settings: { ...baseData.settings, maxTeacherPeriodsPerDay: 2 }
     };
 
-    // Current state: Teacher t1 has 2 periods (P0, P1). Total = 2. Limit = 2.
-    // Moving P0 to P2 should be valid (avoids gap conflict at P2).
-    
+    const state = initializeState(data);
     const result = checkSlotValidity(
       data,
       0,
@@ -85,6 +83,7 @@ describe('Swap Validation Reproduction', () => {
       't1',
       'c1',
       's1',
+      state,
       { day: 0, period: 0, duration: 1 }, // ignore source (P0)
       undefined,
       1,
@@ -103,6 +102,7 @@ describe('Swap Validation Reproduction', () => {
         settings: { ...baseData.settings, maxTeacherPeriodsPerDay: 2 }
     };
 
+    const state = initializeState(data);
     const result = checkSlotValidity(
         data,
         0,
@@ -110,6 +110,7 @@ describe('Swap Validation Reproduction', () => {
         't1',
         'c1',
         's1',
+        state,
         { day: 0, period: 0, duration: 2 }, // Ignore P0, P1
         undefined,
         2, // duration
@@ -138,6 +139,7 @@ describe('Swap Validation Reproduction', () => {
         }
     } as AppData;
 
+    const state = initializeState(data);
     const result = checkSlotValidity(
         data,
         0,
@@ -145,6 +147,7 @@ describe('Swap Validation Reproduction', () => {
         't1',
         'c1',
         's1', // Math
+        state,
         { day: 0, period: 0 }, // ignore source P0
         undefined,
         1,
@@ -156,40 +159,9 @@ describe('Swap Validation Reproduction', () => {
   });
 
   it('FAIL: should NOT trigger "Consecutive period limit" error incorrectly during a swap', () => {
-    // Max consecutive = 2
-    const data = {
+    const reproData = {
         ...baseData,
         settings: { ...baseData.settings, maxConsecutivePeriods: 2 },
-        schedule: {
-            'c1': {
-                0: {
-                    0: { subjectId: 's1', teacherId: 't1', classId: 'c1' },
-                    1: { subjectId: 's1', teacherId: 't1', classId: 'c1' },
-                    3: { subjectId: 's2', teacherId: 't1', classId: 'c1' }
-                }
-            }
-        },
-        subjects: [...baseData.subjects, { id: 's2', name: 'Science' }]
-    } as AppData;
-
-    // Current state: T1 is busy at P0, P1 and P3. Blocks are 2 and 1. Max = 2. Valid.
-    // Moving P0, P1 to P1, P2.
-    // Atomic result: Busy at P1, P2 (moved) and P3 (existing).
-    // Blocks: P1, P2, P3. Consecutive = 3. Wait, P1, P2, P3 ARE consecutive.
-    // Let's move them to P4, P5.
-    // Busy at P4, P5 (moved) and P3 (existing).
-    // Blocks: P3 and P4, P5. P3, P4, P5 is 3 consecutive.
-    
-    // Let's use P0, P1 -> P1, P2 but Science is at P4.
-    // Moving P0, P1 to P1, P2. Science is at P4.
-    // Busy at P1, P2 (moved) and P4 (existing).
-    // Blocks: [1,2] and [4]. Max consecutive = 2. VALID.
-    
-    // IF DOUBLE COUNTED:
-    // P0, P1 (old) + P1, P2 (new) = P0, P1, P2 busy. Consecutive = 3. FAIL.
-    
-    const reproData = {
-        ...data,
         schedule: {
             'c1': {
                 0: {
@@ -200,6 +172,7 @@ describe('Swap Validation Reproduction', () => {
         }
     } as AppData;
 
+    const state = initializeState(reproData);
     const result = checkSlotValidity(
       reproData,
       0,
@@ -207,6 +180,7 @@ describe('Swap Validation Reproduction', () => {
       't1',
       'c1',
       's1',
+      state,
       { day: 0, period: 0, duration: 2 }, // ignore source P0, P1
       undefined,
       2, // duration = 2
