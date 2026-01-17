@@ -34,20 +34,21 @@ export interface AllocationUnit {
 export interface SchedulerState {
   schedule: ScheduleResult;
 
-  // --- 1. HARD CONSTRAINT GRIDS (5x12 Booleans) ---
-  // Fast lookups to check availability in O(1) time
+  // --- 1. HARD CONSTRAINT GRIDS (5x12 Unit IDs) ---
+  // Stores the ID of the unit occupying the slot, or null if free.
+  // This allows O(1) identification of "Who is blocking this?".
 
-  /** [teacherId][day][period] */
-  teacherOccupancy: Record<string, boolean[][]>;
+  /** [teacherId][day][period] -> unitId | null */
+  teacherOccupancy: Record<string, (string | null)[][]>;
 
-  /** [classId][day][period] */
-  classOccupancy: Record<string, boolean[][]>;
+  /** [classId][day][period] -> unitId | null */
+  classOccupancy: Record<string, (string | null)[][]>;
 
-  /** [roomId][day][period] */
-  roomOccupancy: Record<string, boolean[][]>;
+  /** [roomId][day][period] -> unitId | null */
+  roomOccupancy: Record<string, (string | null)[][]>;
 
-  /** [subjectId][day][period] - Tracks usage of abstract resources like "Science" */
-  singleResourceUsage: Record<string, boolean[][]>;
+  /** [subjectId][day][period] -> unitId | null */
+  singleResourceUsage: Record<string, (string | null)[][]>;
 
   // --- 2. SOFT CONSTRAINT TRACKERS ---
 
@@ -57,8 +58,8 @@ export interface SchedulerState {
   /** Used for LCV (Teacher Fatigue) logic */
   teacherDailyLoad: Record<string, Record<number, number>>;
 
-  /** Reverse lookup for repair: UnitID -> Location */
-  unitLocations: Map<string, { day: number; period: number }>;
+  /** Map unitId -> its current placement for fast retrieval and eviction */
+  unitPlacements: Map<string, { d: number; p: number; p2: number; rooms: Record<string, string> }>;
 
   // --- 3. METADATA ---
   /** Cached time ranges for validation alignment */

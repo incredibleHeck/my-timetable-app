@@ -9,16 +9,17 @@ export function determineRoom(d: number, p: number, p2: number, unit: Allocation
 
   const subjectRequiredRoomId = subject.requiredRoomId;
   if (subjectRequiredRoomId) {
-    const isOccupied = state.roomOccupancy[subjectRequiredRoomId]?.[d]?.[p] ||
-                      (unit.duration === 2 && state.roomOccupancy[subjectRequiredRoomId]?.[d]?.[p2]);
+    // Check occupied via new nullability check
+    const isOccupied = state.roomOccupancy[subjectRequiredRoomId]?.[d]?.[p] !== null ||
+                      (unit.duration === 2 && state.roomOccupancy[subjectRequiredRoomId]?.[d]?.[p2] !== null);
     if (isOccupied) return undefined; 
     return subjectRequiredRoomId;
   }
 
   const homeRoomId = classGroup.defaultRoomId;
   if (homeRoomId) {
-    const isOccupied = state.roomOccupancy[homeRoomId]?.[d]?.[p] ||
-                      (unit.duration === 2 && state.roomOccupancy[homeRoomId]?.[d]?.[p2]);
+    const isOccupied = state.roomOccupancy[homeRoomId]?.[d]?.[p] !== null ||
+                      (unit.duration === 2 && state.roomOccupancy[homeRoomId]?.[d]?.[p2] !== null);
     if (isOccupied) return undefined; 
     return homeRoomId;
   }

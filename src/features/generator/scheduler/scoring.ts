@@ -52,22 +52,22 @@ const calculateTeacherGapPenalty = (
     // Scan back from p-1. If we find >2 consecutive empties before hitting an Occupied, penalize.
     let gapSize = 0;
     for (let i = p - 1; i >= 0; i--) {
-        if (dailyGrid[i]) break; // Found occupancy
+        if (dailyGrid[i] !== null) break; // Found occupancy
         gapSize++;
     }
     // Only penalize if we actually found a start block (i.e. we didn't just hit start of day)
     // AND the gap is > 2
-    if (gapSize > 2 && p - gapSize - 1 >= 0 && dailyGrid[p - gapSize - 1]) {
+    if (gapSize > 2 && p - gapSize - 1 >= 0 && dailyGrid[p - gapSize - 1] !== null) {
         penalty += WEIGHTS.TEACHER_WINDOW;
     }
     
     // Check forwards (for iterative repair context)
     let fwdGapSize = 0;
     for (let i = p + 1; i < dailyGrid.length; i++) {
-        if (dailyGrid[i]) break;
+        if (dailyGrid[i] !== null) break;
         fwdGapSize++;
     }
-    if (fwdGapSize > 2 && p + fwdGapSize + 1 < dailyGrid.length && dailyGrid[p + fwdGapSize + 1]) {
+    if (fwdGapSize > 2 && p + fwdGapSize + 1 < dailyGrid.length && dailyGrid[p + fwdGapSize + 1] !== null) {
         penalty += WEIGHTS.TEACHER_WINDOW;
     }
 

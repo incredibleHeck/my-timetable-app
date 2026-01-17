@@ -7,6 +7,9 @@ export interface ScheduleSlot {
   isFixed?: boolean;
   locked?: boolean;
   electiveBlockId?: string;
+  
+  /** ID of the AllocationUnit that created this slot (for Solver/Repair tracking) */
+  unitId?: string;
 }
 
 export type ScheduleResult = Record<

@@ -21,7 +21,7 @@ const checkConsecutiveLimit = (
 
   for (let i = 0; i < gridLen; i++) {
     // Virtual Check: Is this slot occupied physically OR by our proposed move?
-    const isOccupied = dailyGrid[i] || i === p || (duration === 2 && i === p2);
+    const isOccupied = dailyGrid[i] !== null || i === p || (duration === 2 && i === p2);
 
     if (isOccupied) {
       currentRun++;

@@ -111,10 +111,14 @@ export function findMinConflictMove(
           // Use weighted conflict counter
           cost += countPotentialConflicts(u, state, data, d, p, p2);
           
-          // Still track specific victims for eviction
+          // O(1) Eviction Collection
           u.teacherIds.forEach(tid => collectEvictions(state, d, p, p2, tid, "TEACHER", evictions));
           u.classIds.forEach(cid => collectEvictions(state, d, p, p2, cid, "CLASS", evictions));
           collectEvictions(state, d, p, p2, rId, "ROOM", evictions);
+          
+          if (state.singleResourceUsage[u.subjectId]) {
+              collectEvictions(state, d, p, p2, u.subjectId, "SUBJECT", evictions);
+          }
       }
 
       if (possible) {
@@ -161,9 +165,6 @@ export function countPotentialConflicts(
   }
 
   // B. Room/Resource Conflicts
-  // (Note: forceDetermineRoom already checks existence, but here we count occupancy if using fallback)
-  // Since we use forceDetermineRoom in findMinConflictMove, we can count the occupants.
-  // Implementation detail: collectEvictions actually finds them, but for heuristic count:
   const subject = data.subjects.find(s => s.id === unit.subjectId);
   const roomId = subject?.requiredRoomId || unit.defaultRoomId;
   if (roomId) {
@@ -177,36 +178,44 @@ export function countPotentialConflicts(
     if (p2 !== -1 && state.classOccupancy[cid]?.[d]?.[p2]) count++;
   }
 
+  // D. Single Resource Conflicts
+  if (state.singleResourceUsage[unit.subjectId]) {
+      if (state.singleResourceUsage[unit.subjectId][d][p]) count++;
+      if (p2 !== -1 && state.singleResourceUsage[unit.subjectId][d][p2]) count++;
+  }
+
   return count;
 }
 
 
-export function collectEvictions(state: SchedulerState, d: number, p: number, p2: number, id: string, type: "TEACHER"|"CLASS"|"ROOM", out: Set<string>) {
-    if (type === "CLASS") {
-        const slot = state.schedule[id]?.[d]?.[p];
-        if (slot?.unitId) out.add(slot.unitId);
-        if (p2 !== -1) {
-            const slot2 = state.schedule[id]?.[d]?.[p2];
-            if (slot2?.unitId) out.add(slot2.unitId);
-        }
-    } else {
-        for (const cid in state.schedule) {
-             const s = state.schedule[cid]?.[d]?.[p];
-             if (s && s.unitId) {
-                 if ((type === "TEACHER" && s.teacherId === id) || (type === "ROOM" && s.roomId === id)) {
-                     out.add(s.unitId);
-                 }
-             }
-             if (p2 !== -1) {
-                 const s2 = state.schedule[cid]?.[d]?.[p2];
-                 if (s2 && s2.unitId) {
-                     if ((type === "TEACHER" && s2.teacherId === id) || (type === "ROOM" && s2.roomId === id)) {
-                         out.add(s2.unitId);
-                     }
-                 }
-             }
-        }
+export function collectEvictions(
+  state: SchedulerState, 
+  d: number, 
+  p: number, 
+  p2: number, 
+  id: string, 
+  type: "TEACHER"|"CLASS"|"ROOM"|"SUBJECT", 
+  out: Set<string>
+) {
+    let u1: string | null = null;
+    let u2: string | null = null;
+
+    if (type === "TEACHER") {
+        u1 = state.teacherOccupancy[id]?.[d]?.[p];
+        if (p2 !== -1) u2 = state.teacherOccupancy[id]?.[d]?.[p2];
+    } else if (type === "CLASS") {
+        u1 = state.classOccupancy[id]?.[d]?.[p];
+        if (p2 !== -1) u2 = state.classOccupancy[id]?.[d]?.[p2];
+    } else if (type === "ROOM") {
+        u1 = state.roomOccupancy[id]?.[d]?.[p];
+        if (p2 !== -1) u2 = state.roomOccupancy[id]?.[d]?.[p2];
+    } else if (type === "SUBJECT") {
+        u1 = state.singleResourceUsage[id]?.[d]?.[p];
+        if (p2 !== -1) u2 = state.singleResourceUsage[id]?.[d]?.[p2];
     }
+
+    if (u1 && u1 !== "BLOCK") out.add(u1);
+    if (u2 && u2 !== "BLOCK") out.add(u2);
 }
 
 export function findUnitFromConflict(conflict: Conflict, unitMap: Map<string, AllocationUnit>): AllocationUnit | undefined {
