@@ -1,5 +1,7 @@
 import { Teacher, AppData } from "../../../types";
-import { AllocationUnit } from "./types";
+import { AllocationUnit, SchedulerState } from "./types";
+import { checkHardConstraints } from "./constraints";
+import { getNextClassPeriod, getPeriodType } from "./utils";
 
 /**
  * HELPER: Calculates how 'busy' a teacher is based on their constraints.
@@ -100,3 +102,66 @@ export const calculatePriority = (
 
   return score;
 };
+
+/**
+ * MRV: Finds the index of the gang with the smallest domain.
+ */
+export function findMostConstrainedGangIdx(
+  leaders: AllocationUnit[], 
+  state: SchedulerState, 
+  data: AppData,
+  gangMap: Map<string, AllocationUnit[]>
+): number {
+  let minDomain = Infinity;
+  let bestIdx = 0;
+
+  for (let i = 0; i < leaders.length; i++) {
+    const gangId = leaders[i].jointClassId || leaders[i].electiveBlockId || leaders[i].id;
+    const gang = gangMap.get(gangId)!;
+    const domainSize = countValidSlots(state, data, gang);
+
+    if (domainSize < minDomain) {
+      minDomain = domainSize;
+      bestIdx = i;
+    } else if (domainSize === minDomain) {
+      // Tie-breaker: Static Priority
+      if (leaders[i].priority > leaders[bestIdx].priority) {
+        bestIdx = i;
+      }
+    }
+    // Optimization: If 0 moves left, it's a bottleneck, pick immediately
+    if (minDomain === 0) break;
+  }
+  return bestIdx;
+}
+
+export function countValidSlots(state: SchedulerState, data: AppData, gang: AllocationUnit[]): number {
+  const globalPeriods = data.settings.periodsPerDay;
+  const days = (data.settings as any).daysPerWeek || 5;
+  let count = 0;
+
+  for (let d = 0; d < days; d++) {
+    for (let p = 0; p < globalPeriods; p++) {
+      const struct = data.settings.dayStructure;
+      if (getPeriodType(struct, p) !== "CLASS") continue;
+
+      let p2 = -1;
+      if (gang[0].duration === 2) {
+        const next = getNextClassPeriod(p, struct, globalPeriods);
+        if (next === null) continue;
+        p2 = next;
+      }
+
+      let gangValid = true;
+      for (const u of gang) {
+         const involvedClasses = u.classIds.map(cid => data.classes.find(c => c.id === cid));
+         if (!checkHardConstraints(state, data, d, p, p2, u, involvedClasses)) {
+             gangValid = false;
+             break;
+         }
+      }
+      if (gangValid) count++;
+    }
+  }
+  return count;
+}

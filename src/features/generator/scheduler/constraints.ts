@@ -142,3 +142,26 @@ export const checkHardConstraints = (
 
   return true;
 };
+
+export function checkImmutableConstraints(d: number, p: number, p2: number, unit: AllocationUnit, data: AppData): boolean {
+   const globalP1 = data.settings.fixedOccasions?.[d]?.[p];
+   if (isGlobalSlotBlocked(globalP1)) return false;
+   
+   if (unit.duration === 2 && p2 !== -1) {
+       const globalP2 = data.settings.fixedOccasions?.[d]?.[p2];
+       if (isGlobalSlotBlocked(globalP2)) return false;
+   }
+
+   for (const tid of unit.teacherIds) {
+       const t = data.teachers.find(x => x.id === tid);
+       if (t?.constraints?.[d]?.[p]) return false;
+       if (unit.duration === 2 && p2 !== -1 && t?.constraints?.[d]?.[p2]) return false;
+   }
+   
+   for (const cid of unit.classIds) {
+       const cls = data.classes.find(c => c.id === cid);
+       if (cls?.fixedSessions?.[d]?.[p]) return false;
+       if (unit.duration === 2 && p2 !== -1 && cls?.fixedSessions?.[d]?.[p2]) return false;
+   }
+   return true;
+}

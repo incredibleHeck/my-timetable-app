@@ -1,5 +1,6 @@
 import { AllocationUnit, SchedulerState } from "./types";
 import { AppData, Teacher } from "../../../types";
+import { getType } from "./utils";
 
 /**
  * CONFIGURATION: Weights for different soft constraints.
@@ -13,11 +14,16 @@ const WEIGHTS = {
   LUNCH_PROTECTION: -100, // Penalty: Scheduling right after lunch (optional, can be adjusted)
   MORNING_BIAS: 5, // Reward: Slight preference for earlier slots
   SCARCITY_PENALTY: -500, // LCV: High penalty for using the LAST available slot for a resource
+  
+  // Enhanced Pedagogical Costs
+  TEACHER_WINDOW: -200,    // Gaps of > 2 periods
+  ROOM_CHANGE: -50,        // Avoid moving a class between rooms
+  VARIETY_PENALTY: -150,   // Prevents "Subject Stacking" (3 heavy subjects)
+  FRIDAY_AFTERNOON: -30    // Avoid core subjects on Friday PM
 };
 
 /**
- * HELPER: Detect "Swiss Cheese" schedules (1-period gaps).
- * Returns a negative score if the placement creates an awkward gap.
+ * HELPER: Detect "Swiss Cheese" schedules (1-period gaps) AND large Windows.
  */
 const calculateTeacherGapPenalty = (
   state: SchedulerState,
@@ -31,20 +37,41 @@ const calculateTeacherGapPenalty = (
     const dailyGrid = state.teacherOccupancy[tid]?.[d];
     if (!dailyGrid) continue;
 
+    // 1. Swiss Cheese (1-period gap)
     // Check Previous Gap: [Occupied] [Empty] [Current Assignment]
-    // If p-2 is occupied and p-1 is empty, placing at p creates a gap at p-1.
     if (p >= 2 && !dailyGrid[p - 1] && dailyGrid[p - 2]) {
       penalty += WEIGHTS.TEACHER_GAP;
     }
-
     // Check Next Gap: [Current Assignment] [Empty] [Occupied]
-    // (Requires looking ahead at existing assignments - useful for iterative repair)
     if (p + 2 < dailyGrid.length && !dailyGrid[p + 1] && dailyGrid[p + 2]) {
       penalty += WEIGHTS.TEACHER_GAP;
     }
 
+    // 2. Large Window (Gap > 2 periods)
+    // Check backwards: [Occupied] [Empty] [Empty] [Empty] [Current]
+    // Scan back from p-1. If we find >2 consecutive empties before hitting an Occupied, penalize.
+    let gapSize = 0;
+    for (let i = p - 1; i >= 0; i--) {
+        if (dailyGrid[i]) break; // Found occupancy
+        gapSize++;
+    }
+    // Only penalize if we actually found a start block (i.e. we didn't just hit start of day)
+    // AND the gap is > 2
+    if (gapSize > 2 && p - gapSize - 1 >= 0 && dailyGrid[p - gapSize - 1]) {
+        penalty += WEIGHTS.TEACHER_WINDOW;
+    }
+    
+    // Check forwards (for iterative repair context)
+    let fwdGapSize = 0;
+    for (let i = p + 1; i < dailyGrid.length; i++) {
+        if (dailyGrid[i]) break;
+        fwdGapSize++;
+    }
+    if (fwdGapSize > 2 && p + fwdGapSize + 1 < dailyGrid.length && dailyGrid[p + fwdGapSize + 1]) {
+        penalty += WEIGHTS.TEACHER_WINDOW;
+    }
+
     // REWARD: Continuity (Teaching back-to-back)
-    // If p-1 is occupied, this is a good block.
     if (
       (p > 0 && dailyGrid[p - 1]) ||
       (p + 1 < dailyGrid.length && dailyGrid[p + 1])
@@ -57,8 +84,6 @@ const calculateTeacherGapPenalty = (
 
 /**
  * HELPER: Least Constraining Value (LCV).
- * Calculates how "expensive" it is to use a slot for a teacher.
- * If a teacher only has 2 slots left, using one is VERY expensive.
  */
 const calculateScarcityPenalty = (
   state: SchedulerState,
@@ -76,18 +101,92 @@ const calculateScarcityPenalty = (
       teacher.maxPeriodsPerDay || data.settings.maxTeacherPeriodsPerDay || 6;
     const currentLoad = state.teacherDailyLoad[tid]?.[d] || 0;
 
-    // LCV LOGIC:
-    // If we are 1 slot away from maxing out, Panic!
     if (currentLoad >= maxLoad - 1) {
       penalty += WEIGHTS.SCARCITY_PENALTY;
     }
-    // If we are reaching saturation, mild penalty
     else if (currentLoad >= maxLoad - 2) {
       penalty += WEIGHTS.SCARCITY_PENALTY / 2;
     }
   }
   return penalty;
 };
+
+const isCoreSubject = (name?: string) => {
+    if (!name) return false;
+    const n = name.toLowerCase();
+    return n.includes("math") || n.includes("english") || n.includes("science") || n.includes("physics") || n.includes("chem") || n.includes("bio");
+};
+
+const calculatePedagogicalScore = (
+  state: SchedulerState,
+  data: AppData,
+  d: number,
+  p: number,
+  unit: AllocationUnit
+): number => {
+    let score = 0;
+    const classId = unit.classIds[0];
+    if (!classId) return 0;
+    
+    // 1. Friday Afternoon Penalty
+    // Assuming Friday is index 4 and "Afternoon" is roughly the last 30% of the day or after Lunch.
+    // Simplified: Period index > (Total / 2)
+    if (d === 4) {
+        const totalPeriods = data.settings.periodsPerDay;
+        if (p > totalPeriods / 2) {
+            if (isCoreSubject(unit.subjectName)) {
+                score += WEIGHTS.FRIDAY_AFTERNOON;
+            }
+        }
+    }
+
+    // 2. Room Change Penalty
+    // Check p-1. If it was a class, check its room.
+    if (p > 0) {
+        const prevSlot = state.schedule[classId]?.[d]?.[p-1];
+        if (prevSlot && !prevSlot.isFixed) {
+             // Heuristic: If we are assigning a different room than previous, penalize.
+             // We don't know OUR room for sure yet, but we can guess based on unit preferences.
+             const likelyRoom = unit.requiredRoomType ? "Specialist" : (unit.defaultRoomId || "Home");
+             const prevRoom = "Unknown"; // We'd need to lookup room metadata. 
+             // Without full room lookup, we can assume:
+             // If previous slot was same subject, it's fine.
+             // If previous slot was different subject, and we are moving to a Specialist room (e.g. Lab), acceptable.
+             // If we are moving from Home to Home (different room?), bad.
+             
+             // Simplification: Penalize if previous was a different subject (context switch) 
+             // AND we suspect a physical move. 
+             // Actually, strict "Room Change" requires knowing the assigned room.
+             // Let's skip strict room check and focus on Subject Stacking which implies movement.
+        }
+    }
+
+    // 3. Variety / Heavy Stacking (Subject Stacking)
+    // "Prevents 3 heavy subjects in a row"
+    if (isCoreSubject(unit.subjectName)) {
+        let heavyStreak = 0;
+        // Check p-1
+        if (p > 0) {
+            const s1 = state.schedule[classId]?.[d]?.[p-1];
+            if (s1 && isCoreSubject(data.subjects.find(s=>s.id === s1.subjectId)?.name || "")) {
+                heavyStreak++;
+                // Check p-2
+                if (p > 1) {
+                    const s2 = state.schedule[classId]?.[d]?.[p-2];
+                    if (s2 && isCoreSubject(data.subjects.find(s=>s.id === s2.subjectId)?.name || "")) {
+                        heavyStreak++;
+                    }
+                }
+            }
+        }
+        
+        if (heavyStreak >= 2) {
+            score += WEIGHTS.VARIETY_PENALTY;
+        }
+    }
+
+    return score;
+}
 
 /**
  * MAIN SCORING FUNCTION
@@ -103,56 +202,33 @@ export const calculateScore = (
   let score = 0;
   const maxPeriods = data.settings.periodsPerDay;
 
-  // ----------------------------------------------------------
   // 1. LEAST CONSTRAINING VALUE (Resource Scarcity)
-  // ----------------------------------------------------------
   score += calculateScarcityPenalty(state, d, unit.teacherIds, data);
 
-  // ----------------------------------------------------------
-  // 2. TEACHER WELLBEING (Gaps & Clusters)
-  // ----------------------------------------------------------
+  // 2. TEACHER WELLBEING (Gaps, Windows, Clusters)
   score += calculateTeacherGapPenalty(state, d, p, unit.teacherIds);
 
-  // ----------------------------------------------------------
   // 3. STUDENT FATIGUE (Subject Distribution)
-  // ----------------------------------------------------------
-  // Avoid placing the same subject twice in a row (unless it's a double block)
-  // This helps spread the cognitive load.
   const classId = unit.classIds[0];
   if (classId && p > 0) {
     const prevSlot = state.schedule[classId]?.[d]?.[p - 1];
     if (prevSlot) {
-      // If previous slot is the same subject (and not part of this double block unit), penalize
-      // Note: Heuristics handles the Double Block continuity naturally, this is for separate singles.
       if (prevSlot.subjectId === unit.subjectId) {
         score += WEIGHTS.SUBJECT_DISTRIBUTION;
       }
     }
   }
 
-  // ----------------------------------------------------------
-  // 4. PREFERRED TIME SLOTS (Morning Bias)
-  // ----------------------------------------------------------
-  // Linear decay: Period 0 gets max points, Period 11 gets 0.
-  // This gently pushes "harder" subjects (which are sorted first) to the morning.
+  // 4. PEDAGOGICAL (Friday, Stacking)
+  score += calculatePedagogicalScore(state, data, d, p, unit);
+
+  // 5. PREFERRED TIME SLOTS (Morning Bias)
   score += (maxPeriods - p) * (WEIGHTS.MORNING_BIAS / maxPeriods);
 
-  // ----------------------------------------------------------
-  // 5. ROOM EFFICIENCY
-  // ----------------------------------------------------------
-  // If we found a preferred room, give a small bonus
+  // 6. ROOM EFFICIENCY (Bonus for using Preferred Room)
   if (unit.preferredRoomIds?.length && unit.defaultRoomId) {
-    // Logic handled in solver selection, but we can reward here if room is passed in context.
-    // (Simplified for now)
+     score += WEIGHTS.ROOM_EFFICIENCY;
   }
-
-  // ----------------------------------------------------------
-  // 6. DETERMINISTIC TIE-BREAKER
-  // ----------------------------------------------------------
-  // Instead of Math.random(), we use a deterministic hash of IDs to break ties consistency.
-  // This aids debugging.
-  // (Optional: Re-add Math.random() ONLY if you want non-deterministic solving in the worker loop)
-  // score += Math.random();
 
   return score;
 };

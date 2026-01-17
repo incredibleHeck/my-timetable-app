@@ -57,6 +57,9 @@ export interface SchedulerState {
   /** Used for LCV (Teacher Fatigue) logic */
   teacherDailyLoad: Record<string, Record<number, number>>;
 
+  /** Reverse lookup for repair: UnitID -> Location */
+  unitLocations: Map<string, { day: number; period: number }>;
+
   // --- 3. METADATA ---
   /** Cached time ranges for validation alignment */
   classTimeRanges: Map<string, TimeSlot[]>;
