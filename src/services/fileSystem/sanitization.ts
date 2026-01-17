@@ -25,6 +25,7 @@ export const sanitizeAppData = (raw: any): AppData => {
     schedule:
       typeof raw.schedule === "object" && raw.schedule ? raw.schedule : {},
     conflicts: Array.isArray(raw.conflicts) ? raw.conflicts : [],
+    recentActivity: Array.isArray(raw.recentActivity) ? raw.recentActivity : [],
     lastGenerated: raw.lastGenerated || null,
   };
 };

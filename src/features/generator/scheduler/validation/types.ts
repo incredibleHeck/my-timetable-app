@@ -5,6 +5,14 @@ export type ValidationResult = {
   message?: string;
   isSwap?: boolean;
   severity?: "HIGH" | "MEDIUM" | "LOW";
+  /** 
+   * Penalty points for this violation.
+   * Hard constraints = 1000+ pts
+   * Soft constraints (Gaps, Variety) = 10-50 pts
+   */
+  penaltyPoints: number; 
+  /** For Min-Conflicts: How many units are blocking this slot? */
+  conflictCount: number; 
 };
 
 export interface ValidationContext {

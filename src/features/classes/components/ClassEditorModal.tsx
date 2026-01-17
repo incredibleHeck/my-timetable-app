@@ -177,7 +177,7 @@ export const ClassEditorModal: React.FC<ClassEditorModalProps> = ({
     const newClass: ClassGroup = {
       id: editingClass ? editingClass.id : generateId(),
       name: cName,
-      defaultRoomId: cDefaultRoomId || undefined,
+      defaultRoomId: cDefaultRoomId || "",
       periodCount: cPeriodCount,
       duration: cDuration,
       breakDuration: cBreakDuration,

@@ -1,14 +1,14 @@
 import { doTimeRangesOverlap } from "../../../../utils/timeUtils";
+import { SchedulerState } from "../types";
 import { ValidationContext, ValidationResult } from "./types";
 
 /**
  * RULE: Overlaps (Time, Teacher, Room)
- * Checks if the proposed slot physically overlaps with any other class's schedule.
- * Handles "Joint Classes" by allowing overlap if the classes are linked in 'jointClasses'.
  */
 export const checkOverlaps = (
   ctx: ValidationContext,
-  p: number
+  p: number,
+  state?: SchedulerState
 ): ValidationResult | null => {
   const {
     data,
@@ -22,25 +22,66 @@ export const checkOverlaps = (
     ignoredSlots,
   } = ctx;
 
-  // 1. Get the physical time range of the proposed slot
   const targetTime = targetTimeRange[p];
-  if (!targetTime) return null; // Should not happen if configuration is correct
+  if (!targetTime) return null;
 
-  // 2. Iterate over EVERY other class in the school
+  // --- OPTIMIZED PATH: O(1) Check using Unit Registry ---
+  if (state) {
+    // 1. Teacher Overlap (O(1))
+    const teacherVictim = state.teacherOccupancy[teacherId]?.[targetDay]?.[p];
+    if (teacherVictim && !ignoredSlots.has(p)) {
+        // Need to check if it's a joint class
+        const isJoint = data.jointClasses?.some(jc => 
+            jc.subjectId === subjectId && 
+            jc.classIds.includes(classId) && 
+            state.schedule[jc.classIds.find(id => id !== classId) || ""]?.[targetDay]?.[p]?.unitId === teacherVictim
+        );
+        if (!isJoint) {
+            return {
+                valid: false,
+                message: `Teacher is busy elsewhere`,
+                severity: "HIGH",
+                penaltyPoints: 1000,
+                conflictCount: 1
+            };
+        }
+    }
+
+    // 2. Room Overlap (O(1))
+    if (roomId) {
+        const roomVictim = state.roomOccupancy[roomId]?.[targetDay]?.[p];
+        if (roomVictim && !ignoredSlots.has(p)) {
+            const isJoint = data.jointClasses?.some(jc => 
+                jc.subjectId === subjectId && 
+                jc.classIds.includes(classId)
+            );
+            if (!isJoint) {
+                return {
+                    valid: false,
+                    message: `Room occupied`,
+                    severity: "HIGH",
+                    penaltyPoints: 1000,
+                    conflictCount: 1
+                };
+            }
+        }
+    }
+    
+    return null;
+  }
+
+  // --- FALLBACK PATH: O(N) Scan (Legacy/UI) ---
   for (const cId of Object.keys(data.schedule)) {
-    if (cId === classId) continue; // Skip checking against self
+    if (cId === classId) continue;
 
-    // Get calculated time schedule for the "other" class
     const otherClassSchedule = allClassSchedules.get(cId);
     if (!otherClassSchedule) continue;
 
-    // Get the "other" class's assignments for this day
     const otherDaySlots = data.schedule[cId]?.[targetDay] || {};
 
-    // 3. Check every period in the "other" class
     for (const otherPStr in otherDaySlots) {
       const otherP = parseInt(otherPStr);
-      if (ignoredSlots.has(otherP)) continue; // SKIP: This slot is being vacated
+      if (ignoredSlots.has(otherP)) continue;
 
       const slot = otherDaySlots[otherP];
       if (!slot) continue;
@@ -48,15 +89,9 @@ export const checkOverlaps = (
       const otherTime = otherClassSchedule[otherP];
       if (!otherTime) continue;
 
-      // 4. PHYSICAL TIME OVERLAP CHECK
-      // If the times don't touch, we don't care about resources.
       if (!doTimeRangesOverlap(targetTime, otherTime)) continue;
 
-      // --- A. TEACHER OVERLAP ---
-      // If the teacher is the same...
       if (teacherId && slot.teacherId === teacherId) {
-        // CHECK: Are they Joint Class Partners?
-        // (Do they share a 'jointClass' entry for this Subject ID?)
         const isJointSession = data.jointClasses?.some(
           (jc) =>
             jc.subjectId === subjectId &&
@@ -64,22 +99,19 @@ export const checkOverlaps = (
             jc.classIds.includes(cId)
         );
 
-        // FATAL: If they are NOT joint partners, the teacher cannot be in two places.
         if (!isJointSession) {
           const otherCls = data.classes.find((c) => c.id === cId);
           return {
             valid: false,
             message: `Teacher is busy in ${otherCls?.name || "another class"}`,
             severity: "HIGH",
+            penaltyPoints: 1000,
+            conflictCount: 1,
           };
         }
-        // If they ARE partners, overlap is ALLOWED (Joint Teaching).
       }
 
-      // --- B. ROOM OVERLAP ---
-      // If the room is the same...
       if (roomId && slot.roomId === roomId) {
-        // CHECK: Are they Joint Class Partners?
         const isJointPartner = data.jointClasses?.some(
           (jc) =>
             jc.subjectId === subjectId &&
@@ -87,13 +119,14 @@ export const checkOverlaps = (
             jc.classIds.includes(cId)
         );
 
-        // FATAL: If NOT partners, the room is double-booked.
         if (!isJointPartner) {
           const otherCls = data.classes.find((c) => c.id === cId);
           return {
             valid: false,
             message: `Room occupied by ${otherCls?.name || "another class"}`,
             severity: "HIGH",
+            penaltyPoints: 1000,
+            conflictCount: 1,
           };
         }
       }

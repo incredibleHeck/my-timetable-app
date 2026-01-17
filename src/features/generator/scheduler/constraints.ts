@@ -37,7 +37,7 @@ const checkConsecutiveLimit = (
  * HELPER: Checks if a global fixed occasion value constitutes a block.
  * Handles both Strings ("Worship") and Legacy Objects ({ name: "..." }).
  */
-const isGlobalSlotBlocked = (val: any): boolean => {
+export const isGlobalSlotBlocked = (val: any): boolean => {
   if (!val) return false;
   if (typeof val === "string") return val.trim().length > 0;
   if (typeof val === "object") return true; // Legacy object blocks

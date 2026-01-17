@@ -1,5 +1,5 @@
 import { AppData, TimeSlot } from "../../../types";
-import { AllocationUnit, SchedulerState } from "./types";
+import { AllocationUnit, SchedulerState, ScheduleEntry } from "./types";
 import { calculateClassSchedule } from "../../../utils/timeUtils";
 import { getNextClassPeriod } from "./utils";
 
@@ -48,7 +48,6 @@ export const initializeState = (data: AppData): SchedulerState => {
         if (d >= days) return;
         row.forEach((isBlocked, p) => {
           if (isBlocked && p < maxPeriods) {
-            // Use a reserved keyword for static blocks
             state.teacherOccupancy[t.id][d][p] = "BLOCK"; 
           }
         });
@@ -108,132 +107,122 @@ export const initializeState = (data: AppData): SchedulerState => {
   return state;
 };
 
+export function applyMove(
+  state: SchedulerState,
+  unit: AllocationUnit,
+  move: { d: number; p: number; p2: number; rooms: Record<string, string> }
+) {
+  const { d, p, p2, rooms } = move;
+
+  // 1. Register the placement for O(1) unassigning later
+  state.unitPlacements.set(unit.id, move);
+
+  // 2. Occupy Class Resources
+  unit.classIds.forEach((cid) => {
+    if (!state.schedule[cid][d]) state.schedule[cid][d] = {};
+    
+    const entry: ScheduleEntry = {
+      unitId: unit.id,
+      subjectId: unit.subjectId,
+      teacherId: unit.teacherIds[0],
+      classId: cid,
+      roomId: rooms[unit.id],
+      isFixed: false,
+    };
+
+    state.schedule[cid][d][p] = entry;
+    state.classOccupancy[cid][d][p] = unit.id; // Map to unitId
+    state.classDailySubjects[cid][d].add(unit.subjectId);
+
+    if (p2 !== -1) {
+      state.schedule[cid][d][p2] = { ...entry, isFixed: true };
+      state.classOccupancy[cid][d][p2] = unit.id;
+    }
+  });
+
+  // 3. Occupy Teacher & Room
+  unit.teacherIds.forEach((tid) => {
+    state.teacherOccupancy[tid][d][p] = unit.id;
+    state.teacherDailyLoad[tid][d]++; // Using original increment logic
+    if (p2 !== -1) {
+        state.teacherOccupancy[tid][d][p2] = unit.id;
+        state.teacherDailyLoad[tid][d]++;
+    }
+  });
+
+  const rId = rooms[unit.id];
+  if (rId) {
+    state.roomOccupancy[rId][d][p] = unit.id;
+    if (p2 !== -1) state.roomOccupancy[rId][d][p2] = unit.id;
+  }
+
+  if (state.singleResourceUsage[unit.subjectId]) {
+    state.singleResourceUsage[unit.subjectId][d][p] = unit.id;
+    if (p2 !== -1)
+      state.singleResourceUsage[unit.subjectId][d][p2] = unit.id;
+  }
+}
+
 export function applyGangToState(
   state: SchedulerState,
   gang: AllocationUnit[],
   move: { d: number; p: number; p2: number; rooms: Record<string, string> }
 ) {
-  const { d, p, p2, rooms } = move;
-
+  // Delegate to applyMove for each unit in the gang
   gang.forEach((u) => {
-    // Store detailed placement info for O(1) eviction
-    state.unitPlacements.set(u.id, { d, p, p2, rooms });
-    const roomId = rooms[u.id];
-
-    u.classIds.forEach((cid) => {
-      if (!state.schedule[cid][d]) state.schedule[cid][d] = {};
-      const entry = {
-        subjectId: u.subjectId,
-        teacherId: u.teacherIds[0],
-        classId: cid,
-        roomId: roomId,
-        electiveBlockId: u.electiveBlockId,
-        isFixed: false,
-        unitId: u.id 
-      };
-
-      state.schedule[cid][d][p] = entry;
-      // Store Unit ID in grid
-      state.classOccupancy[cid][d][p] = u.id; 
-      state.classDailySubjects[cid][d].add(u.subjectId);
-
-      if (u.duration === 2) {
-        state.schedule[cid][d][p2] = { ...entry, isFixed: true }; 
-        state.classOccupancy[cid][d][p2] = u.id;
-      }
-    });
-
-    u.teacherIds.forEach((tid) => {
-      state.teacherOccupancy[tid][d][p] = u.id;
-      state.teacherDailyLoad[tid][d]++;
-      if (u.duration === 2) {
-        state.teacherOccupancy[tid][d][p2] = u.id;
-        state.teacherDailyLoad[tid][d]++;
-      }
-    });
-
-    if (roomId) {
-      state.roomOccupancy[roomId][d][p] = u.id;
-      if (u.duration === 2) state.roomOccupancy[roomId][d][p2] = u.id;
-    }
-
-    if (state.singleResourceUsage[u.subjectId]) {
-      state.singleResourceUsage[u.subjectId][d][p] = u.id;
-      if (u.duration === 2)
-        state.singleResourceUsage[u.subjectId][d][p2] = u.id;
-    }
+      applyMove(state, u, move);
   });
 }
 
 export function removeGangFromState(state: SchedulerState, gang: AllocationUnit[], data: AppData) {
     gang.forEach(u => {
-        // Use the new unitPlacements map
-        const placement = state.unitPlacements.get(u.id);
-        if (!placement) return;
-        
-        state.unitPlacements.delete(u.id);
-        unassignUnit(state, u, placement, data);
+        unassignUnit(state, u);
     });
 }
 
-export function unassignUnit(
-  state: SchedulerState, 
-  unit: AllocationUnit, 
-  placement: { d: number; p: number; p2: number; rooms: Record<string, string> },
-  data: AppData
-) {
+export function unassignUnit(state: SchedulerState, unit: AllocationUnit) {
+  const placement = state.unitPlacements.get(unit.id);
+  if (!placement) return; // Not currently placed
+
   const { d, p, p2, rooms } = placement;
-  const assignedRoomId = rooms[unit.id];
 
-  // 1. Clear Schedule & Class Occupancy
+  // 1. Clean up Teacher
+  unit.teacherIds.forEach((tid) => {
+    state.teacherOccupancy[tid][d][p] = null;
+    state.teacherDailyLoad[tid][d] -= (p2 !== -1 ? 2 : 1);
+    if (p2 !== -1) state.teacherOccupancy[tid][d][p2] = null;
+  });
+
+  // 2. Clean up Room
+  const rId = rooms[unit.id];
+  if (rId) {
+    state.roomOccupancy[rId][d][p] = null;
+    if (p2 !== -1) state.roomOccupancy[rId][d][p2] = null;
+  }
+
+  // 3. Clean up Classes
   unit.classIds.forEach((cid) => {
-    // Only delete if it matches OUR unit (safety check)
-    if (state.classOccupancy[cid][d][p] === unit.id) {
-        if (state.schedule[cid]?.[d]?.[p]) delete state.schedule[cid][d][p];
-        state.classOccupancy[cid][d][p] = null;
-    }
-
+    delete state.schedule[cid][d][p];
+    state.classOccupancy[cid][d][p] = null;
+    
+    // Only delete from subject set if no other slots on this day have this subject
     const hasOther = Object.values(state.schedule[cid][d] || {}).some(s => s.subjectId === unit.subjectId);
     if (!hasOther) {
       state.classDailySubjects[cid][d].delete(unit.subjectId);
     }
 
     if (p2 !== -1) {
-        if (state.classOccupancy[cid][d][p2] === unit.id) {
-            if (state.schedule[cid]?.[d]?.[p2]) delete state.schedule[cid][d][p2];
-            state.classOccupancy[cid][d][p2] = null;
-        }
+      delete state.schedule[cid][d][p2];
+      state.classOccupancy[cid][d][p2] = null;
     }
   });
 
-  // 2. Revert Teacher Load
-  unit.teacherIds.forEach((tid) => {
-    if (state.teacherOccupancy[tid][d][p] === unit.id) {
-        state.teacherOccupancy[tid][d][p] = null;
-        state.teacherDailyLoad[tid][d]--;
-        if (p2 !== -1 && state.teacherOccupancy[tid][d][p2] === unit.id) {
-          state.teacherOccupancy[tid][d][p2] = null;
-          state.teacherDailyLoad[tid][d]--;
-        }
-    }
-  });
-
-  // 3. Free Room & Resources
-  if (assignedRoomId && state.roomOccupancy[assignedRoomId]) {
-    if (state.roomOccupancy[assignedRoomId][d][p] === unit.id) {
-        state.roomOccupancy[assignedRoomId][d][p] = null;
-    }
-    if (p2 !== -1 && state.roomOccupancy[assignedRoomId][d][p2] === unit.id) {
-        state.roomOccupancy[assignedRoomId][d][p2] = null;
-    }
-  }
-
+  // 4. Free Single Resources
   if (state.singleResourceUsage[unit.subjectId]) {
-    if (state.singleResourceUsage[unit.subjectId][d][p] === unit.id) {
-        state.singleResourceUsage[unit.subjectId][d][p] = null;
-    }
-    if (p2 !== -1 && state.singleResourceUsage[unit.subjectId][d][p2] === unit.id) {
-        state.singleResourceUsage[unit.subjectId][d][p2] = null;
-    }
+    state.singleResourceUsage[unit.subjectId][d][p] = null;
+    if (p2 !== -1) state.singleResourceUsage[unit.subjectId][d][p2] = null;
   }
+
+  state.unitPlacements.delete(unit.id);
 }
+

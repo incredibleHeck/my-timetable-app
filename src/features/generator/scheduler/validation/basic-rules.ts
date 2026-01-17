@@ -1,3 +1,4 @@
+import { SchedulerState } from "../types";
 import { ValidationContext, ValidationResult } from "./types";
 
 /**
@@ -13,22 +14,19 @@ export const checkGlobalAndClassBlocks = (
   const { data, targetDay, classId } = ctx;
   const cls = data.classes.find((c) => c.id === classId);
 
-  // 1. Global Fixed Occasions (STRICT CHECK)
-  // We check safely for both string values and legacy object configurations
   const globalFixed = data.settings.fixedOccasions?.[targetDay]?.[p];
 
   if (globalFixed) {
-    // Case A: Simple String (e.g., "Worship") - Must be non-empty to block
     if (typeof globalFixed === "string" && globalFixed.trim() !== "") {
       return {
         valid: false,
         message: `Global: ${globalFixed}`,
         severity: "HIGH",
+        penaltyPoints: 1000,
+        conflictCount: 1,
       };
     }
-    // Case B: Legacy Object (e.g., { name: "Assembly", ... }) - Always blocks
     if (typeof globalFixed === "object") {
-      // Access .name safely if it exists, or default to "Fixed Event"
       const label =
         (globalFixed as any).name ||
         (globalFixed as any).label ||
@@ -37,12 +35,12 @@ export const checkGlobalAndClassBlocks = (
         valid: false,
         message: `Global: ${label}`,
         severity: "HIGH",
+        penaltyPoints: 1000,
+        conflictCount: 1,
       };
     }
   }
 
-  // 2. Class Fixed Sessions
-  // Specific slots where this class is busy (e.g. Swimming Lesson off-site)
   if (cls?.fixedSessions?.[targetDay]?.[p]) {
     const reason = cls.fixedSessions[targetDay][p];
     return {
@@ -51,6 +49,8 @@ export const checkGlobalAndClassBlocks = (
         typeof reason === "string" ? reason : "Fixed Session"
       }`,
       severity: "HIGH",
+      penaltyPoints: 1000,
+      conflictCount: 1,
     };
   }
 
@@ -59,53 +59,74 @@ export const checkGlobalAndClassBlocks = (
 
 /**
  * RULE: Resource & Teacher Availability
- * Checks:
- * 1. Single Resources (Two classes cannot have "Science" at the same time if only 1 lab exists)
- * 2. Teacher Constraints (Teacher marked as "Unavailable" in their grid)
+ * REFACTORED: Resource Check using O(1) State Grids
  */
 export const checkResourceAndAvailability = (
   ctx: ValidationContext,
-  p: number
+  p: number,
+  state?: SchedulerState // Optional for UI compatibility
 ): ValidationResult | null => {
-  const { data, subjectId, targetDay, classId, teacherId } = ctx;
+  const { data, subjectId, targetDay, classId, teacherId, ignoredSlots } = ctx;
 
-  // 1. Single Resource Check
-  // "Is this subject a bottleneck resource?"
+  // 1. Teacher Availability Check (O(1) if state provided)
+  if (state) {
+    const existingUnitId = state.teacherOccupancy[teacherId]?.[targetDay]?.[p];
+    if (existingUnitId && !ignoredSlots.has(p)) {
+      return {
+        valid: false,
+        message: `Teacher Busy (Unit: ${existingUnitId})`,
+        severity: "HIGH",
+        penaltyPoints: 1000,
+        conflictCount: 1,
+      };
+    }
+  } else {
+    // Fallback: Check Static Constraints
+    const teacher = data.teachers.find((t) => t.id === teacherId);
+    if (teacher?.constraints?.[targetDay]?.[p]) {
+      return {
+        valid: false,
+        message: `${teacher.name || "Teacher"} is unavailable`,
+        severity: "HIGH",
+        penaltyPoints: 1000,
+        conflictCount: 1,
+      };
+    }
+    // Note: Teacher occupancy scan is handled in overlap-checks.ts and load-checks.ts
+  }
+
+  // 2. Single Resource Check (O(1) if state provided, else O(N))
   const subject = data.subjects.find((s) => s.id === subjectId);
-
   if (subject?.isSingleResource) {
-    // If the subject itself is being moved from this slot, don't block
-    if (ctx.ignoredSlots.has(p)) {
-      // Logic: If it's a swap of the SAME subject, we allow it.
-      // (This is rare but possible if user drags a Science slot onto another Science slot)
-    } else {
-      // ITERATIVE SCAN: Check every other class's schedule for this specific time slot.
-      for (const otherCId of Object.keys(data.schedule)) {
-        if (otherCId === classId) continue; // Don't check against self
-
-        const otherSlot = data.schedule[otherCId]?.[targetDay]?.[p];
-
-        // If another class is holding this Subject ID at this time...
-        if (otherSlot && otherSlot.subjectId === subjectId) {
+    if (!ignoredSlots.has(p)) {
+      if (state) {
+        if (state.singleResourceUsage[subjectId]?.[targetDay]?.[p]) {
           return {
             valid: false,
-            message: `${subject.name} is already being taught elsewhere`,
+            message: "Resource bottleneck",
             severity: "HIGH",
+            penaltyPoints: 1000,
+            conflictCount: 1,
           };
         }
       }
+      else {
+        // Fallback: O(N) scan
+        for (const otherCId of Object.keys(data.schedule)) {
+          if (otherCId === classId) continue;
+          const otherSlot = data.schedule[otherCId]?.[targetDay]?.[p];
+          if (otherSlot && otherSlot.subjectId === subjectId) {
+            return {
+              valid: false,
+              message: `${subject.name} is already being taught elsewhere`,
+              severity: "HIGH",
+              penaltyPoints: 1000,
+              conflictCount: 1,
+            };
+          }
+        }
+      }
     }
-  }
-
-  // 2. Teacher Static Availability
-  // "Did the teacher explicitly block this slot?"
-  const teacher = data.teachers.find((t) => t.id === teacherId);
-  if (teacher?.constraints?.[targetDay]?.[p]) {
-    return {
-      valid: false,
-      message: `${teacher.name || "Teacher"} is unavailable`,
-      severity: "HIGH",
-    };
   }
 
   return null;

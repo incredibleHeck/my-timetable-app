@@ -4,6 +4,9 @@ import { checkHardConstraints, checkImmutableConstraints } from "./constraints";
 import { determineRoom, forceDetermineRoom } from "./rooms";
 import { calculateScore } from "./scoring";
 import { getNextClassPeriod, getPeriodType } from "./utils";
+import { EvaluationEngine } from "./evaluation";
+
+const evaluator = new EvaluationEngine();
 
 export function findValidMoves(state: SchedulerState, data: AppData, gangUnits: AllocationUnit[]) {
     const globalPeriods = data.settings.periodsPerDay;
@@ -15,7 +18,7 @@ export function findValidMoves(state: SchedulerState, data: AppData, gangUnits: 
           const struct = data.settings.dayStructure;
           if (getPeriodType(struct, p) !== "CLASS") continue;
 
-          let p2 = -1;
+          let p2: number | null = -1;
           if (gangUnits[0].duration === 2) {
               const next = getNextClassPeriod(p, struct, globalPeriods);
               if (next === null) continue;
@@ -26,8 +29,9 @@ export function findValidMoves(state: SchedulerState, data: AppData, gangUnits: 
           const currentRooms: Record<string, string> = {};
 
           for (const u of gangUnits) {
-             const involvedClasses = u.classIds.map(cid => data.classes.find(c => c.id === cid));
-             if (!checkHardConstraints(state, data, d, p, p2, u, involvedClasses)) {
+             const evalResult = evaluator.evaluate(state, data, { d, p, p2 }, u);
+             
+             if (!evalResult.isLegal) {
                  gangValid = false;
                  break;
              }
@@ -75,16 +79,15 @@ export function findMinConflictMove(
 
   for (let d = 0; d < days; d++) {
     for (let p = 0; p < globalPeriods; p++) {
-      // 1. Structural Check
       if (getPeriodType(struct, p) !== "CLASS") continue;
 
-      let p2 = -1;
+      let p2: number | null = -1;
       if (gang[0].duration === 2) {
         p2 = getNextClassPeriod(p, struct, globalPeriods);
         if (p2 === null) continue; 
       }
 
-      // 2. Immutable Constraints Check
+      // 1. Check Immutable constraints (Fixed sessions, Teacher grid)
       let immutableValid = true;
       for (const u of gang) {
           if (!checkImmutableConstraints(d, p, p2, u, data)) {
@@ -94,13 +97,18 @@ export function findMinConflictMove(
       }
       if (!immutableValid) continue;
 
-      // 3. Count Conflicts (Weighted Violations)
-      let cost = 0;
+      // 2. Evaluate Move (Penalty + Score)
+      let totalPenalty = 0;
+      let totalScore = 0;
       const evictions = new Set<string>();
       const currentRooms: Record<string, string> = {};
       let possible = true;
 
       for (const u of gang) {
+          const evalResult = evaluator.evaluate(state, data, { d, p, p2 }, u);
+          totalPenalty += evalResult.penalty;
+          totalScore += evalResult.score;
+
           const rId = forceDetermineRoom(d, p, p2, u, state, data);
           if (!rId) {
               possible = false;
@@ -108,30 +116,16 @@ export function findMinConflictMove(
           }
           currentRooms[u.id] = rId;
 
-          // Use weighted conflict counter
-          cost += countPotentialConflicts(u, state, data, d, p, p2);
-          
-          // O(1) Eviction Collection
-          u.teacherIds.forEach(tid => collectEvictions(state, d, p, p2, tid, "TEACHER", evictions));
-          u.classIds.forEach(cid => collectEvictions(state, d, p, p2, cid, "CLASS", evictions));
-          collectEvictions(state, d, p, p2, rId, "ROOM", evictions);
-          
-          if (state.singleResourceUsage[u.subjectId]) {
-              collectEvictions(state, d, p, p2, u.subjectId, "SUBJECT", evictions);
-          }
+          // Robustly identify victims for eviction
+          const victims = findUnitsInSlot(state, u, d, p, p2);
+          victims.forEach(v => evictions.add(v));
       }
 
       if (possible) {
-          // Calculate score based on first unit (simplified)
-          const score = calculateScore(state, data, d, p, gang[0]);
-
-          // 4. Selection Logic: Minimize conflicts, Maximize score
-          if (cost < bestMove.cost || (cost === bestMove.cost && score > bestMove.score)) {
-              bestMove = { d, p, p2, cost, score, evictions, rooms: currentRooms };
+          if (totalPenalty < bestMove.cost || (totalPenalty === bestMove.cost && totalScore > bestMove.score)) {
+              bestMove = { d, p, p2, cost: totalPenalty, score: totalScore, evictions, rooms: currentRooms };
           }
-          
-          // Optimization: If perfect slot found, return immediately
-          if (cost === 0) return bestMove;
+          if (totalPenalty === 0) return bestMove;
       }
     }
   }
@@ -187,6 +181,43 @@ export function countPotentialConflicts(
   return count;
 }
 
+/**
+ * findUnitsInSlot: Identifies all units that would be displaced if we placed a new unit here.
+ * Leverages O(1) grid lookups for high-performance repair.
+ */
+export function findUnitsInSlot(
+  state: SchedulerState,
+  unit: AllocationUnit,
+  d: number,
+  p: number,
+  p2: number
+): Set<string> {
+  const victimIds = new Set<string>();
+
+  // 1. Collect Teacher Victims
+  unit.teacherIds.forEach((tid) =>
+    collectEvictions(state, d, p, p2, tid, "TEACHER", victimIds)
+  );
+
+  // 2. Collect Class Victims
+  unit.classIds.forEach((cid) =>
+    collectEvictions(state, d, p, p2, cid, "CLASS", victimIds)
+  );
+
+  // 3. Collect Room Victims
+  // We check both the required room and the homeroom fallback
+  const roomId = unit.defaultRoomId;
+  if (roomId) {
+    collectEvictions(state, d, p, p2, roomId, "ROOM", victimIds);
+  }
+
+  // 4. Collect Subject/Resource Victims
+  if (state.singleResourceUsage[unit.subjectId]) {
+    collectEvictions(state, d, p, p2, unit.subjectId, "SUBJECT", victimIds);
+  }
+
+  return victimIds;
+}
 
 export function collectEvictions(
   state: SchedulerState, 

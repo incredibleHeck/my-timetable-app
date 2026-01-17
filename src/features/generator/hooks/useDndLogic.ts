@@ -291,6 +291,7 @@ export const useDndLogic = (
         if (!valSwap.valid) return;
     }
 
+
     const newSchedule = JSON.parse(JSON.stringify(data.schedule));
     if (!newSchedule[classId]) newSchedule[classId] = {};
     if (!newSchedule[classId][sD]) newSchedule[classId][sD] = {};

@@ -2,6 +2,7 @@ import { AppData, Conflict } from "../../../../types";
 import { calculateClassSchedule } from "../../../../utils/timeUtils";
 import { getType } from "./utils";
 import { ValidationContext, ValidationResult } from "./types";
+import { SchedulerState } from "../types";
 import {
   checkGlobalAndClassBlocks,
   checkResourceAndAvailability,
@@ -24,7 +25,8 @@ export const checkSlotValidity = (
   roomId?: string,
   duration: number = 1,
   ignoreTargetSlot?: { day: number; period: number; duration: number },
-  isAuto: boolean = false
+  isAuto: boolean = false,
+  state?: SchedulerState
 ): ValidationResult => {
   const { settings, classes, rooms } = data;
 
@@ -103,7 +105,13 @@ export const checkSlotValidity = (
   while (periodsConsumed < duration) {
     const p = targetPeriod + currentOffset;
     if (p >= maxPeriods)
-      return { valid: false, message: "Exceeds daily limit", severity: "HIGH" };
+      return {
+        valid: false,
+        message: "Exceeds daily limit",
+        severity: "HIGH",
+        penaltyPoints: 1000,
+        conflictCount: 1,
+      };
 
     // Skip Breaks/Lunch but keep looking for the next CLASS slot
     if (getType(structure, p) !== "CLASS") {
@@ -115,22 +123,13 @@ export const checkSlotValidity = (
 
     // Hard Constraint Checks
     const blockError = checkGlobalAndClassBlocks(ctx, p);
-    if (blockError) {
-      console.log(`Failed blockError at P${p}: ${blockError.message}`);
-      return blockError;
-    }
+    if (blockError) return blockError;
 
-    const resourceError = checkResourceAndAvailability(ctx, p);
-    if (resourceError) {
-      console.log(`Failed resourceError at P${p}: ${resourceError.message}`);
-      return resourceError;
-    }
+    const resourceError = checkResourceAndAvailability(ctx, p, state);
+    if (resourceError) return resourceError;
 
-    const overlapError = checkOverlaps(ctx, p);
-    if (overlapError) {
-      console.log(`Failed overlapError at P${p}: ${overlapError.message}`);
-      return overlapError;
-    }
+    const overlapError = checkOverlaps(ctx, p, state);
+    if (overlapError) return overlapError;
 
     // Room Capacity Check
     if (roomId) {
@@ -140,6 +139,8 @@ export const checkSlotValidity = (
           valid: false,
           message: `Room capacity exceeded (${cls.studentCount}/${room.capacity})`,
           severity: "MEDIUM",
+          penaltyPoints: 500, // Weighted medium
+          conflictCount: 1,
         };
       }
     }
@@ -149,13 +150,13 @@ export const checkSlotValidity = (
   }
 
   // --- 4. LOAD & PATTERN CHECKS ---
-  const loadError = checkTeacherLoad(ctx, proposedSlots, ignoredSlots);
+  const loadError = checkTeacherLoad(ctx, proposedSlots, ignoredSlots, state);
   if (loadError) return loadError;
 
-  const subjectError = checkSubjectLimit(ctx, proposedSlots, ignoredSlots);
+  const subjectError = checkSubjectLimit(ctx, proposedSlots, ignoredSlots, state);
   if (subjectError) return subjectError;
 
-  const gapError = checkGapDetection(ctx, proposedSlots, ignoredSlots);
+  const gapError = checkGapDetection(ctx, proposedSlots, ignoredSlots, state);
   if (gapError) return gapError;
 
   // --- 5. JOINT CLASS INTEGRITY ---
@@ -167,6 +168,8 @@ export const checkSlotValidity = (
       valid: false,
       message: "Joint classes must be moved via the Generator",
       severity: "HIGH",
+      penaltyPoints: 1000,
+      conflictCount: 1,
     };
   }
 
@@ -178,11 +181,24 @@ export const checkSlotValidity = (
         valid: false,
         message: "Target slot is locked",
         severity: "HIGH",
+        penaltyPoints: 1000,
+        conflictCount: 1,
       };
-    return { valid: true, isSwap: true, message: "Swap available" };
+    return {
+      valid: true,
+      isSwap: true,
+      message: "Swap available",
+      penaltyPoints: 0,
+      conflictCount: 0,
+    };
   }
 
-  return { valid: true, message: "Available" };
+  return {
+    valid: true,
+    message: "Available",
+    penaltyPoints: 0,
+    conflictCount: 0,
+  };
 };
 
 /**

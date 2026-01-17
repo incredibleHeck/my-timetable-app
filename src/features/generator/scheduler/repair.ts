@@ -1,7 +1,7 @@
 import { AppData } from "../../../types";
 import { AllocationUnit, SchedulerState } from "./types";
 import { validateFullSchedule } from "./validation";
-import { findUnitFromConflict, findMinConflictMove } from "./search";
+import { findUnitFromConflict, findMinConflictMove, findUnitsInSlot } from "./search";
 import { removeGangFromState, applyGangToState } from "./state";
 
 /**
@@ -63,15 +63,24 @@ export function runMinConflictsRepair(
 function executeRepairMove(
     state: SchedulerState,
     gang: AllocationUnit[],
-    move: { evictions: Set<string>; d: number; p: number; p2: number; rooms: Record<string, string> },
+    move: { d: number; p: number; p2: number; rooms: Record<string, string> },
     queue: string[],
     queuedSet: Set<string>,
     gangMap: Map<string, AllocationUnit[]>,
     unitMap: Map<string, AllocationUnit>,
     data: AppData
 ) {
-    // 1. Evict Victims
-    move.evictions.forEach(victimUnitId => {
+    const { d, p, p2 } = move;
+
+    // 1. Identify Victims (Robust Re-Check)
+    const allVictimIds = new Set<string>();
+    gang.forEach(u => {
+        const victims = findUnitsInSlot(state, u, d, p, p2);
+        victims.forEach(v => allVictimIds.add(v));
+    });
+
+    // 2. Evict Victims
+    allVictimIds.forEach(victimUnitId => {
         const vUnit = unitMap.get(victimUnitId);
         if (vUnit) {
             const vGangId = vUnit.jointClassId || vUnit.electiveBlockId || vUnit.id;
@@ -85,7 +94,7 @@ function executeRepairMove(
         }
     });
 
-    // 2. Place Gang (Now that space is cleared)
+    // 3. Place Gang (Now that space is cleared)
     applyGangToState(state, gang, move);
 }
 

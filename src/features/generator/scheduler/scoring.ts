@@ -1,6 +1,6 @@
 import { AllocationUnit, SchedulerState } from "./types";
 import { AppData, Teacher } from "../../../types";
-import { getType } from "./utils";
+import { getPeriodType } from "./utils";
 
 /**
  * CONFIGURATION: Weights for different soft constraints.
@@ -25,7 +25,7 @@ const WEIGHTS = {
 /**
  * HELPER: Detect "Swiss Cheese" schedules (1-period gaps) AND large Windows.
  */
-const calculateTeacherGapPenalty = (
+export const calculateTeacherGapPenalty = (
   state: SchedulerState,
   d: number,
   p: number,
@@ -117,7 +117,7 @@ const isCoreSubject = (name?: string) => {
     return n.includes("math") || n.includes("english") || n.includes("science") || n.includes("physics") || n.includes("chem") || n.includes("bio");
 };
 
-const calculatePedagogicalScore = (
+export const calculatePedagogicalScore = (
   state: SchedulerState,
   data: AppData,
   d: number,

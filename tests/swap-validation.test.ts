@@ -194,8 +194,7 @@ describe('Swap Validation Reproduction', () => {
             'c1': {
                 0: {
                     0: { subjectId: 's1', teacherId: 't1', classId: 'c1' },
-                    1: { subjectId: 's1', teacherId: 't1', classId: 'c1' },
-                    4: { subjectId: 's2', teacherId: 't1', classId: 'c1' }
+                    1: { subjectId: 's1', teacherId: 't1', classId: 'c1' }
                 }
             }
         }

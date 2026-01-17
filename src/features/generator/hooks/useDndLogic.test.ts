@@ -19,6 +19,7 @@ const createMockData = (): AppData => ({
     daysPerWeek: 5,
     dayStructure: ["CLASS", "CLASS", "CLASS", "CLASS", "CLASS"],
     fixedOccasions: {},
+    maxConsecutivePeriods: 10,
   },
   classes: [{ id: "c1", name: "Class 1", periodCount: 5 }] as ClassGroup[],
   teachers: [{ id: "t1", name: "Teacher 1" }] as Teacher[],

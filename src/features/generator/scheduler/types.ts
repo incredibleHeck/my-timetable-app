@@ -31,6 +31,15 @@ export interface AllocationUnit {
   bumpedCount?: number; // Track how often this unit failed (for future backtracking)
 }
 
+export interface ScheduleEntry {
+  unitId: string; // CRITICAL: Link back to the atom
+  subjectId: string;
+  teacherId: string;
+  classId: string;
+  roomId?: string;
+  isFixed: boolean; // True for the "tail" of a double period
+}
+
 export interface SchedulerState {
   schedule: ScheduleResult;
 
