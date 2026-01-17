@@ -28,10 +28,10 @@
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Academic Data & Settings Integration' (Protocol in workflow.md)
 
 ## Phase 4: Dashboard UI Update [checkpoint: ]
-- [ ] Task: Refactor `DashboardView` to use dynamic activity data
-    - [ ] Update `src/features/dashboard/DashboardView.tsx` to map over `recentActivity`
-    - [ ] Implement category-based icons (Lucide React)
-- [ ] Task: Verify Dashboard UI updates in real-time
+- [x] Task: Refactor `DashboardView` to use dynamic activity data (db71059)
+    - [x] Update `src/features/dashboard/DashboardView.tsx` to map over `recentActivity`
+    - [x] Implement category-based icons (Lucide React)
+- [x] Task: Verify Dashboard UI updates in real-time (db71059)
 - [ ] Task: Conductor - User Manual Verification 'Phase 4: Dashboard UI Update' (Protocol in workflow.md)
 
 ## Phase 5: Timetable Time Labels [checkpoint: ]
