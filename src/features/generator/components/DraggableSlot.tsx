@@ -1,6 +1,6 @@
 import React, { memo } from "react";
 import { useDraggable } from "@dnd-kit/core";
-import { Users, Repeat, Lock, BookOpen } from "lucide-react";
+import { Users, Repeat, Lock, BookOpen, Clock } from "lucide-react";
 import { ScheduleSlot, Subject, Teacher, ClassGroup } from "../../../types";
 
 interface Props {
@@ -12,11 +12,12 @@ interface Props {
   classGroup?: ClassGroup;
   mode: "CLASS" | "TEACHER";
   disabled?: boolean;
+  timeRange?: string;
 }
 
 // Wrapped in memo for performance (prevents unnecessary re-renders in large grids)
 export const DraggableSlot: React.FC<Props> = memo(
-  ({ slot, day, period, subject, teacher, classGroup, mode, disabled }) => {
+  ({ slot, day, period, subject, teacher, classGroup, mode, disabled, timeRange }) => {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
       id: `slot-${day}-${period}`,
       data: { slot, day, period, classGroup, teacher }, // Pass all context data
@@ -71,6 +72,13 @@ export const DraggableSlot: React.FC<Props> = memo(
             </>
           )}
         </div>
+
+        {/* TIME LABEL (Teacher Mode Only) */}
+        {mode === "TEACHER" && timeRange && (
+          <div className="text-[9px] font-bold text-slate-400 mt-1 flex items-center gap-1 relative z-10 uppercase tracking-tight">
+            <Clock size={8} /> {timeRange}
+          </div>
+        )}
 
         {/* Icons for Interaction Status */}
         {!slot.isFixed ? (

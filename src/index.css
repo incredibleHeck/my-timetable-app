@@ -57,3 +57,37 @@
 .custom-scrollbar:hover {
   scrollbar-color: theme('colors.amber.500/0.4') transparent;
 }
+
+/* Print Styles */
+@media print {
+  @page {
+    size: landscape;
+    margin: 1cm;
+  }
+
+  body {
+    background: white !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Hide sidebar and headers not relevant for printing */
+  nav, .sidebar, header, .no-print {
+    display: none !important;
+  }
+
+  /* Ensure grid is visible */
+  .max-w-7xl {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  /* Force background colors and borders */
+  .bg-white { background-color: white !important; }
+  .bg-slate-50 { background-color: #f8fafc !important; }
+  .border { border-width: 1px !important; }
+  
+  /* Ensure time labels are visible */
+  .text-slate-400 { color: #94a3b8 !important; }
+  .font-bold { font-weight: 700 !important; }
+}

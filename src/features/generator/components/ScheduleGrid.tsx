@@ -248,6 +248,16 @@ export const ScheduleGrid: React.FC<Props> = ({
                     const subject = subjects.find((s) => s.id === slot.subjectId);
                     const teacher = teachers.find((t) => t.id === slot.teacherId);
                     const classGroup = classes.find((c) => c.id === classId);
+
+                    let timeRange = "";
+                    if (mode === "TEACHER" && classGroup) {
+                        const classSched = calculateClassSchedule(classGroup, settings, classGroup.structure || settings.dayStructure);
+                        const slotTime = classSched[pIdx];
+                        if (slotTime) {
+                            timeRange = `${slotTime.start} - ${slotTime.end}`;
+                        }
+                    }
+
                     content = (
                        <div className={`w-full h-full ${opacityClass}`}>
                           <DraggableSlot
@@ -259,6 +269,7 @@ export const ScheduleGrid: React.FC<Props> = ({
                             classGroup={classGroup}
                             mode={mode}
                             disabled={!editMode}
+                            timeRange={timeRange}
                           />
                        </div>
                     );
