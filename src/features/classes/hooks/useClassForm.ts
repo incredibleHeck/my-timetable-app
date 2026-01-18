@@ -8,7 +8,7 @@ interface UseClassFormProps {
   onClose: () => void;
   editingClass: ClassGroup | null;
   data: AppData;
-  onSave: (cls: ClassGroup) => void;
+  onSave: (cls: ClassGroup, original: ClassGroup | null) => void;
 }
 
 export const useClassForm = ({
@@ -179,7 +179,7 @@ export const useClassForm = ({
       fixedSessions: cFixedSessions as any,
       curriculum: activeCurriculum,
     };
-    onSave(newClass);
+    onSave(newClass, editingClass);
     onClose();
   };
 

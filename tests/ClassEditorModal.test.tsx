@@ -34,7 +34,7 @@ describe('ClassEditorModal', () => {
       breakDuration: 20,
       lunchDuration: 60,
       duration: 50
-    }));
+    }), null);
   });
 
   it('hydrates existing durations from editingClass and saves them', async () => {
@@ -60,6 +60,6 @@ describe('ClassEditorModal', () => {
       breakDuration: 15,
       lunchDuration: 45,
       duration: 40
-    }));
+    }), expect.objectContaining({ id: 'c1' }));
   });
 });

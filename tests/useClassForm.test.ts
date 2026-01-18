@@ -65,6 +65,6 @@ describe('useClassForm', () => {
     expect(mockOnSave).toHaveBeenCalledWith(expect.objectContaining({
       name: 'Test Class',
       structure: expect.any(Array)
-    }));
+    }), null);
   });
 });

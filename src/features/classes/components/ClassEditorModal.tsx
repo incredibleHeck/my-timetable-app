@@ -12,7 +12,7 @@ interface ClassEditorModalProps {
   onClose: () => void;
   editingClass: ClassGroup | null;
   data: AppData;
-  onSave: (cls: ClassGroup) => void;
+  onSave: (cls: ClassGroup, original: ClassGroup | null) => void;
 }
 
 export const ClassEditorModal: React.FC<ClassEditorModalProps> = (props) => {
