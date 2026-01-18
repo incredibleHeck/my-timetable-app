@@ -1,6 +1,6 @@
 # Plan: Automatic Unique Home Room Assignment
 
-## Phase 1: Data Model & Foundation
+## Phase 1: Data Model & Foundation [checkpoint: f9d6e83]
 - [x] Task: Update Type Definitions (Already present) 0bf4871
     - [x] Add `defaultRoomId: string` to `ClassGroup` in `src/features/classes/types.ts`.
 - [x] Task: Automatic Home Room Assignment Logic 0bf4871
