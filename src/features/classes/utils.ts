@@ -1,29 +1,42 @@
 import { ClassGroup } from './types';
 import { Room } from '../rooms/types';
+import { generateId } from '../../utils/utils';
 
 /**
- * Automatically assigns unique default rooms to classes that don't have one.
- * Ensures a 1-to-1 mapping where possible.
+ * Ensures every class has a unique system-generated Home Room.
+ * Returns updated classes and any newly created rooms.
  */
-export function assignDefaultRooms(classes: ClassGroup[], rooms: Room[]): ClassGroup[] {
-  const assignedRoomIds = new Set(
-    classes
-      .map(c => c.defaultRoomId)
-      .filter((id): id is string => !!id)
-  );
-
-  const availableRooms = rooms.filter(r => !assignedRoomIds.has(r.id));
-  let roomIndex = 0;
-
-  return classes.map(cls => {
-    if (cls.defaultRoomId) return cls;
-
-    const nextRoom = availableRooms[roomIndex];
-    if (nextRoom) {
-      roomIndex++;
-      return { ...cls, defaultRoomId: nextRoom.id };
+export function syncHomeRooms(classes: ClassGroup[], rooms: Room[]): { updatedClasses: ClassGroup[], updatedRooms: Room[] } {
+  const currentRooms = [...rooms];
+  const updatedClasses = classes.map(cls => {
+    // 1. Find room by ID if class already has a defaultRoomId
+    let homeRoom = cls.defaultRoomId ? currentRooms.find(r => r.id === cls.defaultRoomId) : null;
+    
+    // 2. If no room found by ID, try to find a matching home room by name (for stability/migration)
+    if (!homeRoom) {
+      const targetName = `Home Room ${cls.name}`;
+      homeRoom = currentRooms.find(r => r.name === targetName && r.isHomeRoom);
     }
 
-    return cls;
+    if (!homeRoom) {
+      // 3. Create new Home Room if none exists for this class
+      const newRoom: Room = {
+        id: generateId(),
+        name: `Home Room ${cls.name}`,
+        capacity: 30,
+        type: 'Classroom',
+        isHomeRoom: true
+      };
+      currentRooms.push(newRoom);
+      homeRoom = newRoom;
+    } else if (homeRoom.isHomeRoom && homeRoom.name !== `Home Room ${cls.name}`) {
+      // 4. Update the name of the EXISTING room if class name changed
+      // This preserves the Room ID for that specific class
+      homeRoom.name = `Home Room ${cls.name}`;
+    }
+
+    return { ...cls, defaultRoomId: homeRoom.id };
   });
+
+  return { updatedClasses, updatedRooms: currentRooms };
 }

@@ -54,6 +54,7 @@ export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
     const newClass: ClassGroup = JSON.parse(JSON.stringify(cls));
     newClass.id = generateId();
     newClass.name = `${cls.name} (Copy)`;
+    newClass.defaultRoomId = ""; // Ensure a new unique Home Room is generated
     newClass.curriculum.forEach((c) => (c.id = generateId()));
     
     const nextData = { ...data, classes: [...data.classes, newClass] };

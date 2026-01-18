@@ -9,7 +9,7 @@ import { calculateClassSchedule } from '../utils/timeUtils';
 import { TimeSlot } from '../types';
 import { validateFullSchedule } from '../features/generator/scheduler/validation';
 import { initializeState } from '../features/generator/scheduler/state';
-import { assignDefaultRooms } from '../features/classes/utils';
+import { syncHomeRooms } from '../features/classes/utils';
 
 interface ProfileContextType {
   profiles: ProfileManifest['profiles'];
@@ -57,8 +57,10 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
       // Ensure defaults for new schema fields
       profile.data = mergeWithDefaults(profile.data, DEFAULT_DATA);
       
-      // Auto-assign rooms on load if missing
-      profile.data.classes = assignDefaultRooms(profile.data.classes, profile.data.rooms);
+      // Auto-assign/sync unique home rooms on load
+      const { updatedClasses, updatedRooms } = syncHomeRooms(profile.data.classes, profile.data.rooms);
+      profile.data.classes = updatedClasses;
+      profile.data.rooms = updatedRooms;
       
       setActiveProfile(profile);
       await ProfileStorage.setActiveProfile(id);
@@ -170,8 +172,10 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   const applyState = (data: AppData) => {
     if (!activeProfile) return;
 
-    // Ensure all classes have a unique default room
-    data.classes = assignDefaultRooms(data.classes, data.rooms);
+    // Ensure all classes have a unique system-generated Home Room
+    const { updatedClasses, updatedRooms } = syncHomeRooms(data.classes, data.rooms);
+    data.classes = updatedClasses;
+    data.rooms = updatedRooms;
 
     // Trigger validation
     const state = initializeState(data);

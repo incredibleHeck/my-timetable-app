@@ -6,7 +6,7 @@ import {
   AlertTriangle,
   Building2,
   Users,
-  Box,
+  // Box was unused, removed it
 } from "lucide-react";
 import { AppData } from "../../types";
 import { Room } from "./types";
@@ -22,6 +22,7 @@ interface ViewProps {
 const ROOM_TYPES = [
   { value: "Classroom", label: "Standard Classroom" },
   { value: "Lab", label: "Laboratory" },
+  { value: "Library", label: "Library" },
   { value: "Gym", label: "Gymnasium" },
   { value: "Art Studio", label: "Art Studio" },
   { value: "Music Room", label: "Music Room" },
@@ -44,7 +45,9 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
 
   // Smart Sort
   const sortedRooms = useMemo(() => {
-    return [...data.rooms].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+    return [...data.rooms].sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { numeric: true })
+    );
   }, [data.rooms]);
 
   const saveRoom = () => {
@@ -54,6 +57,8 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
       name: roomName,
       capacity: parseInt(roomCapacity) || 0,
       type: roomType,
+      // Preserve the isHomeRoom flag if we are editing
+      isHomeRoom: editingRoom?.isHomeRoom || false, 
     };
 
     let newRooms = [...data.rooms];
@@ -68,7 +73,10 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
       newRooms.push(newRoom);
     }
     const nextData = { ...data, rooms: newRooms };
+    
+    // FIX: Log activity AND update the parent state
     addActivity("ACADEMIC", msg, nextData);
+    onUpdate(nextData);
 
     setModalOpen(false);
     resetForm();
@@ -82,6 +90,9 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
   };
 
   const initiateDelete = (room: Room) => {
+    // FIX: Safety check to ensure we never delete a home room, even if UI is bypassed
+    if (room.isHomeRoom) return;
+    
     setRoomToDelete(room);
     setDeleteModalOpen(true);
   };
@@ -93,7 +104,10 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
     try {
       const updatedRooms = data.rooms.filter((r) => r.id !== id);
       const nextData = { ...data, rooms: updatedRooms };
+      
+      // FIX: Log activity AND update the parent state
       addActivity("ACADEMIC", `Deleted Room: ${roomToDelete.name}`, nextData);
+      onUpdate(nextData);
     } catch (e) {
       console.error(e);
     }
@@ -103,6 +117,9 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
   };
 
   const openModal = (room?: Room) => {
+    // FIX: Safety check to ensure we never open edit modal for home room
+    if (room?.isHomeRoom) return;
+
     if (room) {
       setEditingRoom(room);
       setRoomName(room.name);
@@ -147,10 +164,17 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                 >
                   {room.name}
                 </h3>
-                
-                <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full mb-3 border border-slate-200">
-                  {room.type}
-                </span>
+
+                <div className="flex gap-1 mb-3">
+                  <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
+                    {room.type}
+                  </span>
+                  {room.isHomeRoom && (
+                    <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                      Home Room
+                    </span>
+                  )}
+                </div>
 
                 <div className="flex flex-col gap-1 w-full mt-auto">
                   <div className="text-[10px] py-1 px-2 rounded flex items-center justify-center gap-1 bg-slate-50 text-slate-500">
@@ -160,17 +184,42 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                 </div>
               </div>
 
+              {/* ACTION BUTTONS */}
               <div className="flex border-t border-slate-100">
+                {/* EDIT BUTTON */}
                 <button
-                  onClick={() => openModal(room)}
-                  className="flex-1 py-3 text-slate-600 hover:bg-slate-50 text-xs font-semibold flex items-center justify-center transition-colors"
+                  onClick={() => !room.isHomeRoom && openModal(room)}
+                  disabled={room.isHomeRoom}
+                  title={
+                    room.isHomeRoom
+                      ? "System-managed room. Edit via Class settings."
+                      : "Edit Room"
+                  }
+                  className={`flex-1 py-3 text-xs font-semibold flex items-center justify-center transition-colors ${
+                    room.isHomeRoom
+                      ? "text-slate-300 cursor-not-allowed opacity-50"
+                      : "text-slate-600 hover:bg-slate-50"
+                  }`}
                 >
                   <Edit2 size={14} className="mr-1" /> Edit
                 </button>
+
                 <div className="w-px bg-slate-100"></div>
+
+                {/* DELETE BUTTON */}
                 <button
                   onClick={() => initiateDelete(room)}
-                  className="flex-1 py-3 text-slate-400 hover:text-red-600 hover:bg-red-50 text-xs font-semibold flex items-center justify-center transition-colors"
+                  disabled={room.isHomeRoom}
+                  title={
+                    room.isHomeRoom
+                      ? "System-managed room. Delete via Class settings."
+                      : "Delete Room"
+                  }
+                  className={`flex-1 py-3 text-xs font-semibold flex items-center justify-center transition-colors ${
+                    room.isHomeRoom
+                      ? "text-slate-300 cursor-not-allowed opacity-50"
+                      : "text-slate-400 hover:text-red-600 hover:bg-red-50"
+                  }`}
                 >
                   <Trash2 size={14} className="mr-1" /> Del
                 </button>

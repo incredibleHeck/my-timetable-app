@@ -346,25 +346,6 @@ export const ClassEditorModal: React.FC<ClassEditorModalProps> = ({
                   autoFocus
                 />
 
-                <div className="space-y-2">
-                  <label className="block text-xs font-bold text-slate-500 uppercase">Home Classroom</label>
-                  <select
-                    className="w-full rounded-md border-slate-300 text-sm p-2 focus:ring-amber-500 focus:border-amber-500"
-                    value={cDefaultRoomId || ""}
-                    onChange={(e) => setCDefaultRoomId(e.target.value || null)}
-                  >
-                    <option value="">No Home Classroom Assigned</option>
-                    {(data.rooms || []).map(room => (
-                      <option key={room.id} value={room.id}>
-                        {room.name} ({room.type})
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-[10px] text-slate-400 italic">
-                    Most lessons will be scheduled in this room unless the subject requires a special facility.
-                  </p>
-                </div>
-
                 {/* RESERVATIONS GRID */}
                 <div>
                   <div className="flex justify-between items-end mb-2">

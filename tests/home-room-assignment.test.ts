@@ -1,13 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { assignDefaultRooms } from '../src/features/classes/utils';
+import { syncHomeRooms } from '../src/features/classes/utils';
 import { ClassGroup } from '../src/features/classes/types';
 import { Room } from '../src/features/rooms/types';
 
-describe('Home Room Assignment Utility', () => {
+describe('Home Room Sync Utility', () => {
   const mockRooms: Room[] = [
-    { id: 'r1', name: 'Room 1', type: 'Classroom', capacity: 30 },
-    { id: 'r2', name: 'Room 2', type: 'Classroom', capacity: 30 },
-    { id: 'r3', name: 'Room 3', type: 'Classroom', capacity: 30 },
+    { id: 'r1', name: 'Science Lab', type: 'Lab', capacity: 30 },
   ];
 
   const mockClasses: Partial<ClassGroup>[] = [
@@ -15,37 +13,41 @@ describe('Home Room Assignment Utility', () => {
     { id: 'c2', name: '10B' },
   ];
 
-  it('should assign unique rooms to classes that do not have one', () => {
-    const result = assignDefaultRooms(mockClasses as ClassGroup[], mockRooms);
+  it('should create new unique home rooms for each class', () => {
+    const { updatedClasses, updatedRooms } = syncHomeRooms(mockClasses as ClassGroup[], mockRooms);
     
-    expect(result[0].defaultRoomId).toBeDefined();
-    expect(result[1].defaultRoomId).toBeDefined();
-    expect(result[0].defaultRoomId).not.toBe(result[1].defaultRoomId);
+    expect(updatedRooms.length).toBe(3); // 1 original + 2 new
+    expect(updatedClasses[0].defaultRoomId).toBeDefined();
+    expect(updatedClasses[1].defaultRoomId).toBeDefined();
+    
+    const roomA = updatedRooms.find(r => r.id === updatedClasses[0].defaultRoomId);
+    const roomB = updatedRooms.find(r => r.id === updatedClasses[1].defaultRoomId);
+    
+    expect(roomA?.name).toBe('Home Room 10A');
+    expect(roomB?.name).toBe('Home Room 10B');
+    expect(roomA?.isHomeRoom).toBe(true);
+    expect(roomB?.isHomeRoom).toBe(true);
   });
 
-  it('should preserve existing assignments', () => {
-    const classesWithOneAssigned: Partial<ClassGroup>[] = [
-      { id: 'c1', name: '10A', defaultRoomId: 'r2' },
-      { id: 'c2', name: '10B' },
+  it('should update room name if class name changes', () => {
+    const existingRooms: Room[] = [
+      { id: 'hr1', name: 'Home Room 10A', type: 'Classroom', isHomeRoom: true, capacity: 30 }
+    ];
+    const renamedClass: Partial<ClassGroup>[] = [
+      { id: 'c1', name: '10A-Advanced', defaultRoomId: 'hr1' }
     ];
     
-    const result = assignDefaultRooms(classesWithOneAssigned as ClassGroup[], mockRooms);
+    const { updatedRooms } = syncHomeRooms(renamedClass as ClassGroup[], existingRooms);
     
-    expect(result[0].defaultRoomId).toBe('r2');
-    expect(result[1].defaultRoomId).toBeDefined();
-    expect(result[1].defaultRoomId).not.toBe('r2');
+    expect(updatedRooms[0].name).toBe('Home Room 10A-Advanced');
   });
 
-  it('should handle more classes than rooms gracefully', () => {
-    const manyClasses: Partial<ClassGroup>[] = [
-      { id: 'c1', name: '10A' },
-      { id: 'c2', name: '10B' },
-      { id: 'c3', name: '10C' },
-      { id: 'c4', name: '10D' },
+  it('should not reuse existing non-home rooms', () => {
+    const existingRooms: Room[] = [
+      { id: 'r1', name: 'Science Lab', type: 'Lab', capacity: 30 }
     ];
+    const { updatedClasses, updatedRooms } = syncHomeRooms(mockClasses as ClassGroup[], existingRooms);
     
-    const result = assignDefaultRooms(manyClasses as ClassGroup[], mockRooms);
-    expect(result.length).toBe(4);
-    // Some might be empty or reused if we run out of rooms, but it shouldn't crash.
+    expect(updatedRooms.find(r => r.id === updatedClasses[0].defaultRoomId)?.name).not.toBe('Science Lab');
   });
 });

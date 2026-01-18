@@ -7,7 +7,7 @@
     - [x] Write failing test for a utility that maps each class to a unique room.
     - [x] Implement the assignment utility (ensuring 1-to-1 unique mapping).
     - [x] Hook the utility into the class creation/loading flow.
-- [ ] Task: Conductor - User Manual Verification 'Data Model & Foundation' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Data Model & Foundation' (Protocol in workflow.md)
 
 ## Phase 2: Engine & Rendering Fallbacks
 - [ ] Task: Update Room Resolution Logic (Engine)
