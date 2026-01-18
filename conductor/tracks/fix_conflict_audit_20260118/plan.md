@@ -28,7 +28,7 @@ Update the generator pipeline to prioritize this fresh audit for final reporting
 - [x] **Task: UI Synchronization**
     - [ ] Verify that `GeneratorView` correctly receives and displays the fresh conflict list.
 
-## Phase 3: Verification & Quality Assurance
+## Phase 3: Verification & Quality Assurance [checkpoint: 23a6705]
 Ensure the fix works as expected and doesn't regress.
 
 - [x] **Task: Create Regression Test (`tests/conflict-reporting.test.ts`)**
@@ -36,4 +36,4 @@ Ensure the fix works as expected and doesn't regress.
     - [ ] Assert that the final conflict report does NOT contain the resolved conflict.
 - [x] **Task: Execute Test Suite**
     - [ ] `npm test tests/conflict-reporting.test.ts`
-- [ ] **Task: Conductor - User Manual Verification 'Conflict Reporting Fix' (Protocol in workflow.md)**
+- [x] **Task: Conductor - User Manual Verification 'Conflict Reporting Fix' (Protocol in workflow.md)** 23a6705
