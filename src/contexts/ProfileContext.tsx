@@ -9,6 +9,7 @@ import { calculateClassSchedule } from '../utils/timeUtils';
 import { TimeSlot } from '../types';
 import { validateFullSchedule } from '../features/generator/scheduler/validation';
 import { initializeState } from '../features/generator/scheduler/state';
+import { assignDefaultRooms } from '../features/classes/utils';
 
 interface ProfileContextType {
   profiles: ProfileManifest['profiles'];
@@ -55,6 +56,9 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     if (profile) {
       // Ensure defaults for new schema fields
       profile.data = mergeWithDefaults(profile.data, DEFAULT_DATA);
+      
+      // Auto-assign rooms on load if missing
+      profile.data.classes = assignDefaultRooms(profile.data.classes, profile.data.rooms);
       
       setActiveProfile(profile);
       await ProfileStorage.setActiveProfile(id);
@@ -165,6 +169,9 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
 
   const applyState = (data: AppData) => {
     if (!activeProfile) return;
+
+    // Ensure all classes have a unique default room
+    data.classes = assignDefaultRooms(data.classes, data.rooms);
 
     // Trigger validation
     const state = initializeState(data);
