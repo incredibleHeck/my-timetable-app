@@ -1,4 +1,4 @@
-# Track fix_conflict_audit_20260118 Context
+# Track refactor_fix_config_20260118 Context
 
 - [Specification](./spec.md)
 - [Implementation Plan](./plan.md)

@@ -4,5 +4,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [x] **Track: Fix 'stale' conflict reporting by implementing a fresh post-generation audit.**
-*Link: [./tracks/fix_conflict_audit_20260118/](./tracks/fix_conflict_audit_20260118/)*
+- [x] **Track: Refactor GlobalConfigView into modular components and fix layout issues in the schedule chain and reservations grid.**
+*Link: [./tracks/refactor_fix_config_20260118/](./tracks/refactor_fix_config_20260118/)*
