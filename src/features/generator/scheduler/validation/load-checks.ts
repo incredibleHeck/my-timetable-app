@@ -227,19 +227,94 @@ export const checkGapDetection = (
                 if (isSameClass) {
                   return {
                     valid: false,
-                    message: "Teacher gap (Same Class)",
-                    severity: "MEDIUM",
-                    penaltyPoints: 400,
-                    conflictCount: 0,
-                  };
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  return null;
-};
+                                        message: "Teacher gap (Same Class)",
+                                        severity: "MEDIUM",
+                                        penaltyPoints: 400,
+                                        conflictCount: 0,
+                                      };
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    
+                      return null;
+                    };
+                    
+                    /**
+                     * RULE: Subject Continuity
+                     * Ensures that a subject is only scheduled in one continuous block per day for a class.
+                     * Breaks and Lunches act as "bridges" and do not count as splits.
+                     */
+                    export const checkSubjectContinuity = (
+                      ctx: ValidationContext,
+                      proposedSlots: Set<number>,
+                      ignoredSlots: Set<number>,
+                      state?: SchedulerState
+                    ): ValidationResult | null => {
+                      const { data, classId, subjectId, targetDay, maxPeriods, structure } = ctx;
+                    
+                      const occupiedPeriods: number[] = [];
+                    
+                      for (let p = 0; p < maxPeriods; p++) {
+                        let isOccupiedBySubject = false;
+                    
+                        if (proposedSlots.has(p)) {
+                          isOccupiedBySubject = true;
+                        } else if (!ignoredSlots.has(p)) {
+                          const entry = state 
+                            ? state.schedule[classId]?.[targetDay]?.[p] 
+                            : data.schedule[classId]?.[targetDay]?.[p];
+                          
+                          if (entry && entry.subjectId === subjectId) {
+                            isOccupiedBySubject = true;
+                          }
+                        }
+                    
+                        if (isOccupiedBySubject) {
+                          occupiedPeriods.push(p);
+                        }
+                      }
+                    
+                      if (occupiedPeriods.length <= 1) return null;
+                    
+                      const minP = occupiedPeriods[0];
+                      const maxP = occupiedPeriods[occupiedPeriods.length - 1];
+                    
+                      // Check everything between min and max
+                      for (let p = minP + 1; p < maxP; p++) {
+                        // If it's a "CLASS" period and NOT occupied by this subject, it's a split
+                        if (getType(structure, p) === "CLASS") {
+                          let isThisSubject = false;
+                          if (proposedSlots.has(p)) {
+                            isThisSubject = true;
+                          } else if (!ignoredSlots.has(p)) {
+                            const entry = state 
+                              ? state.schedule[classId]?.[targetDay]?.[p] 
+                              : data.schedule[classId]?.[targetDay]?.[p];
+                            
+                            if (entry && entry.subjectId === subjectId) {
+                              isThisSubject = true;
+                            }
+                          }
+                    
+                          if (!isThisSubject) {
+                            const subject = data.subjects.find(s => s.id === subjectId);
+                            return {
+                              valid: false,
+                              message: `Subject '${subject?.name || "Unknown"}' must be in a continuous block`,
+                              severity: "HIGH",
+                              penaltyPoints: 1500,
+                              conflictCount: 1,
+                            };
+                          }
+                        }
+                      }
+                    
+                      return null;
+                    };
+                    
+                    

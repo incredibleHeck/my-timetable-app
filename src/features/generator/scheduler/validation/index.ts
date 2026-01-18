@@ -11,7 +11,8 @@ import { checkOverlaps } from "./overlap-checks";
 import { 
   checkTeacherLoad, 
   checkSubjectLimit, 
-  checkGapDetection 
+  checkGapDetection,
+  checkSubjectContinuity
 } from "./load-checks";
 
 /**
@@ -172,6 +173,10 @@ export const checkSlotValidity = (
   // B. Curriculum Respect (Subject Max Per Day)
   const subjectError = checkSubjectLimit(ctx, proposedSlots, ignoredSlots, state);
   if (subjectError) return { ...subjectError, penaltyPoints: 600, conflictCount: 0 };
+
+  // B2. Subject Continuity (Hard Constraint)
+  const continuityError = checkSubjectContinuity(ctx, proposedSlots, ignoredSlots, state);
+  if (continuityError) return { ...continuityError, penaltyPoints: 1500, conflictCount: 1 };
 
   // C. Student Well-being (Gap/Sandwich Detection)
   const gapError = checkGapDetection(ctx, proposedSlots, ignoredSlots, state);
