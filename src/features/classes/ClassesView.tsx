@@ -1,14 +1,12 @@
 import React, { useState } from "react";
 import { Plus, AlertTriangle } from "lucide-react";
 import { AppData } from "../../types";
-import { ClassGroup, JointClass, ElectiveBlock } from "./types";
+import { ClassGroup } from "./types";
 import { Button, Modal } from "../../components/ui";
-import { useProfile } from "../../contexts/ProfileContext";
 import { useClassActions } from "./hooks/useClassActions";
 import { ClassList } from "./components/ClassList";
 import { ClassGroups } from "./components/ClassGroups";
 import { ClassEditorModal } from "./components/ClassEditorModal";
-import { JointClassModal, ElectiveBlockModal } from "./components/GroupModals";
 import { ClassAssignmentsPanel } from "./components/ClassAssignmentsPanel";
 
 interface ViewProps {
@@ -17,7 +15,6 @@ interface ViewProps {
 }
 
 export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
-  const { addActivity } = useProfile();
   const [activeTab, setActiveTab] = useState<
     "LIST" | "GROUPS" | "ASSIGNMENTS"
   >("LIST");
@@ -27,8 +24,6 @@ export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
   // Modals State
   const [modalOpen, setModalOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<ClassGroup | null>(null);
-  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
-  const [isElectiveModalOpen, setIsElectiveModalOpen] = useState(false);
 
   // Delete State
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -50,42 +45,6 @@ export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
       setDeleteModalOpen(false);
       setClassToDelete(null);
     }
-  };
-
-  // ------------------------------------------------------------------
-  //  GROUP HANDLERS
-  // ------------------------------------------------------------------
-  const handleSaveLink = (newJoint: JointClass) => {
-    const nextData = { ...data, jointClasses: [...data.jointClasses, newJoint] };
-    addActivity("ACADEMIC", `Created Joint Class: ${newJoint.name}`, nextData);
-    onUpdate(nextData);
-  };
-
-  const handleSaveElective = (newElec: ElectiveBlock) => {
-    const safeElectives = data.electives || [];
-    const nextData = { ...data, electives: [...safeElectives, newElec] };
-    addActivity("ACADEMIC", `Created Elective Block: ${newElec.name}`, nextData);
-    onUpdate(nextData);
-  };
-
-  const handleRemoveJoint = (id: string) => {
-    const joint = data.jointClasses.find(j => j.id === id);
-    const nextData = {
-      ...data,
-      jointClasses: data.jointClasses.filter((j) => j.id !== id),
-    };
-    addActivity("ACADEMIC", `Deleted Joint Class: ${joint?.name}`, nextData);
-    onUpdate(nextData);
-  };
-
-  const handleRemoveElective = (id: string) => {
-    const elec = (data.electives || []).find(e => e.id === id);
-    const nextData = {
-      ...data,
-      electives: (data.electives || []).filter((e) => e.id !== id),
-    };
-    addActivity("ACADEMIC", `Deleted Elective Block: ${elec?.name}`, nextData);
-    onUpdate(nextData);
   };
 
   return (
@@ -151,10 +110,7 @@ export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
       {activeTab === "GROUPS" && (
         <ClassGroups 
           data={data}
-          onAddLink={() => setIsLinkModalOpen(true)}
-          onAddElective={() => setIsElectiveModalOpen(true)}
-          onRemoveJoint={handleRemoveJoint}
-          onRemoveElective={handleRemoveElective}
+          onUpdate={onUpdate}
         />
       )}
 
@@ -168,24 +124,7 @@ export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
         onClose={() => setModalOpen(false)}
         editingClass={editingClass}
         data={data}
-        onSave={(cls) => handleSaveClass(cls, editingClass)}
-      />
-
-      <JointClassModal
-        isOpen={isLinkModalOpen}
-        onClose={() => setIsLinkModalOpen(false)}
-        subjects={data.subjects}
-        classes={data.classes}
-        teachers={data.teachers}
-        onSave={handleSaveLink}
-      />
-
-      <ElectiveBlockModal
-        isOpen={isElectiveModalOpen}
-        onClose={() => setIsElectiveModalOpen(false)}
-        subjects={data.subjects}
-        classes={data.classes}
-        onSave={handleSaveElective}
+        onSave={(cls, original) => handleSaveClass(cls, original)}
       />
 
       {/* DELETE CONFIRMATION */}

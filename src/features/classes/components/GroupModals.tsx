@@ -13,7 +13,7 @@ interface JointClassModalProps {
   teachers: Teacher[];
 }
 
-export const JointClassModal: React.FC<JointClassModalProps> = ({
+export const ClassGroupModal: React.FC<JointClassModalProps> = ({
   isOpen,
   onClose,
   onSave,
@@ -30,7 +30,7 @@ export const JointClassModal: React.FC<JointClassModalProps> = ({
     if (!subjectId || classIds.length < 2) return;
     onSave({
       id: generateId(),
-      name: name || "Joint Group",
+      name: name || "Class Group",
       subjectId,
       classIds,
       teacherId: teacherId || undefined,
@@ -43,10 +43,10 @@ export const JointClassModal: React.FC<JointClassModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="New Linked Class">
+    <Modal isOpen={isOpen} onClose={onClose} title="New Class Group">
       <div className="space-y-4">
         <Input
-          label="Link Name"
+          label="Group Name"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g. Senior Math"
@@ -88,7 +88,7 @@ export const JointClassModal: React.FC<JointClassModalProps> = ({
           ))}
         </div>
         <div className="flex justify-end pt-4">
-          <Button onClick={handleSave}>Create Link</Button>
+          <Button onClick={handleSave}>Create Group</Button>
         </div>
       </div>
     </Modal>
@@ -138,7 +138,7 @@ export const ElectiveBlockModal: React.FC<ElectiveBlockModalProps> = ({
           placeholder="e.g. Arts Options"
         />
         
-        <label className="block text-xs font-bold text-slate-500">
+        <label className="block text-xs font-bold text-slate-500 uppercase">
           Select Classes
         </label>
         <div className="border p-2 rounded max-h-40 overflow-y-auto grid grid-cols-2 gap-2">
@@ -158,7 +158,7 @@ export const ElectiveBlockModal: React.FC<ElectiveBlockModalProps> = ({
           ))}
         </div>
 
-        <label className="block text-xs font-bold text-slate-500">
+        <label className="block text-xs font-bold text-slate-500 uppercase">
           Select Subjects in Block
         </label>
         <div className="border p-2 rounded max-h-40 overflow-y-auto grid grid-cols-2 gap-2">

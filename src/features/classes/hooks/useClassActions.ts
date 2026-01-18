@@ -1,5 +1,5 @@
 import { AppData } from "../../../types";
-import { ClassGroup } from "../types";
+import { ClassGroup, JointClass, ElectiveBlock } from "../types";
 import { generateId, deepClone } from "../../../utils/utils";
 import { syncHomeRooms } from "../utils";
 import { useProfile } from "../../../contexts/ProfileContext";
@@ -81,9 +81,48 @@ export const useClassActions = (data: AppData, onUpdate: (newData: AppData) => v
     onUpdate(nextData);
   };
 
+  // --- GROUP (JOINT CLASS) HANDLERS ---
+  const handleSaveGroup = (newJoint: JointClass) => {
+    const nextData = { ...data, jointClasses: [...data.jointClasses, newJoint] };
+    addActivity("ACADEMIC", `Created Class Group: ${newJoint.name}`, nextData);
+    onUpdate(nextData);
+  };
+
+  const handleRemoveGroup = (id: string) => {
+    const joint = data.jointClasses.find(j => j.id === id);
+    const nextData = {
+      ...data,
+      jointClasses: data.jointClasses.filter((j) => j.id !== id),
+    };
+    addActivity("ACADEMIC", `Deleted Class Group: ${joint?.name}`, nextData);
+    onUpdate(nextData);
+  };
+
+  // --- BLOCK (ELECTIVE) HANDLERS ---
+  const handleSaveBlock = (newElec: ElectiveBlock) => {
+    const safeElectives = data.electives || [];
+    const nextData = { ...data, electives: [...safeElectives, newElec] };
+    addActivity("ACADEMIC", `Created Elective Block: ${newElec.name}`, nextData);
+    onUpdate(nextData);
+  };
+
+  const handleRemoveBlock = (id: string) => {
+    const elec = (data.electives || []).find(e => e.id === id);
+    const nextData = {
+      ...data,
+      electives: (data.electives || []).filter((e) => e.id !== id),
+    };
+    addActivity("ACADEMIC", `Deleted Elective Block: ${elec?.name}`, nextData);
+    onUpdate(nextData);
+  };
+
   return {
     handleDuplicate,
     handleSaveClass,
     confirmDelete,
+    handleSaveGroup,
+    handleRemoveGroup,
+    handleSaveBlock,
+    handleRemoveBlock,
   };
 };
