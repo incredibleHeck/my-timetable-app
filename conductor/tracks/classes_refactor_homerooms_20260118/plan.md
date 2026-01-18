@@ -26,7 +26,7 @@
     - [x] Update `ClassesView.tsx` to use `useClassActions` and the new sub-components.
 - [ ] Task: Conductor - User Manual Verification 'View Refactoring' (Protocol in workflow.md)
 
-## Phase 4: Strict Sync & Final Quality
+## Phase 4: Strict Sync & Final Quality [checkpoint: 83b84d7]
 - [x] Task: Refine Strict Name Sync bd59f32
     - [x] Ensure that editing an existing class name immediately updates the associated `Room` object in state.
 - [x] Task: Final Quality Pass bd59f32
