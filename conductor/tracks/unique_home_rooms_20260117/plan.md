@@ -25,9 +25,9 @@
 - [x] Task: Update Conflict Audit Utility
     - [x] Write failing tests for the `runConflictAudit` utility regarding fallback rooms.
     - [x] Update the audit logic to accurately report overlaps using resolved room IDs.
-- [ ] Task: Conductor - User Manual Verification 'Validation & Quality' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Validation & Quality' (Protocol in workflow.md) bd59f32
 
 ## Phase 4: UI Visibility & Cleanup
-- [x] Task: Display Home Room in Classes Table
+- [x] Task: Display Home Room in Classes Table bd59f32
     - [x] Add a "Home Room" column to the Classes management table.
-- [ ] Task: Conductor - User Manual Verification 'UI Visibility & Cleanup' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'UI Visibility & Cleanup' (Protocol in workflow.md) bd59f32
