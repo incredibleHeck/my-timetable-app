@@ -27,9 +27,9 @@
 - [ ] Task: Conductor - User Manual Verification 'View Refactoring' (Protocol in workflow.md)
 
 ## Phase 4: Strict Sync & Final Quality
-- [ ] Task: Refine Strict Name Sync
-    - [ ] Ensure that editing an existing class name immediately updates the associated `Room` object in state.
-- [ ] Task: Final Quality Pass
-    - [ ] Verify test coverage for all new components and hooks (>80%).
-    - [ ] Run project linting and formatting.
-- [ ] Task: Conductor - User Manual Verification 'Strict Sync & Final Quality' (Protocol in workflow.md)
+- [x] Task: Refine Strict Name Sync bd59f32
+    - [x] Ensure that editing an existing class name immediately updates the associated `Room` object in state.
+- [x] Task: Final Quality Pass bd59f32
+    - [x] Verify test coverage for all new components and hooks (>80%).
+    - [x] Run project linting and formatting.
+- [x] Task: Conductor - User Manual Verification 'Strict Sync & Final Quality' (Protocol in workflow.md) bd59f32

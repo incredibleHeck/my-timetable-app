@@ -23,15 +23,15 @@ describe('Home Room Sync Utility', () => {
     const roomA = updatedRooms.find(r => r.id === updatedClasses[0].defaultRoomId);
     const roomB = updatedRooms.find(r => r.id === updatedClasses[1].defaultRoomId);
     
-    expect(roomA?.name).toBe('Home Room 10A');
-    expect(roomB?.name).toBe('Home Room 10B');
+    expect(roomA?.name).toBe('10A Classroom');
+    expect(roomB?.name).toBe('10B Classroom');
     expect(roomA?.isHomeRoom).toBe(true);
     expect(roomB?.isHomeRoom).toBe(true);
   });
 
   it('should update room name if class name changes', () => {
     const existingRooms: Room[] = [
-      { id: 'hr1', name: 'Home Room 10A', type: 'Classroom', isHomeRoom: true, capacity: 30 }
+      { id: 'hr1', name: '10A Classroom', type: 'Classroom', isHomeRoom: true, capacity: 30 }
     ];
     const renamedClass: Partial<ClassGroup>[] = [
       { id: 'c1', name: '10A-Advanced', defaultRoomId: 'hr1' }
@@ -39,7 +39,7 @@ describe('Home Room Sync Utility', () => {
     
     const { updatedRooms } = syncHomeRooms(renamedClass as ClassGroup[], existingRooms);
     
-    expect(updatedRooms[0].name).toBe('Home Room 10A-Advanced');
+    expect(updatedRooms[0].name).toBe('10A-Advanced Classroom');
   });
 
   it('should not reuse existing non-home rooms', () => {

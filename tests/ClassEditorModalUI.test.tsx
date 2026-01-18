@@ -64,14 +64,16 @@ describe('ClassEditorModal UI Reorganization', () => {
     }
   });
 
-  it('does NOT show Home Classroom selection in Basics tab', () => {
+  it('shows Home Classroom as a read-only field in Basics tab', () => {
     const dataWithRooms = {
       ...DEFAULT_DATA,
-      rooms: [{ id: 'r1', name: 'Room 101', type: 'Classroom', capacity: 30 }]
+      rooms: [{ id: 'r1', name: 'Room 101', type: 'Classroom', capacity: 30, isHomeRoom: true }]
     };
     render(<ClassEditorModal {...defaultProps} data={dataWithRooms as any} />);
     
-    // Home Classroom should no longer be visible as it is system-managed
-    expect(screen.queryByText(/Home Classroom/i)).toBeNull();
+    // Should see the label
+    expect(screen.getByText(/Home Classroom/i)).toBeDefined();
+    // Should see the auto-generated name placeholder or existing name
+    expect(screen.getByText(/New Class Classroom/i)).toBeDefined();
   });
 });

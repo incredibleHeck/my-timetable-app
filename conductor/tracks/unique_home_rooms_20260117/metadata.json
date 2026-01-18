@@ -1,8 +1,0 @@
-{
-  "track_id": "unique_home_rooms_20260117",
-  "type": "bug",
-  "status": "new",
-  "created_at": "2026-01-17T22:46:00Z",
-  "updated_at": "2026-01-17T22:46:00Z",
-  "description": "Subjects that have not been assigned rooms are not showing. Every Class Group must have its own unique Home Room assigned by default. If a subject has no specific room, it falls back to the Class's unique Home Room."
-}
