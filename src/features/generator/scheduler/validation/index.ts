@@ -216,9 +216,13 @@ export const validateFullSchedule = (data: AppData, state: SchedulerState): Conf
         const hasNext = daySchedule[nextP] && daySchedule[nextP].isFixed && daySchedule[nextP].subjectId === slot.subjectId;
         const duration = hasNext ? 2 : 1;
 
+        // Resolve Effective Room (Subject Specific or Home Room Fallback)
+        const subject = subjects.find((s) => s.id === slot.subjectId);
+        const effectiveRoomId = slot.roomId || subject?.requiredRoomId || cls.defaultRoomId;
+
         const result = checkSlotValidity(
           data, day, period, slot.teacherId, classId, slot.subjectId,
-          state, { day, period, duration }, slot.roomId, duration, undefined, true
+          state, { day, period, duration }, effectiveRoomId, duration, undefined, true
         );
 
         if (!result.valid) {

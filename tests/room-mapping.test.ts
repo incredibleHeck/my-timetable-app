@@ -342,4 +342,35 @@ describe('Room Mapping Hierarchy', () => {
     
     expect(labUsage.size).toBe(3); // 2 ICTs + 1 Science = 3 lab slots total
   });
+
+  it('should use class default room when subject has no specific requiredRoomId', () => {
+    const mockRoomHome: Room = { id: 'r-home', name: 'Home Room', type: 'Classroom', capacity: 30, isHomeRoom: true };
+    const mockClass: Class = { id: 'c1', name: '10A', curriculum: [], defaultRoomId: 'r-home' };
+    const mockSubject: Subject = { id: 's1', name: 'General', color: 'blue', requiredRoomId: null };
+    
+    const units = [{
+      id: 'u1',
+      subjectId: 's1',
+      subjectName: 'General',
+      duration: 1,
+      classIds: ['c1'],
+      classNames: ['10A'],
+      teacherIds: ['t1'],
+      teacherNames: ['T1'],
+      priority: 10,
+      defaultRoomId: 'r-home'
+    }];
+
+    const data: AppData = {
+      ...DEFAULT_DATA,
+      rooms: [mockRoomHome],
+      classes: [mockClass],
+      subjects: [mockSubject],
+      teachers: [{ id: 't1', name: 'T1', specialtyIds: ['s1'], constraints: [] } as any]
+    };
+
+    const result = solveSmart(units as any, data);
+    const slot = result.schedule['c1'][0][0];
+    expect(slot.roomId).toBe('r-home');
+  });
 });

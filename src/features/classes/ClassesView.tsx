@@ -233,6 +233,12 @@ export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
 
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between text-xs">
+                      <span className="text-slate-500">Home Room</span>
+                      <span className="font-bold text-amber-600 truncate max-w-[100px]" title={data.rooms.find(r => r.id === c.defaultRoomId)?.name || "Unassigned"}>
+                        {data.rooms.find(r => r.id === c.defaultRoomId)?.name || "Unassigned"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-xs">
                       <span className="text-slate-500">Periods/Day</span>
                       <span className="font-bold text-slate-700">
                         {c.periodCount}

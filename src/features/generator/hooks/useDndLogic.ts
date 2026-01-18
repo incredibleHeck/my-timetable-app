@@ -123,6 +123,10 @@ export const useDndLogic = (
     const targetSlot = schedule[classId]?.[targetDay]?.[targetPeriod];
     const targetDuration = targetSlot ? getDuration(classId, targetDay, targetPeriod) : 1;
 
+    // Resolve Effective Room for the item being dragged
+    const sourceSubject = subjects.find(s => s.id === activeDragItem.slot.subjectId);
+    const sourceEffectiveRoomId = activeDragItem.slot.roomId || sourceSubject?.requiredRoomId || currentClass?.defaultRoomId;
+
     if (targetSlot) {
         if (sourceDuration !== targetDuration) {
              if (isHoverCheck && setHoverConflict) {
@@ -173,7 +177,7 @@ export const useDndLogic = (
         data, targetDay, targetPeriod, activeDragItem.slot.teacherId, classId, activeDragItem.slot.subjectId,
         schedulerState,
         { day: sourceDay, period: sourcePeriod, duration: sourceDuration },
-        activeDragItem.slot.roomId,
+        sourceEffectiveRoomId,
         sourceDuration,
         targetSlot ? { day: targetDay, period: targetPeriod, duration: targetDuration } : undefined
     );
@@ -191,11 +195,14 @@ export const useDndLogic = (
     }
 
     if (targetSlot) {
+         const targetSubject = subjects.find(s => s.id === targetSlot.subjectId);
+         const targetEffectiveRoomId = targetSlot.roomId || targetSubject?.requiredRoomId || currentClass?.defaultRoomId;
+
          const valSwap = checkSlotValidity(
             data, activeDragItem.day, activeDragItem.period, targetSlot.teacherId, classId, targetSlot.subjectId,
             schedulerState,
             { day: targetDay, period: targetPeriod, duration: targetDuration },
-            targetSlot.roomId,
+            targetEffectiveRoomId,
             targetDuration,
             { day: activeDragItem.day, period: activeDragItem.period, duration: sourceDuration }
         );
