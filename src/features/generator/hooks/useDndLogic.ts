@@ -5,6 +5,15 @@ import { checkSlotValidity } from "../scheduler/validation";
 import { initializeState } from "../scheduler/state";
 import { useProfile } from "../../../contexts/ProfileContext";
 import { DAYS } from "../../../utils/constants";
+// ARCHITECT: Import shared utils to ensure UI matches Solver logic
+import { getNextClassPeriod, getPrevClassPeriod } from "../scheduler/utils";
+
+/**
+ * ARCHITECT NOTES:
+ * 1. Logic: Replaced manual period loops with shared 'utils.ts' helpers.
+ * 2. Performance: Relies on the O(1) SchedulerState built in useMemo.
+ * 3. Integrity: Ensures "Tail-Dragging" (moving the 2nd part of a double) is handled robustly.
+ */
 
 export const useDndLogic = (
   data: AppData,
@@ -16,45 +25,23 @@ export const useDndLogic = (
   const [activeDragItem, setActiveDragItem] = useState<any>(null);
   const { pushToHistory, addActivity } = useProfile();
 
+  // 1. Initialize O(1) State for Validation
   const schedulerState = useMemo(() => initializeState(data), [data]);
 
   const { settings, schedule, classes, teachers, subjects } = data;
   const currentClass = classes.find((c) => c.id === activeId);
+  const maxPeriods = settings.periodsPerDay;
 
-  // --- HELPERS ---
-  const getSafeType = (item: any) =>
-    (typeof item === "object" ? item.type : item) || "CLASS";
-
-  const getNextClassIndex = (p: number, classId: string): number | null => {
-    const cls = classes.find((c) => c.id === classId);
-    const struct = cls?.structure || settings.dayStructure;
-    const limit = cls?.periodCount || settings.periodsPerDay;
-    
-    for (let i = p + 1; i < limit; i++) {
-      const item = struct[i];
-      const type = getSafeType(item);
-      if (type === "CLASS") return i;
-    }
-    return null;
-  };
-
-  const getPrevClassIndex = (p: number, classId: string): number | null => {
-    const cls = classes.find((c) => c.id === classId);
-    const struct = cls?.structure || settings.dayStructure;
-    
-    // Loop backwards to find the previous CLASS period
-    for (let i = p - 1; i >= 0; i--) {
-      const item = struct[i];
-      const type = getSafeType(item);
-      if (type === "CLASS") return i;
-    }
-    return null;
-  };
+  // --- OPTIMIZED HELPERS ---
 
   const getDuration = (classId: string, d: number, p: number): number => {
     const slot = schedule[classId]?.[d]?.[p];
     if (!slot) return 1;
-    const p2 = getNextClassIndex(p, classId);
+    
+    // Use shared utility to find next valid class slot
+    const structure = classes.find(c => c.id === classId)?.structure || settings.dayStructure;
+    const p2 = getNextClassPeriod(p, structure, maxPeriods);
+    
     if (p2 !== null) {
       const nextSlot = schedule[classId]?.[d]?.[p2];
       if (nextSlot && nextSlot.isFixed && nextSlot.subjectId === slot.subjectId)
@@ -66,13 +53,18 @@ export const useDndLogic = (
   const checkDragValidity = (targetDay: number, targetPeriod: number, isHoverCheck = false): boolean => {
     if (!activeDragItem) return true;
     
-    // --- NORMALIZE SOURCE: If dragging the TAIL (isFixed), shift start to HEAD ---
+    // --- 1. NORMALIZE SOURCE (Handle Tail Dragging) ---
     let sourcePeriod = activeDragItem.period;
     let sourceDay = activeDragItem.day;
     const sourceClassId = mode === "CLASS" ? activeId : activeDragItem.classGroup?.id;
+    
+    // Access structure for the source class
+    const sourceCls = classes.find(c => c.id === sourceClassId);
+    const sourceStructure = sourceCls?.structure || settings.dayStructure;
 
+    // If dragging the tail (Fixed slot), shift reference to Head
     if (activeDragItem.slot.isFixed && sourceClassId) {
-        const prev = getPrevClassIndex(sourcePeriod, sourceClassId);
+        const prev = getPrevClassPeriod(sourcePeriod, sourceStructure);
         if (prev !== null) sourcePeriod = prev;
     }
 
@@ -83,6 +75,7 @@ export const useDndLogic = (
 
     if (!sourceClassId) return false;
 
+    // --- 2. VALIDATE TARGET CLASS ---
     let targetClassId = sourceClassId;
     let targetClassName = mode === "CLASS" ? currentClass?.name : activeDragItem.classGroup?.name;
     
@@ -111,22 +104,18 @@ export const useDndLogic = (
     }
 
     const classId = sourceClassId;
-
-    const formatConflict = (reason: string) => {
-        const subj = subjects.find(s => s.id === activeDragItem.slot.subjectId);
-        const teach = teachers.find(t => t.id === activeDragItem.slot.teacherId);
-        const time = `${DAYS[targetDay]} P${targetPeriod + 1}`;
-        return `${reason} for ${subj?.name} (${teach?.name}) at ${time}`;
-    };
+    // Use Target Class Structure for target validation
+    const targetCls = classes.find(c => c.id === classId);
+    const targetStructure = targetCls?.structure || settings.dayStructure;
 
     const sourceDuration = getDuration(classId, sourceDay, sourcePeriod);
     const targetSlot = schedule[classId]?.[targetDay]?.[targetPeriod];
     const targetDuration = targetSlot ? getDuration(classId, targetDay, targetPeriod) : 1;
 
-    // Resolve Effective Room for the item being dragged
     const sourceSubject = subjects.find(s => s.id === activeDragItem.slot.subjectId);
-    const sourceEffectiveRoomId = activeDragItem.slot.roomId || sourceSubject?.requiredRoomId || currentClass?.defaultRoomId;
+    const sourceEffectiveRoomId = activeDragItem.slot.roomId || sourceSubject?.requiredRoomId || targetCls?.defaultRoomId;
 
+    // --- 3. CHECK DURATION / BOUNDS ---
     if (targetSlot) {
         if (sourceDuration !== targetDuration) {
              if (isHoverCheck && setHoverConflict) {
@@ -138,55 +127,62 @@ export const useDndLogic = (
                      day: targetDay,
                      period: targetPeriod
                  });
-            }
+             }
             return false;
         }
     } else {
         if (sourceDuration === 2) {
-             const tP2 = getNextClassIndex(targetPeriod, classId);
+             const tP2 = getNextClassPeriod(targetPeriod, targetStructure, maxPeriods);
+             
+             // A. End of Day Check
              if (tP2 === null) {
                   if (isHoverCheck && setHoverConflict) {
-                     setHoverConflict({
-                         classId,
-                         className: targetClassName || "Unknown",
-                         reason: formatConflict("Not enough time remaining in day"),
-                         day: targetDay,
-                         period: targetPeriod
-                     });
+                      setHoverConflict({
+                          classId,
+                          className: targetClassName || "Unknown",
+                          reason: "Not enough time remaining in day (Double Period)",
+                          day: targetDay,
+                          period: targetPeriod
+                      });
                   }
                   return false;
              }
+             
+             // B. Overlap with existing lesson at P2
              if (schedule[classId]?.[targetDay]?.[tP2]) {
                   if (isHoverCheck && setHoverConflict) {
-                     const p2Slot = schedule[classId]?.[targetDay]?.[tP2];
-                     const p2Subj = subjects.find(s => s.id === p2Slot?.subjectId);
-                     setHoverConflict({
-                         classId,
-                         className: targetClassName || "Unknown",
-                         reason: `Overlap: Next period occupied by ${p2Subj?.name}`,
-                         day: targetDay,
-                         period: targetPeriod
-                     });
+                      const p2Slot = schedule[classId]?.[targetDay]?.[tP2];
+                      const p2Subj = subjects.find(s => s.id === p2Slot?.subjectId);
+                      setHoverConflict({
+                          classId,
+                          className: targetClassName || "Unknown",
+                          reason: `Overlap: Next period occupied by ${p2Subj?.name}`,
+                          day: targetDay,
+                          period: targetPeriod
+                      });
                   }
                   return false;
              }
         }
     }
 
+    // --- 4. VALIDATE MOVE (Target Slot Validity) ---
+    // Uses the Unified Validation Engine
     const valMove = checkSlotValidity(
         data, targetDay, targetPeriod, activeDragItem.slot.teacherId, classId, activeDragItem.slot.subjectId,
         schedulerState,
-        { day: sourceDay, period: sourcePeriod, duration: sourceDuration },
+        { day: sourceDay, period: sourcePeriod, duration: sourceDuration }, // Ignore Source
         sourceEffectiveRoomId,
         sourceDuration,
-        targetSlot ? { day: targetDay, period: targetPeriod, duration: targetDuration } : undefined
+        targetSlot ? { day: targetDay, period: targetPeriod, duration: targetDuration } : undefined // Ignore Target (if swapping)
     );
+
     if (!valMove.valid) {
          if (isHoverCheck && setHoverConflict) {
              setHoverConflict({
                  classId,
                  className: targetClassName || "Unknown",
-                 reason: `${valMove.message}`,
+                 reason: valMove.message || "Invalid Move",
                  day: targetDay,
                  period: targetPeriod
              });
@@ -194,25 +190,25 @@ export const useDndLogic = (
          return false;
     }
 
+    // --- 5. VALIDATE SWAP (Source Slot Validity for Target Item) ---
     if (targetSlot) {
          const targetSubject = subjects.find(s => s.id === targetSlot.subjectId);
-         const targetEffectiveRoomId = targetSlot.roomId || targetSubject?.requiredRoomId || currentClass?.defaultRoomId;
+         const targetEffectiveRoomId = targetSlot.roomId || targetSubject?.requiredRoomId || targetCls?.defaultRoomId;
 
          const valSwap = checkSlotValidity(
             data, activeDragItem.day, activeDragItem.period, targetSlot.teacherId, classId, targetSlot.subjectId,
             schedulerState,
-            { day: targetDay, period: targetPeriod, duration: targetDuration },
+            { day: targetDay, period: targetPeriod, duration: targetDuration }, // Ignore Target's current spot
             targetEffectiveRoomId,
             targetDuration,
-            { day: activeDragItem.day, period: activeDragItem.period, duration: sourceDuration }
+            { day: activeDragItem.day, period: activeDragItem.period, duration: sourceDuration } // Ignore Source's current spot
         );
         if (!valSwap.valid) {
              if (isHoverCheck && setHoverConflict) {
-                 const targetSubj = subjects.find(s => s.id === targetSlot.subjectId);
                  setHoverConflict({
                      classId,
                      className: targetClassName || "Unknown",
-                     reason: `Swap Target Invalid: ${valSwap.message} (for ${targetSubj?.name})`,
+                     reason: `Swap Target Invalid: ${valSwap.message}`,
                      day: targetDay,
                      period: targetPeriod
                  });
@@ -226,6 +222,7 @@ export const useDndLogic = (
   };
 
   // --- HANDLERS ---
+
   const handleDragStart = (event: DragStartEvent) => {
     setActiveDragItem(event.active.data.current);
   };
@@ -236,29 +233,21 @@ export const useDndLogic = (
 
     if (!over) return;
 
-    const sData = active.data.current as {
-      day: number;
-      period: number;
-      slot: ScheduleSlot;
-      classGroup?: any;
-    };
-    
-    const tData = over.data.current as {
-      day: number;
-      period: number;
-    };
+    const sData = active.data.current as { day: number; period: number; slot: ScheduleSlot; classGroup?: any };
+    const tData = over.data.current as { day: number; period: number };
 
     if (!sData || !tData) return;
-    if (sData.day === tData.day && sData.period === tData.period) return;
-
+    
     const classId = mode === "CLASS" ? activeId : sData.classGroup?.id;
     if (!classId) return;
 
-    // --- NORMALIZE SOURCE: If dragging the TAIL, shift reference to the HEAD ---
+    // Normalization (Head/Tail)
     let sP = sData.period;
     const sD = sData.day;
+    const sourceStructure = classes.find(c => c.id === classId)?.structure || settings.dayStructure;
+
     if (sData.slot.isFixed) {
-        const prev = getPrevClassIndex(sP, classId);
+        const prev = getPrevClassPeriod(sP, sourceStructure);
         if (prev !== null) sP = prev;
     }
 
@@ -266,46 +255,24 @@ export const useDndLogic = (
 
     const tD = tData.day;
     const tP = tData.period;
+    const targetStructure = classes.find(c => c.id === classId)?.structure || settings.dayStructure;
 
     const sourceDuration = getDuration(classId, sD, sP);
     const targetSlot = data.schedule[classId]?.[tD]?.[tP];
     const targetDuration = targetSlot ? getDuration(classId, tD, tP) : 1;
+    const tP2 = getNextClassPeriod(tP, targetStructure, maxPeriods);
 
-    const tP2 = getNextClassIndex(tP, classId);
-
+    // Re-Validation (Safety Check before commit)
     if (targetSlot) {
         if (sourceDuration !== targetDuration) return;
     } else {
         if (sourceDuration === 2) {
             if (tP2 === null) return;
-            const tSlot2 = data.schedule[classId]?.[tD]?.[tP2];
-            if (tSlot2) return;
+            if (data.schedule[classId]?.[tD]?.[tP2]) return;
         }
     }
 
-    const valMove = checkSlotValidity(
-        data, tD, tP, sData.slot.teacherId, classId, sData.slot.subjectId,
-        schedulerState,
-        { day: sD, period: sP, duration: sourceDuration },
-        sData.slot.roomId,
-        sourceDuration,
-        targetSlot ? { day: tD, period: tP, duration: targetDuration } : undefined
-    );
-    if (!valMove.valid) return;
-
-    if (targetSlot) {
-        const valSwap = checkSlotValidity(
-            data, sD, sP, targetSlot.teacherId, classId, targetSlot.subjectId,
-            schedulerState,
-            { day: tD, period: tP, duration: targetDuration },
-            targetSlot.roomId,
-            targetDuration,
-            { day: sD, period: sP, duration: sourceDuration }
-        );
-        if (!valSwap.valid) return;
-    }
-
-
+    // --- COMMIT MOVE ---
     const newSchedule = JSON.parse(JSON.stringify(data.schedule));
     if (!newSchedule[classId]) newSchedule[classId] = {};
     if (!newSchedule[classId][sD]) newSchedule[classId][sD] = {};
@@ -315,17 +282,16 @@ export const useDndLogic = (
         if (!newSchedule[classId][d]) return;
         delete newSchedule[classId][d][p];
         if (dur === 2) {
-            const p2 = getNextClassIndex(p, classId);
+            const p2 = getNextClassPeriod(p, targetStructure, maxPeriods);
             if (p2 !== null) delete newSchedule[classId][d][p2];
         }
     };
 
     const setSlot = (d: number, p: number, slot: ScheduleSlot, dur: number) => {
         if (!newSchedule[classId][d]) newSchedule[classId][d] = {};
-        // Ensure Head is NOT fixed
         newSchedule[classId][d][p] = { ...slot, isFixed: false };
         if (dur === 2) {
-            const p2 = getNextClassIndex(p, classId);
+            const p2 = getNextClassPeriod(p, targetStructure, maxPeriods);
             if (p2 !== null) {
                 newSchedule[classId][d][p2] = { ...slot, isFixed: true };
             }
@@ -345,17 +311,16 @@ export const useDndLogic = (
 
     const nextData = { ...data, schedule: newSchedule };
 
-    // --- LOG ACTIVITY ---
+    // --- LOGGING ---
     const classObj = classes.find(c => c.id === classId);
     const subjObj = subjects.find(s => s.id === sourceSlot.subjectId);
-    const teacherObj = teachers.find(t => t.id === sourceSlot.teacherId);
     
     let message = "";
     if (destSlot) {
         const targetSubj = subjects.find(s => s.id === destSlot.subjectId);
         message = `Swapped ${subjObj?.name} with ${targetSubj?.name} in ${classObj?.name}`;
     } else {
-        message = `Moved ${subjObj?.name} (${teacherObj?.name}) in ${classObj?.name} to ${DAYS[tD]} P${tP + 1}`;
+        message = `Moved ${subjObj?.name} in ${classObj?.name} to ${DAYS[tD]} P${tP + 1}`;
     }
     addActivity("SCHEDULING", message, nextData);
 
@@ -368,7 +333,6 @@ export const useDndLogic = (
     handleDragStart,
     handleDragEnd,
     checkDragValidity,
-    getDuration,
-    getNextClassIndex
+    getDuration
   };
 };

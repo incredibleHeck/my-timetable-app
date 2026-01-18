@@ -1,9 +1,15 @@
-import { AppData } from "../../../types";
+import { AppData, Subject, ClassGroup } from "../../../types";
 import { AllocationUnit, SchedulerState } from "./types";
 
 /**
+ * ARCHITECT NOTES:
+ * 1. Performance: Replaced .find() with Map.get() for O(1) access.
+ * 2. Logic: Maintains distinction between Phase 1 (Strict) and Phase 2 (Force/Evict).
+ */
+
+/**
  * determineRoom: Used in Phase 1 (Greedy).
- * Strictly checks for availability before returning a room ID.
+ * Checks availability. If specific room is busy, returns undefined (Constraint Failure).
  */
 export function determineRoom(
   d: number, 
@@ -11,10 +17,13 @@ export function determineRoom(
   p2: number, 
   unit: AllocationUnit, 
   state: SchedulerState, 
-  data: AppData
+  data: AppData,
+  subjectMap: Map<string, Subject>, 
+  classMap: Map<string, ClassGroup> 
 ): string | undefined {
-  const subject = data.subjects.find((s) => s.id === unit.subjectId);
-  const classGroup = data.classes.find((c) => c.id === unit.classIds[0]);
+  
+  const subject = subjectMap.get(unit.subjectId);
+  const classGroup = classMap.get(unit.classIds[0]); 
 
   if (!subject || !classGroup) return undefined;
 
@@ -24,26 +33,19 @@ export function determineRoom(
 
   if (!targetRoomId) return undefined;
 
-  // 2. AVAILABILITY CHECK (O(1) lookup)
-  // Check if the room is occupied by another Unit ID.
+  // 2. AVAILABILITY CHECK
   const roomGrid = state.roomOccupancy[targetRoomId];
-  if (!roomGrid) return targetRoomId; // If grid missing, assume free (or allow fallback)
+  if (!roomGrid) return targetRoomId; 
 
-  const isP1Occupied = roomGrid[d]?.[p] !== null;
-  const isP2Occupied = unit.duration === 2 && roomGrid[d]?.[p2] !== null;
-
-  if (isP1Occupied || isP2Occupied) {
-    // If it's a homeroom and it's busy, this lesson cannot be held there currently.
-    return undefined; 
-  }
+  if (roomGrid[d]?.[p]) return undefined;
+  if (unit.duration === 2 && roomGrid[d]?.[p2]) return undefined;
 
   return targetRoomId;
 }
 
 /**
  * forceDetermineRoom: Used in Phase 2 (Repair).
- * Returns the intended room regardless of occupancy.
- * The solver will then identify the occupant and EVICT them.
+ * Returns the intended room even if occupied, triggering an eviction.
  */
 export function forceDetermineRoom(
   d: number, 
@@ -51,14 +53,16 @@ export function forceDetermineRoom(
   p2: number, 
   unit: AllocationUnit, 
   state: SchedulerState, 
-  data: AppData
+  data: AppData,
+  subjectMap: Map<string, Subject>,
+  classMap: Map<string, ClassGroup>
 ): string | undefined {
-  const subject = data.subjects.find((s) => s.id === unit.subjectId);
-  const classGroup = data.classes.find((c) => c.id === unit.classIds[0]);
+  
+  const subject = subjectMap.get(unit.subjectId);
+  const classGroup = classMap.get(unit.classIds[0]);
 
   if (!subject || !classGroup) return undefined;
 
-  // Specialists like Labs/Studios/Fields take precedence.
-  // Otherwise, default to the designated classroom (Homeroom).
+  // Return the Ideal Room
   return subject.requiredRoomId || classGroup.defaultRoomId;
 }

@@ -116,7 +116,7 @@ export const GeneratorView: React.FC<ViewProps> = ({
 
   // --- SOLVER LOGIC (ASYNC WORKER) ---
   const handleGenerate = () => {
-    // 0. Clean up existing timetable
+    // 0. Deep Clean up existing timetable
     const clearedData = {
       ...data,
       schedule: {},
@@ -124,19 +124,19 @@ export const GeneratorView: React.FC<ViewProps> = ({
       lastGenerated: null,
     };
 
+    // Update parent state immediately so UI shows "Empty" during generation
     onUpdate(clearedData);
 
     setIsGenerating(true);
     setStats(null);
 
     // 1. Initialize Worker
-    // Vite specific syntax for Web Workers
     workerRef.current = new Worker(
       new URL("./scheduler/worker.ts", import.meta.url),
       { type: "module" }
     );
 
-    // 2. Send Cleared Data
+    // 2. Send Cleared Data (ensures no legacy burn-in)
     workerRef.current.postMessage(clearedData);
 
     // 3. Listen for Results
@@ -144,19 +144,14 @@ export const GeneratorView: React.FC<ViewProps> = ({
       const { type, payload } = e.data;
 
       if (type === "success") {
-        console.log(
-          `Solver finished: ${
-            payload.iterations
-          } iterations in ${payload.duration.toFixed(0)}ms`
-        );
-
         setStats({
           iterations: payload.iterations,
           duration: payload.duration,
         });
 
+        // Use the functional update to ensure we don't accidentally bring back old schedule data
         onUpdate({
-          ...data,
+          ...clearedData, // Base on the cleared state
           schedule: payload.schedule,
           conflicts: payload.conflicts,
           lastGenerated: new Date().toISOString(),

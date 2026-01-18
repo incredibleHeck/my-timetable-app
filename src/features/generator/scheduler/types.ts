@@ -1,87 +1,88 @@
 import { ScheduleResult, TimeSlot } from "../../../types";
 
+/**
+ * OPTIMIZED ALLOCATION UNIT
+ * Represents a group of lessons (Joint or Standard) to be scheduled together.
+ */
 export interface AllocationUnit {
   id: string;
   subjectId: string;
-  subjectName: string;
-  duration: number; // 1 or 2
-
-  // JOINT CLASS ARCHITECTURE:
-  // One unit contains ALL classIds involved in the lesson.
-  // This ensures they are scheduled simultaneously in the solver.
   classIds: string[];
-  classNames: string[];
-
   teacherIds: string[];
-  teacherNames: string[];
-
-  // Grouping Identifiers (Gang Scheduling)
+  duration: number; // 1 or 2
+  
+  // ARCHITECT: New Fields for O(1) Logic
+  isCore?: boolean;       // Pre-calculated boolean (No string parsing in loops)
+  priority: number;       // Pre-calculated MRV Score (Tournament selection)
+  
+  // Metadata & Grouping
+  jointClassId?: string;
   electiveBlockId?: string;
-  jointClassId?: string; // Used by Validator to allow room overlaps for partners
-
+  classNames: string[];
+  subjectName: string;
+  teacherNames: string[];
+  
   // Resource Constraints
-  preferredRoomIds?: string[];
-  requiredRoomType?: string; // Critical for Room Scarcity Heuristic (e.g. "Computer Lab")
-
-  /** The ID of the classroom assigned to the class(es) (Homeroom) */
   defaultRoomId?: string;
-
-  // Heuristic Metadata
-  priority: number; // Calculated by MRV (Higher = Schedule First)
-  bumpedCount?: number; // Track how often this unit failed (for future backtracking)
+  preferredRoomIds?: string[];
+  requiredRoomType?: string; // e.g. "Computer Lab"
+  
+  bumpedCount?: number; // Track failures for future backtracking logic
 }
 
+/**
+ * SCHEDULE ENTRY
+ * The atomic unit stored in the finalized schedule grid.
+ */
 export interface ScheduleEntry {
-  unitId: string; // CRITICAL: Link back to the atom
+  unitId: string; // Link back to the AllocationUnit
   subjectId: string;
   teacherId: string;
   classId: string;
   roomId?: string;
   isFixed: boolean; // True for the "tail" of a double period
   duration: number; // 1 or 2
+  isCore?: boolean;
 }
 
+/**
+ * THE STATE MANAGER
+ * Maintains O(1) grids and trackers for high-speed constraint satisfaction.
+ */
 export interface SchedulerState {
-  schedule: ScheduleResult;
-
-  // --- 1. HARD CONSTRAINT GRIDS (5x12 Unit IDs) ---
-  // Stores the ID of the unit occupying the slot, or null if free.
-  // This allows O(1) identification of "Who is blocking this?".
-
-  /** [teacherId][day][period] -> unitId | null */
-  teacherOccupancy: Record<string, (string | null)[][]>;
-
-  /** [classId][day][period] -> unitId | null */
+  // The Schedule: [ClassID][Day][Period] -> Entry
+  schedule: Record<string, Record<number, Record<number, ScheduleEntry>>>;
+  
+  // --- 1. O(1) OCCUPANCY GRIDS ---
+  // Stores UnitID | "BLOCK" | null
   classOccupancy: Record<string, (string | null)[][]>;
-
-  /** [roomId][day][period] -> unitId | null */
+  teacherOccupancy: Record<string, (string | null)[][]>;
   roomOccupancy: Record<string, (string | null)[][]>;
-
-  /** [subjectId][day][period] -> unitId | null */
   singleResourceUsage: Record<string, (string | null)[][]>;
-
-  // --- 2. SOFT CONSTRAINT TRACKERS ---
-
-  /** Used to prevent Subject stacking (e.g. 3 Maths in a row) */
+  
+  // --- 2. PERFORMANCE TRACKERS ---
+  /** [teacherId][day] -> totalPeriods */
+  teacherDailyLoad: Record<string, number[]>;
+  
+  /** [classId][day] -> set of subjectIds (Variety rule) */
   classDailySubjects: Record<string, Record<number, Set<string>>>;
-
-  /** Used for LCV (Teacher Fatigue) logic */
-  teacherDailyLoad: Record<string, Record<number, number>>;
-
-  /** Map unitId -> its current placement for fast retrieval and eviction */
-  unitPlacements: Map<string, { d: number; p: number; p2: number; rooms: Record<string, string> }>;
-
-  // --- 3. METADATA ---
-  /** Cached time ranges for validation alignment */
-  classTimeRanges: Map<string, TimeSlot[]>;
-
+  
   /** 
-   * Pre-calculated navigation map for skipping breaks/lunches efficiently.
-   * Maps [classId][currentPeriodIndex] -> nextClassPeriodIndex (or -1 if none)
-   * This enables O(1) "Next Lesson" lookups for double periods.
+   * ARCHITECT: The Performance Secret (Curriculum Tracker)
+   * [classId][subjectId] -> Total Periods Scheduled
    */
-  lessonNavigation: Map<string, number[]>;
+  classSubjectDuration: Record<string, Record<string, number>>; 
 
-  /** Global settings reference for scoring/validation access */
+  // --- 3. HELPERS & METADATA ---
+  /** unitId -> Current coordinates and room assignments */
+  unitPlacements: Map<string, { d: number; p: number; p2: number; rooms: Record<string, string> }>;
+  
+  /** Pre-calculated time slots for overlap checking */
+  classTimeRanges: Map<string, TimeSlot[]>;
+  
+  /** Pre-calculated map to skip breaks/lunch efficiently */
+  lessonNavigation: Map<string, number[]>;
+  
+  /** Global settings reference */
   settings: any;
 }

@@ -1,10 +1,15 @@
-import { AppData } from "../../../types";
+import { AppData, Subject, Teacher, ClassGroup, Room } from "../../../types";
 import { AllocationUnit, SchedulerState } from "./types";
 
 /**
- * OPTIMIZED HELPER: Check Consecutive Limit
- * Prevents teacher burnout by ensuring they don't teach too many periods in a row.
+ * ARCHITECT NOTES:
+ * 1. Performance: O(1) Map-based lookups.
+ * 2. Logic: Includes Joint Class "Self-Overlap" permission.
+ * 3. Logic: Includes "Sandwich" Subject Continuity protection.
  */
+
+// --- HELPERS ---
+
 const checkConsecutiveLimit = (
   state: SchedulerState,
   d: number,
@@ -14,32 +19,29 @@ const checkConsecutiveLimit = (
   teacherId: string,
   maxConsecutive: number
 ): boolean => {
-  const dailyGrid = state.teacherOccupancy[teacherId][d];
-  const gridLen = dailyGrid.length;
-  let currentRun = 0;
+  const dailyGrid = state.teacherOccupancy[teacherId]?.[d];
+  if (!dailyGrid) return true;
 
-  for (let i = 0; i < gridLen; i++) {
-    const isOccupied = dailyGrid[i] !== null || i === p || (duration === 2 && i === p2);
-    if (isOccupied) {
-      currentRun++;
-      if (currentRun > maxConsecutive) return false;
-    } else {
-      currentRun = 0;
-    }
-  }
-  return true;
+  let runBefore = 0;
+  let i = p - 1;
+  while (i >= 0 && dailyGrid[i]) { runBefore++; i--; }
+
+  let runAfter = 0;
+  let j = (duration === 2 ? p2 : p) + 1;
+  while (j < dailyGrid.length && dailyGrid[j]) { runAfter++; j++; }
+
+  return (runBefore + duration + runAfter) <= maxConsecutive;
 };
 
 export const isGlobalSlotBlocked = (val: any): boolean => {
   if (!val) return false;
+  if (val === true) return true; 
   if (typeof val === "string") return val.trim().length > 0;
   return typeof val === "object"; 
 };
 
-/**
- * CORE HARD CONSTRAINTS
- * Includes Teacher Load, Class Occupancy, and Physical Room Integrity.
- */
+// --- CORE HARD CONSTRAINTS ---
+
 export const checkHardConstraints = (
   state: SchedulerState,
   data: AppData,
@@ -47,127 +49,215 @@ export const checkHardConstraints = (
   p: number,
   p2: number,
   unit: AllocationUnit,
-  classes: any[]
+  teacherMap: Map<string, Teacher>,
+  classMap: Map<string, ClassGroup>,
+  subjectMap: Map<string, Subject>,
+  roomMap: Map<string, Room>
 ): boolean => {
   const { duration, subjectId, teacherIds, classIds } = unit;
 
-  // 1. GLOBAL & STRUCTURAL BLOCKS
-  const globalP1 = data.settings.fixedOccasions?.[d]?.[p];
-  if (isGlobalSlotBlocked(globalP1)) return false;
-
-  if (duration === 2) {
-    if (p2 === -1) return false;
-    const globalP2 = data.settings.fixedOccasions?.[d]?.[p2];
-    if (isGlobalSlotBlocked(globalP2)) return false;
+  // 1. IMMUTABLE WALLS
+  if (!checkImmutableConstraints(d, p, p2, unit, data, teacherMap, classMap)) {
+      return false;
   }
 
-  // 2. TEACHER CONSTRAINTS (Load & Availability)
+  // 2. TEACHER CONSTRAINTS
   const maxConsecutive = data.settings.maxConsecutivePeriods || 4;
   for (const tid of teacherIds) {
-    if (state.teacherOccupancy[tid]?.[d]?.[p]) return false;
-    if (duration === 2 && state.teacherOccupancy[tid]?.[d]?.[p2]) return false;
+    // A. Availability (Allow overlap if it's the SAME Joint Unit)
+    const occupantP1 = state.teacherOccupancy[tid]?.[d]?.[p];
+    if (occupantP1 && occupantP1 !== "BLOCK" && occupantP1 !== unit.id) return false;
+    
+    if (duration === 2) {
+        const occupantP2 = state.teacherOccupancy[tid]?.[d]?.[p2];
+        if (occupantP2 && occupantP2 !== "BLOCK" && occupantP2 !== unit.id) return false;
+    }
 
+    // B. Load & Consecutive
     const currentLoad = state.teacherDailyLoad[tid]?.[d] || 0;
-    const teacher = data.teachers.find((t) => t.id === tid);
+    const teacher = teacherMap.get(tid);
     const maxLoad = teacher?.maxPeriodsPerDay ?? (data.settings.maxTeacherPeriodsPerDay || 6);
 
     if (currentLoad + duration > maxLoad) return false;
-
-    if (currentLoad + duration >= maxConsecutive) {
-      if (!checkConsecutiveLimit(state, d, p, p2, duration, tid, maxConsecutive)) return false;
+    
+    if (currentLoad + duration >= 3) { 
+       if (!checkConsecutiveLimit(state, d, p, p2, duration, tid, maxConsecutive)) return false;
     }
   }
 
-  // 3. CLASS & CURRICULUM CONSTRAINTS
+  // 3. CLASS CONSTRAINTS
   const maxSubj = data.settings.maxSubjectPeriodsPerDay || 2;
   for (const cid of classIds) {
-    if (state.classOccupancy[cid]?.[d]?.[p]) return false;
-    if (duration === 2 && state.classOccupancy[cid]?.[d]?.[p2]) return false;
-
-    // Fixed Sessions (Off-site/Swimming/etc)
-    const cls = classes.find((c) => c.id === cid);
-    if (cls?.fixedSessions) {
-      if (cls.fixedSessions[d]?.[p]) return false;
-      if (duration === 2 && cls.fixedSessions[d]?.[p2]) return false;
+    // A. Availability
+    const occupantP1 = state.classOccupancy[cid]?.[d]?.[p];
+    if (occupantP1 && occupantP1 !== unit.id) return false;
+    if (duration === 2) {
+        const occupantP2 = state.classOccupancy[cid]?.[d]?.[p2];
+        if (occupantP2 && occupantP2 !== unit.id) return false;
     }
 
-    // Daily Subject Variety
+    // B. Subject Variety (Daily Max)
+    // Fast scan of day (Size ~8)
     if (state.classDailySubjects[cid]?.[d]?.has(subjectId)) {
-      let count = 0;
-      const sched = state.schedule[cid]?.[d];
-      if (sched) {
-        for (const key in sched) {
-          if (sched[key].subjectId === subjectId) count++;
+        let count = 0;
+        const daySched = state.schedule[cid]?.[d];
+        if (daySched) {
+            Object.values(daySched).forEach(s => {
+                if (s.subjectId === subjectId) count += (s.duration || 1);
+            });
         }
-      }
-      if (count + duration > maxSubj) return false;
+        if (count + duration > maxSubj) return false;
     }
 
-    // Weekly Curriculum Limit
-    const currItem = cls?.curriculum?.find((curr: any) => curr.subjectId === subjectId);
-    if (currItem) {
-        const totalAllowed = (currItem.singles || 0) + (currItem.doubles || 0) * 2;
-        let totalScheduled = duration;
-        
-        const daysPerWeek = (data.settings as any).daysPerWeek || 5;
-        for (let day = 0; day < daysPerWeek; day++) {
-            const daySched = state.schedule[cid]?.[day];
-            if (!daySched) continue;
+    // C. Subject Continuity (Holistic "Single Block" Rule)
+    if (state.classDailySubjects[cid]?.[d]?.has(subjectId)) {
+        const daySched = state.schedule[cid]?.[d];
+        if (daySched) {
+            let existingMin = Infinity;
+            let existingMax = -Infinity;
             
-            for (const pStr in daySched) {
-                const slot = daySched[pStr];
-                if (slot && slot.subjectId === subjectId && !slot.isFixed) {
-                    totalScheduled += ((slot as any).duration || 1);
+            Object.keys(daySched).forEach(pStr => {
+                const pIdx = parseInt(pStr);
+                if (daySched[pIdx]?.subjectId === subjectId) {
+                    if (pIdx < existingMin) existingMin = pIdx;
+                    if (pIdx > existingMax) existingMax = pIdx;
+                }
+            });
+
+            if (existingMin !== Infinity) {
+                // Determine the new proposed block bounds
+                const newMin = p;
+                const newMax = (duration === 2) ? p2 : p;
+
+                // Combined bounds if we were to place this
+                const combinedMin = Math.min(existingMin, newMin);
+                const combinedMax = Math.max(existingMax, newMax);
+                
+                // CRITICAL: Every instructional period in the combined range 
+                // MUST be this subject. No gaps, no other subjects.
+                for (let i = combinedMin; i <= combinedMax; i++) {
+                    if (i >= newMin && i <= newMax) continue; // It's the new unit
+                    
+                    const slot = daySched[i];
+                    const type = data.settings.dayStructure[i]?.type || "CLASS";
+
+                    // If the slot is empty or a different subject, it's a split
+                    // BUT we allow bridging over non-class periods (Breaks/Lunch)
+                    if (type === "CLASS") {
+                        if (!slot || slot.subjectId !== subjectId) {
+                            return false;
+                        }
+                    }
                 }
             }
         }
-        
-        if (totalScheduled > totalAllowed) return false;
+    }
+
+    // D. Subject Continuity ("Don't Split Others" Rule)
+    // Prevent placing ourselves between two blocks of another subject
+    if (p > 0) {
+        const prev = state.schedule[cid]?.[d]?.[p-1];
+        const nextP = (duration === 2 ? p2 : p) + 1;
+        const next = state.schedule[cid]?.[d]?.[nextP];
+
+        if (prev && next && prev.subjectId === next.subjectId && prev.subjectId !== subjectId) {
+             return false;
+        }
     }
   }
 
-  // 4. PHYSICAL ROOM INTEGRITY (Your New Requirement)
-  // We check if the room that WILL be assigned to this move is currently free.
-  const subject = data.subjects.find(s => s.id === subjectId);
-  const repClass = classes.find(c => c.id === classIds[0]);
-  
-  // Rule: Specialist Room if needed, else Classroom (Homeroom)
+  // 4. ROOM LOGIC
+  const subject = subjectMap.get(subjectId);
+  const repClass = classMap.get(classIds[0]);
   const targetRoomId = subject?.requiredRoomId || repClass?.defaultRoomId;
 
   if (targetRoomId) {
-    // If the room is currently occupied by ANY unit, this move is illegal in Phase 1
-    if (state.roomOccupancy[targetRoomId]?.[d]?.[p]) return false;
-    if (duration === 2 && state.roomOccupancy[targetRoomId]?.[d]?.[p2]) return false;
+    // A. Availability
+    const roomOccP1 = state.roomOccupancy[targetRoomId]?.[d]?.[p];
+    if (roomOccP1 && roomOccP1 !== unit.id) return false;
+    
+    if (duration === 2) {
+        const roomOccP2 = state.roomOccupancy[targetRoomId]?.[d]?.[p2];
+        if (roomOccP2 && roomOccP2 !== unit.id) return false;
+    }
+
+    // B. Capacity (Phase 1 Strictness)
+    const room = roomMap.get(targetRoomId);
+    if (room && repClass && (repClass.studentCount || 0) > room.capacity) {
+        return false; 
+    }
   }
 
-  // 5. SINGLE RESOURCE CHECK
+  // 5. SINGLE RESOURCE
   if (subject?.isSingleResource) {
-    if (state.singleResourceUsage[subjectId]?.[d]?.[p]) return false;
-    if (duration === 2 && state.singleResourceUsage[subjectId]?.[d]?.[p2]) return false;
+    const resOccP1 = state.singleResourceUsage[subjectId]?.[d]?.[p];
+    if (resOccP1 && resOccP1 !== unit.id) return false;
+    if (duration === 2) {
+        const resOccP2 = state.singleResourceUsage[subjectId]?.[d]?.[p2];
+        if (resOccP2 && resOccP2 !== unit.id) return false;
+    }
   }
 
   return true;
 };
 
-/**
- * IMMUTABLE CONSTRAINTS
- * These are the 'Hard Walls' that even the Repair Phase cannot break.
- */
-export function checkImmutableConstraints(d: number, p: number, p2: number, unit: AllocationUnit, data: AppData): boolean {
-   // 1. Global Blocked Slots
+// --- IMMUTABLE CONSTRAINTS ---
+
+
+
+export function checkImmutableConstraints(
+
+    d: number, 
+
+    p: number, 
+
+    p2: number, 
+
+    unit: AllocationUnit, 
+
+    data: AppData,
+
+    teacherMap: Map<string, Teacher>, 
+
+    classMap: Map<string, ClassGroup>
+
+): boolean {
+
+      // 0. Class-Specific Period Limits (The "13th Period" Fix)
+
+      for (const cid of unit.classIds) {
+
+          const cls = classMap.get(cid);
+
+          const struct = cls?.structure || data.settings.dayStructure;
+
+          const limit = Math.min(cls?.periodCount ?? 99, struct.length);
+
+          
+
+          if (p >= limit) return false;
+
+          if (unit.duration === 2 && p2 !== -1 && p2 >= limit) return false;
+
+      }
+
+
+
+   // 1. Global blocks
+
    if (isGlobalSlotBlocked(data.settings.fixedOccasions?.[d]?.[p])) return false;
    if (unit.duration === 2 && p2 !== -1 && isGlobalSlotBlocked(data.settings.fixedOccasions?.[d]?.[p2])) return false;
 
-   // 2. Teacher Unavailable Grid
+   // Teacher Grid
    for (const tid of unit.teacherIds) {
-       const t = data.teachers.find(x => x.id === tid);
+       const t = teacherMap.get(tid);
        if (t?.constraints?.[d]?.[p]) return false;
        if (unit.duration === 2 && p2 !== -1 && t?.constraints?.[d]?.[p2]) return false;
    }
    
-   // 3. Class Pre-scheduled Blocks
+   // Class Fixed Sessions
    for (const cid of unit.classIds) {
-       const cls = data.classes.find(c => c.id === cid);
+       const cls = classMap.get(cid);
        if (cls?.fixedSessions?.[d]?.[p]) return false;
        if (unit.duration === 2 && p2 !== -1 && cls?.fixedSessions?.[d]?.[p2]) return false;
    }

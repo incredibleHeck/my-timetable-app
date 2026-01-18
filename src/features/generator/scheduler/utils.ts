@@ -1,4 +1,13 @@
-import { PeriodConfig, PeriodType } from "../../../types";
+import { PeriodType, PeriodConfig } from "../../../types";
+
+/**
+ * ARCHITECT NOTES:
+ * These helpers perform array lookups on the 'Day Structure'.
+ * Since Day Structure is small (~8-12 items), simple iteration is faster 
+ * than Map overhead here.
+ */
+
+// --- 1. TYPE RESOLVER ---
 
 /**
  * UTILITY: getPeriodType
@@ -9,18 +18,20 @@ export const getPeriodType = (
   structure: (PeriodConfig | PeriodType)[] | undefined,
   index: number
 ): PeriodType => {
-  // Safe access in case structure is shorter than maxPeriods
   const item = structure?.[index];
 
-  if (!item) return "CLASS"; // Default to class if undefined (e.g. implicitly extended day)
+  if (!item) return "CLASS"; // Default to class if undefined
 
-  if (typeof item === "string") return item; // It's a Class-Specific Structure (Legacy String)
-  return item.type; // It's a Global Structure (Modern Object)
+  if (typeof item === "string") return item as PeriodType; 
+  return item.type; 
 };
 
+// --- 2. NAVIGATION HELPERS (The "Bridge" Logic) ---
+
 /**
- * Ensures the solver looks for the next 'CLASS' slot,
- * skipping over the breaks we just told the Gap Detector to ignore.
+ * Finds the next index that is strictly a 'CLASS' period.
+ * Skips BREAK, LUNCH, ASSEMBLY, etc.
+ * Returns NULL if end of day reached.
  */
 export function getNextClassPeriod(
   currentP: number,
@@ -36,8 +47,7 @@ export function getNextClassPeriod(
       return nextP; // Found the second half of the double lesson
     }
     
-    // If it's a BREAK, LUNCH, or ASSEMBLY, the solver skips it 
-    // but the clock keeps ticking in the background.
+    // If it's a BREAK, LUNCH, or ASSEMBLY, skip it
     nextP++;
   }
 
@@ -45,8 +55,8 @@ export function getNextClassPeriod(
 }
 
 /**
- * UTILITY: getPrevClassPeriod
- * Finds the previous available CLASS period index, skipping Breaks/Lunches.
+ * Finds the previous index that was strictly a 'CLASS' period.
+ * Used for Gap Detection (Scoring).
  */
 export function getPrevClassPeriod(
   currentP: number,
@@ -62,3 +72,6 @@ export function getPrevClassPeriod(
 
   return null;
 }
+
+// --- 3. RE-EXPORT TIME UTILS ---
+export * from "../../../utils/timeUtils";

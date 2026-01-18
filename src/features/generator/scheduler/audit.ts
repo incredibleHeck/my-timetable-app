@@ -1,46 +1,35 @@
-import { AppData, Conflict } from "../../../types";
+import { AppData, Conflict, Teacher, Subject, ClassGroup, Room } from "../../../types";
 import { SchedulerState } from "./types";
 import { validateFullSchedule } from "./validation/index";
 
 /**
- * CONFLICT AUDIT: The Final Diagnostic
- * Generates a detailed report of all rule violations and curriculum gaps.
+ * ARCHITECT NOTES:
+ * 1. Performance: Uses trackers for instant curriculum audits.
+ * 2. Accuracy: Uses O(1) Validator to provide a Live conflict report.
  */
-export const runConflictAudit = (data: AppData, state: SchedulerState): {
+
+export const runConflictAudit = (
+  data: AppData, 
+  state: SchedulerState
+): {
   conflicts: Conflict[];
   curriculumGaps: any[];
   statistics: any;
 } => {
-  const conflicts: Conflict[] = [];
   const curriculumGaps: any[] = [];
 
-  // 1. RULE VALIDATION SCAN
-  // We use the full validator to find any hard or soft violations
-  const ruleConflicts = validateFullSchedule(data, state);
-  conflicts.push(...ruleConflicts);
+  // 1. LIVE RULE VALIDATION (O(1))
+  // We perform a final scan using the optimized validator to catch any
+  // logical issues (Continuity, Gaps, Overlaps) in the final state.
+  const conflicts = validateFullSchedule(data, state);
 
-  // 2. CURRICULUM INTEGRITY SCAN
-  // Checks if any subject received fewer periods than defined in the curriculum
+  // 2. CURRICULUM INTEGRITY SCAN (O(1) Instant Check)
   data.classes.forEach((cls) => {
+    const durationMap = state.classSubjectDuration[cls.id] || {};
+
     cls.curriculum.forEach((item) => {
       const required = (item.singles || 0) + (item.doubles || 0) * 2;
-      let actual = 0;
-
-      // Scan the class's schedule in the state
-      // Use configured days or default to 5
-      const days = (data.settings as any).daysPerWeek || 5;
-      
-      for (let d = 0; d < days; d++) {
-        const daySched = state.schedule[cls.id]?.[d];
-        if (!daySched) continue;
-
-        Object.values(daySched).forEach((slot: any) => {
-          // We only count 'heads' of lessons (isFixed = false) to avoid double counting
-          if (slot.subjectId === item.subjectId && !slot.isFixed) {
-            actual += (slot.duration || 1);
-          }
-        });
-      }
+      const actual = durationMap[item.subjectId] || 0;
 
       if (actual < required) {
         curriculumGaps.push({
@@ -56,7 +45,7 @@ export const runConflictAudit = (data: AppData, state: SchedulerState): {
 
   // 3. STATISTICAL SUMMARY
   const statistics = {
-    totalLessonsPlaced: Array.from(state.unitPlacements.keys()).length,
+    totalLessonsPlaced: state.unitPlacements.size,
     teacherUtilization: calculateTeacherUtilization(state, data),
     roomUtilization: calculateRoomUtilization(state, data)
   };
@@ -64,38 +53,34 @@ export const runConflictAudit = (data: AppData, state: SchedulerState): {
   return { conflicts, curriculumGaps, statistics };
 };
 
-/**
- * Helper to calculate how 'busy' teachers are (useful for balancing)
- */
 function calculateTeacherUtilization(state: SchedulerState, data: AppData) {
   const stats: Record<string, number> = {};
   data.teachers.forEach(t => {
-    let totalPeriods = 0;
-    const days = (data.settings as any).daysPerWeek || 5;
-    if (state.teacherDailyLoad[t.id]) {
-      for (let d = 0; d < days; d++) {
-        totalPeriods += state.teacherDailyLoad[t.id][d] || 0;
-      }
+    let total = 0;
+    const dailyLoads = state.teacherDailyLoad[t.id];
+    if (dailyLoads) {
+      Object.values(dailyLoads).forEach(load => {
+        total += (load as number);
+      });
     }
-    stats[t.id] = totalPeriods;
+    stats[t.id] = total;
   });
   return stats;
 }
 
-/**
- * Helper to calculate how 'busy' rooms are
- */
 function calculateRoomUtilization(state: SchedulerState, data: AppData) {
   const stats: Record<string, number> = {};
   const days = (data.settings as any).daysPerWeek || 5;
-  const periods = data.settings.periodsPerDay; // Max periods approximation
 
   data.rooms.forEach(r => {
     let occupiedCount = 0;
-    if (state.roomOccupancy[r.id]) {
+    const grid = state.roomOccupancy[r.id];
+    if (grid) {
         for (let d = 0; d < days; d++) {
-            if (state.roomOccupancy[r.id][d]) {
-                occupiedCount += state.roomOccupancy[r.id][d].filter(u => u !== null).length;
+            if (grid[d]) {
+                 for(let p=0; p<grid[d].length; p++) {
+                     if (grid[d][p]) occupiedCount++;
+                 }
             }
         }
     }

@@ -30,7 +30,9 @@ export const checkTeacherLoad = (
     } else if (!ignoredSlots.has(`${targetDay}-${p}`)) {
       // O(1) Lookup: Check if teacher is busy elsewhere
       if (state) {
-        if (state.teacherOccupancy[teacherId]?.[targetDay]?.[p] !== null) {
+        // Safe check: Ensure we don't treat 'undefined' as occupied
+        const occupant = state.teacherOccupancy[teacherId]?.[targetDay]?.[p];
+        if (occupant !== undefined && occupant !== null) {
           isOccupied = true;
         }
       } else {
@@ -108,9 +110,9 @@ export const checkSubjectLimit = (
     return {
       valid: false,
       message: `Max ${maxDaily} periods per day`,
-      severity: "LOW",
-      penaltyPoints: 300, 
-      conflictCount: 0,
+      severity: "HIGH",
+      penaltyPoints: 2000, 
+      conflictCount: 1,
     };
   }
 
@@ -264,8 +266,15 @@ export const checkTeacherContinuity = (
   const minP = occupiedPeriods[0];
   const maxP = occupiedPeriods[occupiedPeriods.length - 1];
 
-  for (let p = minP + 1; p < maxP; p++) {
-    if (getType(structure, p) === "CLASS") {
+          for (let p = minP + 1; p < maxP; p++) {
+
+  
+
+            const type = getType(structure, p);
+
+  
+
+            if (type === "CLASS") {
       let isThisClass = false;
       if (proposedSlots.has(p)) {
         isThisClass = true;
@@ -317,72 +326,554 @@ export const checkTeacherContinuity = (
 };
 
 /**
- * RULE: Subject Continuity
- * Ensures that a subject is only scheduled in one continuous block per day for a class.
+
+ * RULE: Subject Continuity (Holistic)
+
+ * Ensures that EVERY subject scheduled for a class on a specific day exists in one continuous block.
+
+ * This prevents Subject A -> Subject B -> Subject A patterns.
+
  * Breaks and Lunches act as "bridges" and do not count as splits.
+
  */
+
 export const checkSubjectContinuity = (
+
   ctx: ValidationContext,
+
   proposedSlots: Set<number>,
+
   ignoredSlots: Set<string>,
+
   state?: SchedulerState
+
 ): ValidationResult | null => {
+
   const { data, classId, subjectId, targetDay, maxPeriods, structure } = ctx;
 
-  const occupiedPeriods: number[] = [];
 
-  for (let p = 0; p < maxPeriods; p++) {
-    let isOccupiedBySubject = false;
 
-    if (proposedSlots.has(p)) {
-      isOccupiedBySubject = true;
-    } else if (!ignoredSlots.has(`${targetDay}-${p}`)) {
-      const entry = state 
-        ? state.schedule[classId]?.[targetDay]?.[p] 
-        : data.schedule[classId]?.[targetDay]?.[p];
-      
-      if (entry && entry.subjectId === subjectId) {
-        isOccupiedBySubject = true;
-      }
-    }
+  // 1. Identify all subjects that have any presence for this class today.
 
-    if (isOccupiedBySubject) {
-      occupiedPeriods.push(p);
-    }
+  // We check the subject being placed AND any subjects already in the schedule.
+
+  const subjectsToCheck = new Set<string>();
+
+  subjectsToCheck.add(subjectId);
+
+
+
+  const daySched = state 
+
+    ? state.schedule[classId]?.[targetDay] 
+
+    : data.schedule[classId]?.[targetDay];
+
+  
+
+  if (daySched) {
+
+    Object.values(daySched).forEach(slot => {
+
+      if (slot && slot.subjectId) subjectsToCheck.add(slot.subjectId);
+
+    });
+
   }
 
-  if (occupiedPeriods.length <= 1) return null;
 
-  const minP = occupiedPeriods[0];
-  const maxP = occupiedPeriods[occupiedPeriods.length - 1];
 
-  for (let p = minP + 1; p < maxP; p++) {
-    if (getType(structure, p) === "CLASS") {
-      let isThisSubject = false;
-      if (proposedSlots.has(p)) {
-        isThisSubject = true;
+  // 2. For each subject, verify it only has ONE continuous block.
+
+  for (const sId of subjectsToCheck) {
+
+    const occupiedPeriods: number[] = [];
+
+
+
+    for (let p = 0; p < maxPeriods; p++) {
+
+      let isOccupiedByThisSubject = false;
+
+
+
+      // Check if this period is part of the subject's presence
+
+      if (sId === subjectId && proposedSlots.has(p)) {
+
+        isOccupiedByThisSubject = true;
+
       } else if (!ignoredSlots.has(`${targetDay}-${p}`)) {
+
         const entry = state 
+
           ? state.schedule[classId]?.[targetDay]?.[p] 
+
           : data.schedule[classId]?.[targetDay]?.[p];
+
         
-        if (entry && entry.subjectId === subjectId) {
-          isThisSubject = true;
+
+        if (entry && entry.subjectId === sId) {
+
+          isOccupiedByThisSubject = true;
+
         }
+
       }
 
-      if (!isThisSubject) {
-        const subject = data.subjects.find(s => s.id === subjectId);
-        return {
-          valid: false,
-          message: `Subject '${subject?.name || "Unknown"}' must be in a continuous block`,
-          severity: "HIGH",
-          penaltyPoints: 1500,
-          conflictCount: 1,
-        };
+
+
+      if (isOccupiedByThisSubject) {
+
+        occupiedPeriods.push(p);
+
       }
+
     }
+
+
+
+    if (occupiedPeriods.length <= 1) continue;
+
+
+
+    const minP = occupiedPeriods[0];
+
+    const maxP = occupiedPeriods[occupiedPeriods.length - 1];
+
+
+
+        // Check everything between the first and last occurrence of this subject
+
+        for (let p = minP + 1; p < maxP; p++) {
+
+          const type = getType(structure, p);
+          if (type === "CLASS") {
+
+
+
+            let currentSubjectAtP: string | null = null;
+
+
+
+            
+
+
+
+            if (sId === subjectId && proposedSlots.has(p)) {
+
+
+
+              currentSubjectAtP = sId;
+
+
+
+            } else if (!ignoredSlots.has(`${targetDay}-${p}`)) {
+
+
+
+              const entry = state 
+
+
+
+                ? state.schedule[classId]?.[targetDay]?.[p] 
+
+
+
+                : data.schedule[classId]?.[targetDay]?.[p];
+
+
+
+              
+
+
+
+                      if (entry) {
+
+
+
+              
+
+
+
+                          currentSubjectAtP = entry.subjectId;
+
+
+
+              
+
+
+
+                        }
+
+
+
+              
+
+
+
+                      }
+
+
+
+              
+
+
+
+              
+
+
+
+              
+
+
+
+                      // STRICT CONTINUITY CHECK: 
+
+
+
+              
+
+
+
+                      // Every period between min and max must be the SAME subject.
+
+
+
+              
+
+
+
+                      // Free slots (null) or different subjects are both INVALID.
+
+
+
+              
+
+
+
+                                            if (currentSubjectAtP !== sId) {
+
+
+
+              
+
+
+
+                                    
+
+
+
+              
+
+
+
+                                              const splitSubject = data.subjects.find(s => s.id === sId);
+
+
+
+              
+
+
+
+                                    
+
+
+
+              
+
+
+
+                                              const fillerSubject = currentSubjectAtP ? data.subjects.find(s => s.id === currentSubjectAtP) : null;
+
+
+
+              
+
+
+
+                                    
+
+
+
+              
+
+
+
+                                                                                            const reason = fillerSubject ? `sandwiched by '${fillerSubject.name}'` : `split by empty period`;
+
+
+
+              
+
+
+
+                                    
+
+
+
+              
+
+
+
+                                              
+
+
+
+              
+
+
+
+                                    
+
+
+
+              
+
+
+
+                                                                                            return {
+
+
+
+              
+
+
+
+                                    
+
+
+
+              
+
+
+
+                                              
+
+
+
+              
+
+
+
+                                    
+
+
+
+              
+
+
+
+                                                                                              valid: false,
+
+
+
+              
+
+
+
+                                    
+
+
+
+              
+
+
+
+                                              
+
+
+
+              
+
+
+
+                                    
+
+
+
+              
+
+
+
+                                                                                              message: `Subject '${splitSubject?.name || "Unknown"}' is ${reason} at P${p + 1} (${type})`,
+
+
+
+              
+
+
+
+                                    
+
+
+
+              
+
+
+
+                                              
+
+
+
+              
+
+
+
+                                    
+
+
+
+              
+
+
+
+                                                                                              severity: "HIGH",
+
+
+
+              
+
+
+
+                                    
+
+
+
+              
+
+
+
+                                              
+
+
+
+              
+
+
+
+                                    
+
+
+
+              
+
+
+
+                                                                                              penaltyPoints: 1500,
+
+
+
+              
+
+
+
+                                    
+
+
+
+              
+
+
+
+                                              
+
+
+
+              
+
+
+
+                                    
+
+
+
+              
+
+
+
+                                                                                              conflictCount: 1,
+
+
+
+              
+
+
+
+                                    
+
+
+
+              
+
+
+
+                                              
+
+
+
+              
+
+
+
+                                    
+
+
+
+              
+
+
+
+                                                                                            };
+
+
+
+              
+
+
+
+                                    
+
+
+
+              
+
+
+
+                                            }
+
+
+
+              
+
+
+
+                    }
+
+
+
+              
+
+
+
+                  }
+
+
+
+              
+
+
+
+              
+
+
+
+    
+
   }
+
+
 
   return null;
+
 };

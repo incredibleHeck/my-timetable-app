@@ -4,18 +4,15 @@ import { calculateClassSchedule } from "../../../utils/timeUtils";
 import { getType } from "./validation/utils";
 
 /**
- * Helper to create a 2D grid (Days x Periods) initialized with null
+ * ARCHITECT NOTES:
+ * 1. Added 'classSubjectDuration' to track curriculum progress in O(1).
+ * 2. Optimized unassignUnit to cleanly rollback state.
  */
+
 const createOccupancyGrid = (days: number, periods: number): (string | null)[][] => {
-  return Array(days)
-    .fill(null)
-    .map(() => Array(periods).fill(null));
+  return Array(days).fill(null).map(() => Array(periods).fill(null));
 };
 
-/**
- * INITIALIZE STATE: The Foundation of the Solver
- * Pre-calculates navigation maps to ensure O(1) jumps over non-lesson slots.
- */
 export const initializeState = (data: AppData): SchedulerState => {
   const classes = data.classes || [];
   const teachers = data.teachers || [];
@@ -25,11 +22,11 @@ export const initializeState = (data: AppData): SchedulerState => {
   const days = (settings as any).daysPerWeek || 5;
   const periods = settings.periodsPerDay;
 
-  // 1. Storage for Pre-Calculated Navigation
+  // 1. Storage
   const classTimeRanges = new Map<string, TimeSlot[]>();
-  const lessonNavigation = new Map<string, number[]>(); // Maps currentP -> nextClassP
+  const lessonNavigation = new Map<string, number[]>(); 
 
-  // 2. Build Occupancy Grids
+  // 2. Build State
   const state: SchedulerState = {
     schedule: {},
     classOccupancy: {},
@@ -38,29 +35,27 @@ export const initializeState = (data: AppData): SchedulerState => {
     singleResourceUsage: {},
     teacherDailyLoad: {},
     classDailySubjects: {},
+    
+    // ARCHITECT: New Tracker for O(1) Curriculum Validation
+    classSubjectDuration: {}, 
+
     classTimeRanges,
     lessonNavigation,
     unitPlacements: new Map(),
     settings,
   };
 
-  // Initialize Teachers
+  // Init Grids & Teachers
   teachers.forEach((t) => {
     state.teacherOccupancy[t.id] = createOccupancyGrid(days, periods); 
     state.teacherDailyLoad[t.id] = Array.from({ length: days }, () => 0);
   });
   
-  // Calculate true max periods across all classes to handle extended days
-  const maxClassPeriods = Math.max(
-    periods,
-    ...classes.map((c) => c.periodCount || 0)
-  );
+  const maxClassPeriods = Math.max(periods, ...classes.map((c) => c.periodCount || 0));
   
-  // Re-initialize grids with maxPeriods to be safe
+  // Re-init with correct size
   teachers.forEach((t) => {
       state.teacherOccupancy[t.id] = createOccupancyGrid(days, maxClassPeriods);
-      
-      // Apply Static Blocks (Teacher Unavailability)
       if (t.constraints) {
         for (let d = 0; d < days; d++) {
           if (d >= t.constraints.length) continue;
@@ -73,20 +68,21 @@ export const initializeState = (data: AppData): SchedulerState => {
       }
   });
 
-  // Initialize Classes & Pre-calculate Navigation
+  // Init Classes
   classes.forEach((c) => {
     state.classOccupancy[c.id] = createOccupancyGrid(days, maxClassPeriods);
     state.classDailySubjects[c.id] = {};
+    
+    // Init the new tracker
+    state.classSubjectDuration[c.id] = {}; 
+
     for (let d = 0; d < days; d++) state.classDailySubjects[c.id][d] = new Set();
     state.schedule[c.id] = {};
 
-    // A. Pre-calculate Time Slots (e.g., P1 is 08:00 - 09:00)
+    // Navigation Pre-calc
     const structure = c.structure || settings.dayStructure;
-    const timeSlots = calculateClassSchedule(c, settings, structure);
-    classTimeRanges.set(c.id, timeSlots);
+    classTimeRanges.set(c.id, calculateClassSchedule(c, settings, structure));
 
-    // B. Pre-calculate Lesson Navigation (Skip Breaks/Lunch)
-    // We scan up to maxClassPeriods
     const nextLessonMap: number[] = new Array(maxClassPeriods).fill(-1);
     for (let p = 0; p < maxClassPeriods; p++) {
       let lookAhead = p + 1;
@@ -105,27 +101,21 @@ export const initializeState = (data: AppData): SchedulerState => {
       Object.keys(c.fixedSessions).forEach((dayStr) => {
         const d = parseInt(dayStr);
         if (isNaN(d) || d >= days) return;
-        
         const daySessions = c.fixedSessions![d];
         if (!daySessions) return;
-
         Object.keys(daySessions).forEach((pStr) => {
             const p = parseInt(pStr);
             if (isNaN(p) || p >= maxClassPeriods) return;
-            if (daySessions[p]) {
-                state.classOccupancy[c.id][d][p] = "BLOCK";
-            }
+            if (daySessions[p]) state.classOccupancy[c.id][d][p] = "BLOCK";
         });
       });
     }
   });
 
-  // Initialize Rooms
   rooms.forEach((r) => {
     state.roomOccupancy[r.id] = createOccupancyGrid(days, maxClassPeriods);
   });
-
-  // Ensure all class homerooms have a grid
+  
   classes.forEach(c => {
       const rid = c.defaultRoomId || c.classroomId;
       if (rid && !state.roomOccupancy[rid]) {
@@ -133,58 +123,70 @@ export const initializeState = (data: AppData): SchedulerState => {
       }
   });
 
-  // Initialize Single Resources (Labs/ICT)
   subjects.filter(s => s.isSingleResource).forEach(s => {
     state.singleResourceUsage[s.id] = createOccupancyGrid(days, maxClassPeriods);
   });
   
-  // NEW: Burn in existing schedule
+  // BURN IN EXISTING SCHEDULE (Critical: Must update new trackers)
   if (data.schedule) {
       Object.keys(data.schedule).forEach(cId => {
           const clsSched = data.schedule[cId];
           if (!clsSched) return;
-          
           Object.keys(clsSched).forEach(dStr => {
               const d = parseInt(dStr);
               if (isNaN(d) || d >= days) return;
-              
               Object.keys(clsSched[d]).forEach(pStr => {
                   const p = parseInt(pStr);
                   if (isNaN(p) || p >= maxClassPeriods) return;
-                  
                   const slot = clsSched[d][p];
                   if (!slot) return;
                   
                   const unitId = slot.unitId || `LEGACY-${slot.subjectId}`;
                   
-                  // 0. State Schedule
+                  // Update Grids
                   if (!state.schedule[cId]) state.schedule[cId] = {};
                   if (!state.schedule[cId][d]) state.schedule[cId][d] = {};
-                  state.schedule[cId][d][p] = { ...slot, unitId };
+                  
+                  const entry: ScheduleEntry = {
+                      ...slot,
+                      unitId,
+                      duration: (slot as any).duration || 1,
+                      isFixed: (slot as any).isFixed || false
+                  };
+                  state.schedule[cId][d][p] = entry;
 
-                  // 0.5 Register Placement
                   if (!state.unitPlacements.has(unitId)) {
                       state.unitPlacements.set(unitId, { d, p, p2: -1, rooms: { [unitId]: slot.roomId || "" } });
                   }
-
-                  // 1. Class
+                  
                   if (state.classOccupancy[cId]) {
                       state.classOccupancy[cId][d][p] = unitId;
                       state.classDailySubjects[cId][d].add(slot.subjectId);
+                      
+                      // ARCHITECT: Update Tracker
+                      if (!state.classSubjectDuration[cId][slot.subjectId]) {
+                          state.classSubjectDuration[cId][slot.subjectId] = 0;
+                      }
+                      
+                      // Only increment duration if this slot is the 'head' or not fixed
+                      // to avoid double counting doubles in legacy burn-in
+                      if (!slot.isFixed) {
+                          state.classSubjectDuration[cId][slot.subjectId] += (slot.duration || 1);
+                      }
                   }
                   
-                  // 2. Teacher
                   if (slot.teacherId && state.teacherOccupancy[slot.teacherId]) {
-                      state.teacherOccupancy[slot.teacherId][d][p] = unitId;
-                      state.teacherDailyLoad[slot.teacherId][d]++;
+                      const tid = slot.teacherId;
+                      // Only increment load if the slot was previously empty
+                      // This prevents double counting for joint/elective units
+                      if (state.teacherOccupancy[tid][d][p] === null) {
+                          state.teacherDailyLoad[tid][d]++;
+                      }
+                      state.teacherOccupancy[tid][d][p] = unitId;
                   }
-                  
-                  // 3. Room
                   if (slot.roomId && state.roomOccupancy[slot.roomId]) {
                       state.roomOccupancy[slot.roomId][d][p] = unitId;
                   }
-                  
-                  // 4. Single Resource
                   if (state.singleResourceUsage[slot.subjectId]) {
                       state.singleResourceUsage[slot.subjectId][d][p] = unitId;
                   }
@@ -196,17 +198,16 @@ export const initializeState = (data: AppData): SchedulerState => {
   return state;
 };
 
+// --- APPLY MOVE (O(1)) ---
+
 export function applyMove(
   state: SchedulerState,
   unit: AllocationUnit,
   move: { d: number; p: number; p2: number; rooms: Record<string, string> }
 ) {
   const { d, p, p2, rooms } = move;
-
-  // 1. Register the placement for O(1) unassigning later
   state.unitPlacements.set(unit.id, move);
 
-  // 2. Occupy Class Resources
   unit.classIds.forEach((cid) => {
     if (!state.schedule[cid][d]) state.schedule[cid][d] = {};
     
@@ -218,11 +219,18 @@ export function applyMove(
       roomId: rooms[unit.id],
       isFixed: false,
       duration: unit.duration,
+      isCore: unit.isCore,
     };
 
     state.schedule[cid][d][p] = entry;
-    state.classOccupancy[cid][d][p] = unit.id; // Map to unitId
+    state.classOccupancy[cid][d][p] = unit.id; 
     state.classDailySubjects[cid][d].add(unit.subjectId);
+
+    // ARCHITECT: Update Curriculum Tracker
+    if (!state.classSubjectDuration[cid][unit.subjectId]) {
+        state.classSubjectDuration[cid][unit.subjectId] = 0;
+    }
+    state.classSubjectDuration[cid][unit.subjectId] += unit.duration;
 
     if (p2 !== -1) {
       state.schedule[cid][d][p2] = { ...entry, isFixed: true };
@@ -230,13 +238,18 @@ export function applyMove(
     }
   });
 
-  // 3. Occupy Teacher & Room
   unit.teacherIds.forEach((tid) => {
-    state.teacherOccupancy[tid][d][p] = unit.id;
-    state.teacherDailyLoad[tid][d]++; // Using original increment logic
-    if (p2 !== -1) {
-        state.teacherOccupancy[tid][d][p2] = unit.id;
+    // Only increment load if the teacher was previously free in this slot
+    if (state.teacherOccupancy[tid][d][p] === null) {
         state.teacherDailyLoad[tid][d]++;
+    }
+    state.teacherOccupancy[tid][d][p] = unit.id;
+
+    if (p2 !== -1) {
+        if (state.teacherOccupancy[tid][d][p2] === null) {
+            state.teacherDailyLoad[tid][d]++;
+        }
+        state.teacherOccupancy[tid][d][p2] = unit.id;
     }
   });
 
@@ -248,8 +261,7 @@ export function applyMove(
 
   if (state.singleResourceUsage[unit.subjectId]) {
     state.singleResourceUsage[unit.subjectId][d][p] = unit.id;
-    if (p2 !== -1)
-      state.singleResourceUsage[unit.subjectId][d][p2] = unit.id;
+    if (p2 !== -1) state.singleResourceUsage[unit.subjectId][d][p2] = unit.id;
   }
 }
 
@@ -258,44 +270,51 @@ export function applyGangToState(
   gang: AllocationUnit[],
   move: { d: number; p: number; p2: number; rooms: Record<string, string> }
 ) {
-  // Delegate to applyMove for each unit in the gang
-  gang.forEach((u) => {
-      applyMove(state, u, move);
-  });
+  gang.forEach((u) => { applyMove(state, u, move); });
 }
 
 export function removeGangFromState(state: SchedulerState, gang: AllocationUnit[], data: AppData) {
-    gang.forEach(u => {
-        unassignUnit(state, u);
-    });
+   gang.forEach(u => { unassignUnit(state, u); });
 }
+
+// --- UNASSIGN (O(1)) ---
 
 export function unassignUnit(state: SchedulerState, unit: AllocationUnit) {
   const placement = state.unitPlacements.get(unit.id);
-  if (!placement) return; // Not currently placed
+  if (!placement) return; 
 
   const { d, p, p2, rooms } = placement;
 
-  // 1. Clean up Teacher
   unit.teacherIds.forEach((tid) => {
-    state.teacherOccupancy[tid][d][p] = null;
-    state.teacherDailyLoad[tid][d] -= (p2 !== -1 ? 2 : 1);
-    if (p2 !== -1) state.teacherOccupancy[tid][d][p2] = null;
+    // Only decrement load if we are the current occupant
+    if (state.teacherOccupancy[tid][d][p] === unit.id) {
+        state.teacherOccupancy[tid][d][p] = null;
+        state.teacherDailyLoad[tid][d]--;
+    }
+    
+    if (p2 !== -1) {
+        if (state.teacherOccupancy[tid][d][p2] === unit.id) {
+            state.teacherOccupancy[tid][d][p2] = null;
+            state.teacherDailyLoad[tid][d]--;
+        }
+    }
   });
 
-  // 2. Clean up Room
   const rId = rooms[unit.id];
   if (rId) {
     state.roomOccupancy[rId][d][p] = null;
     if (p2 !== -1) state.roomOccupancy[rId][d][p2] = null;
   }
 
-  // 3. Clean up Classes
   unit.classIds.forEach((cid) => {
     delete state.schedule[cid][d][p];
     state.classOccupancy[cid][d][p] = null;
+
+    // ARCHITECT: Update Curriculum Tracker
+    if (state.classSubjectDuration[cid][unit.subjectId]) {
+        state.classSubjectDuration[cid][unit.subjectId] -= unit.duration;
+    }
     
-    // Only delete from subject set if no other slots on this day have this subject
     const hasOther = Object.values(state.schedule[cid][d] || {}).some(s => s.subjectId === unit.subjectId);
     if (!hasOther) {
       state.classDailySubjects[cid][d].delete(unit.subjectId);
@@ -307,7 +326,6 @@ export function unassignUnit(state: SchedulerState, unit: AllocationUnit) {
     }
   });
 
-  // 4. Free Single Resources
   if (state.singleResourceUsage[unit.subjectId]) {
     state.singleResourceUsage[unit.subjectId][d][p] = null;
     if (p2 !== -1) state.singleResourceUsage[unit.subjectId][d][p2] = null;

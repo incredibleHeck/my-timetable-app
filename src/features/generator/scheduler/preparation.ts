@@ -14,6 +14,19 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
   const subjectMap = new Map(subjects.map((s) => [s.id, s]));
   const classMap = new Map(classes.map((c) => [c.id, c]));
 
+  const isCoreSubject = (name?: string) => {
+    if (!name) return false;
+    const n = name.toLowerCase();
+    return (
+      n.includes("math") ||
+      n.includes("english") ||
+      n.includes("science") ||
+      n.includes("physics") ||
+      n.includes("chem") ||
+      n.includes("bio")
+    );
+  };
+
   // 1. TRACKER: Ensure we don't double-count joint/elective subjects
   const processedCurriculumItems = new Set<string>(); // "classId-subjectId"
 
@@ -53,9 +66,10 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
         priority: 0,
         defaultRoomId,
         requiredRoomType,
-        jointClassId: jc.id
+        jointClassId: jc.id,
+        isCore: isCoreSubject(subject?.name)
       };
-      u.priority = calculatePriority(u, teachers, data);
+      u.priority = calculatePriority(u, data, teacherMap, subjectMap);
       units.push(u);
     };
 
@@ -89,8 +103,9 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
           defaultRoomId: cls.defaultRoomId || cls.classroomId,
           requiredRoomType,
           electiveBlockId: (curr as any).electiveBlockId,
+          isCore: isCoreSubject(subject?.name)
         };
-        u.priority = calculatePriority(u, teachers, data);
+        u.priority = calculatePriority(u, data, teacherMap, subjectMap);
         units.push(u);
       };
 

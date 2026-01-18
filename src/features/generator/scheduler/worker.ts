@@ -3,8 +3,19 @@ import { AppData } from "../../../types";
 import { prepareAllocationUnits } from "./preparation";
 import { solveSmart } from "./solver";
 import { runConflictAudit } from "./audit";
+import { generateFinalReport } from "./validation/final-audit";
 
 const ctx: Worker = self as any;
+
+/**
+ * HELPER: Fast Core Subject Check
+ * Identifies core subjects for pedagogical scoring (Math, Science, etc.)
+ */
+const CORE_KEYWORDS = ["math", "english", "science", "physics", "chem", "bio", "history", "geography"];
+const isCoreSubject = (name: string) => {
+    const n = name.toLowerCase();
+    return CORE_KEYWORDS.some(k => n.includes(k));
+};
 
 ctx.onmessage = (e: MessageEvent<AppData>) => {
   const data = e.data;
@@ -13,18 +24,27 @@ ctx.onmessage = (e: MessageEvent<AppData>) => {
 
   try {
     // 1. PREPARATION
-    // Units are strictly curriculum-compliant and prioritized (MRV Initial State)
+    // Units are strictly curriculum-compliant and prioritized
     const units = prepareAllocationUnits(data);
 
-    // 2. HYBRID SOLVER (Construction + Repair)
-    // We pass a progress callback to keep the UI responsive and informative
-    const { schedule, state, iterations } = solveSmart(
+    // ARCHITECT: Safety Patch
+    // Ensure 'isCore' is populated for O(1) scoring performance.
+    // We do this ONCE here so the solver doesn't do it in hot loops.
+    units.forEach(u => {
+        if (u.isCore === undefined) {
+            u.isCore = isCoreSubject(u.subjectName || "");
+        }
+    });
+
+    // 2. HYBRID SOLVER
+    // Runs the Optimized Construction + Repair phases with Map-based constraints
+    const { schedule, conflicts: solverConflicts, state, iterations } = solveSmart(
       units, 
       data, 
       (phase, progress, total, currentConflictCount) => {
-        // Safety check to prevent worker hanging
+        // Timeout Protection: Return current best state if worker hangs
         if (Date.now() - startTime > TIME_LIMIT) {
-           return false; // Tells the solver to stop and return the current best state
+           return false; 
         }
 
         ctx.postMessage({
@@ -40,17 +60,38 @@ ctx.onmessage = (e: MessageEvent<AppData>) => {
       }
     );
 
-    // 3. AUDIT & REPORT
+    // 3. O(1) AUDIT & REPORT
+    // Uses the State Trackers to instantly find curriculum gaps and statistics
     const audit = runConflictAudit(data, state);
 
-    // 4. FINAL SUCCESS RESPONSE
-    // Even if there are lingering conflicts, we return the schedule
-    // so the user can see *where* the bottlenecks are.
+    // ARCHITECT: Fresh Audit (The "Real" Conflict Check)
+    const finalData = { ...data, schedule };
+    const freshConflicts = generateFinalReport(finalData);
+
+    const gapConflicts = audit.curriculumGaps.map((gap: any) => ({
+        classId: gap.classId,
+        className: gap.className,
+        subjectId: gap.subjectId,
+        subjectName: data.subjects.find((s: any) => s.id === gap.subjectId)?.name || gap.subjectId,
+        teacherName: "",
+        day: 0,
+        period: 0,
+        reason: gap.message,
+        severity: "MEDIUM" as const
+    }));
+
+    const allConflicts = [
+        ...solverConflicts,
+        ...freshConflicts,
+        ...gapConflicts
+    ];
+
+    // 4. FINAL RESPONSE
     ctx.postMessage({
       type: "success",
       payload: {
         schedule,
-        conflicts: audit.conflicts,
+        conflicts: allConflicts,
         curriculumGaps: audit.curriculumGaps,
         statistics: audit.statistics,
         iterations, 

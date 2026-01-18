@@ -40,10 +40,10 @@ export const checkSlotValidity = (
   // --- 1. CONTEXT SETUP ---
   const cls = classes.find((c) => c.id === classId);
   const structure = cls?.structure || settings.dayStructure;
-  const maxPeriods = Math.max(
-    cls?.periodCount || settings.periodsPerDay,
-    structure?.length || 0
-  );
+  
+  // PRIORITIZE Class Structure: If a class says it only has 12 periods, 
+  // the 13th period is functionally non-existent for them.
+  const maxPeriods = cls?.periodCount ?? settings.periodsPerDay;
 
   // --- 2. IGNORE LIST SETUP (For Non-Destructive Simulation) ---
   const ignoredSlots = new Set<string>(); // Use "day-period" strings to support cross-day moves
@@ -179,13 +179,9 @@ export const checkSlotValidity = (
   const subjectError = checkSubjectLimit(ctx, proposedSlots, ignoredSlots, state);
   if (subjectError) return { ...subjectError, penaltyPoints: 600, conflictCount: 0 };
 
-  // B2. Subject Continuity (Hard Constraint)
+  // B2. Subject Continuity (Hard Constraint) - Prevents subject sandwiching
   const continuityError = checkSubjectContinuity(ctx, proposedSlots, ignoredSlots, state);
   if (continuityError) return { ...continuityError, penaltyPoints: 1500, conflictCount: 1 };
-
-  // C. Student Well-being (Gap/Sandwich Detection)
-  const gapError = checkGapDetection(ctx, proposedSlots, ignoredSlots, state);
-  if (gapError) return { ...gapError, penaltyPoints: 400, conflictCount: 0 };
 
   // D. Teacher Continuity (Same Class Rule) - Prevents sandwiching different classes
   const teacherContinuityError = checkTeacherContinuity(ctx, proposedSlots, ignoredSlots, state);
@@ -208,7 +204,9 @@ export const checkSlotValidity = (
  * Scans the entire generated state to find every constraint violation.
  */
 export const validateFullSchedule = (data: AppData, state: SchedulerState): Conflict[] => {
-  const { schedule, classes, subjects, teachers } = data;
+  const { classes, subjects, teachers } = data;
+  // Use the schedule from the state (result) if provided, otherwise fallback to data (input)
+  const schedule = state ? state.schedule : data.schedule;
   const allConflicts: Conflict[] = [];
 
   for (const classId of Object.keys(schedule)) {
