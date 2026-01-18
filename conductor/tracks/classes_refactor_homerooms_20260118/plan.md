@@ -19,11 +19,11 @@
 - [ ] Task: Conductor - User Manual Verification 'Modal Refactoring' (Protocol in workflow.md)
 
 ## Phase 3: View Refactoring
-- [ ] Task: Extract Sub-Views
-    - [ ] Create `src/features/classes/components/ClassList.tsx`.
-    - [ ] Create `src/features/classes/components/ClassGroups.tsx` (Joint & Elective blocks).
-- [ ] Task: Refactor `ClassesView`
-    - [ ] Update `ClassesView.tsx` to use `useClassActions` and the new sub-components.
+- [x] Task: Extract Sub-Views 68ae0ec
+    - [x] Create `src/features/classes/components/ClassList.tsx`.
+    - [x] Create `src/features/classes/components/ClassGroups.tsx` (Joint & Elective blocks).
+- [x] Task: Refactor `ClassesView` 68ae0ec
+    - [x] Update `ClassesView.tsx` to use `useClassActions` and the new sub-components.
 - [ ] Task: Conductor - User Manual Verification 'View Refactoring' (Protocol in workflow.md)
 
 ## Phase 4: Strict Sync & Final Quality
