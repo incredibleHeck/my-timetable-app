@@ -1,12 +1,12 @@
 # Plan: Automatic Unique Home Room Assignment
 
 ## Phase 1: Data Model & Foundation
-- [ ] Task: Update Type Definitions
-    - [ ] Add `defaultRoomId: string` to `ClassGroup` in `src/features/classes/types.ts`.
-- [ ] Task: Automatic Home Room Assignment Logic
-    - [ ] Write failing test for a utility that maps each class to a unique room.
-    - [ ] Implement the assignment utility (ensuring 1-to-1 unique mapping).
-    - [ ] Hook the utility into the class creation/loading flow.
+- [x] Task: Update Type Definitions (Already present) 0bf4871
+    - [x] Add `defaultRoomId: string` to `ClassGroup` in `src/features/classes/types.ts`.
+- [x] Task: Automatic Home Room Assignment Logic 0bf4871
+    - [x] Write failing test for a utility that maps each class to a unique room.
+    - [x] Implement the assignment utility (ensuring 1-to-1 unique mapping).
+    - [x] Hook the utility into the class creation/loading flow.
 - [ ] Task: Conductor - User Manual Verification 'Data Model & Foundation' (Protocol in workflow.md)
 
 ## Phase 2: Engine & Rendering Fallbacks
