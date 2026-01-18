@@ -1,8 +1,0 @@
-{
-  "track_id": "subject_continuity_20260118",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-01-18T09:37:00Z",
-  "updated_at": "2026-01-18T09:37:00Z",
-  "description": "Implement a 'Subject Continuity' validation rule for the timetable to ensure subjects appear in one continuous block per day."
-}

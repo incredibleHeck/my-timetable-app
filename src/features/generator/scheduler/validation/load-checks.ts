@@ -241,11 +241,277 @@ export const checkGapDetection = (
                         }
                       }
                     
-                      return null;
-                    };
+                        return null;
                     
-                    /**
-                     * RULE: Subject Continuity
+                      };
+                    
+                      
+                    
+                      /**
+                    
+                       * RULE: Teacher Continuity (Same Class Rule)
+                    
+                       * Ensures that if a teacher has multiple lessons with the same Class Group on a specific day,
+                    
+                       * they are scheduled in a continuous block. This prevents "sandwiching" other classes
+                    
+                       * or having gaps between sessions with the same group.
+                    
+                       */
+                    
+                      export const checkTeacherContinuity = (
+                    
+                        ctx: ValidationContext,
+                    
+                        proposedSlots: Set<number>,
+                    
+                        ignoredSlots: Set<number>,
+                    
+                        state?: SchedulerState
+                    
+                      ): ValidationResult | null => {
+                    
+                        const { data, teacherId, classId, targetDay, maxPeriods, structure } = ctx;
+                    
+                      
+                    
+                        // We are checking continuity for the TEACHER'S relationship with the current CLASS (classId).
+                    
+                        // If the teacher has other lessons with this same classId today, they must be continuous.
+                    
+                        
+                    
+                        const occupiedPeriods: number[] = [];
+                    
+                      
+                    
+                        for (let p = 0; p < maxPeriods; p++) {
+                    
+                          let isOccupiedByThisClass = false;
+                    
+                      
+                    
+                              if (proposedSlots.has(p)) {
+                    
+                      
+                    
+                                isOccupiedByThisClass = true;
+                    
+                      
+                    
+                              } else if (!ignoredSlots.has(p)) {
+                    
+                      
+                    
+                                // Check if the teacher is teaching THIS class at this period
+                    
+                      
+                    
+                                const entry = state 
+                    
+                      
+                    
+                                  ? state.schedule[classId]?.[targetDay]?.[p] 
+                    
+                      
+                    
+                                  : data.schedule[classId]?.[targetDay]?.[p];
+                    
+                      
+                    
+                                
+                    
+                      
+                    
+                                if (entry && entry.teacherId === teacherId) {
+                    
+                      
+                    
+                                  isOccupiedByThisClass = true;
+                    
+                      
+                    
+                                }
+                    
+                      
+                    
+                              }
+                    
+                      
+                    
+                          
+                    
+                      
+                    
+                              if (isOccupiedByThisClass) {
+                    
+                      
+                    
+                                occupiedPeriods.push(p);
+                    
+                      
+                    
+                              }
+                    
+                      
+                    
+                            }
+                    
+                      
+                    
+                          
+                    
+                      
+                    
+                            if (occupiedPeriods.length <= 1) return null;
+                    
+                      
+                    
+                          
+                    
+                      
+                    
+                            const minP = occupiedPeriods[0];
+                    
+                      
+                    
+                            const maxP = occupiedPeriods[occupiedPeriods.length - 1];
+                    
+                      
+                    
+                          
+                    
+                      
+                    
+                            for (let p = minP + 1; p < maxP; p++) {
+                    
+                      
+                    
+                              if (getType(structure, p) === "CLASS") {
+                    
+                      
+                    
+                                let isThisClass = false;
+                    
+                      
+                    
+                                if (proposedSlots.has(p)) {
+                    
+                      
+                    
+                                  isThisClass = true;
+                    
+                      
+                    
+                                } else if (!ignoredSlots.has(p)) {
+                    
+                      
+                    
+                                  const entry = state 
+                    
+                      
+                    
+                                    ? state.schedule[classId]?.[targetDay]?.[p] 
+                    
+                      
+                    
+                                    : data.schedule[classId]?.[targetDay]?.[p];
+                    
+                      
+                    
+                                  
+                    
+                      
+                    
+                                  if (entry && entry.teacherId === teacherId) {
+                    
+                      
+                    
+                                    isThisClass = true;
+                    
+                      
+                    
+                                  }
+                    
+                      
+                    
+                                }
+                    
+                      
+                    
+                          
+                    
+                      
+                    
+                                if (!isThisClass) {
+                    
+                      
+                    
+                                  const cls = data.classes.find(c => c.id === classId);
+                    
+                      
+                    
+                                  return {
+                    
+                      
+                    
+                                    valid: false,
+                    
+                      
+                    
+                                    message: `Teacher sessions with ${cls?.name || "this class"} must be continuous`,
+                    
+                      
+                    
+                                    severity: "MEDIUM",
+                    
+                      
+                    
+                                    penaltyPoints: 600,
+                    
+                      
+                    
+                                    conflictCount: 0,
+                    
+                      
+                    
+                                  };
+                    
+                      
+                    
+                                }
+                    
+                      
+                    
+                              }
+                    
+                      
+                    
+                            }
+                    
+                      
+                    
+                          
+                    
+                      
+                    
+                            return null;
+                    
+                      
+                    
+                          };
+                    
+                      
+                    
+                          
+                    
+                      
+                    
+                      /**
+                    
+                       * RULE: Subject Continuity
+                    
+                      
                      * Ensures that a subject is only scheduled in one continuous block per day for a class.
                      * Breaks and Lunches act as "bridges" and do not count as splits.
                      */

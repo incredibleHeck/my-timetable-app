@@ -12,6 +12,7 @@ import {
   checkTeacherLoad, 
   checkSubjectLimit, 
   checkGapDetection,
+  checkTeacherContinuity,
   checkSubjectContinuity
 } from "./load-checks";
 
@@ -181,6 +182,10 @@ export const checkSlotValidity = (
   // C. Student Well-being (Gap/Sandwich Detection)
   const gapError = checkGapDetection(ctx, proposedSlots, ignoredSlots, state);
   if (gapError) return { ...gapError, penaltyPoints: 400, conflictCount: 0 };
+
+  // D. Teacher Continuity (Same Class Rule) - Prevents sandwiching different classes
+  const teacherContinuityError = checkTeacherContinuity(ctx, proposedSlots, ignoredSlots, state);
+  if (teacherContinuityError) return { ...teacherContinuityError, penaltyPoints: 600, conflictCount: 0 };
 
   // --- 6. JOINT CLASS INTEGRITY ---
   const isJoint = data.jointClasses?.some(jc => jc.subjectId === subjectId && jc.classIds.includes(classId));
