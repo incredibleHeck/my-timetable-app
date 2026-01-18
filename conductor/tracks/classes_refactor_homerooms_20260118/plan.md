@@ -10,12 +10,12 @@
 - [ ] Task: Conductor - User Manual Verification 'Foundation Hooks' (Protocol in workflow.md)
 
 ## Phase 2: Modal Refactoring
-- [ ] Task: Implement Sectional Components
-    - [ ] Create `src/features/classes/components/ClassBasicsSection.tsx` (Read-only Home Room display).
-    - [ ] Create `src/features/classes/components/ClassStructureSection.tsx`.
-    - [ ] Create `src/features/classes/components/ClassCurriculumSection.tsx`.
-- [ ] Task: Refactor `ClassEditorModal`
-    - [ ] Update `ClassEditorModal.tsx` to orchestrate `useClassForm` and the new sections.
+- [x] Task: Implement Sectional Components 39cc646
+    - [x] Create `src/features/classes/components/ClassBasicsSection.tsx` (Read-only Home Room display).
+    - [x] Create `src/features/classes/components/ClassStructureSection.tsx`.
+    - [x] Create `src/features/classes/components/ClassCurriculumSection.tsx`.
+- [x] Task: Refactor `ClassEditorModal` 39cc646
+    - [x] Update `ClassEditorModal.tsx` to orchestrate `useClassForm` and the new sections.
 - [ ] Task: Conductor - User Manual Verification 'Modal Refactoring' (Protocol in workflow.md)
 
 ## Phase 3: View Refactoring
