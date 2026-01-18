@@ -14,7 +14,7 @@ export function syncHomeRooms(classes: ClassGroup[], rooms: Room[]): { updatedCl
     
     // 2. If no room found by ID, try to find a matching home room by name (for stability/migration)
     if (!homeRoom) {
-      const targetName = `Home Room ${cls.name}`;
+      const targetName = `${cls.name} Classroom`;
       homeRoom = currentRooms.find(r => r.name === targetName && r.isHomeRoom);
     }
 
@@ -22,17 +22,17 @@ export function syncHomeRooms(classes: ClassGroup[], rooms: Room[]): { updatedCl
       // 3. Create new Home Room if none exists for this class
       const newRoom: Room = {
         id: generateId(),
-        name: `Home Room ${cls.name}`,
+        name: `${cls.name} Classroom`,
         capacity: 30,
         type: 'Classroom',
         isHomeRoom: true
       };
       currentRooms.push(newRoom);
       homeRoom = newRoom;
-    } else if (homeRoom.isHomeRoom && homeRoom.name !== `Home Room ${cls.name}`) {
+    } else if (homeRoom.isHomeRoom && homeRoom.name !== `${cls.name} Classroom`) {
       // 4. Update the name of the EXISTING room if class name changed
       // This preserves the Room ID for that specific class
-      homeRoom.name = `Home Room ${cls.name}`;
+      homeRoom.name = `${cls.name} Classroom`;
     }
 
     return { ...cls, defaultRoomId: homeRoom.id };
