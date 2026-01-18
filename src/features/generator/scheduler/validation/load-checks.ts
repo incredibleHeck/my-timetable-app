@@ -120,6 +120,8 @@ export const checkSubjectLimit = (
   
   if (curriculumItem) {
     const totalAllowed = (curriculumItem.singles || 0) + (curriculumItem.doubles || 0) * 2;
+    
+    // Start with the proposed slots count
     let totalScheduled = proposedSlots.size;
 
     const daysPerWeek = (data.settings as any).daysPerWeek || 5;
@@ -132,6 +134,8 @@ export const checkSubjectLimit = (
         const p = parseInt(pStr);
         const slot = daySched[p];
         
+        // Skip current day if it's the target day - we already counted proposedSlots
+        // or we need to ignore the source of a move
         const isCurrentSimulation = (d === targetDay && (proposedSlots.has(p) || ignoredSlots.has(p)));
         if (isCurrentSimulation || (slot as any).isFixed) return;
 
@@ -191,7 +195,7 @@ export const checkGapDetection = (
           if (isSourceOccupied) {
             return {
               valid: false,
-              message: "Gap detected",
+              message: "Class Gap detected",
               severity: "MEDIUM",
               penaltyPoints: 400,
               conflictCount: 0,
