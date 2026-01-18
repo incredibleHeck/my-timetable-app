@@ -180,34 +180,44 @@ export const checkGapDetection = (
 ): ValidationResult | null => {
   const { data, classId, targetDay, structure } = ctx;
 
-  // 1. CLASS GAP DETECTION
-  // We only care about gaps for THIS class on THIS day.
-  for (const p of Array.from(proposedSlots)) {
-    const prevInstructionalP = getPrevClassPeriod(p, structure);
-    if (prevInstructionalP !== null) {
-      const isNeighborEmpty = state
-        ? (state.classOccupancy[classId]?.[targetDay]?.[prevInstructionalP] === null || ignoredSlots.has(`${targetDay}-${prevInstructionalP}`))
-        : (data.schedule[classId]?.[targetDay]?.[prevInstructionalP] === undefined || ignoredSlots.has(`${targetDay}-${prevInstructionalP}`));
+  // 1. Find the earliest period in the proposed lesson
+  const sortedProposed = Array.from(proposedSlots).sort((a, b) => a - b);
+  const lessonStart = sortedProposed[0];
+  if (lessonStart === undefined) return null;
 
-      if (isNeighborEmpty) {
-        const sourceInstructionalP = getPrevClassPeriod(prevInstructionalP, structure);
-        if (sourceInstructionalP !== null) {
-          const isSourceOccupied = state
-            ? (state.classOccupancy[classId]?.[targetDay]?.[sourceInstructionalP] !== null && !ignoredSlots.has(`${targetDay}-${sourceInstructionalP}`))
-            : (data.schedule[classId]?.[targetDay]?.[sourceInstructionalP] !== undefined && !ignoredSlots.has(`${targetDay}-${sourceInstructionalP}`));
+  // 2. CLASS GAP DETECTION
+  // Look backward from the start of this lesson for any PREVIOUS occupied instructional period.
+  // If we find an empty CLASS slot between this lesson and a previous one, it's a gap.
+  
+  let checkP = getPrevClassPeriod(lessonStart, structure);
+  let foundEmptyClassSlot = false;
 
-          if (isSourceOccupied) {
-            return {
-              valid: false,
-              message: "Class Gap detected",
-              severity: "MEDIUM",
-              penaltyPoints: 400,
-              conflictCount: 0,
-            };
-          }
-        }
+  while (checkP !== null) {
+    // A slot is "Empty" if it's not occupied in state/data AND it's not part of the source we're ignoring
+    const isEmpty = state
+      ? (state.classOccupancy[classId]?.[targetDay]?.[checkP] === null || ignoredSlots.has(`${targetDay}-${checkP}`))
+      : (data.schedule[classId]?.[targetDay]?.[checkP] === undefined || ignoredSlots.has(`${targetDay}-${checkP}`));
+
+    if (isEmpty) {
+      foundEmptyClassSlot = true;
+    } else {
+      // We found an occupied slot. 
+      // If we already passed an empty CLASS slot on the way here, then there's a gap!
+      if (foundEmptyClassSlot) {
+        return {
+          valid: false,
+          message: "Class Gap detected",
+          severity: "MEDIUM",
+          penaltyPoints: 400,
+          conflictCount: 0,
+        };
       }
+      // If we found an occupied slot immediately (no empty CLASS slots in between), 
+      // then there is no gap between this lesson and the one immediately before it.
+      return null; 
     }
+    
+    checkP = getPrevClassPeriod(checkP, structure);
   }
 
   return null;
