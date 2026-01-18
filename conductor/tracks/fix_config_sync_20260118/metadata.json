@@ -1,0 +1,8 @@
+{
+  "track_id": "fix_config_sync_20260118",
+  "type": "bug",
+  "status": "new",
+  "created_at": "2026-01-18T17:10:00Z",
+  "updated_at": "2026-01-18T17:10:00Z",
+  "description": "Fix synchronization issue between the periods slider and the interactive schedule chain cards."
+}

@@ -171,7 +171,7 @@ export const initializeState = (data: AppData): SchedulerState => {
                       // Only increment duration if this slot is the 'head' or not fixed
                       // to avoid double counting doubles in legacy burn-in
                       if (!slot.isFixed) {
-                          state.classSubjectDuration[cId][slot.subjectId] += (slot.duration || 1);
+                          state.classSubjectDuration[cId][slot.subjectId] += ((slot as any).duration || 1);
                       }
                   }
                   

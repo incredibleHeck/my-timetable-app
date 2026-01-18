@@ -66,7 +66,9 @@ export const useGlobalConfig = (
       newSettings.defaultLunchDuration || 60
     );
 
-    onUpdate({ ...data, settings: { ...newSettings, timeSlots: newTimes } });
+    const nextData = { ...data, settings: { ...newSettings, timeSlots: newTimes } };
+    onUpdate(nextData);
+    return nextData;
   };
 
   const handleStructureChange = (index: number) => {
@@ -98,14 +100,16 @@ export const useGlobalConfig = (
       data.settings.defaultLunchDuration || 60
     );
 
-    onUpdate({
+    const nextData = {
       ...data,
       settings: {
         ...data.settings,
         dayStructure: newStructure,
         timeSlots: newTimes,
       },
-    });
+    };
+    onUpdate(nextData);
+    return nextData;
   };
 
   const handlePeriodCountChange = (val: number) => {
@@ -132,7 +136,7 @@ export const useGlobalConfig = (
       data.settings.defaultLunchDuration || 60
     );
 
-    onUpdate({
+    const nextData = {
       ...data,
       settings: {
         ...data.settings,
@@ -141,14 +145,18 @@ export const useGlobalConfig = (
         fixedOccasions: newFixed,
         timeSlots: newTimes,
       },
-    });
+    };
+    onUpdate(nextData);
+    return nextData;
   };
 
   const handleIdentityUpdate = (
     field: "schoolName" | "academicYear",
     val: string
   ) => {
-    onUpdate({ ...data, settings: { ...data.settings, [field]: val } });
+    const nextData = { ...data, settings: { ...data.settings, [field]: val } };
+    onUpdate(nextData);
+    return nextData;
   };
 
   const updateTimeSlot = (
@@ -160,7 +168,9 @@ export const useGlobalConfig = (
     while (newTimes.length <= idx)
       newTimes.push({ start: "00:00", end: "00:00" });
     newTimes[idx] = { ...newTimes[idx], [field]: value };
-    onUpdate({ ...data, settings: { ...data.settings, timeSlots: newTimes } });
+    const nextData = { ...data, settings: { ...data.settings, timeSlots: newTimes } };
+    onUpdate(nextData);
+    return nextData;
   };
 
   const saveCustomLabel = () => {
@@ -170,32 +180,40 @@ export const useGlobalConfig = (
       ...newStructure[editingLabelIdx],
       label: tempLabel,
     };
-    onUpdate({
+    const nextData = {
       ...data,
       settings: { ...data.settings, dayStructure: newStructure },
-    });
+    };
+    onUpdate(nextData);
     setEditingLabelIdx(null);
+    return nextData;
   };
 
   const updateMaxConsecutive = (val: number) => {
-    onUpdate({
+    const nextData = {
       ...data,
       settings: { ...data.settings, maxConsecutivePeriods: val },
-    });
+    };
+    onUpdate(nextData);
+    return nextData;
   };
 
   const updateMaxSubjectPeriods = (val: number) => {
-    onUpdate({
+    const nextData = {
       ...data,
       settings: { ...data.settings, maxSubjectPeriodsPerDay: val },
-    });
+    };
+    onUpdate(nextData);
+    return nextData;
   };
 
   const updateMaxTeacherPeriods = (val: number) => {
-    onUpdate({
+    const nextData = {
       ...data,
       settings: { ...data.settings, maxTeacherPeriodsPerDay: val },
-    });
+    };
+    onUpdate(nextData);
+    return nextData;
   };
 
   const handleSlotClick = (d: number, p: number) => {
@@ -221,11 +239,13 @@ export const useGlobalConfig = (
       newFixed[d][p] = label;
     }
 
-    onUpdate({
+    const nextData = {
       ...data,
       settings: { ...data.settings, fixedOccasions: newFixed },
-    });
+    };
+    onUpdate(nextData);
     setEditingSlot(null);
+    return nextData;
   };
 
   return {

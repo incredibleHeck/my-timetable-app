@@ -3,8 +3,8 @@ import { Check } from "lucide-react";
 import { Modal, Button, Input } from "../../../components/ui";
 
 interface SlotEditModalProps {
-  editingSlot: { dIdx: number; pIdx: number; label: string } | null;
-  setEditingSlot: (slot: { dIdx: number; pIdx: number; label: string } | null) => void;
+  editingSlot: { d: number; p: number; label: string } | null;
+  setEditingSlot: (slot: { d: number; p: number; label: string } | null) => void;
   applyToAllDays: boolean;
   setApplyToAllDays: (apply: boolean) => void;
   saveSlot: (label: string) => void;

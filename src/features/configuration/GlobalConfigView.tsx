@@ -31,8 +31,13 @@ export const GlobalConfigView: React.FC<ViewProps> = ({ data, onUpdate }) => {
     setTempLabel,
     handleDurationChange,
     handleStructureChange,
+    handlePeriodCountChange,
+    handleIdentityUpdate,
     updateTimeSlot,
     saveCustomLabel,
+    updateMaxConsecutive,
+    updateMaxSubjectPeriods,
+    updateMaxTeacherPeriods,
     handleSlotClick,
     saveSlot,
   } = useGlobalConfig(data, onUpdate);
@@ -40,7 +45,12 @@ export const GlobalConfigView: React.FC<ViewProps> = ({ data, onUpdate }) => {
   return (
     <div className="max-w-7xl mx-auto p-8 space-y-8 animate-in slide-in-from-bottom-4 duration-500 pb-12">
       {/* 1. School Identity Section */}
-      <SchoolIdentitySection data={data} onUpdate={onUpdate} addActivity={addActivity} />
+      <SchoolIdentitySection
+        data={data}
+        onUpdate={onUpdate}
+        addActivity={addActivity}
+        handleIdentityUpdate={handleIdentityUpdate}
+      />
 
       <Card className="p-8 border-t-4 border-t-amber-500">
         <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center">
@@ -75,9 +85,8 @@ export const GlobalConfigView: React.FC<ViewProps> = ({ data, onUpdate }) => {
             value={data.settings.periodsPerDay}
             onChange={(e) => {
               const val = parseInt(e.target.value);
-              const nextData = { ...data, settings: { ...data.settings, periodsPerDay: val } };
+              const nextData = handlePeriodCountChange(val);
               addActivity("SYSTEM", `Updated daily period count to ${val}`, nextData);
-              onUpdate(nextData);
             }}
             className="w-full accent-amber-500 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
           />
@@ -91,15 +100,33 @@ export const GlobalConfigView: React.FC<ViewProps> = ({ data, onUpdate }) => {
             setEditingLabelIdx={setEditingLabelIdx}
             tempLabel={tempLabel}
             setTempLabel={setTempLabel}
-            handleStructureChange={handleStructureChange}
-            updateTimeSlot={updateTimeSlot}
-            saveCustomLabel={saveCustomLabel}
+            handleStructureChange={(idx) => {
+              const nextData = handleStructureChange(idx);
+              addActivity("SYSTEM", `Updated period ${idx + 1} type`, nextData);
+            }}
+            updateTimeSlot={(idx, field, val) => {
+              const nextData = updateTimeSlot(idx, field, val);
+              addActivity("SYSTEM", `Updated period ${idx + 1} ${field} time`, nextData);
+            }}
+            saveCustomLabel={() => {
+              const nextData = saveCustomLabel();
+              if (nextData) {
+                addActivity("SYSTEM", `Updated period label`, nextData);
+              }
+            }}
           />
         </div>
 
         {/* 5. Rules & Constraints Section (Full Width) */}
         <div className="mb-10">
-          <RulesSection data={data} onUpdate={onUpdate} addActivity={addActivity} />
+          <RulesSection
+            data={data}
+            onUpdate={onUpdate}
+            addActivity={addActivity}
+            updateMaxConsecutive={updateMaxConsecutive}
+            updateMaxSubjectPeriods={updateMaxSubjectPeriods}
+            updateMaxTeacherPeriods={updateMaxTeacherPeriods}
+          />
         </div>
 
         {/* 6. Global Reservations Grid */}
@@ -111,7 +138,10 @@ export const GlobalConfigView: React.FC<ViewProps> = ({ data, onUpdate }) => {
           setEditingSlot={setEditingSlot}
           applyToAllDays={applyToAllDays}
           setApplyToAllDays={setApplyToAllDays}
-          saveSlot={saveSlot}
+          saveSlot={(label) => {
+            const nextData = saveSlot(label);
+            addActivity("SYSTEM", `Updated reservation: ${label || "Cleared"}`, nextData);
+          }}
         />
       </Card>
     </div>

@@ -7,12 +7,14 @@ interface SchoolIdentitySectionProps {
   data: AppData;
   onUpdate: (newData: AppData) => void;
   addActivity: (type: "SCHEDULING" | "ACADEMIC" | "SYSTEM", message: string, nextData?: AppData) => void;
+  handleIdentityUpdate: (field: "schoolName" | "academicYear", val: string) => AppData;
 }
 
 export const SchoolIdentitySection: React.FC<SchoolIdentitySectionProps> = ({
   data,
   onUpdate,
   addActivity,
+  handleIdentityUpdate,
 }) => {
   return (
     <Card className="p-6 border-l-4 border-l-slate-800 bg-white">
@@ -32,12 +34,9 @@ export const SchoolIdentitySection: React.FC<SchoolIdentitySectionProps> = ({
               placeholder="e.g. St. Mary's High School"
               value={data.settings.schoolName || ""}
               onChange={(e) => {
-                const nextData = {
-                  ...data,
-                  settings: { ...data.settings, schoolName: e.target.value },
-                };
-                addActivity("SYSTEM", `Updated School Name: ${e.target.value}`, nextData);
-                onUpdate(nextData);
+                const val = e.target.value;
+                const nextData = handleIdentityUpdate("schoolName", val);
+                addActivity("SYSTEM", `Updated School Name: ${val}`, nextData);
               }}
             />
           </div>
@@ -47,12 +46,9 @@ export const SchoolIdentitySection: React.FC<SchoolIdentitySectionProps> = ({
               placeholder="e.g. 2024-2025"
               value={data.settings.academicYear || ""}
               onChange={(e) => {
-                const nextData = {
-                  ...data,
-                  settings: { ...data.settings, academicYear: e.target.value },
-                };
-                addActivity("SYSTEM", `Updated Academic Year: ${e.target.value}`, nextData);
-                onUpdate(nextData);
+                const val = e.target.value;
+                const nextData = handleIdentityUpdate("academicYear", val);
+                addActivity("SYSTEM", `Updated Academic Year: ${val}`, nextData);
               }}
             />
           </div>

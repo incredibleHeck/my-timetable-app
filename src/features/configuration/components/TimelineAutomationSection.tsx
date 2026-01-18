@@ -1,12 +1,12 @@
 import React from "react";
 import { Calculator, RotateCcw } from "lucide-react";
-import { AppData } from "../../../types";
+import { AppData, Settings } from "../../../types";
 
 interface TimelineAutomationSectionProps {
   data: AppData;
   onUpdate: (newData: AppData) => void;
   addActivity: (type: "SCHEDULING" | "ACADEMIC" | "SYSTEM", message: string, nextData?: AppData) => void;
-  handleDurationChange: (field: string, value: number) => void;
+  handleDurationChange: (field: keyof Settings, value: any) => void;
 }
 
 export const TimelineAutomationSection: React.FC<TimelineAutomationSectionProps> = ({
@@ -38,12 +38,9 @@ export const TimelineAutomationSection: React.FC<TimelineAutomationSectionProps>
             type="time"
             value={schoolStartTime || "08:00"}
             onChange={(e) => {
-              const nextData = {
-                ...data,
-                settings: { ...data.settings, schoolStartTime: e.target.value },
-              };
-              addActivity("SYSTEM", `Updated Start time: ${e.target.value}`, nextData);
-              onUpdate(nextData);
+              const val = e.target.value;
+              const nextData = handleDurationChange("schoolStartTime", val);
+              addActivity("SYSTEM", `Updated Start time: ${val}`, nextData);
             }}
             className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 focus:border-amber-500 outline-none"
           />
@@ -59,12 +56,8 @@ export const TimelineAutomationSection: React.FC<TimelineAutomationSectionProps>
             value={classDur || 50}
             onChange={(e) => {
               const val = parseInt(e.target.value);
-              const nextData = {
-                ...data,
-                settings: { ...data.settings, defaultClassDuration: val },
-              };
+              const nextData = handleDurationChange("defaultClassDuration", val);
               addActivity("SYSTEM", `Updated Class Duration: ${val}m`, nextData);
-              onUpdate(nextData);
             }}
             className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 focus:border-amber-500 outline-none"
           />
@@ -80,12 +73,8 @@ export const TimelineAutomationSection: React.FC<TimelineAutomationSectionProps>
             value={breakDur || 15}
             onChange={(e) => {
               const val = parseInt(e.target.value);
-              const nextData = {
-                ...data,
-                settings: { ...data.settings, defaultBreakDuration: val },
-              };
+              const nextData = handleDurationChange("defaultBreakDuration", val);
               addActivity("SYSTEM", `Updated Break Duration: ${val}m`, nextData);
-              onUpdate(nextData);
             }}
             className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 focus:border-amber-500 outline-none"
           />
@@ -101,12 +90,8 @@ export const TimelineAutomationSection: React.FC<TimelineAutomationSectionProps>
             value={lunchDur || 60}
             onChange={(e) => {
               const val = parseInt(e.target.value);
-              const nextData = {
-                ...data,
-                settings: { ...data.settings, defaultLunchDuration: val },
-              };
+              const nextData = handleDurationChange("defaultLunchDuration", val);
               addActivity("SYSTEM", `Updated Lunch Duration: ${val}m`, nextData);
-              onUpdate(nextData);
             }}
             className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 focus:border-amber-500 outline-none"
           />

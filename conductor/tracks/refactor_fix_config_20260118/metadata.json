@@ -1,8 +1,0 @@
-{
-  "track_id": "refactor_fix_config_20260118",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-01-18T16:21:00Z",
-  "updated_at": "2026-01-18T16:21:00Z",
-  "description": "Refactor GlobalConfigView into modular components and fix layout issues in the schedule chain and reservations grid."
-}

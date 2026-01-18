@@ -1,4 +1,4 @@
-import { AppData, Conflict } from "../../../../../types";
+import { AppData, Conflict, ClassGroup, Subject, Teacher, Room } from "../../../../types";
 import { getPeriodType } from "../utils";
 
 export const generateFinalReport = (data: AppData): Conflict[] => {
@@ -15,7 +15,7 @@ export const generateFinalReport = (data: AppData): Conflict[] => {
     const classSchedule = schedule[classId];
     if (!classSchedule) continue;
 
-    const cls = data.classes.find(c => c.id === classId);
+    const cls = data.classes.find((c: ClassGroup) => c.id === classId);
     const structure = cls?.structure || dayStructure; 
 
     for (const dayStr of Object.keys(classSchedule)) {
@@ -102,7 +102,7 @@ export const generateFinalReport = (data: AppData): Conflict[] => {
                               classId,
                               className: cls?.name || classId,
                               subjectId,
-                              subjectName: data.subjects.find(s => s.id === subjectId)?.name,
+                              subjectName: data.subjects.find((s: Subject) => s.id === subjectId)?.name,
                               day,
                               period: p,
                               reason: `Subject Continuity: ${reason}`,
@@ -127,8 +127,8 @@ export const generateFinalReport = (data: AppData): Conflict[] => {
 
         if (classes.length > 1) {
            classes.forEach(classId => {
-             const cls = data.classes.find(c => c.id === classId);
-             const teacher = data.teachers.find(t => t.id === teacherId);
+             const cls = data.classes.find((c: ClassGroup) => c.id === classId);
+             const teacher = data.teachers.find((t: Teacher) => t.id === teacherId);
              
              conflicts.push({
                classId,
@@ -156,8 +156,8 @@ export const generateFinalReport = (data: AppData): Conflict[] => {
 
         if (classes.length > 1) {
           classes.forEach(classId => {
-             const cls = data.classes.find(c => c.id === classId);
-             const room = data.rooms.find(r => r.id === roomId);
+             const cls = data.classes.find((c: ClassGroup) => c.id === classId);
+             const room = data.rooms.find((r: Room) => r.id === roomId);
 
              conflicts.push({
                classId,

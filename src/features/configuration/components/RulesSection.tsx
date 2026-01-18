@@ -6,12 +6,18 @@ interface RulesSectionProps {
   data: AppData;
   onUpdate: (newData: AppData) => void;
   addActivity: (type: "SCHEDULING" | "ACADEMIC" | "SYSTEM", message: string, nextData?: AppData) => void;
+  updateMaxConsecutive: (val: number) => AppData;
+  updateMaxSubjectPeriods: (val: number) => AppData;
+  updateMaxTeacherPeriods: (val: number) => AppData;
 }
 
 export const RulesSection: React.FC<RulesSectionProps> = ({
   data,
   onUpdate,
   addActivity,
+  updateMaxConsecutive,
+  updateMaxSubjectPeriods,
+  updateMaxTeacherPeriods,
 }) => {
   const {
     maxConsecutivePeriods: maxConsecutive,
@@ -42,12 +48,8 @@ export const RulesSection: React.FC<RulesSectionProps> = ({
             <button
               onClick={() => {
                 const val = Math.max(2, (maxConsecutive || 4) - 1);
-                const nextData = {
-                  ...data,
-                  settings: { ...data.settings, maxConsecutivePeriods: val },
-                };
+                const nextData = updateMaxConsecutive(val);
                 addActivity("SYSTEM", `Updated Fatigue Guard to ${val} periods`, nextData);
-                onUpdate(nextData);
               }}
               className="w-8 h-8 rounded bg-white border border-slate-300 font-bold hover:bg-slate-100"
             >
@@ -59,12 +61,8 @@ export const RulesSection: React.FC<RulesSectionProps> = ({
             <button
               onClick={() => {
                 const val = Math.min(8, (maxConsecutive || 4) + 1);
-                const nextData = {
-                  ...data,
-                  settings: { ...data.settings, maxConsecutivePeriods: val },
-                };
+                const nextData = updateMaxConsecutive(val);
                 addActivity("SYSTEM", `Updated Fatigue Guard to ${val} periods`, nextData);
-                onUpdate(nextData);
               }}
               className="w-8 h-8 rounded bg-white border border-slate-300 font-bold hover:bg-slate-100"
             >
@@ -86,12 +84,8 @@ export const RulesSection: React.FC<RulesSectionProps> = ({
             <button
               onClick={() => {
                 const val = Math.max(1, (maxSubject || 2) - 1);
-                const nextData = {
-                  ...data,
-                  settings: { ...data.settings, maxSubjectPeriodsPerDay: val },
-                };
+                const nextData = updateMaxSubjectPeriods(val);
                 addActivity("SYSTEM", `Updated Subject Daily Limit to ${val}`, nextData);
-                onUpdate(nextData);
               }}
               className="w-8 h-8 rounded bg-white border border-slate-300 font-bold hover:bg-slate-100"
             >
@@ -101,12 +95,8 @@ export const RulesSection: React.FC<RulesSectionProps> = ({
             <button
               onClick={() => {
                 const val = Math.min(4, (maxSubject || 2) + 1);
-                const nextData = {
-                  ...data,
-                  settings: { ...data.settings, maxSubjectPeriodsPerDay: val },
-                };
+                const nextData = updateMaxSubjectPeriods(val);
                 addActivity("SYSTEM", `Updated Subject Daily Limit to ${val}`, nextData);
-                onUpdate(nextData);
               }}
               className="w-8 h-8 rounded bg-white border border-slate-300 font-bold hover:bg-slate-100"
             >
@@ -128,12 +118,8 @@ export const RulesSection: React.FC<RulesSectionProps> = ({
             <button
               onClick={() => {
                 const val = Math.max(1, (maxTeacher || 6) - 1);
-                const nextData = {
-                  ...data,
-                  settings: { ...data.settings, maxTeacherPeriodsPerDay: val },
-                };
+                const nextData = updateMaxTeacherPeriods(val);
                 addActivity("SYSTEM", `Updated Teacher Daily Load to ${val}`, nextData);
-                onUpdate(nextData);
               }}
               className="w-8 h-8 rounded bg-white border border-slate-300 font-bold hover:bg-slate-100"
             >
@@ -143,12 +129,8 @@ export const RulesSection: React.FC<RulesSectionProps> = ({
             <button
               onClick={() => {
                 const val = Math.min(15, (maxTeacher || 6) + 1);
-                const nextData = {
-                  ...data,
-                  settings: { ...data.settings, maxTeacherPeriodsPerDay: val },
-                };
+                const nextData = updateMaxTeacherPeriods(val);
                 addActivity("SYSTEM", `Updated Teacher Daily Load to ${val}`, nextData);
-                onUpdate(nextData);
               }}
               className="w-8 h-8 rounded bg-white border border-slate-300 font-bold hover:bg-slate-100"
             >
