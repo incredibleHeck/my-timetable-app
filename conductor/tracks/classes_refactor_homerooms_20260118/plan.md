@@ -1,0 +1,35 @@
+# Plan: Classes Module Refactor and Automated Home Room Management
+
+## Phase 1: Foundation Hooks
+- [x] Task: Create `useClassActions` hook a2b65aa
+    - [x] Write failing tests for class actions (create, duplicate, delete) ensuring Room side-effects (sync naming, deletion).
+    - [x] Implement `useClassActions` in `src/features/classes/hooks/useClassActions.ts`.
+- [x] Task: Create `useClassForm` hook a2b65aa
+    - [x] Write failing tests for complex class form state logic (duration defaults, structure resizing).
+    - [x] Implement `useClassForm` in `src/features/classes/hooks/useClassForm.ts`.
+- [ ] Task: Conductor - User Manual Verification 'Foundation Hooks' (Protocol in workflow.md)
+
+## Phase 2: Modal Refactoring
+- [ ] Task: Implement Sectional Components
+    - [ ] Create `src/features/classes/components/ClassBasicsSection.tsx` (Read-only Home Room display).
+    - [ ] Create `src/features/classes/components/ClassStructureSection.tsx`.
+    - [ ] Create `src/features/classes/components/ClassCurriculumSection.tsx`.
+- [ ] Task: Refactor `ClassEditorModal`
+    - [ ] Update `ClassEditorModal.tsx` to orchestrate `useClassForm` and the new sections.
+- [ ] Task: Conductor - User Manual Verification 'Modal Refactoring' (Protocol in workflow.md)
+
+## Phase 3: View Refactoring
+- [ ] Task: Extract Sub-Views
+    - [ ] Create `src/features/classes/components/ClassList.tsx`.
+    - [ ] Create `src/features/classes/components/ClassGroups.tsx` (Joint & Elective blocks).
+- [ ] Task: Refactor `ClassesView`
+    - [ ] Update `ClassesView.tsx` to use `useClassActions` and the new sub-components.
+- [ ] Task: Conductor - User Manual Verification 'View Refactoring' (Protocol in workflow.md)
+
+## Phase 4: Strict Sync & Final Quality
+- [ ] Task: Refine Strict Name Sync
+    - [ ] Ensure that editing an existing class name immediately updates the associated `Room` object in state.
+- [ ] Task: Final Quality Pass
+    - [ ] Verify test coverage for all new components and hooks (>80%).
+    - [ ] Run project linting and formatting.
+- [ ] Task: Conductor - User Manual Verification 'Strict Sync & Final Quality' (Protocol in workflow.md)
