@@ -46,25 +46,25 @@ export const checkSlotValidity = (
   );
 
   // --- 2. IGNORE LIST SETUP (For Non-Destructive Simulation) ---
-  const ignoredSlots = new Set<number>();
+  const ignoredSlots = new Set<string>(); // Use "day-period" strings to support cross-day moves
   const scheduleSource = state ? state.schedule : data.schedule;
 
   const populateIgnored = (setting: { day: number; period: number; duration?: number }) => {
-    if (targetDay === setting.day) {
-      let startP = setting.period;
-      let dur = setting.duration ?? duration;
-      // If we are looking at the 'tail' of a double, move to the 'head'
-      const entry = scheduleSource[classId]?.[targetDay]?.[startP];
-      if (entry && (entry as any).isFixed) startP--; 
+    let startP = setting.period;
+    let dur = setting.duration ?? duration;
+    const d = setting.day;
 
-      let consumed = 0, offset = 0;
-      while (consumed < dur && (startP + offset) < maxPeriods) {
-        if (getType(structure, startP + offset) === "CLASS") {
-          ignoredSlots.add(startP + offset);
-          consumed++;
-        }
-        offset++;
+    // If we are looking at the 'tail' of a double, move to the 'head'
+    const entry = scheduleSource[classId]?.[d]?.[startP];
+    if (entry && (entry as any).isFixed) startP--; 
+
+    let consumed = 0, offset = 0;
+    while (consumed < dur && (startP + offset) < maxPeriods) {
+      if (getType(structure, startP + offset) === "CLASS") {
+        ignoredSlots.add(`${d}-${startP + offset}`);
+        consumed++;
       }
+      offset++;
     }
   };
 
@@ -111,6 +111,10 @@ export const checkSlotValidity = (
       continue;
     }
 
+    // Logic for cross-day ignored slots
+    // During the loop for the TARGET day, we still need to know if the target period is ignored
+    // (though usually ignoredSlots for targetDay are for the source of a same-day move)
+    
     proposedSlots.add(p);
 
     // A. Global & Class Blocks (Worship, Assembly, off-site sessions)

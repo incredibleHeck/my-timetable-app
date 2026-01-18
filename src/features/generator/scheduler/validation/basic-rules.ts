@@ -103,7 +103,7 @@ export const checkResourceAndAvailability = (
   // If the subject requires a unique room (e.g., "The only Science Lab"),
   // we ensure it isn't already double-booked at this period index.
   const subject = data.subjects.find((s) => s.id === subjectId);
-  if (subject?.isSingleResource && !ignoredSlots.has(p)) {
+  if (subject?.isSingleResource && !ignoredSlots.has(`${targetDay}-${p}`)) {
     // Note: Dynamic Time-Slot overlaps (staggered starts) are handled in overlap-checks.ts
     // This check handles index-based resource exhaustion.
     if (state) {

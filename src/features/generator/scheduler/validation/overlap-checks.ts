@@ -52,7 +52,7 @@ export const checkOverlaps = (
 
     for (const otherPStr in otherDaySlots) {
       const otherP = parseInt(otherPStr);
-      if (ignoredSlots.has(otherP)) continue;
+      if (ignoredSlots.has(`${targetDay}-${otherP}`)) continue;
 
       const slot = otherDaySlots[otherP];
       if (!slot) continue;

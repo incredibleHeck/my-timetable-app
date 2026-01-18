@@ -10,7 +10,7 @@ import { getPrevClassPeriod } from "../utils";
 export const checkTeacherLoad = (
   ctx: ValidationContext,
   proposedSlots: Set<number>,
-  ignoredSlots: Set<number>,
+  ignoredSlots: Set<string>,
   state?: SchedulerState
 ): ValidationResult | null => {
   const { data, teacherId, targetDay, maxPeriods } = ctx;
@@ -27,7 +27,7 @@ export const checkTeacherLoad = (
 
     if (proposedSlots.has(p)) {
       isOccupied = true;
-    } else if (!ignoredSlots.has(p)) {
+    } else if (!ignoredSlots.has(`${targetDay}-${p}`)) {
       // O(1) Lookup: Check if teacher is busy elsewhere
       if (state) {
         if (state.teacherOccupancy[teacherId]?.[targetDay]?.[p] !== null) {
@@ -84,7 +84,7 @@ export const checkTeacherLoad = (
 export const checkSubjectLimit = (
   ctx: ValidationContext,
   proposedSlots: Set<number>,
-  ignoredSlots: Set<number>,
+  ignoredSlots: Set<string>,
   state?: SchedulerState
 ): ValidationResult | null => {
   const { data, classId, subjectId, targetDay, maxPeriods } = ctx;
@@ -96,7 +96,7 @@ export const checkSubjectLimit = (
   for (let p = 0; p < maxPeriods; p++) {
     if (proposedSlots.has(p)) {
       dailyCount++;
-    } else if (!ignoredSlots.has(p)) {
+    } else if (!ignoredSlots.has(`${targetDay}-${p}`)) {
       const entry = state ? state.schedule[classId]?.[targetDay]?.[p] : data.schedule[classId]?.[targetDay]?.[p];
       if (entry && entry.subjectId === subjectId) {
         dailyCount++;
@@ -121,7 +121,7 @@ export const checkSubjectLimit = (
   if (curriculumItem) {
     const totalAllowed = (curriculumItem.singles || 0) + (curriculumItem.doubles || 0) * 2;
     
-    // Start with the proposed slots count
+    // 1. Start with the proposed slots count (The new placement)
     let totalScheduled = proposedSlots.size;
 
     const daysPerWeek = (data.settings as any).daysPerWeek || 5;
@@ -133,13 +133,17 @@ export const checkSubjectLimit = (
       Object.keys(daySched).forEach((pStr) => {
         const p = parseInt(pStr);
         const slot = daySched[p];
-        
-        // Skip current day if it's the target day - we already counted proposedSlots
-        // or we need to ignore the source of a move
-        const isCurrentSimulation = (d === targetDay && (proposedSlots.has(p) || ignoredSlots.has(p)));
-        if (isCurrentSimulation || (slot as any).isFixed) return;
 
-        if (slot && slot.subjectId === subjectId) {
+        // Skip tails of double periods (to count as a single unit below)
+        if (!slot || (slot as any).isFixed) return;
+
+        // SKIP if this slot is part of what we are currently "proposing" to add
+        if (d === targetDay && proposedSlots.has(p)) return;
+
+        // SKIP if this slot is part of what we are "ignoring" (the source of the move)
+        if (ignoredSlots.has(`${d}-${p}`)) return;
+
+        if (slot.subjectId === subjectId) {
           const nextSlot = daySched[p+1];
           const isDouble = nextSlot && (nextSlot as any).isFixed && nextSlot.subjectId === subjectId;
           
@@ -171,7 +175,7 @@ export const checkSubjectLimit = (
 export const checkGapDetection = (
   ctx: ValidationContext,
   proposedSlots: Set<number>,
-  ignoredSlots: Set<number>,
+  ignoredSlots: Set<string>,
   state?: SchedulerState
 ): ValidationResult | null => {
   const { data, classId, targetDay, structure } = ctx;
@@ -182,15 +186,15 @@ export const checkGapDetection = (
     const prevInstructionalP = getPrevClassPeriod(p, structure);
     if (prevInstructionalP !== null) {
       const isNeighborEmpty = state
-        ? (state.classOccupancy[classId]?.[targetDay]?.[prevInstructionalP] === null || ignoredSlots.has(prevInstructionalP))
-        : (data.schedule[classId]?.[targetDay]?.[prevInstructionalP] === undefined || ignoredSlots.has(prevInstructionalP));
+        ? (state.classOccupancy[classId]?.[targetDay]?.[prevInstructionalP] === null || ignoredSlots.has(`${targetDay}-${prevInstructionalP}`))
+        : (data.schedule[classId]?.[targetDay]?.[prevInstructionalP] === undefined || ignoredSlots.has(`${targetDay}-${prevInstructionalP}`));
 
       if (isNeighborEmpty) {
         const sourceInstructionalP = getPrevClassPeriod(prevInstructionalP, structure);
         if (sourceInstructionalP !== null) {
           const isSourceOccupied = state
-            ? (state.classOccupancy[classId]?.[targetDay]?.[sourceInstructionalP] !== null && !ignoredSlots.has(sourceInstructionalP))
-            : (data.schedule[classId]?.[targetDay]?.[sourceInstructionalP] !== undefined && !ignoredSlots.has(sourceInstructionalP));
+            ? (state.classOccupancy[classId]?.[targetDay]?.[sourceInstructionalP] !== null && !ignoredSlots.has(`${targetDay}-${sourceInstructionalP}`))
+            : (data.schedule[classId]?.[targetDay]?.[sourceInstructionalP] !== undefined && !ignoredSlots.has(`${targetDay}-${sourceInstructionalP}`));
 
           if (isSourceOccupied) {
             return {
@@ -218,7 +222,7 @@ export const checkGapDetection = (
 export const checkTeacherContinuity = (
   ctx: ValidationContext,
   proposedSlots: Set<number>,
-  ignoredSlots: Set<number>,
+  ignoredSlots: Set<string>,
   state?: SchedulerState
 ): ValidationResult | null => {
   const { data, teacherId, classId, targetDay, maxPeriods, structure } = ctx;
@@ -230,7 +234,7 @@ export const checkTeacherContinuity = (
 
     if (proposedSlots.has(p)) {
       isOccupiedByThisClass = true;
-    } else if (!ignoredSlots.has(p)) {
+    } else if (!ignoredSlots.has(`${targetDay}-${p}`)) {
       const entry = state 
         ? state.schedule[classId]?.[targetDay]?.[p] 
         : data.schedule[classId]?.[targetDay]?.[p];
@@ -255,7 +259,7 @@ export const checkTeacherContinuity = (
       let isThisClass = false;
       if (proposedSlots.has(p)) {
         isThisClass = true;
-      } else if (!ignoredSlots.has(p)) {
+      } else if (!ignoredSlots.has(`${targetDay}-${p}`)) {
         const entry = state 
           ? state.schedule[classId]?.[targetDay]?.[p] 
           : data.schedule[classId]?.[targetDay]?.[p];
@@ -270,7 +274,7 @@ export const checkTeacherContinuity = (
         // If the teacher is FREE (null), we ignore the gap.
         if (state) {
           const teacherOccupant = state.teacherOccupancy[teacherId]?.[targetDay]?.[p];
-          if (teacherOccupant && teacherOccupant !== "BLOCK" && !ignoredSlots.has(p)) {
+          if (teacherOccupant && teacherOccupant !== "BLOCK" && !ignoredSlots.has(`${targetDay}-${p}`)) {
             const cls = data.classes.find(c => c.id === classId);
             return {
               valid: false,
@@ -283,7 +287,7 @@ export const checkTeacherContinuity = (
         } else {
           for (const otherCId of Object.keys(data.schedule)) {
              const slot = data.schedule[otherCId]?.[targetDay]?.[p];
-             if (slot && slot.teacherId === teacherId && !ignoredSlots.has(p)) {
+             if (slot && slot.teacherId === teacherId && !ignoredSlots.has(`${targetDay}-${p}`)) {
                 const cls = data.classes.find(c => c.id === classId);
                 return {
                   valid: false,
@@ -310,7 +314,7 @@ export const checkTeacherContinuity = (
 export const checkSubjectContinuity = (
   ctx: ValidationContext,
   proposedSlots: Set<number>,
-  ignoredSlots: Set<number>,
+  ignoredSlots: Set<string>,
   state?: SchedulerState
 ): ValidationResult | null => {
   const { data, classId, subjectId, targetDay, maxPeriods, structure } = ctx;
@@ -322,7 +326,7 @@ export const checkSubjectContinuity = (
 
     if (proposedSlots.has(p)) {
       isOccupiedBySubject = true;
-    } else if (!ignoredSlots.has(p)) {
+    } else if (!ignoredSlots.has(`${targetDay}-${p}`)) {
       const entry = state 
         ? state.schedule[classId]?.[targetDay]?.[p] 
         : data.schedule[classId]?.[targetDay]?.[p];
@@ -347,7 +351,7 @@ export const checkSubjectContinuity = (
       let isThisSubject = false;
       if (proposedSlots.has(p)) {
         isThisSubject = true;
-      } else if (!ignoredSlots.has(p)) {
+      } else if (!ignoredSlots.has(`${targetDay}-${p}`)) {
         const entry = state 
           ? state.schedule[classId]?.[targetDay]?.[p] 
           : data.schedule[classId]?.[targetDay]?.[p];
