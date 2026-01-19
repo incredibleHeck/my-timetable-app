@@ -1,6 +1,6 @@
-import { AllocationUnit, SchedulerState } from "./core/types";
-import { AppData, Subject } from "../../../types";
-import { getPrevClassPeriod } from "./utils/utils";
+import { AllocationUnit, SchedulerState } from "../core/types";
+import { AppData, Subject } from "../../../../types";
+import { getPrevClassPeriod } from "../utils/utils";
 
 /**
  * CONFIGURATION: Weights for different soft constraints.

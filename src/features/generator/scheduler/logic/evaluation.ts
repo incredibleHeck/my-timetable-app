@@ -1,10 +1,10 @@
-import { AppData, Subject, Teacher, ClassGroup } from "../../../types";
-import { AllocationUnit, SchedulerState } from "./core/types";
+import { AppData, Subject, Teacher, ClassGroup } from "../../../../types";
+import { AllocationUnit, SchedulerState } from "../core/types";
 import { checkHardConstraints, checkImmutableConstraints } from "./constraints";
 import { calculateScore, calculateTeacherGapPenalty, calculateRoomPenalty } from "./scoring";
-import { countPotentialConflicts, findUnitsInSlot } from "./search";
+import { countPotentialConflicts, findUnitsInSlot } from "../search";
 import { forceDetermineRoom } from "./rooms";
-import { checkSubjectContinuity } from "./validation/load-checks";
+import { checkSubjectContinuity } from "../validation/load-checks";
 
 // ARCHITECT: Removed dependency on legacy 'validation.ts'. 
 // We now rely on the unified O(1) Constraint Engine.

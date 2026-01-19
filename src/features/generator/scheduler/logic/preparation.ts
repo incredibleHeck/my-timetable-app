@@ -1,6 +1,6 @@
-import { AppData, Teacher, Subject, ClassGroup } from "../../../types";
-import { AllocationUnit } from "./core/types";
-import { calculatePriority } from "./heuristics";
+import { AppData, Teacher, Subject, ClassGroup } from "../../../../types";
+import { AllocationUnit } from "../core/types";
+import { calculatePriority } from "../heuristics";
 
 /**
  * REFACTORED: Preparation Layer
