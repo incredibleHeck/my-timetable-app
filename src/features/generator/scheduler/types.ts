@@ -14,6 +14,7 @@ export interface AllocationUnit {
   // ARCHITECT: New Fields for O(1) Logic
   isCore?: boolean;       // Pre-calculated boolean (No string parsing in loops)
   priority: number;       // Pre-calculated MRV Score (Tournament selection)
+  rankLevel: number;      // RANK 2: Structural Hierarchy (Higher grade priority)
   
   // Metadata & Grouping
   jointClassId?: string;

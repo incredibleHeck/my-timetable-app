@@ -6,7 +6,7 @@ interface TimelineAutomationSectionProps {
   data: AppData;
   onUpdate: (newData: AppData) => void;
   addActivity: (type: "SCHEDULING" | "ACADEMIC" | "SYSTEM", message: string, nextData?: AppData) => void;
-  handleDurationChange: (field: keyof Settings, value: any) => void;
+  handleDurationChange: (field: keyof Settings, value: any) => AppData;
 }
 
 export const TimelineAutomationSection: React.FC<TimelineAutomationSectionProps> = ({

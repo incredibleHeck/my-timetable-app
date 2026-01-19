@@ -1,5 +1,5 @@
 /* eslint-disable no-restricted-globals */
-import { AppData } from "../../../types";
+import { AppData, Conflict } from "../../../types";
 import { prepareAllocationUnits } from "./preparation";
 import { solveSmart } from "./solver";
 import { runConflictAudit } from "./audit";
@@ -60,30 +60,44 @@ ctx.onmessage = (e: MessageEvent<AppData>) => {
       }
     );
 
-    // 3. O(1) AUDIT & REPORT
-    // Uses the State Trackers to instantly find curriculum gaps and statistics
+    // 3. AUDIT & REPORT CONSOLIDATION
     const audit = runConflictAudit(data, state);
+    const finalConflicts: Conflict[] = [];
+    const reportedGaps = new Set<string>(); // "classId-subjectId"
 
-    // ARCHITECT: Fresh Audit (The "Real" Conflict Check)
-    const finalData = { ...data, schedule };
-    const freshConflicts = generateFinalReport(finalData);
+    // A. Add Solver Direct Failures (The immediate unplaced units)
+    solverConflicts.forEach(c => {
+        finalConflicts.push(c);
+        if (c.classId && c.subjectId) reportedGaps.add(`${c.classId}-${c.subjectId}`);
+    });
 
-    const gapConflicts = audit.curriculumGaps.map((gap: any) => ({
-        classId: gap.classId,
-        className: gap.className,
-        subjectId: gap.subjectId,
-        subjectName: data.subjects.find((s: any) => s.id === gap.subjectId)?.name || gap.subjectId,
-        teacherName: "",
-        day: 0,
-        period: 0,
-        reason: gap.message,
-        severity: "MEDIUM" as const
-    }));
+    // B. Add Curriculum Gaps from Audit
+    audit.curriculumGaps.forEach((gap: any) => {
+        const key = `${gap.classId}-${gap.subjectId}`;
+        if (!reportedGaps.has(key)) {
+            finalConflicts.push({
+                classId: gap.classId,
+                className: gap.className,
+                subjectId: gap.subjectId,
+                subjectName: data.subjects.find((s: any) => s.id === gap.subjectId)?.name || gap.subjectId,
+                teacherName: "Unassigned",
+                day: 0,
+                period: 0,
+                missingPeriods: gap.missing,
+                reason: gap.message,
+                severity: "HIGH"
+            });
+            reportedGaps.add(key);
+        }
+    });
+
+    // C. LOGICAL AUDIT: Grid-based conflicts (Overlaps, Continuity, etc.)
+    const gridData = { ...data, schedule };
+    const logicalConflicts = generateFinalReport(gridData);
 
     const allConflicts = [
-        ...solverConflicts,
-        ...freshConflicts,
-        ...gapConflicts
+        ...finalConflicts,
+        ...logicalConflicts
     ];
 
     // 4. FINAL RESPONSE

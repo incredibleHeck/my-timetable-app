@@ -54,6 +54,11 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
     if (!curr) return;
 
     const createJoint = (suffix: string, duration: number) => {
+      // RANK 2: STRUCTURAL HIERARCHY
+      // Use the 'level' from the first class or parse it from the name
+      const levelStr = repClass?.level || repClass?.name || "";
+      const rankLevel = parseGradeLevel(levelStr);
+
       const u: AllocationUnit = {
         id: `JOINT-${jc.id}-${suffix}`,
         subjectId: jc.subjectId,
@@ -64,6 +69,7 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
         teacherIds: jc.teacherId ? [jc.teacherId] : [],
         teacherNames: [jc.teacherId ? teacherMap.get(jc.teacherId)?.name || "Unknown" : "Unassigned"],
         priority: 0,
+        rankLevel, // RANK 2 metadata
         defaultRoomId,
         requiredRoomType,
         jointClassId: jc.id,
@@ -90,6 +96,9 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
       const requiredRoomType = resolveRoomRequirement(subject);
       
       const createUnit = (suffix: string, duration: number) => {
+        // RANK 2: STRUCTURAL HIERARCHY
+        const rankLevel = parseGradeLevel(cls.level || cls.name);
+
         const u: AllocationUnit = {
           id: `${cls.id}-${curr.subjectId}-${suffix}`,
           subjectId: curr.subjectId,
@@ -100,6 +109,7 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
           teacherIds: curr.assignedTeacherId ? [curr.assignedTeacherId] : [],
           teacherNames: [curr.assignedTeacherId ? teacherMap.get(curr.assignedTeacherId)?.name || "Unknown" : "Unassigned"],
           priority: 0,
+          rankLevel, // RANK 2 metadata
           defaultRoomId: cls.defaultRoomId || cls.classroomId,
           requiredRoomType,
           electiveBlockId: (curr as any).electiveBlockId,
@@ -128,8 +138,31 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
     console.warn(`Curriculum Mismatch: Required ${totalRequiredPeriods}, Generated ${totalGeneratedPeriods}`);
   }
 
-  // 6. SHUFFLE & STATIC MRV SORT
+  // 6. RANK 2 SORTING: Higher grades first, then by MRV Priority
   return units
-    .sort(() => Math.random() - 0.5)
-    .sort((a, b) => b.priority - a.priority);
+    .sort((a, b) => {
+        // Higher rankLevel means higher grade (e.g. 12 > 11)
+        if (b.rankLevel !== a.rankLevel) {
+            return b.rankLevel - a.rankLevel;
+        }
+        // Tie-breaker: MRV priority within the same grade
+        return b.priority - a.priority;
+    });
 };
+
+/**
+ * UTILITY: parseGradeLevel
+ * Extracts a numeric value from Grade/Year strings.
+ */
+function parseGradeLevel(levelStr: string): number {
+    const n = levelStr.toLowerCase();
+    // Match "Year 12", "Grade 12", "12A" -> 12
+    const match = n.match(/(\d+)/);
+    if (match) return parseInt(match[1]);
+    
+    // Fallback for names
+    if (n.includes("grad")) return 13; // Graduation?
+    if (n.includes("kinder")) return 0;
+    
+    return 0;
+}

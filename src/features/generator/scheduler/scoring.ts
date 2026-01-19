@@ -10,17 +10,65 @@ const WEIGHTS = {
   TEACHER_GAP: -50,
   CLASS_GAP: -400,          // From load-checks.ts
   TEACHER_CONTINUITY: -600,   // From load-checks.ts
-  TEACHER_CLUSTER: 20,
+  TEACHER_CONSECUTIVE: -500,  // Rank 9: Very strongly discourage clustering
   SUBJECT_DISTRIBUTION: -30,
   ROOM_EFFICIENCY: 10,
   LUNCH_PROTECTION: -100,
-  MORNING_BIAS: 5,
+  MORNING_BIAS: 0.1,          // Reduced bias to allow better distribution
+  HCD_PRIME_BIAS: 500,        // Rank 4: Boost for core subjects in morning
   SCARCITY_PENALTY: -500,
   TEACHER_WINDOW: -200,
   ROOM_CHANGE: -50,
   VARIETY_PENALTY: -150,
-  FRIDAY_AFTERNOON: -30
+  FRIDAY_AFTERNOON: -30,
+  WEEKLY_UNBALANCE: -100 // Rank 10: Final polish for even week
 };
+
+/**
+ * RANK 10: WEEKLY BALANCE (The Final Polish)
+ * Ensures that core subjects are distributed evenly across the week.
+ * If Monday already has 3 core subjects, we prefer placing the 4th on Tuesday.
+ */
+export function calculateWeeklyBalance(
+    state: SchedulerState,
+    classId: string,
+    d: number,
+    isCore?: boolean
+): number {
+    if (!isCore) return 0;
+
+    let dayCoreCount = 0;
+    const daySched = state.schedule[classId]?.[d];
+    if (daySched) {
+        Object.values(daySched).forEach(slot => {
+            if (slot.isCore) dayCoreCount++;
+        });
+    }
+
+    // Heuristic: If day already has > 3 core periods, penalize slightly to nudge towards other days.
+    if (dayCoreCount >= 3) {
+        return WEIGHTS.WEEKLY_UNBALANCE * (dayCoreCount - 2); 
+    }
+
+    return 0;
+}
+
+/**
+ * TEACHER LOAD BALANCE
+ * Ensures teachers don't have too many lessons on one day if they could be spread out.
+ */
+export function calculateTeacherLoadBalance(
+    state: SchedulerState,
+    teacherId: string,
+    d: number
+): number {
+    const dailyLoad = state.teacherDailyLoad[teacherId]?.[d] || 0;
+    // Exponential penalty for high daily loads to FORCE even distribution
+    if (dailyLoad >= 2) {
+        return -1000 * Math.pow(2, dailyLoad - 2);
+    }
+    return 0;
+}
 
 /**
  * HOMEROOM INTEGRITY CHECK
@@ -111,9 +159,16 @@ export const calculateTeacherGapPenalty = (
        }
     }
 
-    // Continuity Reward
+    // Clustering Penalty (Discourage long consecutive blocks)
     if (prevInstructionalP !== null && dailyGrid[prevInstructionalP]) {
-      penalty += WEIGHTS.TEACHER_CLUSTER;
+      let runBefore = 0;
+      let i = prevInstructionalP;
+      while (i >= 0 && dailyGrid[i]) {
+          runBefore++;
+          i = getPrevClassPeriod(i, structure) ?? -1;
+      }
+      // Exponential penalty: 2, 4, 8, 16, 32...
+      penalty += WEIGHTS.TEACHER_CONSECUTIVE * Math.pow(2, runBefore - 1);
     }
   }
   return penalty;
@@ -132,6 +187,14 @@ export const calculatePedagogicalScore = (
     let score = 0;
     const classId = unit.classIds[0];
     if (!classId) return 0;
+
+    // --- RANK 4: HCD PRIME LOADING ---
+    if (unit.isCore) {
+        const totalPeriods = data.settings.periodsPerDay;
+        if (p < totalPeriods / 2) {
+            score += WEIGHTS.HCD_PRIME_BIAS;
+        }
+    }
 
     // A. Friday Afternoon (O(1))
     if (d === 4 && unit.isCore) {
@@ -219,21 +282,22 @@ export const calculateScore = (
         score += WEIGHTS.SUBJECT_DISTRIBUTION;
     }
 
-    // B. Holistic Continuity Reward (Prefer adjacency if subject already exists today)
+    // --- RANK 5: THE CONNECTORS (Anti-Sandwich Rule) ---
+    // Holistic Continuity: Prefer adjacency if subject already exists today.
     if (state.classDailySubjects[classId]?.[d]?.has(unit.subjectId)) {
         const daySched = state.schedule[classId]?.[d];
         if (daySched) {
             let isAdjacent = false;
-            const p2 = (unit.duration === 2) ? p + 1 : p; // Approximation of P2
+            const p2 = (unit.duration === 2) ? p + 1 : p; 
 
             // Check if we are touching any existing block of this subject
             if (p > 0 && daySched[p-1]?.subjectId === unit.subjectId) isAdjacent = true;
             if (daySched[p2+1]?.subjectId === unit.subjectId) isAdjacent = true;
 
             if (isAdjacent) {
-                score += 500; // High Reward for adjacency
+                score += 5000; // Rank 5 Reward: High for adjacency
             } else {
-                score -= 1000; // High Penalty for splitting
+                score -= 10000; // Rank 5 Penalty: Massive for splitting (The XYX Sandwich)
             }
         }
     }
@@ -242,7 +306,17 @@ export const calculateScore = (
   // 5. PEDAGOGICAL
   score += calculatePedagogicalScore(state, data, d, p, unit);
 
-  // 6. BIAS & ROOMS
+  // 6. RANK 10: WEEKLY BALANCE
+  if (classId) {
+    score += calculateWeeklyBalance(state, classId, d, unit.isCore);
+  }
+  
+  // Teacher Load Balance
+  unit.teacherIds.forEach(tid => {
+    score += calculateTeacherLoadBalance(state, tid, d);
+  });
+
+  // 7. BIAS & ROOMS
   score += (maxPeriods - p) * (WEIGHTS.MORNING_BIAS / maxPeriods);
   
   if (unit.preferredRoomIds?.length && unit.defaultRoomId) {

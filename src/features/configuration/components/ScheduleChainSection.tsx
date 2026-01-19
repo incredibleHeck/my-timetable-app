@@ -8,9 +8,9 @@ interface ScheduleChainSectionProps {
   setEditingLabelIdx: (idx: number | null) => void;
   tempLabel: string;
   setTempLabel: (label: string) => void;
-  handleStructureChange: (idx: number) => void;
-  updateTimeSlot: (idx: number, field: "start" | "end", value: string) => void;
-  saveCustomLabel: () => void;
+  handleStructureChange: (idx: number) => AppData;
+  updateTimeSlot: (idx: number, field: "start" | "end", value: string) => AppData;
+  saveCustomLabel: () => AppData | undefined;
 }
 
 export const ScheduleChainSection: React.FC<ScheduleChainSectionProps> = ({

@@ -21,13 +21,14 @@ export function findValidMoves(
   roomMap: Map<string, any>
 ) {
     const globalPeriods = data.settings.periodsPerDay;
+    const maxPossiblePeriods = 15; // Support up to 15 periods as per UI limits
     const days = (data.settings as any).daysPerWeek || 5;
     const moves = [];
     
     const primaryUnit = gangUnits[0];
 
     for (let d = 0; d < days; d++) {
-        for (let p = 0; p < globalPeriods; p++) {
+        for (let p = 0; p < maxPossiblePeriods; p++) {
             let gangValid = true;
             const currentRooms: Record<string, string> = {};
             let sharedP2 = -1;
@@ -36,7 +37,7 @@ export function findValidMoves(
                 const cls = classMap.get(u.classIds[0]);
                 const struct = cls?.structure || data.settings.dayStructure;
                 
-                // 1. Structure Check (Fastest Fail)
+                // RANK 0: Structural Hierarchy (Must be CLASS slot for this specific class)
                 const classLimit = cls?.periodCount ?? globalPeriods;
                 if (p >= classLimit || getPeriodType(struct, p) !== "CLASS") {
                     gangValid = false; break;
@@ -44,13 +45,13 @@ export function findValidMoves(
 
                 let p2: number | null = -1;
                 if (u.duration === 2) {
-                    const next = getNextClassPeriod(p, struct, globalPeriods);
+                    const next = getNextClassPeriod(p, struct, classLimit);
                     if (next === null) { gangValid = false; break; }
                     p2 = next;
                 }
                 sharedP2 = p2;
 
-                // 2. Hard Constraints (Legal Check)
+                // RANK 1: Evaluation
                 const evalResult = evaluator.evaluate(state, data, { d, p, p2 }, u, teacherMap, subjectMap, classMap, roomMap);
                 if (!evalResult.isLegal) {
                     gangValid = false; break;
@@ -89,6 +90,7 @@ export function findMinConflictMove(
 ): { d: number; p: number; p2: number; cost: number; score: number; evictions: Set<string>; rooms: Record<string, string> } {
   
   const globalPeriods = data.settings.periodsPerDay;
+  const maxPossiblePeriods = 15;
   const days = (data.settings as any).daysPerWeek || 5;
 
   let bestMove = { 
@@ -100,7 +102,7 @@ export function findMinConflictMove(
   const primaryUnit = gang[0];
 
   for (let d = 0; d < days; d++) {
-    for (let p = 0; p < globalPeriods; p++) {
+    for (let p = 0; p < maxPossiblePeriods; p++) {
       let possible = true;
       const currentRooms: Record<string, string> = {};
       let totalPenalty = 0;
@@ -110,14 +112,15 @@ export function findMinConflictMove(
         const cls = classMap.get(u.classIds[0]);
         const struct = cls?.structure || data.settings.dayStructure;
         
-        // 1. Structure Checks
-        if ((cls?.periodCount ?? globalPeriods) <= p || getPeriodType(struct, p) !== "CLASS") {
+        // RANK 0: Structural Hierarchy (Must be CLASS slot for this specific class)
+        const classLimit = cls?.periodCount ?? globalPeriods;
+        if (p >= classLimit || getPeriodType(struct, p) !== "CLASS") {
           possible = false; break;
         }
 
         let p2: number | null = -1;
         if (u.duration === 2) {
-          p2 = getNextClassPeriod(p, struct, globalPeriods) ?? -1;
+          p2 = getNextClassPeriod(p, struct, classLimit) ?? -1;
           if (p2 === -1) { possible = false; break; }
         }
         sharedP2 = p2;
@@ -128,7 +131,7 @@ export function findMinConflictMove(
         }
 
         // 3. Conflict Counting (The "Cost" of the move)
-        const evalResult = evaluator.evaluateMove(state, data, u, d, p, teacherMap, subjectMap, classMap, roomMap);
+        const evalResult = evaluator.evaluateMove(state, data, u, d, p, teacherMap, subjectMap, classMap, roomMap, unitMap);
         if (!evalResult.isLegal) {
              possible = false;
              break;

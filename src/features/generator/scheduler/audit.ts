@@ -23,13 +23,28 @@ export const runConflictAudit = (
   // logical issues (Continuity, Gaps, Overlaps) in the final state.
   const conflicts = validateFullSchedule(data, state);
 
-  // 2. CURRICULUM INTEGRITY SCAN (O(1) Instant Check)
+  // 2. CURRICULUM INTEGRITY SCAN (Nuclear Audit: Physical Grid Verification)
+  // We bypass trackers and physically count lessons in the grid for absolute accuracy.
+  const schedule = state ? state.schedule : data.schedule;
+
   data.classes.forEach((cls) => {
-    const durationMap = state.classSubjectDuration[cls.id] || {};
+    const clsSched = schedule[cls.id] || {};
+    const actualCounts = new Map<string, number>();
+
+    // Physical Count
+    Object.values(clsSched).forEach(daySched => {
+        Object.values(daySched).forEach(s => {
+            const slot = s as any;
+            if (slot && slot.subjectId && !slot.isFixed) {
+                const dur = slot.duration || 1;
+                actualCounts.set(slot.subjectId, (actualCounts.get(slot.subjectId) || 0) + dur);
+            }
+        });
+    });
 
     cls.curriculum.forEach((item) => {
       const required = (item.singles || 0) + (item.doubles || 0) * 2;
-      const actual = durationMap[item.subjectId] || 0;
+      const actual = actualCounts.get(item.subjectId) || 0;
 
       if (actual < required) {
         curriculumGaps.push({
@@ -37,7 +52,7 @@ export const runConflictAudit = (
           className: cls.name,
           subjectId: item.subjectId,
           missing: required - actual,
-          message: `${cls.name} is missing ${required - actual} periods of ${item.subjectId}`
+          message: `Curriculum Gap: ${required - actual} period(s) of ${data.subjects.find(s => s.id === item.subjectId)?.name || item.subjectId} could not be scheduled.`
         });
       }
     });

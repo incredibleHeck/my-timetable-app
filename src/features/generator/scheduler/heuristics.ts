@@ -7,6 +7,7 @@ import { getNextClassPeriod, getPeriodType } from "./utils";
  * ARCHITECT NOTES:
  * 1. Performance: Implemented "Tournament MRV" to kill the O(N^2) loop.
  * 2. Optimization: Injected Maps for all lookups.
+ * 3. Priority Hierarchy: Follows Ranks 1-4.
  */
 
 // --- STATIC PRIORITY (Calculated Once) ---
@@ -19,7 +20,6 @@ const getTeacherConstraintScore = (
   if (!teacher) return 0;
 
   let blockedCount = 0;
-  // 1. Count blocked slots
   if (teacher.constraints) {
     for (const row of teacher.constraints) {
       for (const isBlocked of row) {
@@ -28,20 +28,9 @@ const getTeacherConstraintScore = (
     }
   }
 
-  // 2. Max Load
   const totalSlots = 60; 
   const maxLoad = teacher.maxPeriodsPerDay ? teacher.maxPeriodsPerDay * 5 : totalSlots;
   return blockedCount + (totalSlots - maxLoad);
-};
-
-const getRoomScarcityScore = (unit: AllocationUnit, data: AppData, subjectMap: Map<string, Subject>): number => {
-  if (unit.requiredRoomType) {
-    const matchingRooms = data.rooms.filter(r => r.type === unit.requiredRoomType).length;
-    return 5000 / (matchingRooms || 1);
-  }
-  const subject = subjectMap.get(unit.subjectId);
-  if (subject?.isSingleResource) return 2000;
-  return 0;
 };
 
 export const calculatePriority = (
@@ -53,33 +42,52 @@ export const calculatePriority = (
   let score = 0;
   const subject = subjectMap.get(unit.subjectId);
 
-  // 1. Joint Classes / Fixed constraints
-  if (unit.classIds.length > 1) score += 10000;
-
-  // 2. Room Scarcity
-  if (subject?.requiredRoomId) score += 8000;
-  score += getRoomScarcityScore(unit, data, subjectMap);
-
-  // 3. Teacher Constraints
+  // --- RANK 1: Restricted / Part-Time Teachers (Absolute Global Priority) ---
   for (const tid of unit.teacherIds) {
-    score += getTeacherConstraintScore(tid, teacherMap) * 50;
+    const teacher = teacherMap.get(tid);
+    if (teacher?.constraints) {
+      let availableSlots = 0;
+      teacher.constraints.forEach(row => row.forEach(isBlocked => { if (!isBlocked) availableSlots++; }));
+      if (availableSlots < 45) {
+        score += 50000; 
+      }
+    }
   }
 
-  // 4. Duration
-  if (unit.duration === 2) score += 500;
+  // --- RANK 3: THE BOTTLENECKS ---
+  // 3.1 Complex Groupings (Joint Classes / Electives)
+  if (unit.classIds.length > 1 || unit.jointClassId || unit.electiveBlockId) {
+      score += 30000;
+  }
 
-  // 5. Gangs
-  if (unit.electiveBlockId) score += 1000;
+  // 3.2 Specialist Rooms (Labs/Workshops)
+  const isSpecialist = subject?.requiredRoomId || unit.requiredRoomType;
+  if (isSpecialist) {
+      if (unit.duration === 2) {
+          score += 25000; // Specialist Double
+      } else {
+          score += 20000; // Specialist Single
+      }
+  }
+
+  // --- RANK 2: Structural Hierarchy (Grade Level) ---
+  score += unit.rankLevel * 100;
+
+  // --- RANK 4: THE BIG ROCKS (Standard Doubles) ---
+  if (!isSpecialist && unit.duration === 2 && unit.classIds.length === 1 && !unit.jointClassId && !unit.electiveBlockId) {
+      score += 15000;
+  }
+
+  // Teacher Constraints Tie-breaker
+  for (const tid of unit.teacherIds) {
+    score += getTeacherConstraintScore(tid, teacherMap) * 10;
+  }
 
   return score;
 };
 
-// --- DYNAMIC HEURISTICS (The Hot Path) ---
+// --- DYNAMIC HEURISTICS ---
 
-/**
- * findMostConstrainedGangIdx (Optimized with Tournament Selection)
- * Instead of checking ALL leaders (O(N)), we check a subset.
- */
 export function findMostConstrainedGangIdx(
   leaders: AllocationUnit[], 
   state: SchedulerState, 
@@ -91,12 +99,10 @@ export function findMostConstrainedGangIdx(
   roomMap: Map<string, any>
 ): number {
   
-  // 1. Fast Path: If few units left, check all.
   if (leaders.length < 20) {
       return scanAll(leaders, state, data, gangMap, teacherMap, subjectMap, classMap, roomMap);
   }
 
-  // 2. Tournament Selection
   let bestIdx = -1;
   let minDomain = Infinity;
   let bestPriority = -1;
@@ -107,7 +113,7 @@ export function findMostConstrainedGangIdx(
       const idx = Math.floor(Math.random() * leaders.length);
       const leader = leaders[idx];
       
-      if (leader.priority > 9000) return idx;
+      if (leader.priority >= 50000) return idx;
 
       const gangId = leader.jointClassId || leader.electiveBlockId || leader.id;
       const gang = gangMap.get(gangId)!;
@@ -144,7 +150,7 @@ function scanAll(
 
     for (let i = 0; i < leaders.length; i++) {
         const leader = leaders[i];
-        if (leader.priority > 9000) return i;
+        if (leader.priority >= 50000) return i;
 
         const gangId = leader.jointClassId || leader.electiveBlockId || leader.id;
         const gang = gangMap.get(gangId)!;
@@ -162,8 +168,6 @@ function scanAll(
     return bestIdx;
 }
 
-// --- OPTIMIZED SLOT COUNTER ---
-
 export function countValidSlots(
     state: SchedulerState, 
     data: AppData, 
@@ -173,7 +177,7 @@ export function countValidSlots(
     subjectMap: Map<string, Subject>,
     roomMap: Map<string, any>
 ): number {
-  const globalPeriods = data.settings.periodsPerDay;
+  const globalPeriods = 15; // Scan full range
   const days = (data.settings as any).daysPerWeek || 5;
   let count = 0;
 
@@ -185,11 +189,12 @@ export function countValidSlots(
          const cls = classMap.get(u.classIds[0]);
          const struct = cls?.structure || data.settings.dayStructure;
 
-         if (getPeriodType(struct, p) !== "CLASS") { gangValid = false; break; }
+         const classLimit = cls?.periodCount ?? data.settings.periodsPerDay;
+         if (p >= classLimit || getPeriodType(struct, p) !== "CLASS") { gangValid = false; break; }
 
          let p2 = -1;
          if (u.duration === 2) {
-           const next = getNextClassPeriod(p, struct, globalPeriods);
+           const next = getNextClassPeriod(p, struct, classLimit);
            if (next === null) { gangValid = false; break; }
            p2 = next;
          }

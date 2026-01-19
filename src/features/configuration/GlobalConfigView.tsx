@@ -103,16 +103,19 @@ export const GlobalConfigView: React.FC<ViewProps> = ({ data, onUpdate }) => {
             handleStructureChange={(idx) => {
               const nextData = handleStructureChange(idx);
               addActivity("SYSTEM", `Updated period ${idx + 1} type`, nextData);
+              return nextData;
             }}
             updateTimeSlot={(idx, field, val) => {
               const nextData = updateTimeSlot(idx, field, val);
               addActivity("SYSTEM", `Updated period ${idx + 1} ${field} time`, nextData);
+              return nextData;
             }}
             saveCustomLabel={() => {
               const nextData = saveCustomLabel();
               if (nextData) {
                 addActivity("SYSTEM", `Updated period label`, nextData);
               }
+              return nextData;
             }}
           />
         </div>
@@ -141,6 +144,7 @@ export const GlobalConfigView: React.FC<ViewProps> = ({ data, onUpdate }) => {
           saveSlot={(label) => {
             const nextData = saveSlot(label);
             addActivity("SYSTEM", `Updated reservation: ${label || "Cleared"}`, nextData);
+            return nextData;
           }}
         />
       </Card>

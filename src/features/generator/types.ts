@@ -27,6 +27,7 @@ export interface Conflict {
   day: number;
   period: number;
   duration?: number;
+  missingPeriods?: number;
   reason: string;
   severity?: "HIGH" | "MEDIUM" | "LOW";
 }

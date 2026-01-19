@@ -3,6 +3,7 @@ import { calculateClassSchedule } from "../../../../utils/timeUtils";
 import { getType } from "./utils";
 import { ValidationContext, ValidationResult } from "./types";
 import { SchedulerState } from "../types";
+import { getNextClassPeriod } from "../utils";
 import {
   checkGlobalAndClassBlocks,
   checkResourceAndAvailability,
@@ -37,7 +38,7 @@ export const checkSlotValidity = (
 ): ValidationResult => {
   const { settings, classes, rooms } = data;
 
-  // --- 1. CONTEXT SETUP ---
+  // --- RANK 0 & 1.1: CONTEXT SETUP ---
   const cls = classes.find((c) => c.id === classId);
   const structure = cls?.structure || settings.dayStructure;
   
@@ -56,7 +57,18 @@ export const checkSlotValidity = (
 
     // If we are looking at the 'tail' of a double, move to the 'head'
     const entry = scheduleSource[classId]?.[d]?.[startP];
-    if (entry && (entry as any).isFixed) startP--; 
+    if (entry && (entry as any).isFixed) {
+        // Find the head by scanning backwards for the same unitId
+        let headP = startP - 1;
+        while (headP >= 0) {
+            const prevEntry = scheduleSource[classId]?.[d]?.[headP];
+            if (prevEntry && prevEntry.unitId === entry.unitId && !prevEntry.isFixed) {
+                startP = headP;
+                break;
+            }
+            headP--;
+        }
+    }
 
     let consumed = 0, offset = 0;
     while (consumed < dur && (startP + offset) < maxPeriods) {
@@ -88,7 +100,7 @@ export const checkSlotValidity = (
     ignoredSlots,
   };
 
-  // --- 4. PERIOD LOOP (HARD CONSTRAINT & OVERLAP CHECKS) ---
+  // --- 4. PERIOD LOOP (RANK 1: THE INVARIANTS) ---
   const proposedSlots = new Set<number>();
   let periodsConsumed = 0;
   let currentOffset = 0;
@@ -104,35 +116,39 @@ export const checkSlotValidity = (
       };
     }
 
-    // Skip non-teaching slots (Lunch/Break)
-    // If this is a BREAK or LUNCH, we skip it but DON'T count it toward duration
+    // RANK 0: Structural Hierarchy (Must be CLASS slot for this specific class)
+    // If this is not a 'CLASS' slot, we skip it for multi-period units (Bridge Logic).
     if (getType(structure, p) !== "CLASS") {
+      // If the lesson STARTS on a break, it's invalid.
+      if (periodsConsumed === 0) {
+        return { 
+          valid: false, message: "Non-instructional slot (Break/Lunch/Hidden)", 
+          severity: "HIGH", penaltyPoints: 100000, conflictCount: 1 
+        };
+      }
+      // Otherwise, we skip this slot and look for the next class slot
       currentOffset++;
       continue;
     }
-
-    // Logic for cross-day ignored slots
-    // During the loop for the TARGET day, we still need to know if the target period is ignored
-    // (though usually ignoredSlots for targetDay are for the source of a same-day move)
     
     proposedSlots.add(p);
 
     // A. Global & Class Blocks (Worship, Assembly, off-site sessions)
     const blockError = checkGlobalAndClassBlocks(ctx, p);
-    if (blockError) return { ...blockError, penaltyPoints: 1500, conflictCount: 1 };
+    if (blockError) return { ...blockError, penaltyPoints: 20000, conflictCount: 1 };
 
     // B. Resource Availability (Teacher/Resource grids)
     const resourceError = checkResourceAndAvailability(ctx, p, state);
     if (resourceError) {
       if (resourceError.message && resourceError.message.includes("Teacher Busy")) {
-        return { ...resourceError, message: "Teacher is busy", penaltyPoints: 1000, conflictCount: 1 };
+        return { ...resourceError, message: "Teacher is busy", penaltyPoints: 5000, conflictCount: 1 };
       }
-      return { ...resourceError, penaltyPoints: 1000, conflictCount: 1 };
+      return { ...resourceError, penaltyPoints: 5000, conflictCount: 1 };
     }
 
     // C. Physical Overlaps (Teacher/Room double-booking)
     const overlapError = checkOverlaps(ctx, p, state);
-    if (overlapError) return { ...overlapError, penaltyPoints: 1000, conflictCount: 1 };
+    if (overlapError) return { ...overlapError, penaltyPoints: 5000, conflictCount: 1 };
 
     // D. Room Capacity
     if (roomId) {
@@ -140,7 +156,7 @@ export const checkSlotValidity = (
       if (room && cls && (cls.studentCount || 0) > room.capacity) {
         return { 
           valid: false, message: `Room capacity exceeded (${cls.studentCount}/${room.capacity})`, 
-          severity: "MEDIUM", penaltyPoints: 500, conflictCount: 1 
+          severity: "MEDIUM", penaltyPoints: 2000, conflictCount: 1 
         };
       }
     }
@@ -149,7 +165,12 @@ export const checkSlotValidity = (
     currentOffset++;
   }
 
-  // --- 5. SWAP ANALYSIS (Before Soft Checks) ---
+  // --- 4.1 PEDAGOGICAL HARD WALLS ---
+  // RANK 1.4: Curriculum Respect (Subject Max Per Day)
+  const subjectError = checkSubjectLimit(ctx, proposedSlots, ignoredSlots, state);
+  if (subjectError) return { ...subjectError, penaltyPoints: 10000, conflictCount: 1 };
+
+  // --- 5. SWAP ANALYSIS ---
   const targetSlot = data.schedule[classId]?.[targetDay]?.[targetPeriod];
   if (targetSlot && !isAuto) {
     if ((targetSlot as any).locked)
@@ -171,19 +192,15 @@ export const checkSlotValidity = (
 
   // --- 6. PATTERN & CURRICULUM CHECKS (SOFT/MEDIUM CONSTRAINTS) ---
   
-  // A. Teacher Load (Daily Limits & Consecutive Max)
+  // RANK 1.3: Teacher Load (Daily Limits & Consecutive Max)
   const loadError = checkTeacherLoad(ctx, proposedSlots, ignoredSlots, state);
   if (loadError) return { ...loadError, penaltyPoints: 800, conflictCount: 0 };
 
-  // B. Curriculum Respect (Subject Max Per Day)
-  const subjectError = checkSubjectLimit(ctx, proposedSlots, ignoredSlots, state);
-  if (subjectError) return { ...subjectError, penaltyPoints: 600, conflictCount: 0 };
-
-  // B2. Subject Continuity (Hard Constraint) - Prevents subject sandwiching
+  // RANK 8: Subject Continuity (Hard Constraint) - Prevents subject sandwiching
   const continuityError = checkSubjectContinuity(ctx, proposedSlots, ignoredSlots, state);
   if (continuityError) return { ...continuityError, penaltyPoints: 1500, conflictCount: 1 };
 
-  // D. Teacher Continuity (Same Class Rule) - Prevents sandwiching different classes
+  // Teacher Continuity (Same Class Rule) - Prevents sandwiching different classes
   const teacherContinuityError = checkTeacherContinuity(ctx, proposedSlots, ignoredSlots, state);
   if (teacherContinuityError) return { ...teacherContinuityError, penaltyPoints: 600, conflictCount: 0 };
 
@@ -204,14 +221,16 @@ export const checkSlotValidity = (
  * Scans the entire generated state to find every constraint violation.
  */
 export const validateFullSchedule = (data: AppData, state: SchedulerState): Conflict[] => {
-  const { classes, subjects, teachers } = data;
-  // Use the schedule from the state (result) if provided, otherwise fallback to data (input)
+  const { classes, subjects, teachers, settings } = data;
   const schedule = state ? state.schedule : data.schedule;
   const allConflicts: Conflict[] = [];
 
   for (const classId of Object.keys(schedule)) {
     const cls = classes.find((c) => c.id === classId);
     if (!cls) continue;
+
+    const structure = cls.structure || settings.dayStructure;
+    const classLimit = cls.periodCount ?? settings.periodsPerDay;
 
     for (const dayStr of Object.keys(schedule[classId])) {
       const day = parseInt(dayStr);
@@ -223,10 +242,15 @@ export const validateFullSchedule = (data: AppData, state: SchedulerState): Conf
 
         if (slot.isFixed) continue; // Skip tails
 
-        // Determine duration
-        let nextP = period + 1;
-        const hasNext = daySchedule[nextP] && daySchedule[nextP].isFixed && daySchedule[nextP].subjectId === slot.subjectId;
-        const duration = hasNext ? 2 : 1;
+        // Determine duration by looking ahead using navigation logic
+        let duration = 1;
+        const nextP = getNextClassPeriod(period, structure, classLimit);
+        if (nextP !== null) {
+            const nextSlot = daySchedule[nextP];
+            if (nextSlot && nextSlot.isFixed && nextSlot.unitId === slot.unitId) {
+                duration = 2;
+            }
+        }
 
         // Resolve Effective Room (Subject Specific or Home Room Fallback)
         const subject = subjects.find((s) => s.id === slot.subjectId);
@@ -238,7 +262,12 @@ export const validateFullSchedule = (data: AppData, state: SchedulerState): Conf
         );
 
         if (!result.valid) {
-          const subject = subjects.find((s) => s.id === slot.subjectId);
+          // RANK 0 FILTER: Do not report "Non-instructional slot" in the conflict panel.
+          // These are often false positives during repair or intended for internal scoring only.
+          if (result.message === "Non-instructional slot (Break/Lunch/Hidden)") {
+            continue;
+          }
+
           const teacher = teachers.find((t) => t.id === slot.teacherId);
           allConflicts.push({
             classId,

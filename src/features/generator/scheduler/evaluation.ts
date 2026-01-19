@@ -4,6 +4,7 @@ import { checkHardConstraints, checkImmutableConstraints } from "./constraints";
 import { calculateScore, calculateTeacherGapPenalty, calculateRoomPenalty } from "./scoring";
 import { countPotentialConflicts, findUnitsInSlot } from "./search";
 import { forceDetermineRoom } from "./rooms";
+import { checkSubjectContinuity } from "./validation/load-checks";
 
 // ARCHITECT: Removed dependency on legacy 'validation.ts'. 
 // We now rely on the unified O(1) Constraint Engine.
@@ -73,42 +74,93 @@ export class EvaluationEngine {
     teacherMap: Map<string, Teacher>,
     subjectMap: Map<string, Subject>,
     classMap: Map<string, ClassGroup>,
-    roomMap: Map<string, any>
+    roomMap: Map<string, any>,
+    unitMap: Map<string, AllocationUnit>
   ): { isLegal: boolean; totalCost: number; conflicts: string[] } {
     
     let totalCost = 0;
     const conflicts: string[] = [];
     const p2 = unit.duration === 2 ? p + 1 : -1;
 
-    // 1. IMMUTABLE CHECKS (The "Hard Walls")
-    const possible = checkImmutableConstraints(
-        d, p, p2, unit, data, 
-        teacherMap, classMap
+    // --- RANK 1: THE INVARIANTS (The Rules of Engagement) ---
+    // Includes Triple Lock, Shape Rules, and Teacher Welfare.
+    // If ANY of these fail, the move is physically impossible and must be rejected.
+    const isLegal = checkHardConstraints(
+        state, data, d, p, p2, unit, 
+        teacherMap, classMap, subjectMap, roomMap
     );
 
-    if (!possible) {
-        return { isLegal: false, totalCost: Infinity, conflicts: ["Immutable Constraint Violation"] };
+    if (!isLegal) {
+        return { isLegal: false, totalCost: Infinity, conflicts: ["Rank 1: Invariant Violation (Triple Lock/Shape/Welfare)"] };
     }
 
-    // 2. PHYSICAL CONFLICTS (Evictions)
+    // Determining victims for evictions (Phase 2 allowing bumping)
+    // Note: Since checkHardConstraints above checks occupancy, we only get here if the slot 
+    // is physically reachable (e.g. during repair we temporarily ignore occupancy to find victims).
+    // WAIT: If Rank 1 is absolute, we shouldn't allow evicting Rank 1 units to satisfy Rank 1.
+    // Actually, checkHardConstraints in state.ts allows unit.id overlap.
+    
     const victims = findUnitsInSlot(state, unit, d, p, p2);
     if (victims.size > 0) {
-        totalCost += victims.size * 1000; // Base eviction cost
-        victims.forEach(v => conflicts.push(`Evicting ${v}`));
+        victims.forEach(vId => {
+            const vUnit = unitMap.get(vId); 
+            let evictionCost = 1000; // Base
+            
+            if (vUnit) {
+                // RANK 3: THE BOTTLENECKS (High displacement cost)
+                const vSubject = subjectMap.get(vUnit.subjectId);
+                const isVSpecialist = vSubject?.requiredRoomId || vUnit.requiredRoomType;
+                const isVComplex = vUnit.classIds.length > 1 || vUnit.jointClassId || vUnit.electiveBlockId;
+
+                if (isVComplex) {
+                    evictionCost = 20000; // Most protected (Skeleton)
+                } else {
+                    // Check for restricted teachers
+                    for (const tid of vUnit.teacherIds) {
+                        const teacher = teacherMap.get(tid);
+                        if (teacher?.constraints) {
+                            let availableSlots = 0;
+                            teacher.constraints.forEach(row => row.forEach(isBlocked => { if (!isBlocked) availableSlots++; }));
+                            if (availableSlots < 45) {
+                                evictionCost = Math.max(evictionCost, 18000); // High protection for part-timers
+                            }
+                        }
+                    }
+                    
+                    if (isVSpecialist) {
+                        evictionCost = Math.max(evictionCost, vUnit.duration === 2 ? 15000 : 12000);
+                    }
+                }
+            }
+            
+            totalCost += evictionCost;
+            conflicts.push(`Rank 3: Evicting bottleneck ${vId}`);
+        });
     }
 
-    // 3. LOGICAL CONFLICTS (Teacher Load, etc.)
-    const logicPenalty = countPotentialConflicts(
-        unit, state, data, d, p, p2, 
-        teacherMap, subjectMap
-    );
-    totalCost += logicPenalty * 100; // Weighting logic violations
+    // --- OTHER LOGICAL PENALTIES ---
+    const ctx = {
+        data,
+        classId: unit.classIds[0],
+        subjectId: unit.subjectId,
+        teacherId: unit.teacherIds[0],
+        targetDay: d,
+        maxPeriods: 15,
+        structure: data.settings.dayStructure
+    } as any;
 
-    // 4. QUALITY PENALTIES (Soft Constraints)
+    const proposedSet = new Set([p]);
+    if (p2 !== -1) proposedSet.add(p2);
+
+    // --- RANK 5: THE CONNECTORS (Anti-Sandwich) ---
+    const continuityError = checkSubjectContinuity(ctx, proposedSet, new Set(), state);
+    if (continuityError) totalCost += 5000; 
+
+    // Quality Penalties
     const gapPenalty = calculateTeacherGapPenalty(state, d, p, unit.teacherIds, unit.classIds);
     totalCost += Math.abs(gapPenalty); 
 
-    // 5. ROOM PENALTY (Homeroom Displacement)
+    // Room Penalty
     const targetRoomId = forceDetermineRoom(d, p, p2, unit, state, data, subjectMap, classMap);
     if (targetRoomId) {
         totalCost += calculateRoomPenalty(state, unit, d, p, targetRoomId);

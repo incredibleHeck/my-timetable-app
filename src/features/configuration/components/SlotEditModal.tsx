@@ -1,13 +1,14 @@
 import React from "react";
 import { Check } from "lucide-react";
 import { Modal, Button, Input } from "../../../components/ui";
+import { AppData } from "../../../types";
 
 interface SlotEditModalProps {
   editingSlot: { d: number; p: number; label: string } | null;
   setEditingSlot: (slot: { d: number; p: number; label: string } | null) => void;
   applyToAllDays: boolean;
   setApplyToAllDays: (apply: boolean) => void;
-  saveSlot: (label: string) => void;
+  saveSlot: (label: string) => AppData | undefined;
 }
 
 export const SlotEditModal: React.FC<SlotEditModalProps> = ({

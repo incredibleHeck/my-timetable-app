@@ -32,7 +32,7 @@ export const checkTeacherLoad = (
       // O(1) Lookup: Check if teacher is busy elsewhere
       if (state) {
         // Safe check: Ensure we don't treat 'undefined' as occupied
-        const occupant = state.teacherOccupancy[teacherId]?.[targetDay]?.[p];
+        const occupant = state?.teacherOccupancy[teacherId]?.[targetDay]?.[p];
         if (occupant !== undefined && occupant !== null) {
           isOccupied = true;
         }
@@ -101,7 +101,7 @@ export const checkSubjectLimit = (
       dailyCount++;
     } else if (!ignoredSlots.has(`${targetDay}-${p}`)) {
       const entry = state
-        ? state.schedule[classId]?.[targetDay]?.[p]
+        ? state?.schedule[classId]?.[targetDay]?.[p]
         : data.schedule[classId]?.[targetDay]?.[p];
       if (entry && entry.subjectId === subjectId) {
         dailyCount++;
@@ -136,7 +136,7 @@ export const checkSubjectLimit = (
 
     for (let d = 0; d < daysPerWeek; d++) {
       const daySched = state
-        ? state.schedule[classId]?.[d]
+        ? state?.schedule[classId]?.[d]
         : data.schedule[classId]?.[d];
       if (!daySched) continue;
 
@@ -208,7 +208,7 @@ export const checkGapDetection = (
   while (checkP !== null) {
     // A slot is "Empty" if it's not occupied in state/data AND it's not part of the source we're ignoring
     const isEmpty = state
-      ? state.classOccupancy[classId]?.[targetDay]?.[checkP] === null ||
+      ? state?.classOccupancy[classId]?.[targetDay]?.[checkP] === null ||
         ignoredSlots.has(`${targetDay}-${checkP}`)
       : data.schedule[classId]?.[targetDay]?.[checkP] === undefined ||
         ignoredSlots.has(`${targetDay}-${checkP}`);
@@ -261,7 +261,7 @@ export const checkTeacherContinuity = (
       isOccupiedByThisClass = true;
     } else if (!ignoredSlots.has(`${targetDay}-${p}`)) {
       const entry = state
-        ? state.schedule[classId]?.[targetDay]?.[p]
+        ? state?.schedule[classId]?.[targetDay]?.[p]
         : data.schedule[classId]?.[targetDay]?.[p];
 
       if (entry && entry.teacherId === teacherId) {
@@ -288,7 +288,7 @@ export const checkTeacherContinuity = (
         isThisClass = true;
       } else if (!ignoredSlots.has(`${targetDay}-${p}`)) {
         const entry = state
-          ? state.schedule[classId]?.[targetDay]?.[p]
+          ? state?.schedule[classId]?.[targetDay]?.[p]
           : data.schedule[classId]?.[targetDay]?.[p];
 
         if (entry && entry.teacherId === teacherId) {
@@ -301,7 +301,7 @@ export const checkTeacherContinuity = (
         // If the teacher is FREE (null), we ignore the gap.
         if (state) {
           const teacherOccupant =
-            state.teacherOccupancy[teacherId]?.[targetDay]?.[p];
+            state?.teacherOccupancy[teacherId]?.[targetDay]?.[p];
           if (
             teacherOccupant &&
             teacherOccupant !== "BLOCK" &&
@@ -362,7 +362,7 @@ export const checkSubjectContinuity = (
   subjectsToCheck.add(subjectId);
 
   const daySched = state
-    ? state.schedule[classId]?.[targetDay]
+    ? state?.schedule[classId]?.[targetDay]
     : data.schedule[classId]?.[targetDay];
 
   if (daySched) {
@@ -383,7 +383,7 @@ export const checkSubjectContinuity = (
         isOccupiedByThisSubject = true;
       } else if (!ignoredSlots.has(`${targetDay}-${p}`)) {
         const entry = state
-          ? state.schedule[classId]?.[targetDay]?.[p]
+          ? state?.schedule[classId]?.[targetDay]?.[p]
           : data.schedule[classId]?.[targetDay]?.[p];
 
         if (entry && entry.subjectId === sId) {
@@ -411,7 +411,7 @@ export const checkSubjectContinuity = (
           currentSubjectAtP = sId;
         } else if (!ignoredSlots.has(`${targetDay}-${p}`)) {
           const entry = state
-            ? state.schedule[classId]?.[targetDay]?.[p]
+            ? state?.schedule[classId]?.[targetDay]?.[p]
             : data.schedule[classId]?.[targetDay]?.[p];
 
           if (entry) {

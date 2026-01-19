@@ -11,12 +11,17 @@ export const ConflictPanel: React.FC<Props> = ({ conflicts, onConflictSelect }) 
   const sortedGroups = useMemo(() => {
     const groups: Record<string, Conflict[]> = {};
     conflicts.forEach((c) => {
-      if (!groups[c.className]) groups[c.className] = [];
-      groups[c.className].push(c);
+      const groupKey = c.className || "System/Unresolved";
+      if (!groups[groupKey]) groups[groupKey] = [];
+      groups[groupKey].push(c);
     });
-    return Object.entries(groups).sort((a, b) =>
-      a[0].localeCompare(b[0], undefined, { numeric: true })
-    );
+    
+    // Sort groups so "System/Unresolved" (which contains unplaced units) comes first
+    return Object.entries(groups).sort((a, b) => {
+      if (a[0] === "System/Unresolved") return -1;
+      if (b[0] === "System/Unresolved") return 1;
+      return a[0].localeCompare(b[0], undefined, { numeric: true });
+    });
   }, [conflicts]);
 
   if (conflicts.length === 0) return null;
@@ -56,20 +61,32 @@ export const ConflictPanel: React.FC<Props> = ({ conflicts, onConflictSelect }) 
                   <div
                     key={i}
                     className={`text-xs p-2 rounded border ${style} cursor-pointer hover:opacity-80 transition-opacity`}
-                    onClick={() => onConflictSelect?.(c)}
+                    onClick={() => {
+                        // Only select if it has a valid grid position
+                        if (c.day !== 0 || c.period !== 0 || !c.reason.includes("Unplaced")) {
+                            onConflictSelect?.(c);
+                        }
+                    }}
                   >
                     <div className="flex justify-between font-semibold mb-1">
                       <span>{c.subjectName}</span>
                       <span className="text-[9px] uppercase opacity-70">
-                        {c.duration === 2 ? "Double" : "Single"}
+                        {c.missingPeriods 
+                          ? `${c.missingPeriods} Missing` 
+                          : (c.duration === 2 ? "Double" : "Single")}
                       </span>
                     </div>
                     <div className="opacity-75 flex items-center gap-1 mb-1">
                       <Users size={10} /> {c.teacherName}
                     </div>
-                    <div className="italic text-[10px] opacity-90">
+                    <div className="italic text-[10px] opacity-90 leading-tight">
                       {c.reason}
                     </div>
+                    {(c.day !== 0 || c.period !== 0) && !c.reason.includes("Unplaced") && (
+                        <div className="mt-1 text-[8px] font-bold uppercase tracking-tighter opacity-50">
+                            Day {c.day + 1} • Period {c.period + 1}
+                        </div>
+                    )}
                   </div>
                 );
               })}
