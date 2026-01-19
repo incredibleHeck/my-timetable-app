@@ -1,6 +1,6 @@
 # Plan: Refactor Scheduler File Structure
 
-## Phase 1: Setup
+## Phase 1: Setup [checkpoint: a87bf72]
 - [x] Task: Create the new directory structure in `src/features/generator/scheduler/`. c55419e
     - Create: `core/`, `solver/`, `logic/`, `diagnostics/`, `utils/`.
 - [ ] Task: Conductor - User Manual Verification 'Setup' (Protocol in workflow.md)
