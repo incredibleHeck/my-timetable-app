@@ -3,7 +3,7 @@
 ## Phase 1: Setup [checkpoint: a87bf72]
 - [x] Task: Create the new directory structure in `src/features/generator/scheduler/`. c55419e
     - Create: `core/`, `solver/`, `logic/`, `diagnostics/`, `utils/`.
-- [ ] Task: Conductor - User Manual Verification 'Setup' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Setup' (Protocol in workflow.md) a87bf72
 
 ## Phase 2: Migration
 - [x] Task: Move `core` files (`generator.ts`, `worker.ts`, `state.ts`, `types.ts`) to `core/` and update internal/relative imports. f98850b
@@ -11,7 +11,7 @@
 - [x] Task: Move `logic` files (`constraints.ts`, `evaluation.ts`, `scoring.ts`, `preparation.ts`, `rooms.ts`) to `logic/` and update internal/relative imports. 008f05b
 - [x] Task: Move `validation` root files (`audit.ts`) to `validation/` and update internal/relative imports. 39aecbe
 - [x] Task: Move `solver` files (`solver.ts`, `search.ts`, `repair.ts`, `tabu.ts`, `heuristics.ts`) to `solver/` and update internal/relative imports. 6413806
-- [ ] Task: Move `diagnostics` files (`smoke-test.ts`, `test-real-world.ts`, `school-data.json`) to `diagnostics/` and update internal/relative imports.
+- [x] Task: Move `diagnostics` files (`smoke-test.ts`, `test-real-world.ts`, `school-data.json`) to `diagnostics/` and update internal/relative imports. ce4a9fd
 - [ ] Task: Conductor - User Manual Verification 'Migration' (Protocol in workflow.md)
 
 ## Phase 3: Stabilization & Verification
