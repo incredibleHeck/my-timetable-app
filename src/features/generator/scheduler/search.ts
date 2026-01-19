@@ -3,7 +3,7 @@ import { AllocationUnit, SchedulerState } from "./core/types";
 import { checkHardConstraints, checkImmutableConstraints } from "./constraints";
 import { determineRoom, forceDetermineRoom } from "./rooms";
 import { calculateScore } from "./scoring";
-import { getNextClassPeriod, getPeriodType } from "./utils";
+import { getNextClassPeriod, getPeriodType } from "./utils/utils";
 import { EvaluationEngine } from "./evaluation";
 import { TabuManager } from "./tabu";
 

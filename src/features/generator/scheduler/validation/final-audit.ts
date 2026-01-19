@@ -1,5 +1,5 @@
 import { AppData, Conflict, ClassGroup, Subject, Teacher, Room } from "../../../../types";
-import { getPeriodType } from "../utils";
+import { getPeriodType } from "../utils/utils";
 
 export const generateFinalReport = (data: AppData): Conflict[] => {
   const conflicts: Conflict[] = [];

@@ -3,7 +3,7 @@ import { calculateClassSchedule } from "../../../../utils/timeUtils";
 import { getType } from "./utils";
 import { ValidationContext, ValidationResult } from "./types";
 import { SchedulerState } from "../core/types";
-import { getNextClassPeriod } from "../utils";
+import { getNextClassPeriod } from "../utils/utils";
 import {
   checkGlobalAndClassBlocks,
   checkResourceAndAvailability,

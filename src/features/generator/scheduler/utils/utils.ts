@@ -1,4 +1,4 @@
-import { PeriodType, PeriodConfig } from "../../../types";
+import { PeriodType, PeriodConfig } from "../../../../types";
 
 /**
  * ARCHITECT NOTES:
@@ -74,4 +74,4 @@ export function getPrevClassPeriod(
 }
 
 // --- 3. RE-EXPORT TIME UTILS ---
-export * from "../../../utils/timeUtils";
+export * from "../../../../utils/timeUtils";
