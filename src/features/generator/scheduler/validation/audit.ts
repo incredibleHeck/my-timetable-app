@@ -1,6 +1,6 @@
-import { AppData, Conflict, Teacher, Subject, ClassGroup, Room } from "../../../types";
-import { SchedulerState } from "./core/types";
-import { validateFullSchedule } from "./validation/index";
+import { AppData, Conflict, Teacher, Subject, ClassGroup, Room } from "../../../../types";
+import { SchedulerState } from "../core/types";
+import { validateFullSchedule } from "./index";
 
 /**
  * ARCHITECT NOTES:

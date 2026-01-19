@@ -1,7 +1,7 @@
 import { AppData, ScheduleResult, Conflict } from "../../../../types";
 import { prepareAllocationUnits } from "../logic/preparation";
 import { solveSmart } from "../solver";
-import { runConflictAudit } from "../audit"; // ARCHITECT: Switch to Fast Audit
+import { runConflictAudit } from "../validation/audit"; // ARCHITECT: Switch to Fast Audit
 import { generateFinalReport } from "../validation/final-audit";
 
 /**

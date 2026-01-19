@@ -2,7 +2,7 @@
 import { AppData, Conflict } from "../../../../types";
 import { prepareAllocationUnits } from "../logic/preparation";
 import { solveSmart } from "../solver";
-import { runConflictAudit } from "../audit";
+import { runConflictAudit } from "../validation/audit";
 import { generateFinalReport } from "../validation/final-audit";
 
 const ctx: Worker = self as any;

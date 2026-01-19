@@ -2,7 +2,7 @@
 import { AppData, PeriodType, Teacher, Subject, ClassGroup } from "../../../types";
 import { prepareAllocationUnits } from "./preparation";
 import { solveSmart } from "./solver";
-import { runConflictAudit } from "./audit";
+import { runConflictAudit } from "./validation/audit";
 
 /**
  * EDUSCHEDULER 2.0 - SMOKE TEST
