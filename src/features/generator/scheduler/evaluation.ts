@@ -1,5 +1,5 @@
 import { AppData, Subject, Teacher, ClassGroup } from "../../../types";
-import { AllocationUnit, SchedulerState } from "./types";
+import { AllocationUnit, SchedulerState } from "./core/types";
 import { checkHardConstraints, checkImmutableConstraints } from "./constraints";
 import { calculateScore, calculateTeacherGapPenalty, calculateRoomPenalty } from "./scoring";
 import { countPotentialConflicts, findUnitsInSlot } from "./search";

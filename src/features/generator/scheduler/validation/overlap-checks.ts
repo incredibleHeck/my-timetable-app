@@ -1,4 +1,4 @@
-import { SchedulerState } from "../types";
+import { SchedulerState } from "../core/types";
 import { ValidationContext, ValidationResult } from "./types";
 
 /**

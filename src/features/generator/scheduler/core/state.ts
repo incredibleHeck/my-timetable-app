@@ -1,7 +1,7 @@
-import { AppData, TimeSlot } from "../../../types";
+import { AppData, TimeSlot } from "../../../../types";
 import { AllocationUnit, SchedulerState, ScheduleEntry } from "./types";
-import { calculateClassSchedule } from "../../../utils/timeUtils";
-import { getType } from "./validation/utils";
+import { calculateClassSchedule } from "../../../../utils/timeUtils";
+import { getType } from "../validation/utils";
 
 /**
  * ARCHITECT NOTES:

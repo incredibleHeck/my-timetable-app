@@ -1,5 +1,5 @@
 import { AppData, Teacher, Subject, ClassGroup } from "../../../types";
-import { AllocationUnit } from "./types";
+import { AllocationUnit } from "./core/types";
 import { calculatePriority } from "./heuristics";
 
 /**

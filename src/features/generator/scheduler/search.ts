@@ -1,5 +1,5 @@
 import { AppData, Conflict, Teacher, Subject } from "../../../types";
-import { AllocationUnit, SchedulerState } from "./types";
+import { AllocationUnit, SchedulerState } from "./core/types";
 import { checkHardConstraints, checkImmutableConstraints } from "./constraints";
 import { determineRoom, forceDetermineRoom } from "./rooms";
 import { calculateScore } from "./scoring";

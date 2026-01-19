@@ -1,9 +1,9 @@
 /* eslint-disable no-restricted-globals */
-import { AppData, Conflict } from "../../../types";
-import { prepareAllocationUnits } from "./preparation";
-import { solveSmart } from "./solver";
-import { runConflictAudit } from "./audit";
-import { generateFinalReport } from "./validation/final-audit";
+import { AppData, Conflict } from "../../../../types";
+import { prepareAllocationUnits } from "../preparation";
+import { solveSmart } from "../solver";
+import { runConflictAudit } from "../audit";
+import { generateFinalReport } from "../validation/final-audit";
 
 const ctx: Worker = self as any;
 

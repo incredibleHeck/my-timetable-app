@@ -1,5 +1,5 @@
 import { AppData, Subject, ClassGroup } from "../../../types";
-import { AllocationUnit, SchedulerState } from "./types";
+import { AllocationUnit, SchedulerState } from "./core/types";
 
 /**
  * ARCHITECT NOTES:

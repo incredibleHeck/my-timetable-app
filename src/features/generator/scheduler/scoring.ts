@@ -1,4 +1,4 @@
-import { AllocationUnit, SchedulerState } from "./types";
+import { AllocationUnit, SchedulerState } from "./core/types";
 import { AppData, Subject } from "../../../types";
 import { getPrevClassPeriod } from "./utils";
 

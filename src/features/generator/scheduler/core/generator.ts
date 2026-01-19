@@ -1,8 +1,8 @@
-import { AppData, ScheduleResult, Conflict } from "../../../types";
-import { prepareAllocationUnits } from "./preparation";
-import { solveSmart } from "./solver";
-import { runConflictAudit } from "./audit"; // ARCHITECT: Switch to Fast Audit
-import { generateFinalReport } from "./validation/final-audit";
+import { AppData, ScheduleResult, Conflict } from "../../../../types";
+import { prepareAllocationUnits } from "../preparation";
+import { solveSmart } from "../solver";
+import { runConflictAudit } from "../audit"; // ARCHITECT: Switch to Fast Audit
+import { generateFinalReport } from "../validation/final-audit";
 
 /**
  * GENERATE SCHEDULE: The System Orchestrator

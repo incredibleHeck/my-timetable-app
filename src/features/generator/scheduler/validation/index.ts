@@ -2,7 +2,7 @@ import { AppData, Conflict } from "../../../../types";
 import { calculateClassSchedule } from "../../../../utils/timeUtils";
 import { getType } from "./utils";
 import { ValidationContext, ValidationResult } from "./types";
-import { SchedulerState } from "../types";
+import { SchedulerState } from "../core/types";
 import { getNextClassPeriod } from "../utils";
 import {
   checkGlobalAndClassBlocks,
