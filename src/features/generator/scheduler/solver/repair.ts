@@ -1,7 +1,7 @@
-import { AppData, Teacher, Subject, ClassGroup } from "../../../types";
-import { AllocationUnit, SchedulerState } from "./core/types";
+import { AppData, Teacher, Subject, ClassGroup } from "../../../../types";
+import { AllocationUnit, SchedulerState } from "../core/types";
 import { findMinConflictMove, findUnitsInSlot } from "./search";
-import { removeGangFromState, applyGangToState } from "./core/state";
+import { removeGangFromState, applyGangToState } from "../core/state";
 import { TabuManager } from "./tabu"; 
 
 /**

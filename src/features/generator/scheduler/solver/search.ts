@@ -1,10 +1,10 @@
-import { AppData, Conflict, Teacher, Subject } from "../../../types";
-import { AllocationUnit, SchedulerState } from "./core/types";
-import { checkHardConstraints, checkImmutableConstraints } from "./logic/constraints";
-import { determineRoom, forceDetermineRoom } from "./logic/rooms";
-import { calculateScore } from "./logic/scoring";
-import { getNextClassPeriod, getPeriodType } from "./utils/utils";
-import { EvaluationEngine } from "./logic/evaluation";
+import { AppData, Conflict, Teacher, Subject } from "../../../../types";
+import { AllocationUnit, SchedulerState } from "../core/types";
+import { checkHardConstraints, checkImmutableConstraints } from "../logic/constraints";
+import { determineRoom, forceDetermineRoom } from "../logic/rooms";
+import { calculateScore } from "../logic/scoring";
+import { getNextClassPeriod, getPeriodType } from "../utils/utils";
+import { EvaluationEngine } from "../logic/evaluation";
 import { TabuManager } from "./tabu";
 
 const evaluator = new EvaluationEngine();

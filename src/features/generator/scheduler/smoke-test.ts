@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { AppData, PeriodType, Teacher, Subject, ClassGroup } from "../../../types";
 import { prepareAllocationUnits } from "./preparation";
-import { solveSmart } from "./solver";
+import { solveSmart } from "./solver/solver";
 import { runConflictAudit } from "./validation/audit";
 
 /**

@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-globals */
 import { AppData, Conflict } from "../../../../types";
 import { prepareAllocationUnits } from "../logic/preparation";
-import { solveSmart } from "../solver";
+import { solveSmart } from "../solver/solver";
 import { runConflictAudit } from "../validation/audit";
 import { generateFinalReport } from "../validation/final-audit";
 

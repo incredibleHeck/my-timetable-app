@@ -2,7 +2,7 @@ import { AppData, Subject, Teacher, ClassGroup } from "../../../../types";
 import { AllocationUnit, SchedulerState } from "../core/types";
 import { checkHardConstraints, checkImmutableConstraints } from "./constraints";
 import { calculateScore, calculateTeacherGapPenalty, calculateRoomPenalty } from "./scoring";
-import { countPotentialConflicts, findUnitsInSlot } from "../search";
+import { countPotentialConflicts, findUnitsInSlot } from "../solver/search";
 import { forceDetermineRoom } from "./rooms";
 import { checkSubjectContinuity } from "../validation/load-checks";
 

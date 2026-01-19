@@ -4,7 +4,7 @@ import * as path from 'path';
 import { fileURLToPath } from 'url';
 import { AppData, Teacher, Subject, ClassGroup, Room } from "../../../types"; 
 import { prepareAllocationUnits } from "./preparation";
-import { solveSmart } from "./solver";
+import { solveSmart } from "./solver/solver";
 import { runConflictAudit } from "./validation/audit";
 
 const __filename = fileURLToPath(import.meta.url);

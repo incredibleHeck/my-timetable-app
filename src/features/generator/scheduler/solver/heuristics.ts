@@ -1,7 +1,7 @@
-import { Teacher, AppData, Subject, ClassGroup } from "../../../types";
-import { AllocationUnit, SchedulerState } from "./core/types";
-import { checkHardConstraints } from "./logic/constraints";
-import { getNextClassPeriod, getPeriodType } from "./utils/utils";
+import { Teacher, AppData, Subject, ClassGroup } from "../../../../types";
+import { AllocationUnit, SchedulerState } from "../core/types";
+import { checkHardConstraints } from "../logic/constraints";
+import { getNextClassPeriod, getPeriodType } from "../utils/utils";
 
 /**
  * ARCHITECT NOTES:

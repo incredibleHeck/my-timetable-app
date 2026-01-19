@@ -1,6 +1,6 @@
-import { AppData, Conflict, Teacher, Subject, ClassGroup, Room } from "../../../types";
-import { AllocationUnit, SchedulerState } from "./core/types";
-import { initializeState, applyGangToState, removeGangFromState } from "./core/state";
+import { AppData, Conflict, Teacher, Subject, ClassGroup, Room } from "../../../../types";
+import { AllocationUnit, SchedulerState } from "../core/types";
+import { initializeState, applyGangToState, removeGangFromState } from "../core/state";
 import { findMostConstrainedGangIdx, calculatePriority } from "./heuristics"; 
 import { findValidMoves, findMinConflictMove } from "./search";
 import { TabuManager } from "./tabu";
