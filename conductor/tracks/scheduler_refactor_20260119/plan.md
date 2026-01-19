@@ -6,7 +6,7 @@
 - [ ] Task: Conductor - User Manual Verification 'Setup' (Protocol in workflow.md)
 
 ## Phase 2: Migration
-- [ ] Task: Move `core` files (`generator.ts`, `worker.ts`, `state.ts`, `types.ts`) to `core/` and update internal/relative imports.
+- [x] Task: Move `core` files (`generator.ts`, `worker.ts`, `state.ts`, `types.ts`) to `core/` and update internal/relative imports. f98850b
 - [ ] Task: Move `utils` files (`utils.ts`) to `utils/` and update internal/relative imports.
 - [ ] Task: Move `logic` files (`constraints.ts`, `evaluation.ts`, `scoring.ts`, `preparation.ts`, `rooms.ts`) to `logic/` and update internal/relative imports.
 - [ ] Task: Move `validation` root files (`audit.ts`) to `validation/` and update internal/relative imports.
