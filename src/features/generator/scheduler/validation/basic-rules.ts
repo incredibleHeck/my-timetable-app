@@ -108,8 +108,14 @@ export const checkResourceAndAvailability = (
     // This check handles index-based resource exhaustion.
     if (state) {
       const resourceUser = state.singleResourceUsage[subjectId]?.[targetDay]?.[p];
-      if (resourceUser && resourceUser !== "AVAILABLE") {
-         // Logic for determining if this specific index is exhausted
+      if (resourceUser && resourceUser !== "AVAILABLE" && resourceUser !== "BLOCK") {
+          return {
+            valid: false,
+            message: `${subject.name} Resource bottleneck`,
+            severity: "HIGH",
+            penaltyPoints: 1000,
+            conflictCount: 1,
+          };
       }
     } else {
       // O(N) Fallback scan for UI moves

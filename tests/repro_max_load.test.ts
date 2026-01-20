@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { checkSlotValidity } from "../src/features/generator/scheduler/validation";
-import { initializeState } from "../src/features/generator/scheduler/state";
+import { initializeState } from "../src/features/generator/scheduler/core/state";
 import { AppData } from "../src/types";
 
 describe("Repro: Max Daily Load Hardcoded Limit", () => {

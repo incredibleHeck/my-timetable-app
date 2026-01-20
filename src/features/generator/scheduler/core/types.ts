@@ -78,6 +78,9 @@ export interface SchedulerState {
   /** unitId -> Current coordinates and room assignments */
   unitPlacements: Map<string, { d: number; p: number; p2: number; rooms: Record<string, string> }>;
   
+  /** unitId -> Representative Class ID (for time range lookups) */
+  unitToClassMap: Map<string, string>;
+
   /** Pre-calculated time slots for overlap checking */
   classTimeRanges: Map<string, TimeSlot[]>;
   

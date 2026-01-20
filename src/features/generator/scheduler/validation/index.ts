@@ -196,6 +196,10 @@ export const checkSlotValidity = (
   const loadError = checkTeacherLoad(ctx, proposedSlots, ignoredSlots, state);
   if (loadError) return { ...loadError, penaltyPoints: 800, conflictCount: 0 };
 
+  // RANK 1.5: Class Gaps (The Sandwich Rule)
+  const gapError = checkGapDetection(ctx, proposedSlots, ignoredSlots, state);
+  if (gapError) return { ...gapError, penaltyPoints: 400, conflictCount: 0 };
+
   // RANK 8: Subject Continuity (Hard Constraint) - Prevents subject sandwiching
   const continuityError = checkSubjectContinuity(ctx, proposedSlots, ignoredSlots, state);
   if (continuityError) return { ...continuityError, penaltyPoints: 1500, conflictCount: 1 };

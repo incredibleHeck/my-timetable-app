@@ -99,7 +99,7 @@ describe('Subject Continuity Validation', () => {
     // Math at P0 and P2, English at P1
     const result = checkSubjectContinuity(ctx, new Set([0, 2]), new Set());
     expect(result).not.toBeNull();
-    expect(result?.message).toContain('continuous block');
+    expect(result?.message).toMatch(/split by|sandwiched by/i);
   });
 
   it('should be invalid for periods split by an empty CLASS slot', () => {
@@ -108,7 +108,7 @@ describe('Subject Continuity Validation', () => {
     // Math at P0 and P2, P1 is empty CLASS
     const result = checkSubjectContinuity(ctx, new Set([0, 2]), new Set());
     expect(result).not.toBeNull();
-    expect(result?.message).toContain('continuous block');
+    expect(result?.message).toMatch(/split by|sandwiched by/i);
   });
 
   it('should be invalid for multiple blocks on the same day', () => {
@@ -117,6 +117,6 @@ describe('Subject Continuity Validation', () => {
      // Math block P0-P1, and another block P4-P5
      const result = checkSubjectContinuity(ctx, new Set([0, 1, 4, 5]), new Set());
      expect(result).not.toBeNull();
-     expect(result?.message).toContain('continuous block');
+     expect(result?.message).toMatch(/split by|sandwiched by/i);
   });
 });

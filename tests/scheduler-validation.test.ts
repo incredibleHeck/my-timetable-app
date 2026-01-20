@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { checkSlotValidity } from '../src/features/generator/scheduler/validation';
-import { initializeState } from '../src/features/generator/scheduler/state';
+import { checkSlotValidity } from '../src/features/generator/scheduler/validation/index';
+import { initializeState } from '../src/features/generator/scheduler/core/state';
 import { AppData, Teacher, Class, Subject, Room } from '../src/types';
 import { DEFAULT_DATA } from '../src/utils/constants';
 

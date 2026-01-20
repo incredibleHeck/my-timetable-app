@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { checkSlotValidity } from '../src/features/generator/scheduler/validation';
-import { initializeState } from '../src/features/generator/scheduler/state';
+import { initializeState } from '../src/features/generator/scheduler/core/state';
 import { AppData, Teacher, ClassGroup, Subject } from '../src/types';
 import { DEFAULT_DATA } from '../src/utils/constants';
 
@@ -86,8 +86,8 @@ describe('Subject Continuity Repro - Single Periods', () => {
     );
 
     expect(result.valid).toBe(false);
-    expect(result.message).toContain('continuous block');
-    expect(result.message).toContain('Gap at P2'); // Period 1 is index 1, P2 label
+    expect(result.message).toMatch(/split by|sandwiched by/i);
+    expect(result.message).toContain('at P2'); // Period 1 is index 1, P2 label
   });
 
   it('should NOT flag two adjacent single periods as having a gap', () => {
@@ -206,7 +206,7 @@ describe('Subject Continuity Repro - Single Periods', () => {
     );
 
     expect(result.valid).toBe(false);
-    expect(result.message).toContain('continuous block');
+    expect(result.message).toMatch(/split by|sandwiched by/i);
   });
 
   it('should NOT flag a single period move as a gap if the source is ignored correctly', () => {

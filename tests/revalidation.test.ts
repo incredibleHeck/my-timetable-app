@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { validateFullSchedule } from '../src/features/generator/scheduler/validation';
-import { initializeState } from '../src/features/generator/scheduler/state';
+import { validateFullSchedule } from '../src/features/generator/scheduler/validation/index';
+import { initializeState } from '../src/features/generator/scheduler/core/state';
 import { AppData, Class, Subject, Teacher } from '../src/types';
 import { DEFAULT_DATA } from '../src/utils/constants';
 

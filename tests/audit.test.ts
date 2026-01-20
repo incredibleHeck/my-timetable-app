@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { runConflictAudit } from '../src/features/generator/scheduler/audit';
-import { initializeState } from '../src/features/generator/scheduler/state';
+import { runConflictAudit } from '../src/features/generator/scheduler/validation/audit';
+import { initializeState } from '../src/features/generator/scheduler/core/state';
 import { AppData } from '../src/types';
 import { DEFAULT_DATA } from '../src/utils/constants';
 

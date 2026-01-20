@@ -1,9 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { generateSchedule } from '../src/features/generator/scheduler/generator';
-import { AppData, Settings } from '../src/types';
-
+import { generateSchedule } from '../src/features/generator/scheduler/core/generator';
 import { validateFullSchedule } from '../src/features/generator/scheduler/validation/index';
-import { initializeState } from '../src/features/generator/scheduler/state';
+import { initializeState } from '../src/features/generator/scheduler/core/state';
 
 describe('Generator - Class Structure Fixed Slots', () => {
   const mockSettings: Settings = {

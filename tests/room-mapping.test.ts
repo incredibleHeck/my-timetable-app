@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { solveSmart } from '../src/features/generator/scheduler/solver';
-import { calculatePriority } from '../src/features/generator/scheduler/heuristics';
+import { solveSmart } from '../src/features/generator/scheduler/solver/solver';
+import { calculatePriority } from '../src/features/generator/scheduler/solver/heuristics';
 import { AppData, Teacher, Class, Subject, Room } from '../src/types';
 import { DEFAULT_DATA } from '../src/utils/constants';
 
@@ -66,12 +66,13 @@ describe('Room Mapping Hierarchy', () => {
       teacherIds: ['t1'],
       teacherNames: ['Teacher 1'],
       priority: 10,
+      rankLevel: 10
     }];
 
     const result = solveSmart(units as any, baseData);
     
     // Check if scheduled in Lab
-    const slot = result.schedule['c-10a'][0][0]; // Should be at 0,0
+    const slot = result.schedule['c-10a']?.[0]?.[0]; // Should be at 0,0
     expect(slot).toBeDefined();
     expect(slot.roomId).toBe('r-lab');
   });
@@ -87,12 +88,13 @@ describe('Room Mapping Hierarchy', () => {
       teacherIds: ['t1'],
       teacherNames: ['Teacher 1'],
       priority: 5,
+      rankLevel: 10
     }];
 
     const result = solveSmart(units as any, baseData);
     
     // Check if scheduled in Home Room
-    const slot = result.schedule['c-10a'][0][0];
+    const slot = result.schedule['c-10a']?.[0]?.[0];
     expect(slot).toBeDefined();
     expect(slot.roomId).toBe('r-home');
   });
@@ -130,6 +132,7 @@ describe('Room Mapping Hierarchy', () => {
         teacherIds: ['t2'],
         teacherNames: ['Teacher 2'],
         priority: 100, // Very high priority to ensure it schedules at P0
+        rankLevel: 10
       },
       {
         id: 'u-10a-ict',
@@ -141,6 +144,7 @@ describe('Room Mapping Hierarchy', () => {
         teacherIds: ['t1'],
         teacherNames: ['Teacher 1'],
         priority: 10,
+        rankLevel: 10
       }
     ];
 
@@ -201,6 +205,7 @@ describe('Room Mapping Hierarchy', () => {
         teacherIds: ['t2'],
         teacherNames: ['Teacher 2'],
         priority: 100,
+        rankLevel: 10
       },
       {
         id: 'u-10a-ict',
@@ -212,6 +217,7 @@ describe('Room Mapping Hierarchy', () => {
         teacherIds: ['t1'],
         teacherNames: ['Teacher 1'],
         priority: 10,
+        rankLevel: 10
       }
     ];
 
@@ -244,6 +250,7 @@ describe('Room Mapping Hierarchy', () => {
       teacherIds: ['t1'],
       duration: 1,
       classIds: ['c1'],
+      rankLevel: 10
     } as any;
 
     const unitMath = {
@@ -251,6 +258,7 @@ describe('Room Mapping Hierarchy', () => {
       teacherIds: ['t1'],
       duration: 1,
       classIds: ['c1'],
+      rankLevel: 10
     } as any;
 
     const data = {
@@ -259,11 +267,17 @@ describe('Room Mapping Hierarchy', () => {
         { id: 's-math', requiredRoomId: null }
       ],
       rooms: [{ id: 'r1', type: 'Lab' }],
-      settings: { maxTeacherPeriodsPerDay: 6 }
+      settings: { maxTeacherPeriodsPerDay: 6, periodsPerDay: 8 }
     } as any;
 
-    const priorityICT = calculatePriority(unitICT, [], data);
-    const priorityMath = calculatePriority(unitMath, [], data);
+    const teacherMap = new Map();
+    teacherMap.set('t1', { id: 't1', constraints: [] });
+    const subjectMap = new Map();
+    subjectMap.set('s-ict', data.subjects[0]);
+    subjectMap.set('s-math', data.subjects[1]);
+
+    const priorityICT = calculatePriority(unitICT, data, teacherMap, subjectMap);
+    const priorityMath = calculatePriority(unitMath, data, teacherMap, subjectMap);
 
     expect(priorityICT).toBeGreaterThan(priorityMath);
   });
@@ -296,13 +310,13 @@ describe('Room Mapping Hierarchy', () => {
 
     const units = [
       // Class A: ICT (1), Math (1)
-      { id: 'u-a-ict', subjectId: 's-ict', duration: 1, classIds: ['c-a'], teacherIds: ['t1'], priority: 8000 },
-      { id: 'u-a-math', subjectId: 's-math', duration: 1, classIds: ['c-a'], teacherIds: ['t1'], priority: 0 },
+      { id: 'u-a-ict', subjectId: 's-ict', duration: 1, classIds: ['c-a'], teacherIds: ['t1'], priority: 8000, rankLevel: 10, classNames: ['A'], teacherNames: ['T1'], subjectName: 'ICT' },
+      { id: 'u-a-math', subjectId: 's-math', duration: 1, classIds: ['c-a'], teacherIds: ['t1'], priority: 0, rankLevel: 10, classNames: ['A'], teacherNames: ['T1'], subjectName: 'Math' },
       // Class B: Sci (1), Math (1)
-      { id: 'u-b-sci', subjectId: 's-sci', duration: 1, classIds: ['c-b'], teacherIds: ['t2'], priority: 8000 },
-      { id: 'u-b-math', subjectId: 's-math', duration: 1, classIds: ['c-b'], teacherIds: ['t2'], priority: 0 },
+      { id: 'u-b-sci', subjectId: 's-sci', duration: 1, classIds: ['c-b'], teacherIds: ['t2'], priority: 8000, rankLevel: 10, classNames: ['B'], teacherNames: ['T2'], subjectName: 'Sci' },
+      { id: 'u-b-math', subjectId: 's-math', duration: 1, classIds: ['c-b'], teacherIds: ['t2'], priority: 0, rankLevel: 10, classNames: ['B'], teacherNames: ['T2'], subjectName: 'Math' },
       // Class C: ICT (1), Math (1)
-      { id: 'u-c-ict', subjectId: 's-ict', duration: 1, classIds: ['c-c'], teacherIds: ['t3'], priority: 8000 },
+      { id: 'u-c-ict', subjectId: 's-ict', duration: 1, classIds: ['c-c'], teacherIds: ['t3'], priority: 8000, rankLevel: 10, classNames: ['C'], teacherNames: ['T3'], subjectName: 'ICT' },
     ];
 
     const data: AppData = {
@@ -358,6 +372,7 @@ describe('Room Mapping Hierarchy', () => {
       teacherIds: ['t1'],
       teacherNames: ['T1'],
       priority: 10,
+      rankLevel: 10,
       defaultRoomId: 'r-home'
     }];
 

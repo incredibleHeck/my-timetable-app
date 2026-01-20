@@ -132,7 +132,7 @@ export const GeneratorView: React.FC<ViewProps> = ({
 
     // 1. Initialize Worker
     workerRef.current = new Worker(
-      new URL("./scheduler/worker.ts", import.meta.url),
+      new URL("./scheduler/core/worker.ts", import.meta.url),
       { type: "module" }
     );
 

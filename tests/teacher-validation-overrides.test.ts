@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { checkSlotValidity } from '../src/features/generator/scheduler/validation';
-import { initializeState } from '../src/features/generator/scheduler/state';
+import { checkSlotValidity } from '../src/features/generator/scheduler/validation/index';
+import { initializeState } from '../src/features/generator/scheduler/core/state';
 import { AppData, Teacher, Class, Subject } from '../src/types';
 import { DEFAULT_DATA } from '../src/utils/constants';
 
@@ -38,14 +38,14 @@ describe('Teacher Daily Limit Overrides', () => {
     },
     teachers: [mockTeacher],
     classes: [mockClass],
-    subjects: [mockSubject],
+    subjects: [mockSubject, { id: 's2', name: 'S2' }, { id: 's3', name: 'S3' }, { id: 's4', name: 'S4' }, { id: 's5', name: 'S5' }],
     schedule: {
         'c1': {
           0: {
-            2: { subjectId: 's1', teacherId: 't1', classId: 'c1' },
-            3: { subjectId: 's1', teacherId: 't1', classId: 'c1' },
-            4: { subjectId: 's1', teacherId: 't1', classId: 'c1' },
-            5: { subjectId: 's1', teacherId: 't1', classId: 'c1' }
+            2: { subjectId: 's2', teacherId: 't1', classId: 'c1' },
+            3: { subjectId: 's3', teacherId: 't1', classId: 'c1' },
+            4: { subjectId: 's4', teacherId: 't1', classId: 'c1' },
+            5: { subjectId: 's5', teacherId: 't1', classId: 'c1' }
           }
         }
     },
@@ -84,9 +84,10 @@ describe('Teacher Daily Limit Overrides', () => {
       maxPeriodsPerDay: 8
     };
 
-    const data: AppData = {
-      ...baseData,
-      teachers: [lenientTeacher]
+    const data = {
+        ...baseData,
+        subjects: [...baseData.subjects, { id: 's2', name: 'S2' }, { id: 's3', name: 'S3' }, { id: 's4', name: 'S4' }, { id: 's5', name: 'S5' }, { id: 's6', name: 'S6' }],
+        teachers: [lenientTeacher]
     };
 
     // Teacher has 4 periods. Adding 5th, 6th, 7th should PASS.
@@ -126,6 +127,7 @@ describe('Teacher Daily Limit Overrides', () => {
     // Adding 7th period should FAIL with global limit.
     const busyData: AppData = {
         ...baseData,
+        subjects: [...baseData.subjects, { id: 's2', name: 'S2' }, { id: 's3', name: 'S3' }, { id: 's4', name: 'S4' }, { id: 's5', name: 'S5' }, { id: 's6', name: 'S6' }],
         schedule: {
             'c1': {
                 0: {

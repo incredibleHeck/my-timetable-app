@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { TabuManager } from '../src/features/generator/scheduler/tabu';
+import { TabuManager } from '../src/features/generator/scheduler/solver/tabu';
 
 describe('TabuManager', () => {
   it('should mark a move as tabu and respect tenure', () => {

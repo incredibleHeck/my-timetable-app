@@ -42,6 +42,7 @@ export const initializeState = (data: AppData): SchedulerState => {
     classTimeRanges,
     lessonNavigation,
     unitPlacements: new Map(),
+    unitToClassMap: new Map(),
     settings,
   };
 
@@ -157,6 +158,7 @@ export const initializeState = (data: AppData): SchedulerState => {
 
                   if (!state.unitPlacements.has(unitId)) {
                       state.unitPlacements.set(unitId, { d, p, p2: -1, rooms: { [unitId]: slot.roomId || "" } });
+                      state.unitToClassMap.set(unitId, cId);
                   }
                   
                   if (state.classOccupancy[cId]) {
@@ -207,6 +209,7 @@ export function applyMove(
 ) {
   const { d, p, p2, rooms } = move;
   state.unitPlacements.set(unit.id, move);
+  state.unitToClassMap.set(unit.id, unit.classIds[0]);
 
   unit.classIds.forEach((cid) => {
     if (!state.schedule[cid][d]) state.schedule[cid][d] = {};
@@ -284,6 +287,7 @@ export function unassignUnit(state: SchedulerState, unit: AllocationUnit) {
   if (!placement) return; 
 
   const { d, p, p2, rooms } = placement;
+  state.unitToClassMap.delete(unit.id);
 
   unit.teacherIds.forEach((tid) => {
     // Only decrement load if we are the current occupant

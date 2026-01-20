@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { checkSlotValidity } from "../src/features/generator/scheduler/validation";
-import { initializeState } from "../src/features/generator/scheduler/state";
+import { initializeState } from "../src/features/generator/scheduler/core/state";
 import { AppData, ClassGroup, Teacher, Subject } from "../src/types";
 
 describe("Debug Repro: Single Swap Same Teacher", () => {

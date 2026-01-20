@@ -12,7 +12,7 @@
 - [x] Task: Move `validation` root files (`audit.ts`) to `validation/` and update internal/relative imports. 39aecbe
 - [x] Task: Move `solver` files (`solver.ts`, `search.ts`, `repair.ts`, `tabu.ts`, `heuristics.ts`) to `solver/` and update internal/relative imports. 6413806
 - [x] Task: Move `diagnostics` files (`smoke-test.ts`, `test-real-world.ts`, `school-data.json`) to `diagnostics/` and update internal/relative imports. ce4a9fd
-- [ ] Task: Conductor - User Manual Verification 'Migration' (Protocol in workflow.md)
+- [~] Task: Conductor - User Manual Verification 'Migration' (Protocol in workflow.md)
 
 ## Phase 3: Stabilization & Verification
 - [ ] Task: Update external references.

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { solveSmart } from '../src/features/generator/scheduler/solver';
-import { prepareAllocationUnits } from '../src/features/generator/scheduler/preparation';
+import { solveSmart } from '../src/features/generator/scheduler/solver/solver';
+import { prepareAllocationUnits } from '../src/features/generator/scheduler/logic/preparation';
 import { DEFAULT_DATA } from '../src/utils/constants';
 
 describe('Conflict Reporting Verification', () => {

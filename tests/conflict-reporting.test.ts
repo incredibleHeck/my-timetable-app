@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from "vitest";
-import { generateSchedule } from "../src/features/generator/scheduler/generator";
+import { generateSchedule } from "../src/features/generator/scheduler/core/generator";
 import { AppData } from "../src/types";
 
 // Mock solveSmart to return a predictable schedule
-vi.mock("../src/features/generator/scheduler/solver", () => ({
+vi.mock("../src/features/generator/scheduler/solver/solver", () => ({
   solveSmart: vi.fn(() => ({
     schedule: {
       "c1": {
@@ -48,7 +48,7 @@ vi.mock("../src/features/generator/scheduler/solver", () => ({
 }));
 
 // Mock audit to return empty legacy stuff
-vi.mock("../src/features/generator/scheduler/audit", () => ({
+vi.mock("../src/features/generator/scheduler/validation/audit", () => ({
   runConflictAudit: vi.fn(() => ({
     conflicts: [],
     curriculumGaps: [],
@@ -57,7 +57,7 @@ vi.mock("../src/features/generator/scheduler/audit", () => ({
 }));
 
 // Mock preparation to avoid processing units
-vi.mock("../src/features/generator/scheduler/preparation", () => ({
+vi.mock("../src/features/generator/scheduler/logic/preparation", () => ({
   prepareAllocationUnits: vi.fn(() => [])
 }));
 

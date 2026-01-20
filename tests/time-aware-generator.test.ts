@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { solveSmart } from '../src/features/generator/scheduler/solver';
+import { solveSmart } from '../src/features/generator/scheduler/solver/solver';
 import { AppData, Teacher, Class, Subject } from '../src/types';
 import { DEFAULT_DATA } from '../src/utils/constants';
 
@@ -58,7 +58,8 @@ describe('Time-Aware Generator', () => {
         classNames: ['Class A'],
         teacherIds: ['t1'], 
         teacherNames: ['John'], 
-        priority: 10 // Higher priority to ensure it schedules first
+        priority: 10,
+        rankLevel: 10
       },
       { 
         id: 'u2', 
@@ -69,7 +70,8 @@ describe('Time-Aware Generator', () => {
         classNames: ['Class B'],
         teacherIds: ['t1'], 
         teacherNames: ['John'], 
-        priority: 5
+        priority: 5,
+        rankLevel: 10
       }
     ];
 

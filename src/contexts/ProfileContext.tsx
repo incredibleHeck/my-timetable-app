@@ -1,25 +1,36 @@
-import React, { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
-import { Profile, ProfileManifest } from '../types/profile';
-import { AppData, Activity, ActivityType } from '../types';
-import * as ProfileStorage from '../services/profile/profileStorage';
-import * as Migration from '../services/profile/migration';
-import { generateId, deepClone, mergeWithDefaults } from '../utils/utils';
-import { DEFAULT_DATA } from '../utils/constants';
-import { calculateClassSchedule } from '../utils/timeUtils';
-import { TimeSlot } from '../types';
-import { validateFullSchedule } from '../features/generator/scheduler/validation';
-import { initializeState } from '../features/generator/scheduler/state';
-import { syncHomeRooms } from '../features/classes/utils';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useRef,
+  ReactNode,
+} from "react";
+import { Profile, ProfileManifest } from "../types/profile";
+import { AppData, Activity, ActivityType } from "../types";
+import * as ProfileStorage from "../services/profile/profileStorage";
+import * as Migration from "../services/profile/migration";
+import { generateId, deepClone, mergeWithDefaults } from "../utils/utils";
+import { DEFAULT_DATA } from "../utils/constants";
+import { calculateClassSchedule } from "../utils/timeUtils";
+import { TimeSlot } from "../types";
+import { validateFullSchedule } from "../features/generator/scheduler/validation";
+import { initializeState } from "../features/generator/scheduler/core/state";
+import { syncHomeRooms } from "../features/classes/utils";
 
 interface ProfileContextType {
-  profiles: ProfileManifest['profiles'];
+  profiles: ProfileManifest["profiles"];
   activeProfile: Profile | null;
   isLoading: boolean;
   isSaving: boolean;
   createNewProfile: (name: string, templateData?: AppData) => Promise<void>;
   switchProfile: (id: string) => Promise<void>;
   updateActiveProfile: (data: AppData) => void;
-  addActivity: (type: ActivityType, message: string, dataToUpdate?: AppData) => void;
+  addActivity: (
+    type: ActivityType,
+    message: string,
+    dataToUpdate?: AppData,
+  ) => void;
   reloadProfiles: () => Promise<void>;
   undo: () => void;
   redo: () => void;
@@ -34,11 +45,11 @@ const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 const MAX_HISTORY = 50;
 
 export const ProfileProvider = ({ children }: { children: ReactNode }) => {
-  const [profiles, setProfiles] = useState<ProfileManifest['profiles']>([]);
+  const [profiles, setProfiles] = useState<ProfileManifest["profiles"]>([]);
   const [activeProfile, setActiveProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  
+
   // History State
   const [past, setPast] = useState<AppData[]>([]);
   const [future, setFuture] = useState<AppData[]>([]);
@@ -56,12 +67,15 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     if (profile) {
       // Ensure defaults for new schema fields
       profile.data = mergeWithDefaults(profile.data, DEFAULT_DATA);
-      
+
       // Auto-assign/sync unique home rooms on load
-      const { updatedClasses, updatedRooms } = syncHomeRooms(profile.data.classes, profile.data.rooms);
+      const { updatedClasses, updatedRooms } = syncHomeRooms(
+        profile.data.classes,
+        profile.data.rooms,
+      );
       profile.data.classes = updatedClasses;
       profile.data.rooms = updatedRooms;
-      
+
       setActiveProfile(profile);
       await ProfileStorage.setActiveProfile(id);
       // Reset history on profile switch
@@ -76,7 +90,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     try {
       // 1. Migrate if needed
       await Migration.migrateFromLocalStorage();
-      
+
       // 2. Init Storage (ensure manifest)
       await ProfileStorage.init();
 
@@ -111,7 +125,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
       created: Date.now(),
       lastModified: Date.now(),
       data: templateData ? deepClone(templateData) : deepClone(DEFAULT_DATA),
-      meta: {}
+      meta: {},
     };
 
     await ProfileStorage.saveProfile(newProfile);
@@ -122,10 +136,10 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   const switchProfile = async (id: string) => {
     // Cancel pending saves
     if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-        if (activeProfile) {
-            await ProfileStorage.saveProfile(activeProfile);
-        }
+      clearTimeout(saveTimeoutRef.current);
+      if (activeProfile) {
+        await ProfileStorage.saveProfile(activeProfile);
+      }
     }
     await loadActiveProfile(id);
   };
@@ -135,10 +149,10 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
 
     const previous = past[past.length - 1];
     const newPast = past.slice(0, past.length - 1);
-    
+
     setPast(newPast);
     setFuture([activeProfile.data, ...future]);
-    
+
     // Apply state without pushing to history again
     applyState(previous);
   };
@@ -148,18 +162,18 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
 
     const next = future[0];
     const newFuture = future.slice(1);
-    
+
     setPast([...past, activeProfile.data]);
     setFuture(newFuture);
-    
+
     // Apply state without pushing to history again
     applyState(next);
   };
 
   const pushToHistory = (data: AppData) => {
     if (!activeProfile) return;
-    
-    setPast(prevPast => {
+
+    setPast((prevPast) => {
       const newPast = [...prevPast, activeProfile.data];
       if (newPast.length > MAX_HISTORY) {
         return newPast.slice(newPast.length - MAX_HISTORY);
@@ -173,7 +187,10 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     if (!activeProfile) return;
 
     // Ensure all classes have a unique system-generated Home Room
-    const { updatedClasses, updatedRooms } = syncHomeRooms(data.classes, data.rooms);
+    const { updatedClasses, updatedRooms } = syncHomeRooms(
+      data.classes,
+      data.rooms,
+    );
     data.classes = updatedClasses;
     data.rooms = updatedRooms;
 
@@ -182,10 +199,10 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     const conflicts = validateFullSchedule(data, state);
     const validatedData = { ...data, conflicts };
 
-    const updated = { 
-        ...activeProfile, 
-        data: validatedData, 
-        lastModified: Date.now() 
+    const updated = {
+      ...activeProfile,
+      data: validatedData,
+      lastModified: Date.now(),
     };
     setActiveProfile(updated);
     triggerSave(updated);
@@ -196,7 +213,11 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     applyState(data);
   };
 
-  const addActivity = (type: ActivityType, message: string, dataToUpdate?: AppData) => {
+  const addActivity = (
+    type: ActivityType,
+    message: string,
+    dataToUpdate?: AppData,
+  ) => {
     if (!activeProfile) return;
 
     const newActivity: Activity = {
@@ -207,10 +228,13 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const currentData = dataToUpdate || activeProfile.data;
-    
+
     const updatedData = {
       ...currentData,
-      recentActivity: [newActivity, ...(currentData.recentActivity || [])].slice(0, 50),
+      recentActivity: [
+        newActivity,
+        ...(currentData.recentActivity || []),
+      ].slice(0, 50),
     };
 
     updateActiveProfile(updatedData);
@@ -228,35 +252,37 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
 
   const getClassSchedule = (classId: string): TimeSlot[] => {
     if (!activeProfile) return [];
-    
-    const classGroup = activeProfile.data.classes.find(c => c.id === classId);
+
+    const classGroup = activeProfile.data.classes.find((c) => c.id === classId);
     if (!classGroup) return [];
 
     return calculateClassSchedule(
       classGroup,
       activeProfile.data.settings,
-      activeProfile.data.settings.dayStructure
+      activeProfile.data.settings.dayStructure,
     );
   };
 
   return (
-    <ProfileContext.Provider value={{
-      profiles,
-      activeProfile,
-      isLoading,
-      isSaving,
-      createNewProfile,
-      switchProfile,
-      updateActiveProfile,
-      addActivity,
-      reloadProfiles,
-      undo,
-      redo,
-      pushToHistory,
-      canUndo: past.length > 0,
-      canRedo: future.length > 0,
-      getClassSchedule
-    }}>
+    <ProfileContext.Provider
+      value={{
+        profiles,
+        activeProfile,
+        isLoading,
+        isSaving,
+        createNewProfile,
+        switchProfile,
+        updateActiveProfile,
+        addActivity,
+        reloadProfiles,
+        undo,
+        redo,
+        pushToHistory,
+        canUndo: past.length > 0,
+        canRedo: future.length > 0,
+        getClassSchedule,
+      }}
+    >
       {children}
     </ProfileContext.Provider>
   );
@@ -265,7 +291,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
 export const useProfile = () => {
   const context = useContext(ProfileContext);
   if (context === undefined) {
-    throw new Error('useProfile must be used within a ProfileProvider');
+    throw new Error("useProfile must be used within a ProfileProvider");
   }
   return context;
 };
