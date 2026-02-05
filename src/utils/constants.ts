@@ -7,71 +7,75 @@ import { generateDefaultTimeSlots } from "./timeUtils";
 // --- PRO COLOR PALETTE (Hex + Name) ---
 // Used by SubjectsView for tooltips
 export const COLOR_PALETTE = [
-  // Reds & Pinks
+  // --- REDS (4) ---
   { hex: "#ef4444", name: "Bright Red" },
-  { hex: "#b91c1c", name: "Deep Crimson" },
+  { hex: "#7f1d1d", name: "Deep Maroon" },
+  { hex: "#dc143c", name: "Crimson" },
+  { hex: "#fa8072", name: "Salmon" },
+
+  // --- PINKS (4) ---
   { hex: "#ec4899", name: "Hot Pink" },
-  { hex: "#be185d", name: "Dark Magenta" },
-  { hex: "#f43f5e", name: "Rose" },
-  { hex: "#9f1239", name: "Burgundy" },
+  { hex: "#fbcfe8", name: "Pastel Pink" },
+  { hex: "#be185d", name: "Magenta" },
+  { hex: "#da70d6", name: "Orchid" }, // Distinct Purple-Pink
 
-  // Oranges & Browns
+  // --- ORANGES (4) ---
   { hex: "#f97316", name: "Bright Orange" },
-  { hex: "#c2410c", name: "Burnt Orange" },
-  { hex: "#f59e0b", name: "Amber" },
-  { hex: "#b45309", name: "Bronze" },
-  { hex: "#854d0e", name: "Golden Brown" },
-  { hex: "#A0522D", name: "Sienna" },
-  { hex: "#8B4513", name: "Saddle Brown" },
+  { hex: "#c2410c", name: "Rust" },
+  { hex: "#fdba74", name: "Peach" },
+  { hex: "#ff7f50", name: "Coral" },
 
-  // Yellows
-  { hex: "#eab308", name: "Mustard" },
-  { hex: "#ca8a04", name: "Dark Gold" },
+  // --- YELLOWS (3) ---
+  { hex: "#facc15", name: "Lemon Yellow" },
+  { hex: "#ca8a04", name: "Mustard" },
+  { hex: "#ffd700", name: "Gold" },
 
-  // Greens
-  { hex: "#84cc16", name: "Lime" },
-  { hex: "#4d7c0f", name: "Olive Green" },
+  // --- GREENS (5) ---
   { hex: "#22c55e", name: "True Green" },
-  { hex: "#15803d", name: "Forest Green" },
-  { hex: "#10b981", name: "Emerald" },
-  { hex: "#047857", name: "Deep Pine" },
+  { hex: "#84cc16", name: "Lime" },
+  { hex: "#14532d", name: "Forest Green" },
+  { hex: "#556b2f", name: "Olive" },
+  { hex: "#00ff7f", name: "Spring Green" }, // High-Vis Neon
 
-  // Teals & Cyans
-  { hex: "#14b8a6", name: "Teal" },
-  { hex: "#0f766e", name: "Dark Teal" },
+  // --- TEALS & CYANS (5) ---
   { hex: "#06b6d4", name: "Cyan" },
-  { hex: "#0e7490", name: "Cerulean" },
-
-  // Blues
-  { hex: "#0ea5e9", name: "Sky Blue" },
-  { hex: "#0369a1", name: "Ocean Blue" },
-  { hex: "#3b82f6", name: "Royal Blue" },
-  { hex: "#1d4ed8", name: "Cobalt" },
-  { hex: "#1e40af", name: "Midnight Blue" },
-  { hex: "#6366f1", name: "Indigo" },
-  { hex: "#4338ca", name: "Deep Indigo" },
-
-  // Purples & Violets
-  { hex: "#8b5cf6", name: "Violet" },
-  { hex: "#6d28d9", name: "Deep Violet" },
-  { hex: "#a855f7", name: "Purple" },
-  { hex: "#7e22ce", name: "Grape" },
-  { hex: "#d946ef", name: "Fuchsia" },
-  { hex: "#a21caf", name: "Plum" },
-
-  // Grays & Muted
-  { hex: "#64748b", name: "Slate Gray" },
-  { hex: "#334155", name: "Dark Slate" },
-  { hex: "#71717a", name: "Zinc" },
-  { hex: "#3f3f46", name: "Charcoal" },
-  { hex: "#78716c", name: "Warm Stone" },
-  { hex: "#44403c", name: "Dark Stone" },
-
-  // Distinct Others
+  { hex: "#115e59", name: "Deep Teal" },
   { hex: "#2dd4bf", name: "Aquamarine" },
-  { hex: "#fb7185", name: "Soft Coral" },
-  { hex: "#a78bfa", name: "Lavender" },
-  { hex: "#fbbf24", name: "Marigold" },
+  { hex: "#5f9ea0", name: "Cadet Blue" }, // Grayish Teal
+  { hex: "#40e0d0", name: "Turquoise" },
+
+  // --- BLUES (5) ---
+  { hex: "#2563eb", name: "Royal Blue" },
+  { hex: "#0ea5e9", name: "Sky Blue" },
+  { hex: "#1e3a8a", name: "Navy" },
+  { hex: "#4682b4", name: "Steel Blue" }, // Gray-Blue
+  { hex: "#818cf8", name: "Periwinkle" }, // Soft Indigo-Blue
+
+  // --- PURPLES (5) ---
+  { hex: "#8b5cf6", name: "Violet" },
+  { hex: "#581c87", name: "Deep Indigo" },
+  { hex: "#d8b4fe", name: "Lavender" },
+  { hex: "#a21caf", name: "Plum" },
+  { hex: "#d946ef", name: "Fuchsia" }, // Neon Purple
+
+  // --- BROWNS (4) ---
+  { hex: "#451a03", name: "Chocolate" },
+  { hex: "#854d0e", name: "Bronze" },
+  { hex: "#d2b48c", name: "Tan" },
+  { hex: "#a0522d", name: "Sienna" },
+
+  // --- GRAYS (4) ---
+  { hex: "#94a3b8", name: "Silver" },
+  { hex: "#475569", name: "Slate" },
+  { hex: "#1c1917", name: "Charcoal" },
+  { hex: "#d1d5db", name: "Light Gray" },
+
+  // --- DISTINCT ACCENTS (5) ---
+  { hex: "#6ee7b7", name: "Mint" }, // Soft Green
+  { hex: "#808000", name: "Army Green" }, // Brown-Green
+  { hex: "#93c5fd", name: "Baby Blue" }, // Very Light Blue
+  { hex: "#fb923c", name: "Apricot" }, // Soft Orange
+  { hex: "#0891b2", name: "Ocean" }, // Rich Blue-Green
 ];
 
 export const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
@@ -132,3 +136,4 @@ export const DEFAULT_PROFILE: Profile = {
   name: "Default Profile",
   data: DEFAULT_DATA,
 };
+

@@ -6,7 +6,7 @@ import {
   AlertTriangle,
   Building2,
   Users,
-  // Box was unused, removed it
+  Box,
 } from "lucide-react";
 import { AppData } from "../../types";
 import { Room } from "./types";
@@ -46,7 +46,7 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
   // Smart Sort
   const sortedRooms = useMemo(() => {
     return [...data.rooms].sort((a, b) =>
-      a.name.localeCompare(b.name, undefined, { numeric: true })
+      a.name.localeCompare(b.name, undefined, { numeric: true }),
     );
   }, [data.rooms]);
 
@@ -57,26 +57,19 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
       name: roomName,
       capacity: parseInt(roomCapacity) || 0,
       type: roomType,
-      // Preserve the isHomeRoom flag if we are editing
-      isHomeRoom: editingRoom?.isHomeRoom || false, 
     };
 
     let newRooms = [...data.rooms];
     let msg = "";
     if (editingRoom) {
       msg = `Updated Room: ${newRoom.name}`;
-      newRooms = newRooms.map((r) =>
-        r.id === editingRoom.id ? newRoom : r
-      );
+      newRooms = newRooms.map((r) => (r.id === editingRoom.id ? newRoom : r));
     } else {
       msg = `Added Room: ${newRoom.name}`;
       newRooms.push(newRoom);
     }
     const nextData = { ...data, rooms: newRooms };
-    
-    // FIX: Log activity AND update the parent state
     addActivity("ACADEMIC", msg, nextData);
-    onUpdate(nextData);
 
     setModalOpen(false);
     resetForm();
@@ -90,9 +83,6 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
   };
 
   const initiateDelete = (room: Room) => {
-    // FIX: Safety check to ensure we never delete a home room, even if UI is bypassed
-    if (room.isHomeRoom) return;
-    
     setRoomToDelete(room);
     setDeleteModalOpen(true);
   };
@@ -104,10 +94,7 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
     try {
       const updatedRooms = data.rooms.filter((r) => r.id !== id);
       const nextData = { ...data, rooms: updatedRooms };
-      
-      // FIX: Log activity AND update the parent state
       addActivity("ACADEMIC", `Deleted Room: ${roomToDelete.name}`, nextData);
-      onUpdate(nextData);
     } catch (e) {
       console.error(e);
     }
@@ -117,9 +104,6 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
   };
 
   const openModal = (room?: Room) => {
-    // FIX: Safety check to ensure we never open edit modal for home room
-    if (room?.isHomeRoom) return;
-
     if (room) {
       setEditingRoom(room);
       setRoomName(room.name);
@@ -184,37 +168,17 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                 </div>
               </div>
 
-              {/* ACTION BUTTONS */}
               <div className="flex border-t border-slate-100">
-                {/* EDIT BUTTON */}
                 <button
-                  onClick={() => !room.isHomeRoom && openModal(room)}
-                  disabled={room.isHomeRoom}
-                  title={
-                    room.isHomeRoom
-                      ? "System-managed room. Edit via Class settings."
-                      : "Edit Room"
-                  }
-                  className={`flex-1 py-3 text-xs font-semibold flex items-center justify-center transition-colors ${
-                    room.isHomeRoom
-                      ? "text-slate-300 cursor-not-allowed opacity-50"
-                      : "text-slate-600 hover:bg-slate-50"
-                  }`}
+                  onClick={() => openModal(room)}
+                  className="flex-1 py-3 text-slate-600 hover:bg-slate-50 text-xs font-semibold flex items-center justify-center transition-colors"
                 >
                   <Edit2 size={14} className="mr-1" /> Edit
                 </button>
-
                 <div className="w-px bg-slate-100"></div>
-
-                {/* DELETE BUTTON */}
                 <button
                   onClick={() => initiateDelete(room)}
                   disabled={room.isHomeRoom}
-                  title={
-                    room.isHomeRoom
-                      ? "System-managed room. Delete via Class settings."
-                      : "Delete Room"
-                  }
                   className={`flex-1 py-3 text-xs font-semibold flex items-center justify-center transition-colors ${
                     room.isHomeRoom
                       ? "text-slate-300 cursor-not-allowed opacity-50"
@@ -249,7 +213,7 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
           <div className="flex justify-end gap-2 w-full">
             <Button variant="secondary" onClick={() => setModalOpen(false)}>
               Cancel
-            </Button>
+            </Button>2
             <Button onClick={saveRoom}>Save Room</Button>
           </div>
         }
