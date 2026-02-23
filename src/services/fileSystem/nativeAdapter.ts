@@ -9,6 +9,13 @@ const getFs = async () => {
   throw new Error('Tauri FS plugin is not available in this environment');
 };
 
+const getPath = async () => {
+  if (isTauriEnv()) {
+    return await import('@tauri-apps/api/path');
+  }
+  throw new Error('Tauri Path API is not available in this environment');
+};
+
 const getDialog = async () => {
   if (isTauriEnv()) {
     return await import('@tauri-apps/plugin-dialog');
@@ -23,7 +30,10 @@ const getDialog = async () => {
  */
 export async function writeBinaryFile(path: string, content: Uint8Array): Promise<void> {
   try {
-    const { writeFile } = await getFs();
+    const { writeFile, mkdir } = await getFs();
+    const { dirname } = await getPath();
+    const dir = await dirname(path);
+    await mkdir(dir, { recursive: true });
     await writeFile(path, content);
   } catch (error) {
     console.error(`Failed to write binary file to ${path}:`, error);
@@ -38,7 +48,10 @@ export async function writeBinaryFile(path: string, content: Uint8Array): Promis
  */
 export async function writeFile(path: string, content: string): Promise<void> {
   try {
-    const { writeTextFile } = await getFs();
+    const { writeTextFile, mkdir } = await getFs();
+    const { dirname } = await getPath();
+    const dir = await dirname(path);
+    await mkdir(dir, { recursive: true });
     await writeTextFile(path, content);
   } catch (error) {
     console.error(`Failed to write file to ${path}:`, error);

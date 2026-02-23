@@ -8,7 +8,12 @@ vi.mock('@tauri-apps/plugin-fs', () => ({
   exists: vi.fn(),
   writeFile: vi.fn(),
   remove: vi.fn(),
+  mkdir: vi.fn(),
   BaseDirectory: { AppData: 1 }
+}));
+
+vi.mock('@tauri-apps/api/path', () => ({
+  dirname: vi.fn().mockResolvedValue('/mock/path')
 }));
 
 vi.mock('@tauri-apps/plugin-dialog', () => ({
