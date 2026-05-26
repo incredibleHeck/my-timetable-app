@@ -4,7 +4,7 @@ import { initializeState } from '../src/features/generator/scheduler/core/state'
 import { AppData, Teacher, Class, Subject } from '../src/types';
 import { DEFAULT_DATA } from '../src/utils/constants';
 
-describe('Teacher Daily Limit Overrides', () => {
+describe('Teacher Daily Limit (global settings)', () => {
   const mockTeacher: Teacher = {
     id: 't1',
     name: 'John Doe',
@@ -18,7 +18,8 @@ describe('Teacher Daily Limit Overrides', () => {
     curriculum: [],
     studentCount: 30,
     periodCount: 10,
-    structure: Array(10).fill({ type: 'CLASS', label: 'C' })
+    structure: Array(10).fill({ type: 'CLASS', label: 'C' }),
+    defaultRoomId: 'r1',
   };
 
   const mockSubject: Subject = {
@@ -31,129 +32,50 @@ describe('Teacher Daily Limit Overrides', () => {
     ...DEFAULT_DATA,
     settings: {
       ...DEFAULT_DATA.settings,
-      maxTeacherPeriodsPerDay: 6, // Global limit
+      maxTeacherPeriodsPerDay: 6,
       maxConsecutivePeriods: 10,
       periodsPerDay: 10,
       dayStructure: Array(10).fill({ type: 'CLASS', label: 'C' }),
     },
     teachers: [mockTeacher],
     classes: [mockClass],
-    subjects: [mockSubject, { id: 's2', name: 'S2' }, { id: 's3', name: 'S3' }, { id: 's4', name: 'S4' }, { id: 's5', name: 'S5' }],
+    subjects: [
+      mockSubject,
+      { id: 's2', name: 'S2', color: '#00ff00' },
+      { id: 's3', name: 'S3', color: '#0000ff' },
+      { id: 's4', name: 'S4', color: '#ffff00' },
+      { id: 's5', name: 'S5', color: '#ff00ff' },
+      { id: 's6', name: 'S6', color: '#00ffff' },
+      { id: 's7', name: 'S7', color: '#888888' },
+    ],
     schedule: {
-        'c1': {
-          0: {
-            2: { subjectId: 's2', teacherId: 't1', classId: 'c1' },
-            3: { subjectId: 's3', teacherId: 't1', classId: 'c1' },
-            4: { subjectId: 's4', teacherId: 't1', classId: 'c1' },
-            5: { subjectId: 's5', teacherId: 't1', classId: 'c1' }
-          }
-        }
+      c1: {
+        0: {
+          0: { subjectId: 's1', teacherId: 't1', classId: 'c1' },
+          1: { subjectId: 's2', teacherId: 't1', classId: 'c1' },
+          2: { subjectId: 's3', teacherId: 't1', classId: 'c1' },
+          3: { subjectId: 's4', teacherId: 't1', classId: 'c1' },
+          4: { subjectId: 's5', teacherId: 't1', classId: 'c1' },
+          5: { subjectId: 's6', teacherId: 't1', classId: 'c1' },
+        },
+      },
     },
     recentActivity: [],
   };
 
-  it('should respect a STRICTER teacher-specific limit (e.g. 4 vs global 6)', () => {
-    const strictTeacher = {
-      ...mockTeacher,
-      maxPeriodsPerDay: 4
-    };
-
-    const data: AppData = {
-      ...baseData,
-      teachers: [strictTeacher]
-    };
-
-    const state = initializeState(data);
+  it('enforces global maxTeacherPeriodsPerDay when adding another period', () => {
+    const state = initializeState(baseData);
     const result = checkSlotValidity(
-      data,
-      0, // Monday
-      0, // Period 0
+      baseData,
+      0,
+      6,
       't1',
       'c1',
-      's1',
-      state
+      's7',
+      state,
     );
 
     expect(result.valid).toBe(false);
-    expect(result.message).toContain("Exceeds daily limit");
-  });
-
-  it('should respect a MORE LENIENT teacher-specific limit (e.g. 8 vs global 6)', () => {
-    const lenientTeacher = {
-      ...mockTeacher,
-      maxPeriodsPerDay: 8
-    };
-
-    const data = {
-        ...baseData,
-        subjects: [...baseData.subjects, { id: 's2', name: 'S2' }, { id: 's3', name: 'S3' }, { id: 's4', name: 'S4' }, { id: 's5', name: 'S5' }, { id: 's6', name: 'S6' }],
-        teachers: [lenientTeacher]
-    };
-
-    // Teacher has 4 periods. Adding 5th, 6th, 7th should PASS.
-    // Let's add 6 existing periods and try to add a 7th.
-    const busyData: AppData = {
-        ...data,
-        schedule: {
-            'c1': {
-                0: {
-                    0: { subjectId: 's1', teacherId: 't1', classId: 'c1' },
-                    1: { subjectId: 's2', teacherId: 't1', classId: 'c1' },
-                    2: { subjectId: 's3', teacherId: 't1', classId: 'c1' },
-                    3: { subjectId: 's4', teacherId: 't1', classId: 'c1' },
-                    4: { subjectId: 's5', teacherId: 't1', classId: 'c1' },
-                    5: { subjectId: 's6', teacherId: 't1', classId: 'c1' }
-                }
-            }
-        }
-    } as AppData;
-
-    const state = initializeState(busyData);
-    const result = checkSlotValidity(
-        busyData,
-        0,
-        6, // Adding 7th period
-        't1',
-        'c1',
-        's7',
-        state
-    );
-
-    expect(result.valid).toBe(true);
-  });
-
-  it('should fall back to global limit if teacher limit is undefined', () => {
-    // Teacher has no override. Global is 6.
-    // Adding 7th period should FAIL with global limit.
-    const busyData: AppData = {
-        ...baseData,
-        subjects: [...baseData.subjects, { id: 's2', name: 'S2' }, { id: 's3', name: 'S3' }, { id: 's4', name: 'S4' }, { id: 's5', name: 'S5' }, { id: 's6', name: 'S6' }],
-        schedule: {
-            'c1': {
-                0: {
-                    0: { subjectId: 's1', teacherId: 't1', classId: 'c1' },
-                    1: { subjectId: 's2', teacherId: 't1', classId: 'c1' },
-                    2: { subjectId: 's3', teacherId: 't1', classId: 'c1' },
-                    3: { subjectId: 's4', teacherId: 't1', classId: 'c1' },
-                    4: { subjectId: 's5', teacherId: 't1', classId: 'c1' },
-                    5: { subjectId: 's6', teacherId: 't1', classId: 'c1' }
-                }
-            }
-        }
-    } as AppData;
-
-    const state = initializeState(busyData);
-    const result = checkSlotValidity(
-        busyData,
-        0,
-        6, // Adding 7th period
-        't1',
-        'c1',
-        's7',
-        state
-    );
-
-    expect(result.valid).toBe(false);
-    expect(result.message).toContain("Exceeds daily limit");
+    expect(result.message).toContain('Exceeds daily limit');
   });
 });

@@ -1,8 +1,9 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { AppData } from "../../types";
 import { Card, Button } from "../../components/ui";
 import { Upload, AlertCircle, Clock } from "lucide-react";
 import { useWorkloadStats } from "./hooks/useWorkloadStats";
+import { WorkloadTeacherDetail } from "./components/WorkloadTeacherDetail";
 
 interface ViewProps {
   data: AppData;
@@ -11,6 +12,7 @@ interface ViewProps {
 
 export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
   const { workloadStats } = useWorkloadStats(data);
+  const maxWeeklyDefault = data.settings.maxTeachingPeriodsPerWeek ?? 24;
 
   const handleExportCSV = () => {
     const headers = [
@@ -18,7 +20,7 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
       "Requested Periods",
       "Scheduled Periods",
       "Blocked Slots",
-      "Available Slots",
+      "Max Weekly Periods",
       "Utilization %",
     ];
     const rows = workloadStats.map((s) => [
@@ -26,7 +28,7 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
       s.assignedPeriods,
       s.scheduledPeriods,
       s.blockedSlots,
-      s.availableSlots,
+      s.maxWeeklyCapacity,
       `${s.utilizationPct.toFixed(1)}%`,
     ]);
 
@@ -50,12 +52,12 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
             Capacity Planning
           </h2>
           <p className="text-xs text-slate-500 mt-1">
-            Analyze effective utilization based on constraints and assigned
-            classes.
+            Utilization is based on requested curriculum load vs the school-wide
+            max of {maxWeeklyDefault} periods per week. Hover or click a card
+            for class breakdown.
           </p>
         </div>
         <div className="flex gap-4 items-center">
-          {/* Legend */}
           <div className="flex gap-4 text-[10px] font-bold uppercase tracking-wider border-r border-slate-200 pr-4 mr-2">
             <div className="flex items-center gap-1.5">
               <div className="w-2 h-2 rounded-full bg-emerald-500"></div>{" "}
@@ -79,29 +81,36 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {workloadStats.map(
-          (stat) => {
-            const {
-              t,
-              assignedPeriods,
-              scheduledPeriods,
-              availableSlots,
-              blockedSlots,
-              utilizationPct,
-            } = stat;
+        {workloadStats.map((stat) => {
+          const {
+            t,
+            assignedPeriods,
+            scheduledPeriods,
+            maxWeeklyCapacity,
+            blockedSlots,
+            utilizationPct,
+            classBreakdown,
+          } = stat;
 
-            // Determine Status Color
-            let statusColor = "bg-emerald-500";
+          let statusColor = "bg-emerald-500";
 
-            if (utilizationPct > 100) {
-              statusColor = "bg-red-600";
-            } else if (utilizationPct > 85) {
-              statusColor = "bg-amber-500";
-            }
+          if (utilizationPct > 100) {
+            statusColor = "bg-red-600";
+          } else if (utilizationPct > 85) {
+            statusColor = "bg-amber-500";
+          }
 
-            return (
+          return (
+            <WorkloadTeacherDetail
+              key={t.id}
+              teacherName={t.name}
+              assignedPeriods={assignedPeriods}
+              maxWeeklyCapacity={maxWeeklyCapacity}
+              scheduledPeriods={scheduledPeriods}
+              blockedSlots={blockedSlots}
+              classBreakdown={classBreakdown}
+            >
               <Card
-                key={t.id}
                 className={`p-5 flex flex-col gap-3 transition-all hover:shadow-md ${
                   utilizationPct > 100
                     ? "ring-2 ring-red-500 ring-offset-2"
@@ -140,8 +149,8 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
                         utilizationPct > 100
                           ? "text-red-600"
                           : utilizationPct > 85
-                          ? "text-amber-600"
-                          : "text-slate-700"
+                            ? "text-amber-600"
+                            : "text-slate-700"
                       }`}
                     >
                       {Math.round(utilizationPct)}%
@@ -152,14 +161,11 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
                   </div>
                 </div>
 
-                {/* Utilization Bar */}
                 <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden flex relative border border-slate-100">
-                  {/* Safe Zone */}
                   <div
                     className={`h-full ${statusColor} transition-all duration-1000`}
                     style={{ width: `${Math.min(utilizationPct, 100)}%` }}
                   />
-                  {/* Overload Zone */}
                   {utilizationPct > 100 && (
                     <div
                       className="h-full bg-red-700 animate-pulse striped-bar"
@@ -180,7 +186,7 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
                     </span>
                   </div>
                   <div className="text-slate-400 text-right">
-                    <strong>{availableSlots}</strong> Capacity
+                    <strong>{maxWeeklyCapacity}</strong> Weekly max
                   </div>
                 </div>
 
@@ -190,9 +196,9 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
                   </div>
                 )}
               </Card>
-            );
-          }
-        )}
+            </WorkloadTeacherDetail>
+          );
+        })}
         {workloadStats.length === 0 && (
           <div className="col-span-full text-center py-12 text-slate-400">
             No teachers found. Add faculty to see analysis.

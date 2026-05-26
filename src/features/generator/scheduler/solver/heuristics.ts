@@ -22,6 +22,7 @@ import {
 const getTeacherConstraintScore = (
   teacherId: string,
   teacherMap: Map<string, Teacher>,
+  data: AppData,
 ): number => {
   const teacher = teacherMap.get(teacherId);
   if (!teacher) return 0;
@@ -36,9 +37,10 @@ const getTeacherConstraintScore = (
   }
 
   const totalSlots = 60;
-  const maxLoad = teacher.maxPeriodsPerDay
-    ? teacher.maxPeriodsPerDay * 5
-    : totalSlots;
+  const maxWeekly =
+    data.settings.maxTeachingPeriodsPerWeek ??
+    (data.settings.maxTeacherPeriodsPerDay || 6) * 5;
+  const maxLoad = Math.min(maxWeekly, totalSlots);
   return blockedCount + (totalSlots - maxLoad);
 };
 
@@ -99,7 +101,7 @@ export const calculatePriority = (
 
   // Teacher Constraints Tie-breaker
   for (const tid of unit.teacherIds) {
-    score += getTeacherConstraintScore(tid, teacherMap) * 10;
+    score += getTeacherConstraintScore(tid, teacherMap, data) * 10;
   }
 
   return score;

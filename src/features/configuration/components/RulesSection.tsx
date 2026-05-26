@@ -1,5 +1,5 @@
 import React from "react";
-import { ShieldAlert, Clock } from "lucide-react";
+import { ShieldAlert, Clock, BarChart3 } from "lucide-react";
 import { AppData } from "../../../types";
 
 interface RulesSectionProps {
@@ -9,6 +9,7 @@ interface RulesSectionProps {
   updateMaxConsecutive: (val: number) => AppData;
   updateMaxSubjectPeriods: (val: number) => AppData;
   updateMaxTeacherPeriods: (val: number) => AppData;
+  updateMaxTeachingPeriodsPerWeek: (val: number) => AppData;
 }
 
 export const RulesSection: React.FC<RulesSectionProps> = ({
@@ -18,11 +19,13 @@ export const RulesSection: React.FC<RulesSectionProps> = ({
   updateMaxConsecutive,
   updateMaxSubjectPeriods,
   updateMaxTeacherPeriods,
+  updateMaxTeachingPeriodsPerWeek,
 }) => {
   const {
     maxConsecutivePeriods: maxConsecutive,
     maxSubjectPeriodsPerDay: maxSubject,
     maxTeacherPeriodsPerDay: maxTeacher,
+    maxTeachingPeriodsPerWeek: maxWeekly,
     timeSlots,
   } = data.settings;
 
@@ -33,7 +36,7 @@ export const RulesSection: React.FC<RulesSectionProps> = ({
           Rules & Constraints
         </p>
       </div>
-      <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         {/* Fatigue Guard */}
         <div className="space-y-2">
           <div className="flex items-center gap-2 mb-2">
@@ -131,6 +134,43 @@ export const RulesSection: React.FC<RulesSectionProps> = ({
                 const val = Math.min(15, (maxTeacher || 6) + 1);
                 const nextData = updateMaxTeacherPeriods(val);
                 addActivity("SYSTEM", `Updated Teacher Daily Load to ${val}`, nextData);
+              }}
+              className="w-8 h-8 rounded bg-white border border-slate-300 font-bold hover:bg-slate-100"
+            >
+              +
+            </button>
+          </div>
+        </div>
+
+        {/* Weekly workload capacity */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 mb-2">
+            <BarChart3 size={18} className="text-indigo-600" />
+            <h4 className="font-bold text-slate-700 text-sm">Max Teaching Periods / Week</h4>
+          </div>
+          <p className="text-xs text-slate-500 mb-3 leading-relaxed">
+            School-wide weekly capacity used by Workload Analysis to calculate utilization
+            percentages (stored per profile).
+          </p>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                const val = Math.max(1, (maxWeekly ?? 24) - 1);
+                const nextData = updateMaxTeachingPeriodsPerWeek(val);
+                addActivity("SYSTEM", `Updated Max Teaching Periods Per Week to ${val}`, nextData);
+              }}
+              className="w-8 h-8 rounded bg-white border border-slate-300 font-bold hover:bg-slate-100"
+            >
+              -
+            </button>
+            <span className="text-lg font-bold text-slate-800 w-8 text-center">
+              {maxWeekly ?? 24}
+            </span>
+            <button
+              onClick={() => {
+                const val = Math.min(40, (maxWeekly ?? 24) + 1);
+                const nextData = updateMaxTeachingPeriodsPerWeek(val);
+                addActivity("SYSTEM", `Updated Max Teaching Periods Per Week to ${val}`, nextData);
               }}
               className="w-8 h-8 rounded bg-white border border-slate-300 font-bold hover:bg-slate-100"
             >

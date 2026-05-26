@@ -4,7 +4,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { TeacherEditorModal } from '../src/features/teachers/components/TeacherEditorModal';
 import { DEFAULT_DATA } from '../src/utils/constants';
 
-describe('TeacherEditorModal Overrides', () => {
+describe('TeacherEditorModal', () => {
   const mockOnClose = vi.fn();
   const mockOnSave = vi.fn();
 
@@ -16,54 +16,31 @@ describe('TeacherEditorModal Overrides', () => {
     onSave: mockOnSave,
   };
 
-  it('renders the Max Periods Per Day field', () => {
+  it('does not render per-teacher capacity fields', () => {
     render(<TeacherEditorModal {...defaultProps} />);
-    
-    expect(screen.getByLabelText(/Max Periods Per Day/i)).toBeDefined();
+
+    expect(screen.queryByLabelText(/Max Periods Per Day/i)).toBeNull();
+    expect(screen.queryByLabelText(/Target Load/i)).toBeNull();
   });
 
-  it('allows entering a value for Max Periods Per Day', () => {
+  it('passes teacher core fields to onSave', () => {
     render(<TeacherEditorModal {...defaultProps} />);
-    
-    const input = screen.getByLabelText(/Max Periods Per Day/i);
-    fireEvent.change(input, { target: { value: '4' } });
-    
-    expect((input as HTMLInputElement).value).toBe('4');
-  });
 
-  it('passes the maxPeriodsPerDay value to onSave', () => {
-    render(<TeacherEditorModal {...defaultProps} />);
-    
     const nameInput = screen.getByLabelText(/Full Name/i);
     fireEvent.change(nameInput, { target: { value: 'Jane Doe' } });
 
-    const input = screen.getByLabelText(/Max Periods Per Day/i);
-    fireEvent.change(input, { target: { value: '5' } });
-    
     const saveButton = screen.getByRole('button', { name: /Save Changes/i });
     fireEvent.click(saveButton);
 
-    expect(mockOnSave).toHaveBeenCalledWith(expect.objectContaining({
-      name: 'Jane Doe',
-      maxPeriodsPerDay: 5
-    }));
-  });
-
-  it('handles empty Max Periods Per Day as undefined', () => {
-    render(<TeacherEditorModal {...defaultProps} />);
-    
-    const nameInput = screen.getByLabelText(/Full Name/i);
-    fireEvent.change(nameInput, { target: { value: 'Jane Doe' } });
-
-    const input = screen.getByLabelText(/Max Periods Per Day/i);
-    fireEvent.change(input, { target: { value: '' } });
-    
-    const saveButton = screen.getByRole('button', { name: /Save Changes/i });
-    fireEvent.click(saveButton);
-
-    expect(mockOnSave).toHaveBeenCalledWith(expect.objectContaining({
-      name: 'Jane Doe',
-      maxPeriodsPerDay: undefined
-    }));
+    expect(mockOnSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Jane Doe',
+        specialtyIds: [],
+        constraints: expect.any(Array),
+      }),
+    );
+    const saved = mockOnSave.mock.calls[0][0];
+    expect(saved).not.toHaveProperty('maxPeriodsPerDay');
+    expect(saved).not.toHaveProperty('targetLoad');
   });
 });

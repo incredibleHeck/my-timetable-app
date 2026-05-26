@@ -16,8 +16,7 @@ export const checkTeacherLoad = (
   const { data, teacherId, targetDay, maxPeriods } = ctx;
   const teacher = data.teachers.find((t) => t.id === teacherId);
 
-  const maxDailyLoad =
-    teacher?.maxPeriodsPerDay ?? (data.settings.maxTeacherPeriodsPerDay || 6);
+  const maxDailyLoad = data.settings.maxTeacherPeriodsPerDay || 6;
   const maxConsecutive = data.settings.maxConsecutivePeriods || 4;
 
   let currentDailyLoad = 0;

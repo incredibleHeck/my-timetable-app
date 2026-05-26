@@ -38,6 +38,7 @@ export const GlobalConfigView: React.FC<ViewProps> = ({ data, onUpdate }) => {
     updateMaxConsecutive,
     updateMaxSubjectPeriods,
     updateMaxTeacherPeriods,
+    updateMaxTeachingPeriodsPerWeek,
     handleSlotClick,
     saveSlot,
   } = useGlobalConfig(data, onUpdate);
@@ -129,6 +130,7 @@ export const GlobalConfigView: React.FC<ViewProps> = ({ data, onUpdate }) => {
             updateMaxConsecutive={updateMaxConsecutive}
             updateMaxSubjectPeriods={updateMaxSubjectPeriods}
             updateMaxTeacherPeriods={updateMaxTeacherPeriods}
+            updateMaxTeachingPeriodsPerWeek={updateMaxTeachingPeriodsPerWeek}
           />
         </div>
 

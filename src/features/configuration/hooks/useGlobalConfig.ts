@@ -216,6 +216,15 @@ export const useGlobalConfig = (
     return nextData;
   };
 
+  const updateMaxTeachingPeriodsPerWeek = (val: number) => {
+    const nextData = {
+      ...data,
+      settings: { ...data.settings, maxTeachingPeriodsPerWeek: val },
+    };
+    onUpdate(nextData);
+    return nextData;
+  };
+
   const handleSlotClick = (d: number, p: number) => {
     let val: any = data.settings.fixedOccasions[d]?.[p];
     if (val === true) val = "Reserved";
@@ -266,6 +275,7 @@ export const useGlobalConfig = (
     updateMaxConsecutive,
     updateMaxSubjectPeriods,
     updateMaxTeacherPeriods,
+    updateMaxTeachingPeriodsPerWeek,
     handleSlotClick,
     saveSlot,
   };

@@ -133,7 +133,16 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
             {filteredTeachers.map((t) => (
               <div
                 key={t.id}
-                className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-all group"
+                role="button"
+                tabIndex={0}
+                onClick={() => openModal(t)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    openModal(t);
+                  }
+                }}
+                className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-all group cursor-pointer"
               >
                 <div className="flex items-start space-x-3 mb-4">
                   <div className="w-12 h-12 shrink-0 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center font-bold text-slate-500 border border-slate-300 shadow-inner">
@@ -196,21 +205,30 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                   </div>
                   <div className="flex space-x-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                     <button
-                      onClick={() => duplicateTeacher(t)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        duplicateTeacher(t);
+                      }}
                       className="p-2 hover:bg-slate-100 rounded-md text-slate-400 hover:text-blue-600 transition-colors"
                       title="Duplicate"
                     >
                       <Copy size={14} />
                     </button>
                     <button
-                      onClick={() => openModal(t)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openModal(t);
+                      }}
                       className="p-2 hover:bg-slate-100 rounded-md text-slate-400 hover:text-amber-600 transition-colors"
                       title="Edit"
                     >
                       <Edit2 size={14} />
                     </button>
                     <button
-                      onClick={() => initiateDelete(t)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        initiateDelete(t);
+                      }}
                       className="p-2 hover:bg-red-50 rounded-md text-slate-400 hover:text-red-600 transition-colors"
                       title="Delete"
                     >
@@ -279,7 +297,16 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                         facultyMembers.map((t) => (
                           <div
                             key={t.id}
-                            className="flex items-center gap-2 p-1.5 bg-white rounded-lg border border-slate-100 hover:border-amber-200 transition-all shadow-sm group"
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => openModal(t)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                openModal(t);
+                              }
+                            }}
+                            className="flex items-center gap-2 p-1.5 bg-white rounded-lg border border-slate-100 hover:border-amber-200 transition-all shadow-sm group cursor-pointer"
                           >
                             <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">
                               {t.name

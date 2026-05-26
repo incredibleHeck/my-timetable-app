@@ -30,12 +30,9 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
   onSave,
 }) => {
   const [tName, setTName] = useState("");
-  const [tTargetLoad, setTTargetLoad] = useState("");
-  const [tMaxPeriods, setTMaxPeriods] = useState("");
   const [tSpecialties, setTSpecialties] = useState<string[]>([]);
   const [tConstraints, setTConstraints] = useState<boolean[][]>([]);
 
-  // Calculate the maximum periods any class has (e.g. 13 for Year 7)
   const maxClassPeriods = useMemo(
     () =>
       Math.max(
@@ -45,21 +42,16 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
     [data.settings.periodsPerDay, data.classes]
   );
 
-  // Sort subjects for the picker
   const sortedSubjects = useMemo(
     () => [...data.subjects].sort((a, b) => a.name.localeCompare(b.name)),
     [data.subjects]
   );
 
-  // Hydrate State when modal opens
   useEffect(() => {
     if (isOpen) {
       setTName(editingTeacher?.name || "");
-      setTTargetLoad(editingTeacher?.targetLoad?.toString() || "");
-      setTMaxPeriods(editingTeacher?.maxPeriodsPerDay?.toString() || "");
       setTSpecialties(editingTeacher?.specialtyIds || []);
 
-      // Initialize Constraint Matrix (Deep Copy & Resize safety)
       const periods = maxClassPeriods;
       const initialC = Array(5)
         .fill(null)
@@ -85,16 +77,13 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
       name: tName,
       specialtyIds: tSpecialties,
       constraints: tConstraints,
-      targetLoad: parseInt(tTargetLoad) || undefined,
-      maxPeriodsPerDay: parseInt(tMaxPeriods) || undefined,
     };
     onSave(newT);
     onClose();
   };
 
-  // --- CONSTRAINT HELPERS ---
   const toggleConstraint = (d: number, p: number) => {
-    const n = tConstraints.map((row) => [...row]); // Deep copy
+    const n = tConstraints.map((row) => [...row]);
     n[d][p] = !n[d][p];
     setTConstraints(n);
   };
@@ -124,13 +113,13 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
 
     for (let d = 0; d < 5; d++) {
       for (let p = 0; p < pCount; p++) {
-        if (type === "MORNINGS" && p < midPoint) n[d][p] = false; // Available
-        if (type === "MORNINGS" && p >= midPoint) n[d][p] = true; // Blocked
+        if (type === "MORNINGS" && p < midPoint) n[d][p] = false;
+        if (type === "MORNINGS" && p >= midPoint) n[d][p] = true;
 
-        if (type === "AFTERNOONS" && p < midPoint) n[d][p] = true; // Blocked
-        if (type === "AFTERNOONS" && p >= midPoint) n[d][p] = false; // Available
+        if (type === "AFTERNOONS" && p < midPoint) n[d][p] = true;
+        if (type === "AFTERNOONS" && p >= midPoint) n[d][p] = false;
 
-        if (type === "FRIDAYS" && d === 4) n[d][p] = true; // Block Fridays
+        if (type === "FRIDAYS" && d === 4) n[d][p] = true;
       }
     }
     setTConstraints(n);
@@ -152,35 +141,13 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
       }
     >
       <div className="space-y-6">
-        <div className="flex gap-4">
-          <div className="flex-[2]">
-            <Input
-              label="Full Name"
-              value={tName}
-              onChange={(e) => setTName(e.target.value)}
-              placeholder="e.g. John Doe"
-              autoFocus
-            />
-          </div>
-          <div className="flex-1">
-            <Input
-              label="Target Load"
-              type="number"
-              value={tTargetLoad}
-              onChange={(e) => setTTargetLoad(e.target.value)}
-              placeholder="e.g. 20"
-            />
-          </div>
-          <div className="flex-1">
-            <Input
-              label="Max Periods Per Day"
-              type="number"
-              value={tMaxPeriods}
-              onChange={(e) => setTMaxPeriods(e.target.value)}
-              placeholder="Use Global"
-            />
-          </div>
-        </div>
+        <Input
+          label="Full Name"
+          value={tName}
+          onChange={(e) => setTName(e.target.value)}
+          placeholder="e.g. John Doe"
+          autoFocus
+        />
 
         <div>
           <label className="block text-xs font-bold text-slate-500 uppercase mb-2">
@@ -214,7 +181,8 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
           </div>
           <p className="text-[10px] text-slate-400 mt-2">
             Selecting subjects here adds this teacher to the corresponding
-            Faculty.
+            Faculty. Weekly capacity is configured globally under Configuration
+            → Max Teaching Periods / Week.
           </p>
         </div>
 
@@ -258,7 +226,6 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
                 gridTemplateColumns: `80px repeat(${maxClassPeriods}, 1fr)`,
               }}
             >
-              {/* Header */}
               <div className="text-right pr-2 text-[10px] font-bold text-slate-400 self-end pb-1">
                 Day \ Per
               </div>
@@ -289,7 +256,6 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
                 );
               })}
 
-              {/* Days */}
               {DAYS.map((d, dIdx) => (
                 <React.Fragment key={d}>
                   <button

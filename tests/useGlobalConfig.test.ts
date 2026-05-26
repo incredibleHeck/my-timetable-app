@@ -19,6 +19,23 @@ describe('useGlobalConfig', () => {
     }));
   });
 
+  it('should update maxTeachingPeriodsPerWeek', () => {
+    const onUpdate = vi.fn();
+    const { result } = renderHook(() => useGlobalConfig(DEFAULT_DATA, onUpdate));
+
+    act(() => {
+      result.current.updateMaxTeachingPeriodsPerWeek(30);
+    });
+
+    expect(onUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        settings: expect.objectContaining({
+          maxTeachingPeriodsPerWeek: 30,
+        }),
+      }),
+    );
+  });
+
   it('should update maxTeacherPeriodsPerDay', () => {
     const onUpdate = vi.fn();
     const { result } = renderHook(() => useGlobalConfig(DEFAULT_DATA, onUpdate));

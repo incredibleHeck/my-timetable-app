@@ -60,6 +60,8 @@ export interface Settings {
   defaultLunchDuration?: number;
   maxSubjectPeriodsPerDay?: number;
   maxTeacherPeriodsPerDay?: number;
+  /** School-wide weekly cap for workload analysis (per profile) */
+  maxTeachingPeriodsPerWeek?: number;
 }
 
 // ----------------------------------------------------------------------

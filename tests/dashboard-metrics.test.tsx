@@ -19,6 +19,7 @@ describe('useDashboard Metrics', () => {
       fixedOccasions: [],
       timeSlots: [],
       maxConsecutivePeriods: 4,
+      maxTeachingPeriodsPerWeek: 24,
     } as any,
     teachers: [
       { id: 't1', name: 'Teacher 1', constraints: [[],[],[],[],[]] } as any,
@@ -54,12 +55,10 @@ describe('useDashboard Metrics', () => {
   it('should report correct metrics with de-duplicated joint class workload', () => {
     const { result } = renderHook(() => useDashboard(mockData, vi.fn()));
     
-    // T1 has 3 periods (de-duplicated). Capacity is 3 periods * 5 days = 15.
-    // Utilization = 3 / 15 * 100 = 20%.
-    // T2 has 0 periods. Utilization = 0%.
-    // Avg Utilization = (20 + 0) / 2 = 10%.
+    // T1 has 3 periods (de-duplicated). Weekly max = 24 → 12.5%.
+    // T2 has 0%. Avg = (12.5 + 0) / 2 = 6.25%.
     
-    expect(result.current.metrics.avgUtilization).toBe(10);
+    expect(result.current.metrics.avgUtilization).toBe(6);
     expect(result.current.metrics.overloadedCount).toBe(0);
   });
 
@@ -84,11 +83,22 @@ describe('useDashboard Metrics', () => {
       jointClasses: []
     };
     
-    const { result } = renderHook(() => useDashboard(overloadedData as AppData, vi.fn()));
-    
-    // T1 has 20 periods. Capacity is 15. Utilization > 100%.
+    const heavilyLoaded = {
+      ...overloadedData,
+      classes: [
+        {
+          id: 'c1',
+          name: 'Class 1',
+          curriculum: [
+            { id: 'curr1', subjectId: 's1', periodsPerWeek: 25, assignedTeacherId: 't1' },
+          ],
+        },
+      ] as any,
+    };
+
+    const { result } = renderHook(() => useDashboard(heavilyLoaded as AppData, vi.fn()));
     expect(result.current.metrics.overloadedCount).toBe(1);
-    
+
     const overloadedIssue = result.current.healthIssues.issues.find(i => i.message.includes('overloaded'));
     expect(overloadedIssue).toBeDefined();
   });

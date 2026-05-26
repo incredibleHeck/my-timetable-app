@@ -16,6 +16,7 @@ describe('useWorkloadStats', () => {
       fixedOccasions: [],
       timeSlots: [],
       maxConsecutivePeriods: 4,
+      maxTeachingPeriodsPerWeek: 24,
     } as any,
     teachers: [{ id: 't1', name: 'Teacher 1', constraints: [[],[],[],[],[]] } as any],
     classes: [
@@ -56,6 +57,22 @@ describe('useWorkloadStats', () => {
     
     // Joint class 's1' for c1 and c2 should count as 2 periods total, not 4
     expect(stat?.assignedPeriods).toBe(2);
+  });
+
+  it('should calculate utilization from global max teaching periods per week', () => {
+    const { result } = renderHook(() => useWorkloadStats(mockData as AppData));
+    const stat = result.current.workloadStats.find((s) => s.t.id === 't1');
+
+    expect(stat?.maxWeeklyCapacity).toBe(24);
+    expect(stat?.utilizationPct).toBeCloseTo((2 / 24) * 100, 5);
+  });
+
+  it('should provide class breakdown per teacher', () => {
+    const { result } = renderHook(() => useWorkloadStats(mockData as AppData));
+    const stat = result.current.workloadStats.find((s) => s.t.id === 't1');
+
+    expect(stat?.classBreakdown).toHaveLength(2);
+    stat?.classBreakdown.forEach((row) => expect(row.periods).toBe(2));
   });
 
   it('should de-duplicate scheduled workload for concurrent sessions', () => {
