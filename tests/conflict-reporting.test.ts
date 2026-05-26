@@ -77,7 +77,14 @@ describe("generateSchedule Integration", () => {
       { id: "s2", name: "Science", color: "green", type: "CORE" }
     ],
     teachers: [
-      { id: "t1", name: "Mr. Smith", subjects: ["s1", "s2"], constraints: {} }
+      {
+        id: "t1",
+        name: "Mr. Smith",
+        subjects: ["s1", "s2"],
+        constraints: Array(5)
+          .fill(null)
+          .map(() => Array(10).fill(false)),
+      },
     ],
     rooms: [],
     classes: [
@@ -105,7 +112,12 @@ describe("generateSchedule Integration", () => {
     // 4. result.conflicts contains the reported conflict.
 
     expect(result.conflicts.length).toBeGreaterThan(0);
-    const hasDoubleBooking = result.conflicts.some(c => c.reason.includes("Double Booking: Teacher"));
-    expect(hasDoubleBooking).toBe(true);
+    const hasTeacherOverlap = result.conflicts.some(
+      (c) =>
+        c.reason.includes("Teacher Busy") ||
+        c.reason.includes("Teacher is busy") ||
+        c.reason.includes("Double Booking: Teacher"),
+    );
+    expect(hasTeacherOverlap).toBe(true);
   });
 });

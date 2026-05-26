@@ -81,7 +81,8 @@ export const checkHardConstraints = (
     // RANK 1.3: TEACHER WELFARE (Fatigue Check)
     // Check BEFORE placing: Max 4 consecutive; Max 6 total.
     const currentLoad = state.teacherDailyLoad[tid]?.[d] || 0;
-    const maxLoad = maxTeacherLoad;
+    const teacher = teacherMap.get(tid);
+    const maxLoad = teacher?.maxPeriodsPerDay ?? maxTeacherLoad;
 
     if (currentLoad + duration > maxLoad) return false;
     

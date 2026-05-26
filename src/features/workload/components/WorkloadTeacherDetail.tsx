@@ -5,6 +5,7 @@ interface WorkloadTeacherDetailProps {
   teacherName: string;
   assignedPeriods: number;
   maxWeeklyCapacity: number;
+  targetLoad?: number;
   scheduledPeriods: number;
   blockedSlots: number;
   classBreakdown: ClassWorkloadBreakdown[];
@@ -17,6 +18,7 @@ export const WorkloadTeacherDetail: React.FC<WorkloadTeacherDetailProps> = ({
   teacherName,
   assignedPeriods,
   maxWeeklyCapacity,
+  targetLoad,
   scheduledPeriods,
   blockedSlots,
   classBreakdown,
@@ -113,6 +115,12 @@ export const WorkloadTeacherDetail: React.FC<WorkloadTeacherDetailProps> = ({
           <p className="text-[11px] text-slate-500 mb-3">
             <strong>{assignedPeriods}</strong> requested /{" "}
             <strong>{maxWeeklyCapacity}</strong> weekly max
+            {targetLoad != null && targetLoad > 0 && (
+              <>
+                {" "}
+                · Target: <strong>{targetLoad}</strong> periods/week
+              </>
+            )}
             {scheduledPeriods > 0 && (
               <>
                 {" "}

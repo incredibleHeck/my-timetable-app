@@ -4,7 +4,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { TeacherEditorModal } from '../src/features/teachers/components/TeacherEditorModal';
 import { DEFAULT_DATA } from '../src/utils/constants';
 
-describe('TeacherEditorModal', () => {
+describe('TeacherEditorModal Overrides', () => {
   const mockOnClose = vi.fn();
   const mockOnSave = vi.fn();
 
@@ -16,18 +16,29 @@ describe('TeacherEditorModal', () => {
     onSave: mockOnSave,
   };
 
-  it('does not render per-teacher capacity fields', () => {
+  it('renders the Max Periods Per Day field', () => {
     render(<TeacherEditorModal {...defaultProps} />);
 
-    expect(screen.queryByLabelText(/Max Periods Per Day/i)).toBeNull();
-    expect(screen.queryByLabelText(/Target Load/i)).toBeNull();
+    expect(screen.getByLabelText(/Max Periods Per Day/i)).toBeDefined();
   });
 
-  it('passes teacher core fields to onSave', () => {
+  it('allows entering a value for Max Periods Per Day', () => {
+    render(<TeacherEditorModal {...defaultProps} />);
+
+    const input = screen.getByLabelText(/Max Periods Per Day/i);
+    fireEvent.change(input, { target: { value: '4' } });
+
+    expect((input as HTMLInputElement).value).toBe('4');
+  });
+
+  it('passes the maxPeriodsPerDay value to onSave', () => {
     render(<TeacherEditorModal {...defaultProps} />);
 
     const nameInput = screen.getByLabelText(/Full Name/i);
     fireEvent.change(nameInput, { target: { value: 'Jane Doe' } });
+
+    const input = screen.getByLabelText(/Max Periods Per Day/i);
+    fireEvent.change(input, { target: { value: '5' } });
 
     const saveButton = screen.getByRole('button', { name: /Save Changes/i });
     fireEvent.click(saveButton);
@@ -35,12 +46,47 @@ describe('TeacherEditorModal', () => {
     expect(mockOnSave).toHaveBeenCalledWith(
       expect.objectContaining({
         name: 'Jane Doe',
-        specialtyIds: [],
-        constraints: expect.any(Array),
+        maxPeriodsPerDay: 5,
       }),
     );
-    const saved = mockOnSave.mock.calls[0][0];
-    expect(saved).not.toHaveProperty('maxPeriodsPerDay');
-    expect(saved).not.toHaveProperty('targetLoad');
+  });
+
+  it('handles empty Max Periods Per Day as undefined', () => {
+    render(<TeacherEditorModal {...defaultProps} />);
+
+    const nameInput = screen.getByLabelText(/Full Name/i);
+    fireEvent.change(nameInput, { target: { value: 'Jane Doe' } });
+
+    const input = screen.getByLabelText(/Max Periods Per Day/i);
+    fireEvent.change(input, { target: { value: '' } });
+
+    const saveButton = screen.getByRole('button', { name: /Save Changes/i });
+    fireEvent.click(saveButton);
+
+    expect(mockOnSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Jane Doe',
+        maxPeriodsPerDay: undefined,
+      }),
+    );
+  });
+
+  it('passes targetLoad to onSave when set', () => {
+    render(<TeacherEditorModal {...defaultProps} />);
+
+    fireEvent.change(screen.getByLabelText(/Full Name/i), {
+      target: { value: 'Jane Doe' },
+    });
+    fireEvent.change(screen.getByLabelText(/Target Load/i), {
+      target: { value: '20' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Save Changes/i }));
+
+    expect(mockOnSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Jane Doe',
+        targetLoad: 20,
+      }),
+    );
   });
 });

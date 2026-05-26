@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { solveSmart } from '../src/features/generator/scheduler/solver/solver';
 import { prepareAllocationUnits } from '../src/features/generator/scheduler/logic/preparation';
+import { auditFinalSchedule } from '../src/features/generator/scheduler/validation';
 import { DEFAULT_DATA } from '../src/utils/constants';
+import { AppData } from '../src/types';
 
 describe('Conflict Reporting Verification', () => {
   it('should report unplaced lessons when oversubscribed', () => {
@@ -45,5 +47,69 @@ describe('Conflict Reporting Verification', () => {
     const mathConflict = conflicts.find(c => c.subjectName === 'Math');
     expect(mathConflict).toBeDefined();
     expect(mathConflict?.className).toBe('Test Class');
+  });
+
+  it('auditFinalSchedule reports curriculum gap from final schedule grid, not solver messages', () => {
+    const data: AppData = {
+      ...DEFAULT_DATA,
+      settings: {
+        ...DEFAULT_DATA.settings,
+        periodsPerDay: 5,
+        daysPerWeek: 1,
+      },
+      classes: [
+        {
+          id: 'c1',
+          name: 'Test Class',
+          periodCount: 5,
+          subjects: [],
+          curriculum: [
+            { id: 'curr1', subjectId: 's1', singles: 5, doubles: 0 },
+          ],
+        },
+      ],
+      subjects: [{ id: 's1', name: 'Math', color: 'blue', type: 'CORE' }],
+      teachers: [
+        {
+          id: 't1',
+          name: 'Teacher 1',
+          subjects: ['s1'],
+          constraints: Array(5)
+            .fill(null)
+            .map(() => Array(10).fill(false)),
+        },
+      ],
+      schedule: {
+        c1: {
+          0: {
+            0: { subjectId: 's1', teacherId: 't1', classId: 'c1' },
+          },
+        },
+      },
+      conflicts: [
+        {
+          classId: 'c1',
+          className: 'Test Class',
+          subjectId: 's1',
+          subjectName: 'Math',
+          day: 0,
+          period: 0,
+          reason: 'Unplaced: Could not find slot for Math',
+          severity: 'HIGH',
+        },
+      ],
+    };
+
+    const audited = auditFinalSchedule(data);
+    expect(
+      audited.some((c) => c.reason.includes('Curriculum Gap')),
+    ).toBe(true);
+    expect(
+      audited.some(
+        (c) =>
+          c.reason.includes('Unplaced') ||
+          c.reason.includes('Could not find'),
+      ),
+    ).toBe(false);
   });
 });

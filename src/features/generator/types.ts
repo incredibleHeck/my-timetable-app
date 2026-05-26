@@ -24,6 +24,7 @@ export interface Conflict {
   subjectName?: string;
   teacherId?: string;
   teacherName?: string;
+  roomId?: string;
   day: number;
   period: number;
   duration?: number;

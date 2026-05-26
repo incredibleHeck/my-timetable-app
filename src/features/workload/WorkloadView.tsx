@@ -106,6 +106,7 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
               teacherName={t.name}
               assignedPeriods={assignedPeriods}
               maxWeeklyCapacity={maxWeeklyCapacity}
+              targetLoad={t.targetLoad}
               scheduledPeriods={scheduledPeriods}
               blockedSlots={blockedSlots}
               classBreakdown={classBreakdown}

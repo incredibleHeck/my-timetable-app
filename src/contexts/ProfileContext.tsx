@@ -14,8 +14,7 @@ import { generateId, deepClone, mergeWithDefaults } from "../utils/utils";
 import { DEFAULT_DATA } from "../utils/constants";
 import { calculateClassSchedule } from "../utils/timeUtils";
 import { TimeSlot } from "../types";
-import { validateFullSchedule } from "../features/generator/scheduler/validation";
-import { initializeState } from "../features/generator/scheduler/core/state";
+import { auditFinalSchedule } from "../features/generator/scheduler/validation";
 import { syncHomeRooms } from "../features/classes/utils";
 
 interface ProfileContextType {
@@ -196,9 +195,8 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     data.classes = updatedClasses;
     data.rooms = updatedRooms;
 
-    // Trigger validation
-    const state = initializeState(data);
-    const conflicts = validateFullSchedule(data, state);
+    // Audit conflicts from the committed schedule only (final output)
+    const conflicts = auditFinalSchedule(data);
     const validatedData = { ...data, conflicts };
 
     const updated = {

@@ -113,7 +113,9 @@ const calculateScarcityPenalty = (
     const teacher = teacherMap.get(tid); 
     if (!teacher) continue;
 
-    const maxLoad = data.settings.maxTeacherPeriodsPerDay || 6;
+    const maxLoad =
+      teacher.maxPeriodsPerDay ??
+      (data.settings.maxTeacherPeriodsPerDay || 6);
     const currentLoad = state.teacherDailyLoad[tid]?.[d] || 0; 
 
     if (currentLoad >= maxLoad - 1) {

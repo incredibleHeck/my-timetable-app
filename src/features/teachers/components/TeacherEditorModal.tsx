@@ -30,8 +30,12 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
   onSave,
 }) => {
   const [tName, setTName] = useState("");
+  const [tTargetLoad, setTTargetLoad] = useState("");
+  const [tMaxPeriods, setTMaxPeriods] = useState("");
   const [tSpecialties, setTSpecialties] = useState<string[]>([]);
   const [tConstraints, setTConstraints] = useState<boolean[][]>([]);
+
+  const globalMaxDaily = data.settings.maxTeacherPeriodsPerDay ?? 6;
 
   const maxClassPeriods = useMemo(
     () =>
@@ -50,6 +54,8 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setTName(editingTeacher?.name || "");
+      setTTargetLoad(editingTeacher?.targetLoad?.toString() || "");
+      setTMaxPeriods(editingTeacher?.maxPeriodsPerDay?.toString() || "");
       setTSpecialties(editingTeacher?.specialtyIds || []);
 
       const periods = maxClassPeriods;
@@ -77,6 +83,8 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
       name: tName,
       specialtyIds: tSpecialties,
       constraints: tConstraints,
+      targetLoad: parseInt(tTargetLoad) || undefined,
+      maxPeriodsPerDay: parseInt(tMaxPeriods) || undefined,
     };
     onSave(newT);
     onClose();
@@ -141,13 +149,35 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
       }
     >
       <div className="space-y-6">
-        <Input
-          label="Full Name"
-          value={tName}
-          onChange={(e) => setTName(e.target.value)}
-          placeholder="e.g. John Doe"
-          autoFocus
-        />
+        <div className="flex gap-4">
+          <div className="flex-[2]">
+            <Input
+              label="Full Name"
+              value={tName}
+              onChange={(e) => setTName(e.target.value)}
+              placeholder="e.g. John Doe"
+              autoFocus
+            />
+          </div>
+          <div className="flex-1">
+            <Input
+              label="Target Load"
+              type="number"
+              value={tTargetLoad}
+              onChange={(e) => setTTargetLoad(e.target.value)}
+              placeholder="e.g. 20"
+            />
+          </div>
+          <div className="flex-1">
+            <Input
+              label="Max Periods Per Day"
+              type="number"
+              value={tMaxPeriods}
+              onChange={(e) => setTMaxPeriods(e.target.value)}
+              placeholder={`Use global (${globalMaxDaily})`}
+            />
+          </div>
+        </div>
 
         <div>
           <label className="block text-xs font-bold text-slate-500 uppercase mb-2">
@@ -181,8 +211,9 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
           </div>
           <p className="text-[10px] text-slate-400 mt-2">
             Selecting subjects here adds this teacher to the corresponding
-            Faculty. Weekly capacity is configured globally under Configuration
-            → Max Teaching Periods / Week.
+            Faculty. Max Periods Per Day overrides the global daily scheduler
+            limit ({globalMaxDaily}). Workload % uses Configuration → Max
+            Teaching Periods / Week.
           </p>
         </div>
 

@@ -194,7 +194,9 @@ export function countPotentialConflicts(
     // Check Teacher Daily Load (O(1) Access)
     const currentLoad = state.teacherDailyLoad[tid]?.[d] || 0;
     const teacher = teacherMap.get(tid); 
-    const max = data.settings.maxTeacherPeriodsPerDay || 6;
+    const max =
+      teacher?.maxPeriodsPerDay ??
+      (data.settings.maxTeacherPeriodsPerDay || 6);
     if (currentLoad + unit.duration > max) count += 2; 
   }
 

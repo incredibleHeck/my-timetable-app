@@ -1,6 +1,13 @@
 import { AppData, Conflict } from "../../../../types";
-import { calculateClassSchedule } from "../../../../utils/timeUtils";
 import { getType } from "./utils";
+import { initializeState } from "../core/state";
+import {
+  collectResourceDoubleBookings,
+  conflictDedupeKey,
+  curriculumGapsToConflicts,
+  dedupeConflicts,
+  detectCurriculumGaps,
+} from "./final-conflicts";
 import { ValidationContext, ValidationResult } from "./types";
 import { SchedulerState } from "../core/types";
 import { getNextClassPeriod } from "../utils/utils";
@@ -83,6 +90,11 @@ export const checkSlotValidity = (
   if (ignoreSlot) populateIgnored(ignoreSlot);
   if (ignoreTargetSlot) populateIgnored(ignoreTargetSlot);
 
+  const hasRealTeacher =
+    !!teacherId && data.teachers.some((t) => t.id === teacherId);
+  const hasRealSubject =
+    !!subjectId && data.subjects.some((s) => s.id === subjectId);
+
   // --- 3. CONTEXT INITIALIZATION ---
   const ctx: ValidationContext = {
     data,
@@ -137,18 +149,19 @@ export const checkSlotValidity = (
     const blockError = checkGlobalAndClassBlocks(ctx, p);
     if (blockError) return { ...blockError, penaltyPoints: 20000, conflictCount: 1 };
 
-    // B. Resource Availability (Teacher/Resource grids)
-    const resourceError = checkResourceAndAvailability(ctx, p, state);
-    if (resourceError) {
-      if (resourceError.message && resourceError.message.includes("Teacher Busy")) {
-        return { ...resourceError, message: "Teacher is busy", penaltyPoints: 5000, conflictCount: 1 };
+    // B/C. Resource + overlap checks only for assigned real teacher/subject
+    if (hasRealTeacher && hasRealSubject) {
+      const resourceError = checkResourceAndAvailability(ctx, p, state);
+      if (resourceError) {
+        if (resourceError.message && resourceError.message.includes("Teacher Busy")) {
+          return { ...resourceError, message: "Teacher is busy", penaltyPoints: 5000, conflictCount: 1 };
+        }
+        return { ...resourceError, penaltyPoints: 5000, conflictCount: 1 };
       }
-      return { ...resourceError, penaltyPoints: 5000, conflictCount: 1 };
-    }
 
-    // C. Physical Overlaps (Teacher/Room double-booking)
-    const overlapError = checkOverlaps(ctx, p, state);
-    if (overlapError) return { ...overlapError, penaltyPoints: 5000, conflictCount: 1 };
+      const overlapError = checkOverlaps(ctx, p, state);
+      if (overlapError) return { ...overlapError, penaltyPoints: 5000, conflictCount: 1 };
+    }
 
     // D. Room Capacity
     if (roomId) {
@@ -244,7 +257,10 @@ export const validateFullSchedule = (data: AppData, state: SchedulerState): Conf
         const period = parseInt(periodStr);
         const slot = daySchedule[period];
 
+        if (!slot?.subjectId || !slot?.teacherId) continue;
+        if (!teachers.some((t) => t.id === slot.teacherId)) continue;
         if (slot.isFixed) continue; // Skip tails
+        if (getType(structure, period) !== "CLASS") continue;
 
         // Determine duration by looking ahead using navigation logic
         let duration = 1;
@@ -266,9 +282,15 @@ export const validateFullSchedule = (data: AppData, state: SchedulerState): Conf
         );
 
         if (!result.valid) {
-          // RANK 0 FILTER: Do not report "Non-instructional slot" in the conflict panel.
-          // These are often false positives during repair or intended for internal scoring only.
-          if (result.message === "Non-instructional slot (Break/Lunch/Hidden)") {
+          const auditSkipMessages = [
+            "Non-instructional slot (Break/Lunch/Hidden)",
+            "Invalid Period Type",
+          ];
+          if (
+            auditSkipMessages.some((m) =>
+              (result.message || "").includes(m),
+            )
+          ) {
             continue;
           }
 
@@ -278,8 +300,12 @@ export const validateFullSchedule = (data: AppData, state: SchedulerState): Conf
             className: cls.name,
             subjectId: slot.subjectId,
             subjectName: subject?.name || "Unknown",
+            teacherId: slot.teacherId,
             teacherName: teacher?.name || "Unknown",
-            day, period,
+            roomId: effectiveRoomId,
+            duration,
+            day,
+            period,
             reason: result.message || "Constraint Violation",
             severity: result.severity || "HIGH",
           });
@@ -289,3 +315,22 @@ export const validateFullSchedule = (data: AppData, state: SchedulerState): Conf
   }
   return allConflicts;
 };
+
+/** Post-commit audit: curriculum gaps + slot validation + resource double-bookings, deduped. */
+export function auditFinalSchedule(data: AppData): Conflict[] {
+  const state = initializeState(data);
+  const raw: Conflict[] = [
+    ...curriculumGapsToConflicts(detectCurriculumGaps(data)),
+    ...validateFullSchedule(data, state),
+    ...collectResourceDoubleBookings(data),
+  ];
+  return dedupeConflicts(raw);
+}
+
+export {
+  detectCurriculumGaps,
+  dedupeConflicts,
+  conflictDedupeKey,
+  collectResourceDoubleBookings,
+} from "./final-conflicts";
+export type { CurriculumGap } from "./final-conflicts";
