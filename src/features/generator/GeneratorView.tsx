@@ -187,7 +187,13 @@ export const GeneratorView: React.FC<ViewProps> = ({
   };
 
   const handleExcelExport = async () => {
-    await exportScheduleToExcel(data, mode);
+    try {
+      // One .xlsx file: every class or every teacher as its own sheet tab
+      await exportScheduleToExcel(data, mode);
+    } catch (err) {
+      console.error("Excel export failed:", err);
+      showToast("Excel export failed. Check the console for details.", "error");
+    }
   };
 
   const handlePrint = () => {
@@ -293,7 +299,11 @@ export const GeneratorView: React.FC<ViewProps> = ({
             onClick={handleExcelExport}
             disabled={isGenerating}
             icon={<FileSpreadsheet size={16} />}
-            title="Export All"
+            title={
+              mode === "CLASS"
+                ? "Export all classes to one Excel workbook"
+                : "Export all teachers to one Excel workbook"
+            }
           />
 
           <Button

@@ -38,17 +38,49 @@ const getDuration = (
   return 1;
 };
 
+const EXCEL_SHEET_NAME_MAX = 31;
+
+/** Excel tab names: max 31 chars, no \\ / ? * [ ], unique case-insensitively */
+const sanitizeSheetName = (name: string): string => {
+  const cleaned = name.replace(/[\\/?*[\]]/g, "").trim();
+  return (cleaned || "Sheet").substring(0, EXCEL_SHEET_NAME_MAX);
+};
+
+const makeUniqueWorksheetName = (
+  displayName: string,
+  entityId: string,
+  usedNames: Set<string>,
+): string => {
+  const base = sanitizeSheetName(displayName);
+  let candidate = base;
+  let counter = 2;
+  while (usedNames.has(candidate.toLowerCase())) {
+    const suffix = ` (${counter})`;
+    candidate = base.substring(0, EXCEL_SHEET_NAME_MAX - suffix.length) + suffix;
+    counter += 1;
+    if (counter > 99) {
+      candidate = sanitizeSheetName(entityId);
+      while (usedNames.has(candidate.toLowerCase())) {
+        candidate = sanitizeSheetName(`${entityId}-${counter}`);
+        counter += 1;
+      }
+      break;
+    }
+  }
+  usedNames.add(candidate.toLowerCase());
+  return candidate;
+};
+
 // --- HELPER: GENERATE SINGLE SHEET ---
 const generateSheet = (
   workbook: ExcelJS.Workbook,
   data: AppData,
   entityId: string,
   entityName: string,
+  sheetName: string,
   mode: "CLASS" | "TEACHER"
 ) => {
-  // sanitize name for Excel sheet limit (31 chars) and invalid chars
-  const safeName = entityName.replace(/[\\/?*[\]]/g, "").substring(0, 30);
-  const worksheet = workbook.addWorksheet(safeName);
+  const worksheet = workbook.addWorksheet(sheetName);
 
   // --- PAGE SETUP FOR A4 LANDSCAPE ---
   worksheet.pageSetup = {
@@ -320,7 +352,12 @@ export const exportScheduleToExcel = async (
   data: AppData,
   mode: "CLASS" | "TEACHER"
 ) => {
-  const entities = mode === "CLASS" ? data.classes : data.teachers;
+  const entities =
+    mode === "CLASS"
+      ? [...data.classes].sort((a, b) =>
+          a.name.localeCompare(b.name, undefined, { numeric: true }),
+        )
+      : [...data.teachers].sort((a, b) => a.name.localeCompare(b.name));
 
   if (entities.length === 0) {
     notify(
@@ -335,12 +372,33 @@ export const exportScheduleToExcel = async (
   workbook.creator = "EduScheduler Pro";
   workbook.created = new Date();
 
-  // Create a sheet for every single entity
-  entities.forEach((entity) => {
-    generateSheet(workbook, data, entity.id, entity.name, mode);
-  });
+  const usedSheetNames = new Set<string>();
+  const failedNames: string[] = [];
 
-  // Save File
+  // One workbook, one worksheet per class/teacher — no batching or separate files
+  for (const entity of entities) {
+    const sheetName = makeUniqueWorksheetName(
+      entity.name,
+      entity.id,
+      usedSheetNames,
+    );
+    try {
+      generateSheet(workbook, data, entity.id, entity.name, sheetName, mode);
+    } catch (err) {
+      console.error(`Excel export failed for ${entity.name}:`, err);
+      failedNames.push(entity.name);
+    }
+  }
+
+  const sheetCount = workbook.worksheets.length;
+  if (sheetCount === 0) {
+    notify(
+      `Export failed: no ${mode === "CLASS" ? "class" : "teacher"} sheets could be created.`,
+      "error",
+    );
+    return;
+  }
+
   const buffer = await workbook.xlsx.writeBuffer();
   const fileName = `Full_${
     mode === "CLASS" ? "Classes" : "Faculty"
@@ -348,6 +406,22 @@ export const exportScheduleToExcel = async (
   const blob = new Blob([buffer], {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
-  
-  await FileService.saveExport(blob, fileName, "xlsx");
+
+  const saveResult = await FileService.saveExport(blob, fileName, "xlsx");
+  if (!saveResult.success) {
+    return;
+  }
+
+  const label = mode === "CLASS" ? "classes" : "teachers";
+  if (failedNames.length > 0) {
+    notify(
+      `Saved one workbook with ${sheetCount}/${entities.length} ${label}. Failed: ${failedNames.join(", ")}`,
+      "error",
+    );
+  } else {
+    notify(
+      `Saved one Excel file with all ${sheetCount} ${label} (${fileName}).`,
+      "success",
+    );
+  }
 };
