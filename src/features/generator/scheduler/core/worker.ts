@@ -3,6 +3,7 @@ import { AppData } from "../../../../types";
 import { prepareAllocationUnits } from "../logic/preparation";
 import { solveSmart } from "../solver/solver";
 import { runConflictAudit } from "../validation/audit";
+import { auditFinalSchedule, dedupeConflicts } from "../validation";
 import { SOLVER_TIME_LIMIT_MS } from "../constants";
 
 const ctx: Worker = self as any;
@@ -41,7 +42,7 @@ ctx.onmessage = (e: MessageEvent<AppData>) => {
     });
 
     // 2. HYBRID SOLVER
-    const { schedule, state, iterations } = solveSmart(
+    const { schedule, state, iterations, conflicts: unplacedConflicts } = solveSmart(
       units,
       data,
       (phase, progress, total, currentConflictCount) => {
@@ -62,13 +63,17 @@ ctx.onmessage = (e: MessageEvent<AppData>) => {
       },
     );
 
-    // 3. Statistics only (conflicts are computed on the main thread from final schedule)
+    // 3. Statistics + conflicts (main thread audit on final grid)
     const audit = runConflictAudit(data, state);
+    const scheduleData = { ...data, schedule };
+    const auditConflicts = auditFinalSchedule(scheduleData, { mode: "generated" });
+    const conflicts = dedupeConflicts([...auditConflicts, ...unplacedConflicts]);
 
     ctx.postMessage({
       type: "success",
       payload: {
         schedule,
+        conflicts,
         curriculumGaps: audit.curriculumGaps,
         statistics: audit.statistics,
         iterations,

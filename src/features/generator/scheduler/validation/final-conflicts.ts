@@ -265,21 +265,57 @@ function isJointRoomSession(
   return isJointTeacherSession(data, classIds, day, period);
 }
 
+/** [resourceId -> day -> period -> Set<classId>] occupancy matrix. */
+type OccupancyMatrix = Map<string, Map<number, Map<number, Set<string>>>>;
+
+/**
+ * Record one (resource, day, period) -> classId occupancy on a freshly-owned matrix.
+ * The matrix is always allocated by the caller via `new Map()` so it cannot
+ * alias any solver-internal tracker.
+ */
+function recordOccupancy(
+  matrix: OccupancyMatrix,
+  resourceId: string,
+  day: number,
+  period: number,
+  classId: string,
+): void {
+  let byDay = matrix.get(resourceId);
+  if (!byDay) {
+    byDay = new Map();
+    matrix.set(resourceId, byDay);
+  }
+  let byPeriod = byDay.get(day);
+  if (!byPeriod) {
+    byPeriod = new Map();
+    byDay.set(day, byPeriod);
+  }
+  let classSet = byPeriod.get(period);
+  if (!classSet) {
+    classSet = new Set();
+    byPeriod.set(period, classSet);
+  }
+  classSet.add(classId);
+}
+
 /**
  * Teacher and room double-bookings only (no gap/continuity — those come from validateFullSchedule).
+ *
+ * GHOST-CONFLICT ISOLATION
+ * The two occupancy matrices below are allocated with `new Map()` on every call
+ * and live entirely on this function's stack frame. They do NOT reference any
+ * solver state, module-level cache, or `SchedulerState.teacherOccupancy` /
+ * `SchedulerState.roomOccupancy` grid. Once this function returns, both maps
+ * are garbage-collected, guaranteeing that no overlap-tracking memory survives
+ * between audit runs.
  */
 export function collectResourceDoubleBookings(data: AppData): Conflict[] {
   const conflicts: Conflict[] = [];
   const { schedule } = data;
 
-  const teacherOccupancy: Record<
-    string,
-    Record<number, Record<number, string[]>>
-  > = {};
-  const roomOccupancy: Record<
-    string,
-    Record<number, Record<number, string[]>>
-  > = {};
+  // Fresh, isolated trackers - rebuilt from the FINAL schedule only.
+  const teacherOccupancy: OccupancyMatrix = new Map();
+  const roomOccupancy: OccupancyMatrix = new Map();
 
   for (const classId of Object.keys(schedule)) {
     const classSchedule = schedule[classId];
@@ -300,45 +336,26 @@ export function collectResourceDoubleBookings(data: AppData): Conflict[] {
         const structure = cls?.structure || data.settings.dayStructure;
         if (getType(structure, period) !== "CLASS") continue;
 
-        const teacherId = slot.teacherId;
-        if (!teacherOccupancy[teacherId]) teacherOccupancy[teacherId] = {};
-        if (!teacherOccupancy[teacherId][day])
-          teacherOccupancy[teacherId][day] = {};
-        if (!teacherOccupancy[teacherId][day][period])
-          teacherOccupancy[teacherId][day][period] = [];
-        if (!teacherOccupancy[teacherId][day][period].includes(classId)) {
-          teacherOccupancy[teacherId][day][period].push(classId);
-        }
+        recordOccupancy(teacherOccupancy, slot.teacherId, day, period, classId);
 
         const subject = data.subjects.find((s) => s.id === slot.subjectId);
         const effectiveRoomId =
           slot.roomId || subject?.requiredRoomId || cls?.defaultRoomId;
 
         if (effectiveRoomId && isValidRoom(data, effectiveRoomId)) {
-          if (!roomOccupancy[effectiveRoomId])
-            roomOccupancy[effectiveRoomId] = {};
-          if (!roomOccupancy[effectiveRoomId][day])
-            roomOccupancy[effectiveRoomId][day] = {};
-          if (!roomOccupancy[effectiveRoomId][day][period])
-            roomOccupancy[effectiveRoomId][day][period] = [];
-          if (!roomOccupancy[effectiveRoomId][day][period].includes(classId)) {
-            roomOccupancy[effectiveRoomId][day][period].push(classId);
-          }
+          recordOccupancy(roomOccupancy, effectiveRoomId, day, period, classId);
         }
       }
     }
   }
 
-  for (const teacherId of Object.keys(teacherOccupancy)) {
+  for (const [teacherId, byDay] of teacherOccupancy) {
     if (!isValidTeacher(data, teacherId)) continue;
 
-    for (const dayStr of Object.keys(teacherOccupancy[teacherId])) {
-      const day = parseInt(dayStr);
-      for (const periodStr of Object.keys(teacherOccupancy[teacherId][day])) {
-        const period = parseInt(periodStr);
-        const classes = teacherOccupancy[teacherId][day][period];
-
-        if (classes.length <= 1) continue;
+    for (const [day, byPeriod] of byDay) {
+      for (const [period, classSet] of byPeriod) {
+        if (classSet.size <= 1) continue;
+        const classes = Array.from(classSet);
         if (isJointTeacherSession(data, classes, day, period)) continue;
 
         const teacher = data.teachers.find((t: Teacher) => t.id === teacherId);
@@ -367,16 +384,13 @@ export function collectResourceDoubleBookings(data: AppData): Conflict[] {
     }
   }
 
-  for (const roomId of Object.keys(roomOccupancy)) {
+  for (const [roomId, byDay] of roomOccupancy) {
     if (!isValidRoom(data, roomId)) continue;
 
-    for (const dayStr of Object.keys(roomOccupancy[roomId])) {
-      const day = parseInt(dayStr);
-      for (const periodStr of Object.keys(roomOccupancy[roomId][day])) {
-        const period = parseInt(periodStr);
-        const classes = roomOccupancy[roomId][day][period];
-
-        if (classes.length <= 1) continue;
+    for (const [day, byPeriod] of byDay) {
+      for (const [period, classSet] of byPeriod) {
+        if (classSet.size <= 1) continue;
+        const classes = Array.from(classSet);
         if (isJointRoomSession(data, classes, day, period)) continue;
 
         const room = data.rooms.find((r: Room) => r.id === roomId);

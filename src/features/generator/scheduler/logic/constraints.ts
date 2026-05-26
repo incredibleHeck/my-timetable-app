@@ -1,38 +1,16 @@
 import { AppData, Subject, Teacher, ClassGroup, Room } from "../../../../types";
 import { AllocationUnit, SchedulerState } from "../core/types";
 import { isOccasionBlocked } from "../../../../utils/utils";
+import { checkSubjectContinuity } from "../validation/load-checks";
+import { ValidationContext } from "../validation/types";
 
 /**
  * ARCHITECT NOTES:
  * 1. Performance: O(1) Map-based lookups.
  * 2. Logic: Includes Joint Class "Self-Overlap" permission.
- * 3. Logic: Includes "Sandwich" Subject Continuity protection.
+ * 3. Logic: Subject continuity enforced here (aligned with manual validation).
+ * 4. Max consecutive periods is soft (scoring/repair only), not a hard reject.
  */
-
-// --- HELPERS ---
-
-const checkConsecutiveLimit = (
-  state: SchedulerState,
-  d: number,
-  p: number,
-  p2: number,
-  duration: number,
-  teacherId: string,
-  maxConsecutive: number
-): boolean => {
-  const dailyGrid = state.teacherOccupancy[teacherId]?.[d];
-  if (!dailyGrid) return true;
-
-  let runBefore = 0;
-  let i = p - 1;
-  while (i >= 0 && dailyGrid[i]) { runBefore++; i--; }
-
-  let runAfter = 0;
-  let j = (duration === 2 ? p2 : p) + 1;
-  while (j < dailyGrid.length && dailyGrid[j]) { runAfter++; j++; }
-
-  return (runBefore + duration + runAfter) <= maxConsecutive;
-};
 
 export const isGlobalSlotBlocked = isOccasionBlocked;
 
@@ -66,7 +44,6 @@ export const checkHardConstraints = (
   // Is the Teacher free? Is the Class free? Is the Room free?
   
   // A. Teacher Availability
-  const maxConsecutive = data.settings.maxConsecutivePeriods || 4;
   const maxTeacherLoad = data.settings.maxTeacherPeriodsPerDay || 6;
 
   for (const tid of teacherIds) {
@@ -78,21 +55,18 @@ export const checkHardConstraints = (
         if (occupantP2 && occupantP2 !== "BLOCK" && occupantP2 !== unit.id) return false;
     }
 
-    // RANK 1.3: TEACHER WELFARE (Fatigue Check)
-    // Check BEFORE placing: Max 4 consecutive; Max 6 total.
+    // RANK 1.3: TEACHER WELFARE — daily load cap only (consecutive is soft)
     const currentLoad = state.teacherDailyLoad[tid]?.[d] || 0;
     const teacher = teacherMap.get(tid);
     const maxLoad = teacher?.maxPeriodsPerDay ?? maxTeacherLoad;
 
     if (currentLoad + duration > maxLoad) return false;
-    
-    // Only check consecutive if they have enough lessons to matter
-    if (currentLoad + duration >= 3) { 
-       if (!checkConsecutiveLimit(state, d, p, p2, duration, tid, maxConsecutive)) return false;
-    }
   }
 
   // B. Class Availability & Shape Rules
+  const proposedSlots = new Set<number>([p]);
+  if (duration === 2 && p2 !== -1) proposedSlots.add(p2);
+
   for (const cid of classIds) {
     const occupantP1 = state.classOccupancy[cid]?.[d]?.[p];
     if (occupantP1 && occupantP1 !== unit.id) return false;
@@ -112,6 +86,28 @@ export const checkHardConstraints = (
         });
     }
     if (count + duration > maxSubj) return false;
+
+    // RANK 1.5: Subject continuity (no XYX sandwiching)
+    const cls = classMap.get(cid);
+    const structure = cls?.structure || data.settings.dayStructure;
+    const maxPeriods = cls?.periodCount ?? data.settings.periodsPerDay;
+    const continuityCtx: ValidationContext = {
+      data,
+      targetDay: d,
+      targetPeriod: p,
+      teacherId: teacherIds[0] || "",
+      classId: cid,
+      subjectId,
+      duration,
+      maxPeriods,
+      structure,
+      classSchedule: state.classTimeRanges.get(cid) || [],
+      allClassSchedules: state.classTimeRanges,
+      ignoredSlots: new Set(),
+    };
+    if (checkSubjectContinuity(continuityCtx, proposedSlots, new Set(), state)) {
+      return false;
+    }
   }
 
   // C. Room Availability (Triple Lock Part 3)

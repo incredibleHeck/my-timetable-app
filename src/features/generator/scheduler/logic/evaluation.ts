@@ -5,6 +5,7 @@ import { calculateScore, calculateTeacherGapPenalty, calculateRoomPenalty } from
 import { countPotentialConflicts, findUnitsInSlot } from "../solver/search";
 import { forceDetermineRoom } from "./rooms";
 import { checkSubjectContinuity } from "../validation/load-checks";
+import { getNextClassPeriod } from "../utils/utils";
 
 // ARCHITECT: Removed dependency on legacy 'validation.ts'. 
 // We now rely on the unified O(1) Constraint Engine.
@@ -80,7 +81,17 @@ export class EvaluationEngine {
     
     let totalCost = 0;
     const conflicts: string[] = [];
-    const p2 = unit.duration === 2 ? p + 1 : -1;
+    const repClass = classMap.get(unit.classIds[0]);
+    const struct = repClass?.structure || data.settings.dayStructure;
+    const classLimit = repClass?.periodCount ?? data.settings.periodsPerDay;
+    const p2 =
+      unit.duration === 2
+        ? (getNextClassPeriod(p, struct, classLimit) ?? -1)
+        : -1;
+
+    if (unit.duration === 2 && p2 === -1) {
+      return { isLegal: false, totalCost: Infinity, conflicts: ["No valid second period for double"] };
+    }
 
     // --- RANK 1: THE INVARIANTS (The Rules of Engagement) ---
     // Includes Triple Lock, Shape Rules, and Teacher Welfare.

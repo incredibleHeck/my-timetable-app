@@ -21,6 +21,7 @@ import { ConflictPanel } from "./components/ConflictPanel";
 import { exportScheduleToExcel } from "../../services/export/excel";
 import { printAllSchedules } from "../../services/export/print";
 import { useToast } from "../../components/ui/Toast";
+import { auditFinalSchedule, runPreflightCheck } from "./scheduler/validation";
 
 interface ViewProps {
   data: AppData;
@@ -118,6 +119,15 @@ export const GeneratorView: React.FC<ViewProps> = ({
 
   // --- SOLVER LOGIC (ASYNC WORKER) ---
   const handleGenerate = () => {
+    const preflight = runPreflightCheck(data);
+    if (!preflight.ok) {
+      showToast(preflight.errors[0]?.message || "Cannot generate timetable.", "error");
+      return;
+    }
+    if (preflight.warnings.length > 0) {
+      showToast(preflight.warnings[0].message, "info");
+    }
+
     // 0. Deep Clean up existing timetable
     const clearedData = {
       ...data,
@@ -151,13 +161,26 @@ export const GeneratorView: React.FC<ViewProps> = ({
           duration: payload.duration,
         });
 
-        // Use the functional update to ensure we don't accidentally bring back old schedule data
-        onUpdate({
-          ...clearedData, // Base on the cleared state
+        // GHOST-CONFLICT GUARD
+        // Build the *settled* timetable from scratch with an EMPTY conflicts array
+        // so that nothing from intermediate solver iterations (or the prior session)
+        // can survive into the final audit input.
+        const settledData: AppData = {
+          ...clearedData,
           schedule: payload.schedule,
-          conflicts: payload.conflicts,
+          conflicts: [],
           lastGenerated: new Date().toISOString(),
+        };
+
+        // Audit reads ONLY from settledData.schedule (and the static refs:
+        // classes/teachers/rooms/subjects). It never reads settledData.conflicts.
+        const auditedConflicts = auditFinalSchedule(settledData, {
+          mode: "generated",
         });
+
+        // OVERWRITE-ONLY: never spread/merge previous conflicts.
+        // The line below intentionally omits any `[...prev, ...new]` pattern.
+        onUpdate({ ...settledData, conflicts: auditedConflicts });
 
         terminateWorker();
       } else if (type === "error") {
@@ -395,7 +418,9 @@ export const GeneratorView: React.FC<ViewProps> = ({
         </div>
 
         {/* Conflict Panel */}
-        {(hoverConflict || (!isGenerating && data.conflicts.length > 0)) && (
+        {(hoverConflict ||
+          (!isGenerating &&
+            data.conflicts.some((c) => c.kind !== "quality"))) && (
           <div>
             {/* LIVE VALIDATION ERROR */}
             {hoverConflict && (
@@ -417,7 +442,8 @@ export const GeneratorView: React.FC<ViewProps> = ({
               </div>
             )}
 
-            {!isGenerating && data.conflicts.length > 0 && (
+            {!isGenerating &&
+              data.conflicts.some((c) => c.kind !== "quality") && (
               <ConflictPanel 
                 conflicts={data.conflicts} 
                 onConflictSelect={setHighlightedConflict}

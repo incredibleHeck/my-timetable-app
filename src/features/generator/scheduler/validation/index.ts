@@ -183,9 +183,9 @@ export const checkSlotValidity = (
   const subjectError = checkSubjectLimit(ctx, proposedSlots, ignoredSlots, state);
   if (subjectError) return { ...subjectError, penaltyPoints: 10000, conflictCount: 1 };
 
-  // --- 5. SWAP ANALYSIS ---
+  // --- 5. SWAP ANALYSIS (interactive drag-and-drop only, not schedule re-audit) ---
   const targetSlot = data.schedule[classId]?.[targetDay]?.[targetPeriod];
-  if (targetSlot && !isAuto) {
+  if (targetSlot && !isAuto && ignoreTargetSlot) {
     if ((targetSlot as any).locked)
       return {
         valid: false,
@@ -207,19 +207,23 @@ export const checkSlotValidity = (
   
   // RANK 1.3: Teacher Load (Daily Limits & Consecutive Max)
   const loadError = checkTeacherLoad(ctx, proposedSlots, ignoredSlots, state);
-  if (loadError) return { ...loadError, penaltyPoints: 800, conflictCount: 0 };
+  if (loadError) {
+    return { ...loadError, penaltyPoints: loadError.penaltyPoints ?? 800, conflictCount: loadError.conflictCount ?? 0 };
+  }
 
   // RANK 1.5: Class Gaps (The Sandwich Rule)
   const gapError = checkGapDetection(ctx, proposedSlots, ignoredSlots, state);
   if (gapError) return { ...gapError, penaltyPoints: 400, conflictCount: 0 };
 
-  // RANK 8: Subject Continuity (Hard Constraint) - Prevents subject sandwiching
+  // RANK 8: Subject Continuity
   const continuityError = checkSubjectContinuity(ctx, proposedSlots, ignoredSlots, state);
   if (continuityError) return { ...continuityError, penaltyPoints: 1500, conflictCount: 1 };
 
-  // Teacher Continuity (Same Class Rule) - Prevents sandwiching different classes
+  // Teacher Continuity (Same Class Rule)
   const teacherContinuityError = checkTeacherContinuity(ctx, proposedSlots, ignoredSlots, state);
-  if (teacherContinuityError) return { ...teacherContinuityError, penaltyPoints: 600, conflictCount: 0 };
+  if (teacherContinuityError) {
+    return { ...teacherContinuityError, penaltyPoints: 600, conflictCount: 0 };
+  }
 
   // --- 6. JOINT CLASS INTEGRITY ---
   const isJoint = data.jointClasses?.some(jc => jc.subjectId === subjectId && jc.classIds.includes(classId));
@@ -236,10 +240,20 @@ export const checkSlotValidity = (
 /**
  * FULL AUDIT: validateFullSchedule
  * Scans the entire generated state to find every constraint violation.
+ *
+ * GHOST-CONFLICT ISOLATION
+ * - `allConflicts` is a brand-new array per call; it is not seeded from
+ *   `data.conflicts` and never references any external mutable list.
+ * - `state` MUST be a freshly built `initializeState(data)` snapshot of the
+ *   FINAL committed timetable. Passing in a solver-internal state that was
+ *   mutated mid-iteration will produce ghost conflicts. The only sanctioned
+ *   caller is `auditFinalSchedule` below, which always rebuilds state.
  */
 export const validateFullSchedule = (data: AppData, state: SchedulerState): Conflict[] => {
   const { classes, subjects, teachers, settings } = data;
-  const schedule = state ? state.schedule : data.schedule;
+  // Read EXCLUSIVELY from the freshly-rebuilt state.schedule so that
+  // ad-hoc mutations to `data.schedule` made elsewhere cannot bleed in.
+  const schedule = state.schedule;
   const allConflicts: Conflict[] = [];
 
   for (const classId of Object.keys(schedule)) {
@@ -278,7 +292,7 @@ export const validateFullSchedule = (data: AppData, state: SchedulerState): Conf
 
         const result = checkSlotValidity(
           data, day, period, slot.teacherId, classId, slot.subjectId,
-          state, { day, period, duration }, effectiveRoomId, duration, undefined, true
+          state, { day, period, duration }, effectiveRoomId, duration, undefined, false
         );
 
         if (!result.valid) {
@@ -308,6 +322,7 @@ export const validateFullSchedule = (data: AppData, state: SchedulerState): Conf
             period,
             reason: result.message || "Constraint Violation",
             severity: result.severity || "HIGH",
+            kind: "blocking",
           });
         }
       }
@@ -316,14 +331,48 @@ export const validateFullSchedule = (data: AppData, state: SchedulerState): Conf
   return allConflicts;
 };
 
-/** Post-commit audit: curriculum gaps + slot validation + resource double-bookings, deduped. */
-export function auditFinalSchedule(data: AppData): Conflict[] {
-  const state = initializeState(data);
-  const raw: Conflict[] = [
-    ...curriculumGapsToConflicts(detectCurriculumGaps(data)),
-    ...validateFullSchedule(data, state),
-    ...collectResourceDoubleBookings(data),
-  ];
+/** Post-generate audit: curriculum gaps + slot validation + resource double-bookings, deduped. */
+export type ScheduleAuditMode = "generated" | "full";
+
+/**
+ * FINAL-STATE AUDIT
+ *
+ * Hard contract: this function produces conflicts based ONLY on the timetable
+ * snapshot present in `data.schedule` at the moment of the call. It MUST NOT
+ * read `data.conflicts` (i.e., callers may pass any value or `[]` - it is
+ * irrelevant to the result).
+ *
+ * GHOST-CONFLICT GUARANTEES
+ *  1. `state` is freshly built from scratch via `initializeState(data)` -
+ *     no reference to any solver tracker survives across audit invocations.
+ *  2. `collectResourceDoubleBookings` allocates its own `Map`/`Set` trackers.
+ *  3. We seed the audit with an EMPTY `Conflict[]` (`raw`) - never from
+ *     `data.conflicts`, never via array spread of any prior list.
+ *  4. The returned array is a NEW array (via `dedupeConflicts`) - mutating it
+ *     does not retroactively affect any input.
+ */
+export function auditFinalSchedule(
+  data: AppData,
+  options?: { mode?: ScheduleAuditMode },
+): Conflict[] {
+  const mode = options?.mode ?? "full";
+
+  // Defensive: rebuild a clean view of the input where any pre-existing
+  // `conflicts` field is wiped. Downstream collectors only read schedule +
+  // static catalogs (classes, teachers, rooms, subjects, settings), but this
+  // makes the "no historical data" guarantee structurally enforced.
+  const auditData: AppData = { ...data, conflicts: [] };
+
+  // Fresh O(1)-lookup state computed from the FINAL committed schedule.
+  const state = initializeState(auditData);
+
+  const raw: Conflict[] = [];
+  raw.push(...curriculumGapsToConflicts(detectCurriculumGaps(auditData)));
+  if (mode === "full") {
+    raw.push(...validateFullSchedule(auditData, state));
+  }
+  raw.push(...collectResourceDoubleBookings(auditData));
+
   return dedupeConflicts(raw);
 }
 
@@ -333,4 +382,6 @@ export {
   conflictDedupeKey,
   collectResourceDoubleBookings,
 } from "./final-conflicts";
+export { runPreflightCheck } from "./preflight";
+export type { PreflightIssue, PreflightResult } from "./preflight";
 export type { CurriculumGap } from "./final-conflicts";

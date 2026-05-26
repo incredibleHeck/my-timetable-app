@@ -5,6 +5,8 @@ export type ValidationResult = {
   message?: string;
   isSwap?: boolean;
   severity?: "HIGH" | "MEDIUM" | "LOW";
+  /** When true, violation is a quality warning (post-generate audit), not blocking. */
+  qualityWarning?: boolean;
   /** 
    * Penalty points for this violation.
    * Hard constraints = 1000+ pts

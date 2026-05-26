@@ -24,7 +24,7 @@ export const generateSchedule = (
 
   return {
     schedule,
-    conflicts: auditFinalSchedule(finalData),
+    conflicts: auditFinalSchedule(finalData, { mode: "generated" }),
     statistics: auditResult.statistics,
   };
 };

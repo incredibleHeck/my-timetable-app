@@ -77,12 +77,15 @@ describe('ConflictPanel', () => {
     
     // High severity
     // The text is inside a div, which is inside the container div we want
-    const highSeverityItem = screen.getByText('Room capacity exceeded by Class 1A').closest('div')?.parentElement;
-    expect(highSeverityItem).toHaveClass('bg-red-50/50');
-    expect(highSeverityItem).toHaveClass('border-red-100');
+    const highSeverityItem = screen
+      .getByText("Room capacity exceeded by Class 1A")
+      .closest(".bg-red-50\\/50");
+    expect(highSeverityItem).toHaveClass("bg-red-50/50");
+    expect(highSeverityItem).toHaveClass("border-red-100");
 
-    // Medium severity
-    const mediumSeverityItem = screen.getByText('Medium Warning').closest('div')?.parentElement;
+    const mediumSeverityItem = screen
+      .getByText("Medium Warning")
+      .closest(".bg-orange-50\\/50");
     expect(mediumSeverityItem).toHaveClass('bg-orange-50/50');
     expect(mediumSeverityItem).toHaveClass('border-orange-100');
   });

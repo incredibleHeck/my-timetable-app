@@ -180,7 +180,7 @@ export const solveSmart = (
 
   // --- PHASE 2: REPAIR (Min-Conflicts + Tabu Search) ---
   let repairSteps = 0;
-  const MAX_REPAIR_STEPS = 2500;
+  const MAX_REPAIR_STEPS = 5000;
   const tabu = new TabuManager(25);
 
   const repairQueue = [...unplacedDuringConstruction].sort(
@@ -275,6 +275,7 @@ export const solveSmart = (
         teacherName: leader.teacherNames.join(", "),
         reason: `Unplaced: System could not find a valid slot for ${leader.duration === 2 ? "Double" : "Single"} Period. Try adjusting constraints or availability.`,
         severity: "HIGH",
+        kind: "blocking",
         day: 0,
         period: 0,
       });

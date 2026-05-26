@@ -31,4 +31,6 @@ export interface Conflict {
   missingPeriods?: number;
   reason: string;
   severity?: "HIGH" | "MEDIUM" | "LOW";
+  /** blocking = must fix; quality = pedagogical preference (gaps, consecutive, etc.) */
+  kind?: "blocking" | "quality";
 }

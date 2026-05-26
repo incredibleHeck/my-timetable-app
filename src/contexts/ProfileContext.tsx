@@ -195,9 +195,27 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     data.classes = updatedClasses;
     data.rooms = updatedRooms;
 
-    // Audit conflicts from the committed schedule only (final output)
-    const conflicts = auditFinalSchedule(data);
-    const validatedData = { ...data, conflicts };
+    // Audit: generated timetables only need real failures (gaps + double-bookings).
+    // Full audit runs after manual edits.
+    const isFreshGeneration =
+      !!data.lastGenerated &&
+      data.lastGenerated !== activeProfile.data.lastGenerated;
+
+    // GHOST-CONFLICT GUARD
+    // 1. Build a "scrubbed" snapshot with an EMPTY conflicts array BEFORE auditing
+    //    so any pre-existing or intermediate conflicts cannot leak into the audit
+    //    input or accidentally survive a later spread.
+    const auditInput: AppData = { ...data, conflicts: [] };
+
+    // 2. Audit runs against a 1:1 snapshot of the final settled grid.
+    const conflicts = auditFinalSchedule(auditInput, {
+      mode: isFreshGeneration ? "generated" : "full",
+    });
+
+    // 3. OVERWRITE-ONLY: never spread/merge prior conflicts. The order below
+    //    matters - `conflicts` MUST appear after `...auditInput` so it wins.
+    //    Do NOT change to `[...prev, ...newAuditedConflicts]`.
+    const validatedData: AppData = { ...auditInput, conflicts };
 
     const updated = {
       ...activeProfile,
