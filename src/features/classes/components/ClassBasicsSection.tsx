@@ -3,6 +3,7 @@ import { School } from "lucide-react";
 import { AppData } from "../../../types";
 import { ClassGroup } from "../types";
 import { Input } from "../../../components/ui";
+import { getOccasionLabel } from "../../../utils/utils";
 import { DAYS } from "../../../utils/constants";
 
 interface ClassBasicsSectionProps {
@@ -86,10 +87,9 @@ export const ClassBasicsSection: React.FC<ClassBasicsSectionProps> = ({
                 {Array.from({ length: cPeriodCount }).map(
                   (_, pIdx) => {
                     // Check Global First
-                    let globalLabel: any =
-                      data.settings.fixedOccasions[dIdx]?.[pIdx];
-                    if (globalLabel === true)
-                      globalLabel = "Reserved";
+                    const globalLabel = getOccasionLabel(
+                      data.settings.fixedOccasions[dIdx]?.[pIdx]
+                    );
 
                     // Check Local
                     const localLabel = cFixedSessions[dIdx]?.[pIdx];

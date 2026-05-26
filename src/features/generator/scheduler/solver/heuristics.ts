@@ -1,7 +1,7 @@
-import { Teacher, AppData, Subject, ClassGroup } from "../../../../types";
+import { Teacher, AppData, Subject, ClassGroup, Room } from "../../../../types";
 import { AllocationUnit, SchedulerState } from "../core/types";
 import { checkHardConstraints } from "../logic/constraints";
-import { getNextClassPeriod, getPeriodType } from "../utils/utils";
+import { getNextClassPeriod, getPeriodType, getDaysPerWeek } from "../utils/utils";
 import {
   PRIORITY_CRITICAL,
   CRITICAL_UNIT_PRIORITY_BOOST,
@@ -115,7 +115,7 @@ export function findMostConstrainedGangIdx(
   teacherMap: Map<string, Teacher>,
   subjectMap: Map<string, Subject>,
   classMap: Map<string, ClassGroup>,
-  roomMap: Map<string, any>,
+  roomMap: Map<string, Room>,
 ): number {
   if (leaders.length < MRV_SAMPLE_THRESHOLD) {
     return scanAll(
@@ -181,7 +181,7 @@ function scanAll(
   teacherMap: Map<string, Teacher>,
   subjectMap: Map<string, Subject>,
   classMap: Map<string, ClassGroup>,
-  roomMap: Map<string, any>,
+  roomMap: Map<string, Room>,
 ): number {
   let minDomain = Infinity;
   let bestIdx = 0;
@@ -221,10 +221,10 @@ export function countValidSlots(
   classMap: Map<string, ClassGroup>,
   teacherMap: Map<string, Teacher>,
   subjectMap: Map<string, Subject>,
-  roomMap: Map<string, any>,
+  roomMap: Map<string, Room>,
 ): number {
   const globalPeriods = 15; // Scan full range
-  const days = (data.settings as any).daysPerWeek || 5;
+  const days = getDaysPerWeek(data.settings);
   let count = 0;
 
   for (let d = 0; d < days; d++) {

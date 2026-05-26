@@ -31,7 +31,7 @@ const DutyView = React.lazy(() =>
 );
 
 // UI
-import { Button, Modal, Input } from "./components/ui";
+import { Button } from "./components/ui";
 import { Sidebar } from "./components/layout/Sidebar";
 import { Header } from "./components/layout/Header";
 import { ProfileWizard } from "./features/configuration/components/ProfileWizard";
@@ -43,6 +43,7 @@ function App() {
     activeProfile,
     isLoading,
     isSaving,
+    isDirty,
     createNewProfile,
     switchProfile,
     updateActiveProfile,
@@ -85,45 +86,6 @@ function App() {
     );
     if (result.success && result.path) {
       setActiveFilePath(result.path);
-    }
-  };
-
-  // --- FIX: Updated to use new FileService API ---
-  const handleImport = async () => {
-    if (!FileService.isTauri) {
-      // WEB: Create hidden input
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = ".json";
-      input.onchange = async (e: any) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        try {
-          // Use helper to parse and validate
-          const json = await FileService.parseJsonFile(file);
-
-          // Create new profile with imported data
-          await createNewProfile(
-            `Imported ${new Date().toLocaleDateString()}`,
-            json,
-          );
-        } catch (err) {
-          alert("Error reading file: " + err);
-        }
-      };
-      input.click();
-    } else {
-      // DESKTOP: Native Dialog
-      const result = await FileService.loadProjectNative();
-      if (result.data) {
-        // Create new profile with imported data
-        await createNewProfile(
-          `Imported ${new Date().toLocaleDateString()}`,
-          result.data,
-        );
-        setActiveFilePath(result.path);
-      }
     }
   };
 
@@ -172,7 +134,7 @@ function App() {
           view={view}
           setView={setView}
           onSave={handleExport}
-          hasUnsavedChanges={isSaving}
+          hasUnsavedChanges={isDirty}
           activeFilePath={activeFilePath}
           activeProfile={activeProfile}
           profiles={profiles}
@@ -181,7 +143,7 @@ function App() {
       )}
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-1 flex flex-col min-w-0">
+      <main id="main-content" role="main" className="flex-1 flex flex-col min-w-0">
         {/* TOP HEADER */}
         <Header
           view={view}

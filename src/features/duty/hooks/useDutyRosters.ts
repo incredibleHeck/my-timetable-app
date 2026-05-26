@@ -9,12 +9,13 @@ export const useDutyRosters = (data: AppData, onUpdate: (newData: AppData) => vo
     let updated = false;
     let rosters = [...(data.dutyRosters || [])];
 
-    if (data.dutyAssignments?.length > 0 && rosters.length === 0) {
+    const legacyAssignments = data.dutyAssignments ?? [];
+    if (legacyAssignments.length > 0 && rosters.length === 0) {
       const legacyRoster: DutyRoster = {
         id: generateId(),
         name: "Imported Roster",
         type: "DAILY",
-        dailyAssignments: data.dutyAssignments,
+        dailyAssignments: legacyAssignments,
         weeklyAssignments: [],
         dailyParams: { min: 4, max: 6 },
         weeklyParams: { min: 4, max: 6, weeks: 4 },

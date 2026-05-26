@@ -1,7 +1,7 @@
 import { SchedulerState } from "../core/types";
 import { ValidationContext, ValidationResult } from "./types";
 import { getType } from "./utils";
-import { getPrevClassPeriod } from "../utils/utils";
+import { getPrevClassPeriod, getDaysPerWeek } from "../utils/utils";
 
 /**
  * RULE: Teacher Load & Consecutive Limits
@@ -132,7 +132,7 @@ export const checkSubjectLimit = (
     // 1. Start with the proposed slots count (The new placement)
     let totalScheduled = proposedSlots.size;
 
-    const daysPerWeek = (data.settings as any).daysPerWeek || 5;
+    const daysPerWeek = getDaysPerWeek(data.settings);
 
     for (let d = 0; d < daysPerWeek; d++) {
       const daySched = state

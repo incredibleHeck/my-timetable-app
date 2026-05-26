@@ -1,2 +1,13 @@
 /dist
 /node_modules
+src-tauri/target/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+dev_server.log
+dev_server_err.log

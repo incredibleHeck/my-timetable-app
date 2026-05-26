@@ -13,16 +13,15 @@ export default defineConfig({
     chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Vendor chunks - libraries that don't change often
-          react: ["react", "react-dom"],
-          dndkit: ["@dnd-kit/core", "@dnd-kit/utilities"],
-          tauri: [
-            "@tauri-apps/api",
-            "@tauri-apps/plugin-dialog",
-            "@tauri-apps/plugin-fs",
-          ],
-          exports: ["exceljs", "file-saver", "react-to-print"],
+        manualChunks(id) {
+          if (id.includes("node_modules/@dnd-kit")) return "dndkit";
+          if (
+            id.includes("node_modules/@tauri-apps/api") ||
+            id.includes("node_modules/@tauri-apps/plugin-")
+          ) {
+            return "tauri";
+          }
+          if (id.includes("node_modules/exceljs")) return "exceljs";
         },
       },
     },

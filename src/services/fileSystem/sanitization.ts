@@ -1,4 +1,21 @@
-import { AppData } from "../../types";
+import { AppData, FixedOccasion } from "../../types";
+
+const normalizeOccasion = (val: unknown): string | null => {
+  if (!val) return null;
+  if (val === true) return "Reserved";
+  if (typeof val === "string") return val;
+  if (typeof val === "object" && val !== null && "name" in val) {
+    return (val as { name: string }).name;
+  }
+  return null;
+};
+
+const normalizeOccasions = (grid: FixedOccasion[][] | undefined): FixedOccasion[][] => {
+  if (!Array.isArray(grid)) return [];
+  return grid.map((row) =>
+    Array.isArray(row) ? row.map(normalizeOccasion) : []
+  );
+};
 
 export const sanitizeAppData = (raw: any): AppData => {
   if (!raw || typeof raw !== "object") {
@@ -9,19 +26,35 @@ export const sanitizeAppData = (raw: any): AppData => {
     throw new Error("Invalid data: Missing 'settings'.");
   }
 
+  const settings = {
+    ...raw.settings,
+    fixedOccasions: normalizeOccasions(raw.settings.fixedOccasions),
+  };
+
+  const classes = Array.isArray(raw.classes)
+    ? raw.classes.map((c: any) => ({
+        ...c,
+        ...(c.fixedSessions
+          ? { fixedSessions: normalizeOccasions(c.fixedSessions) }
+          : {}),
+      }))
+    : [];
+
   return {
-    settings: raw.settings,
+    settings,
     subjects: Array.isArray(raw.subjects) ? raw.subjects : [],
     teachers: Array.isArray(raw.teachers) ? raw.teachers : [],
     rooms: Array.isArray(raw.rooms) ? raw.rooms : [],
-    classes: Array.isArray(raw.classes) ? raw.classes : [],
+    classes,
     jointClasses: Array.isArray(raw.jointClasses) ? raw.jointClasses : [],
     electives: Array.isArray(raw.electives) ? raw.electives : [],
     exams: Array.isArray(raw.exams) ? raw.exams : [],
+    examRosters: Array.isArray(raw.examRosters) ? raw.examRosters : [],
     dutyLocations: Array.isArray(raw.dutyLocations) ? raw.dutyLocations : [],
     dutyAssignments: Array.isArray(raw.dutyAssignments)
       ? raw.dutyAssignments
       : [],
+    dutyRosters: Array.isArray(raw.dutyRosters) ? raw.dutyRosters : [],
     schedule:
       typeof raw.schedule === "object" && raw.schedule ? raw.schedule : {},
     conflicts: Array.isArray(raw.conflicts) ? raw.conflicts : [],

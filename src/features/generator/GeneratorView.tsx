@@ -20,6 +20,7 @@ import { ScheduleGrid } from "./components/ScheduleGrid";
 import { ConflictPanel } from "./components/ConflictPanel";
 import { exportScheduleToExcel } from "../../services/export/excel";
 import { printAllSchedules } from "../../services/export/print";
+import { useToast } from "../../components/ui/Toast";
 
 interface ViewProps {
   data: AppData;
@@ -32,6 +33,7 @@ export const GeneratorView: React.FC<ViewProps> = ({
   onUpdate,
   onNavigate,
 }) => {
+  const { showToast } = useToast();
   const [mode, setMode] = useState<"CLASS" | "TEACHER">("CLASS");
   const [activeId, setActiveId] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -161,7 +163,7 @@ export const GeneratorView: React.FC<ViewProps> = ({
       } else if (type === "error") {
         console.error("Worker error:", payload);
         terminateWorker();
-        alert("An error occurred during generation.");
+        showToast("An error occurred during generation.", "error");
       }
     };
 

@@ -1,6 +1,4 @@
-// PASTE INTO: src/utils/constants.ts
-
-import { AppData, PeriodConfig, Profile } from "../types"; // UPDATED IMPORT
+import { AppData, PeriodConfig } from "../types";
 import { generateId } from "./utils";
 import { generateDefaultTimeSlots } from "./timeUtils";
 
@@ -131,9 +129,4 @@ export const DEFAULT_DATA: AppData = {
   recentActivity: [],
 };
 
-export const DEFAULT_PROFILE: Profile = {
-  id: "default",
-  name: "Default Profile",
-  data: DEFAULT_DATA,
-};
 

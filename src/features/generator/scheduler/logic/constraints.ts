@@ -1,5 +1,6 @@
 import { AppData, Subject, Teacher, ClassGroup, Room } from "../../../../types";
 import { AllocationUnit, SchedulerState } from "../core/types";
+import { isOccasionBlocked } from "../../../../utils/utils";
 
 /**
  * ARCHITECT NOTES:
@@ -33,12 +34,7 @@ const checkConsecutiveLimit = (
   return (runBefore + duration + runAfter) <= maxConsecutive;
 };
 
-export const isGlobalSlotBlocked = (val: any): boolean => {
-  if (!val) return false;
-  if (val === true) return true; 
-  if (typeof val === "string") return val.trim().length > 0;
-  return typeof val === "object"; 
-};
+export const isGlobalSlotBlocked = isOccasionBlocked;
 
 // --- CORE HARD CONSTRAINTS: RANK 1 THE INVARIANTS ---
 

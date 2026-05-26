@@ -1,4 +1,4 @@
-import { AppData, Subject, Teacher, ClassGroup } from "../../../../types";
+import { AppData, Subject, Teacher, ClassGroup, Room } from "../../../../types";
 import { AllocationUnit, SchedulerState } from "../core/types";
 import { checkHardConstraints, checkImmutableConstraints } from "./constraints";
 import { calculateScore, calculateTeacherGapPenalty, calculateRoomPenalty } from "./scoring";
@@ -35,7 +35,7 @@ export class EvaluationEngine {
     teacherMap: Map<string, Teacher>, 
     subjectMap: Map<string, Subject>,
     classMap: Map<string, ClassGroup>,
-    roomMap: Map<string, any>
+    roomMap: Map<string, Room>
   ): EvaluationResult {
     
     // 1. HARD Constraints (O(1))
@@ -74,7 +74,7 @@ export class EvaluationEngine {
     teacherMap: Map<string, Teacher>,
     subjectMap: Map<string, Subject>,
     classMap: Map<string, ClassGroup>,
-    roomMap: Map<string, any>,
+    roomMap: Map<string, Room>,
     unitMap: Map<string, AllocationUnit>
   ): { isLegal: boolean; totalCost: number; conflicts: string[] } {
     

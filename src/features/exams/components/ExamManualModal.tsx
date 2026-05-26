@@ -3,6 +3,7 @@ import { AppData, ExamSession } from "../../../types";
 import { Modal, Button, Select, Input } from "../../../components/ui";
 import { Layers, Users, BookOpen, Clock } from "lucide-react";
 import { generateId } from "../../../utils/utils";
+import { useToast } from "../../../components/ui/Toast";
 
 interface Props {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export const ExamManualModal: React.FC<Props> = ({
   editingExam,
   onSave,
 }) => {
+  const { showToast } = useToast();
   // --- FORM STATE ---
   const [examSubjectId, setExamSubjectId] = useState("");
   const [examClassIds, setExamClassIds] = useState<string[]>([]);
@@ -108,11 +110,11 @@ export const ExamManualModal: React.FC<Props> = ({
 
   const handleSave = () => {
     if (!examSubjectId || !examDate) {
-      alert("Please select a Subject and Date.");
+      showToast("Please select a Subject and Date.", "error");
       return;
     }
     if (examClassIds.length === 0) {
-      alert("Please select at least one Class.");
+      showToast("Please select at least one Class.", "error");
       return;
     }
 

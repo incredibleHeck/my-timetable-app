@@ -1,9 +1,9 @@
-import { AppData, Conflict, Teacher, Subject } from "../../../../types";
+import { AppData, Conflict, Teacher, Subject, ClassGroup, Room } from "../../../../types";
 import { AllocationUnit, SchedulerState } from "../core/types";
 import { checkHardConstraints, checkImmutableConstraints } from "../logic/constraints";
 import { determineRoom, forceDetermineRoom } from "../logic/rooms";
 import { calculateScore } from "../logic/scoring";
-import { getNextClassPeriod, getPeriodType } from "../utils/utils";
+import { getNextClassPeriod, getPeriodType, getDaysPerWeek } from "../utils/utils";
 import { EvaluationEngine } from "../logic/evaluation";
 import { TabuManager } from "./tabu";
 
@@ -17,12 +17,12 @@ export function findValidMoves(
   gangUnits: AllocationUnit[],
   teacherMap: Map<string, Teacher>,
   subjectMap: Map<string, Subject>,
-  classMap: Map<string, any>,
-  roomMap: Map<string, any>
+  classMap: Map<string, ClassGroup>,
+  roomMap: Map<string, Room>
 ) {
     const globalPeriods = data.settings.periodsPerDay;
     const maxPossiblePeriods = 15; // Support up to 15 periods as per UI limits
-    const days = (data.settings as any).daysPerWeek || 5;
+    const days = getDaysPerWeek(data.settings);
     const moves = [];
     
     const primaryUnit = gangUnits[0];
@@ -83,15 +83,15 @@ export function findMinConflictMove(
   unitMap: Map<string, AllocationUnit>,
   teacherMap: Map<string, Teacher>,
   subjectMap: Map<string, Subject>,
-  classMap: Map<string, any>,
-  roomMap: Map<string, any>,
+  classMap: Map<string, ClassGroup>,
+  roomMap: Map<string, Room>,
   tabu?: TabuManager,
   iteration: number = 0
 ): { d: number; p: number; p2: number; cost: number; score: number; evictions: Set<string>; rooms: Record<string, string> } {
   
   const globalPeriods = data.settings.periodsPerDay;
   const maxPossiblePeriods = 15;
-  const days = (data.settings as any).daysPerWeek || 5;
+  const days = getDaysPerWeek(data.settings);
 
   let bestMove = { 
       d: -1, p: -1, p2: -1, 

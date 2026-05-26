@@ -24,6 +24,7 @@ import {
 import { AppData } from "../../types";
 import { ExamSession, ExamRoster } from "./types";
 import { Button } from "../../components/ui";
+import { useToast } from "../../components/ui/Toast";
 import { generateId } from "../../utils/utils";
 
 // Hooks
@@ -58,6 +59,7 @@ export const ExamsView: React.FC<ViewProps> = ({
   onUpdate,
   onNavigate,
 }) => {
+  const { showToast } = useToast();
   const {
     activeRosterId,
     setActiveRosterId,
@@ -208,7 +210,7 @@ export const ExamsView: React.FC<ViewProps> = ({
 
   const handleAutoAssignInvigilators = () => {
     if (exams.length === 0) {
-      alert("No exams to assign staff to. Please schedule exams first.");
+      showToast("No exams to assign staff to. Please schedule exams first.", "error");
       return;
     }
     setExclusionModalOpen(true);
@@ -224,12 +226,13 @@ export const ExamsView: React.FC<ViewProps> = ({
 
       handleUpdateActiveRoster({ ...activeData, exams: updatedExams });
       setExclusionModalOpen(false);
-      alert(
-        `Success! Staff assigned. Exam count is now: ${updatedExams.length}`
+      showToast(
+        `Success! Staff assigned. Exam count is now: ${updatedExams.length}`,
+        "success",
       );
     } catch (error) {
       console.error("Allocation failed", error);
-      alert("An error occurred during allocation. Please check console.");
+      showToast("An error occurred during allocation. Please check console.", "error");
     }
   };
 

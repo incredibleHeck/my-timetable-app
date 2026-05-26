@@ -1,5 +1,5 @@
 {
-  "name": "local TT",
-  "description": "A structured timetable management application with class, teacher, and subject management features.",
+  "name": "EduScheduler Pro",
+  "description": "School timetable management with class scheduling, exam logistics, and duty rosters.",
   "requestFramePermissions": []
 }

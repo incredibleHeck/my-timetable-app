@@ -1,4 +1,7 @@
-import { PeriodType, PeriodConfig } from "../../../../types";
+import { PeriodType, PeriodConfig, Settings } from "../../../../types";
+
+export const getDaysPerWeek = (settings: Settings): number =>
+  settings.daysPerWeek ?? 5;
 
 /**
  * ARCHITECT NOTES:

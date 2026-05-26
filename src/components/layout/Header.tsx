@@ -1,6 +1,6 @@
 import React from "react";
 import { PlusCircle, FolderOpen, Save, Globe } from "lucide-react";
-import { Profile, ViewState } from "../../types";
+import { ViewState } from "../../types";
 import { isTauriEnv } from "../../utils/platform";
 import { UndoRedoControls } from "./UndoRedoControls";
 import { ProfileSwitcher } from "./header/ProfileSwitcher";

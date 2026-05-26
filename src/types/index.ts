@@ -41,6 +41,7 @@ export type FixedOccasion =
 export interface Settings {
   // Core Structure
   periodsPerDay: number;
+  daysPerWeek?: number;
   dayStructure: PeriodConfig[];
 
   // Updated to allow objects (fixes the "Property name does not exist" error)
@@ -85,7 +86,7 @@ export interface AppData {
   exams: ExamSession[]; // NEW
   examRosters?: ExamRoster[]; // NEW: Support for multiple exam rosters
   dutyLocations: DutyLocation[]; // NEW
-  dutyAssignments: DutyAssignment[]; // LEGACY - to be migrated
+  dutyAssignments?: DutyAssignment[]; // LEGACY - migrated to dutyRosters
   dutyRosters?: DutyRoster[]; // NEW: Support for multiple rosters
   schedule: ScheduleResult;
   conflicts: Conflict[];
@@ -93,12 +94,7 @@ export interface AppData {
   recentActivity: Activity[];
 }
 
-export interface Profile {
-  id: string;
-  name: string;
-  data: AppData;
-  createdAt?: string;
-}
+export type { Profile } from "../types/profile";
 
 export type ViewState =
   | "DASHBOARD"

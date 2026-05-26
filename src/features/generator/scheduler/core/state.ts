@@ -2,6 +2,7 @@ import { AppData, TimeSlot } from "../../../../types";
 import { AllocationUnit, SchedulerState, ScheduleEntry } from "./types";
 import { calculateClassSchedule } from "../../../../utils/timeUtils";
 import { getType } from "../validation/utils";
+import { getDaysPerWeek } from "../utils/utils";
 
 /**
  * ARCHITECT NOTES:
@@ -19,7 +20,7 @@ export const initializeState = (data: AppData): SchedulerState => {
   const subjects = data.subjects || [];
   const rooms = data.rooms || [];
   const settings = data.settings;
-  const days = (settings as any).daysPerWeek || 5;
+  const days = getDaysPerWeek(settings);
   const periods = settings.periodsPerDay;
 
   // 1. Storage

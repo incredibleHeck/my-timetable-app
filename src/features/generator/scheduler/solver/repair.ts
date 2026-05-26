@@ -1,4 +1,4 @@
-import { AppData, Teacher, Subject, ClassGroup } from "../../../../types";
+import { AppData, Teacher, Subject, ClassGroup, Room } from "../../../../types";
 import { AllocationUnit, SchedulerState } from "../core/types";
 import { findMinConflictMove, findUnitsInSlot } from "./search";
 import { removeGangFromState, applyGangToState } from "../core/state";
@@ -19,7 +19,7 @@ export function runMinConflictsRepair(
     teacherMap: Map<string, Teacher>,
     subjectMap: Map<string, Subject>,
     classMap: Map<string, ClassGroup>,
-    roomMap: Map<string, any>,
+    roomMap: Map<string, Room>,
     maxSteps = 100,
     onProgress?: (phase: string, progress: number, total: number) => void
 ) {
@@ -135,7 +135,7 @@ export function attemptGangEviction(
     teacherMap: Map<string, Teacher>,
     subjectMap: Map<string, Subject>,
     classMap: Map<string, ClassGroup>,
-    roomMap: Map<string, any>
+    roomMap: Map<string, Room>
 ): string[] {
     
     // O(1) Search

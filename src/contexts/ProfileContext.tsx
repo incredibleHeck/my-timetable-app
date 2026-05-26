@@ -23,6 +23,7 @@ interface ProfileContextType {
   activeProfile: Profile | null;
   isLoading: boolean;
   isSaving: boolean;
+  isDirty: boolean;
   createNewProfile: (name: string, templateData?: AppData) => Promise<void>;
   switchProfile: (id: string) => Promise<void>;
   updateActiveProfile: (data: AppData) => void;
@@ -49,6 +50,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   const [activeProfile, setActiveProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
 
   // History State
   const [past, setPast] = useState<AppData[]>([]);
@@ -241,12 +243,13 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const triggerSave = (updatedProfile: Profile) => {
+    setIsDirty(true);
     setIsSaving(true);
-    // Debounce Save
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(async () => {
       await ProfileStorage.saveProfile(updatedProfile);
       setIsSaving(false);
+      setIsDirty(false);
     }, 1000);
   };
 
@@ -270,6 +273,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
         activeProfile,
         isLoading,
         isSaving,
+        isDirty,
         createNewProfile,
         switchProfile,
         updateActiveProfile,

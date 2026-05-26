@@ -6,6 +6,7 @@ import { AppData, Teacher, Subject, ClassGroup, Room } from "../../../../types";
 import { prepareAllocationUnits } from "../logic/preparation";
 import { solveSmart } from "../solver/solver";
 import { runConflictAudit } from "../validation/audit";
+import { getDaysPerWeek } from "../utils/utils";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -197,7 +198,7 @@ async function runRealWorldTest() {
   let sandwichesFound = 0;
   data.classes.forEach(cls => {
       const structure = cls.structure || data.settings.dayStructure;
-      const days = data.settings.daysPerWeek || 5;
+      const days = getDaysPerWeek(data.settings);
       for (let d = 0; d < days; d++) {
           const daySched = state.schedule[cls.id]?.[d];
           if (!daySched) continue;

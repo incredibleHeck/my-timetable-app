@@ -3,11 +3,13 @@ import { AppData, ViewState } from "../../../types";
 import { FileService } from "../../../services/fileSystem";
 import { sanitizeAppData } from "../../../services/fileSystem/sanitization";
 import { useWorkloadStats } from "../../workload/hooks/useWorkloadStats";
+import { useToast } from "../../../components/ui/Toast";
 
 export const useDashboard = (
   data: AppData,
   onUpdate: (d: AppData) => void
 ) => {
+  const { showToast } = useToast();
   const { workloadStats } = useWorkloadStats(data);
 
   // --- STATE ---
@@ -143,11 +145,11 @@ export const useDashboard = (
     try {
       const newData = await FileService.parseJsonFile(file);
       onUpdate(newData); // Updates the entire app state
-      alert("Backup restored successfully!");
+      showToast("Backup restored successfully!", "success");
       return true;
     } catch (error: any) {
       console.error(error);
-      alert(`Failed to load backup: ${error.message || "Unknown error"}`);
+      showToast(`Failed to load backup: ${error.message || "Unknown error"}`, "error");
       return false;
     }
   };

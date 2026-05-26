@@ -1,4 +1,4 @@
-import { ScheduleResult, TimeSlot } from "../../../../types";
+import { ScheduleResult, TimeSlot, Settings } from "../../../../types";
 
 /**
  * OPTIMIZED ALLOCATION UNIT
@@ -88,5 +88,5 @@ export interface SchedulerState {
   lessonNavigation: Map<string, number[]>;
   
   /** Global settings reference */
-  settings: any;
+  settings: Settings;
 }

@@ -1,4 +1,4 @@
-import { AppData } from "../types"; // UPDATED IMPORT
+import { AppData, FixedOccasion } from "../types";
 
 // Utility for safe ID generation
 export const generateId = () => {
@@ -86,6 +86,21 @@ export const formatRelativeTime = (dateStr: string): string => {
   if (diffInDays < 7) return `${diffInDays} days ago`;
   
   return date.toLocaleDateString();
+};
+
+export const isOccasionBlocked = (val: FixedOccasion): boolean => {
+  if (!val) return false;
+  if (val === true) return true;
+  if (typeof val === "string") return val.trim().length > 0;
+  return typeof val === "object";
+};
+
+export const getOccasionLabel = (val: FixedOccasion): string | null => {
+  if (!val) return null;
+  if (val === true) return "Reserved";
+  if (typeof val === "string") return val.trim() || null;
+  if (typeof val === "object" && val !== null) return val.name || null;
+  return null;
 };
 
 /**

@@ -1,6 +1,7 @@
-import ExcelJS from "exceljs";
+import type ExcelJS from "exceljs";
 import { AppData, ExamSession } from "../../types";
 import { FileService } from "../fileSystem";
+import { loadExcelJS } from "./excelLoader";
 
 // --- HELPERS ---
 const hexToArgb = (hex?: string) => {
@@ -27,6 +28,7 @@ const formatDuration = (mins: number) => {
 // --- EXCEL EXPORT ---
 export const exportExamsToExcel = async (data: AppData) => {
   const { exams, subjects, classes, settings } = data;
+  const ExcelJS = await loadExcelJS();
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "EduScheduler Pro";
   workbook.created = new Date();
@@ -487,6 +489,7 @@ export const exportInvigilatorsToExcel = async (
 ) => {
   const { teachers, classes } = data;
   const exams = currentExams || data.exams; // Use state exams if provided
+  const ExcelJS = await loadExcelJS();
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "EduScheduler Pro";
   const worksheet = workbook.addWorksheet("Invigilation Roster");

@@ -1,6 +1,7 @@
 import { SchedulerState } from "../core/types";
 import { ValidationContext, ValidationResult } from "./types";
 import { getType } from "./utils";
+import { getOccasionLabel } from "../../../../utils/utils";
 
 /**
  * RULE: Global & Class Blocks
@@ -28,9 +29,7 @@ export const checkGlobalAndClassBlocks = (
   // 2. GLOBAL FIXED OCCASIONS (Worship, Assemblies, Public Holidays)
   const globalFixed = data.settings.fixedOccasions?.[targetDay]?.[p];
   if (globalFixed) {
-    const label = typeof globalFixed === "string" 
-      ? globalFixed 
-      : (globalFixed as any).name || (globalFixed as any).label || "Global Event";
+    const label = getOccasionLabel(globalFixed) || "Global Event";
 
     if (label.trim() !== "") {
       return {

@@ -3,6 +3,7 @@ import { AppData, Teacher, DutyLocation, ClassGroup, DutyAssignment } from "../.
 import { Modal, Button, Select, Input } from "../../../components/ui";
 import { Users, MapPin, Calendar, Clock, BookOpen, Plus } from "lucide-react";
 import { generateId } from "../../../utils/utils";
+import { useToast } from "../../../components/ui/Toast";
 import { DAYS } from "../../../utils/constants";
 
 interface Props {
@@ -18,6 +19,7 @@ export const DutyBulkAssignModal: React.FC<Props> = ({
   data,
   onSave,
 }) => {
+  const { showToast } = useToast();
   const [selectedLocationId, setSelectedLocationId] = useState(data.dutyLocations?.[0]?.id || "");
   const [startDay, setStartDay] = useState(0);
   const [endDay, setEndDay] = useState(0);
@@ -53,15 +55,15 @@ export const DutyBulkAssignModal: React.FC<Props> = ({
 
   const handleApply = () => {
     if (!selectedLocationId) {
-      alert("Please select a location.");
+      showToast("Please select a location.", "error");
       return;
     }
     if (selectedTeacherIds.length === 0) {
-      alert("Please select at least one teacher.");
+      showToast("Please select at least one teacher.", "error");
       return;
     }
     if (selectedPeriods.length === 0) {
-      alert("Please select at least one period.");
+      showToast("Please select at least one period.", "error");
       return;
     }
 

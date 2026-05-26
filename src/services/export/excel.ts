@@ -1,8 +1,11 @@
-import ExcelJS from "exceljs";
+import type ExcelJS from "exceljs";
 import { AppData, ScheduleSlot } from "../../types";
 import { DAYS } from "../../utils/constants";
 import { FileService } from "../fileSystem";
 import { calculateClassSchedule, getFormattedTimeRange } from "../../utils/timeUtils";
+import { getOccasionLabel } from "../../utils/utils";
+import { notify } from "../../components/ui/Toast";
+import { loadExcelJS } from "./excelLoader";
 
 // --- HELPERS ---
 const hexToArgb = (hex?: string) => {
@@ -213,8 +216,9 @@ const generateSheet = (
         } else {
             // Check Class & Global Fixed Sessions
             const reserved = currentClass?.fixedSessions?.[d]?.[p] || settings.fixedOccasions?.[d]?.[p];
-            if (reserved) {
-                cellText = typeof reserved === "string" ? reserved : (typeof reserved === "object" && reserved !== null && 'name' in reserved ? (reserved as any).name : "RESERVED");
+            const reservedLabel = getOccasionLabel(reserved);
+            if (reservedLabel) {
+                cellText = reservedLabel;
                 isReserved = true;
             }
         }
@@ -316,17 +320,20 @@ export const exportScheduleToExcel = async (
   data: AppData,
   mode: "CLASS" | "TEACHER"
 ) => {
-  const workbook = new ExcelJS.Workbook();
-  workbook.creator = "EduScheduler Pro";
-  workbook.created = new Date();
-
-  // BATCH EXPORT: Loop through ALL entities
   const entities = mode === "CLASS" ? data.classes : data.teachers;
 
   if (entities.length === 0) {
-    alert(`No ${mode === "CLASS" ? "classes" : "teachers"} found to export.`);
+    notify(
+      `No ${mode === "CLASS" ? "classes" : "teachers"} found to export.`,
+      "error",
+    );
     return;
   }
+
+  const ExcelJS = await loadExcelJS();
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = "EduScheduler Pro";
+  workbook.created = new Date();
 
   // Create a sheet for every single entity
   entities.forEach((entity) => {

@@ -16,6 +16,7 @@ export const NavItem = ({
 }) => (
   <button
     onClick={() => onClick(id)}
+    aria-current={currentView === id ? "page" : undefined}
     className={`w-full flex items-center px-6 py-3 transition-colors border-l-4 text-sm font-medium group ${
       currentView === id
         ? "bg-slate-800 text-white border-amber-400"

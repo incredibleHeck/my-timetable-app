@@ -11,6 +11,7 @@ import {
 import { Lock, ArrowRightLeft } from "lucide-react";
 import { AppData, Conflict } from "../../../types";
 import { DAYS } from "../../../utils/constants";
+import { getOccasionLabel } from "../../../utils/utils";
 import { calculateClassSchedule } from "../../../utils/timeUtils";
 import { useProfile } from "../../../contexts/ProfileContext";
 import { DraggableSlot } from "./DraggableSlot";
@@ -287,17 +288,11 @@ export const ScheduleGrid: React.FC<Props> = ({
                   const classFixedLabel = mode === "CLASS" ? currentClass?.fixedSessions?.[dIdx]?.[pIdx] : null;
                   const finalFixed = classFixedLabel || fixedLabel;
 
-                  if (finalFixed) {
-                    let label = "Unavailable";
-                    if (typeof finalFixed === "string") {
-                      label = finalFixed;
-                    } else if (typeof finalFixed === "object" && finalFixed !== null && "name" in finalFixed) {
-                      label = (finalFixed as any).name;
-                    }
-
+                  const fixedText = getOccasionLabel(finalFixed);
+                  if (fixedText) {
                     content = (
                       <div className="flex items-center justify-center w-full h-full bg-slate-800 rounded text-amber-400 font-bold text-[9px] uppercase tracking-wider border border-slate-700">
-                        {label}
+                        {fixedText}
                       </div>
                     );
                   }

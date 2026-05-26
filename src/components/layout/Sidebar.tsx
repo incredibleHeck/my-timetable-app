@@ -40,7 +40,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSwitchProfile,
 }) => {
   return (
-    <aside className="w-64 bg-slate-900 flex flex-col h-screen text-slate-300 shadow-2xl shrink-0 z-20">
+    <aside className="w-64 bg-slate-900 flex flex-col h-screen text-slate-300 shadow-2xl shrink-0 z-20" aria-label="Main navigation">
       {/* Brand */}
       <div className="p-6 flex items-center gap-3">
         <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center text-slate-900 shadow-lg shadow-amber-500/20">
@@ -57,7 +57,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto custom-scrollbar py-4">
+      <nav className="flex-1 overflow-y-auto custom-scrollbar py-4" aria-label="Application sections">
         <SidebarSection label="General" isFirst />
         <NavItem
           id="DASHBOARD"

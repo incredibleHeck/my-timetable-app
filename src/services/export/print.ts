@@ -1,5 +1,6 @@
 import { AppData, ScheduleSlot, Subject, Teacher, ClassGroup } from "../../types";
 import { calculateClassSchedule, getFormattedTimeRange } from "../../utils/timeUtils";
+import { getOccasionLabel } from "../../utils/utils";
 
 // --- HELPER: GET DURATION ---
 const getDuration = (data: any, classId: string, d: number, p: number): number => {
@@ -196,8 +197,9 @@ export const printAllSchedules = (data: AppData, mode: "CLASS" | "TEACHER") => {
         const classFixed = currentClass?.fixedSessions?.[dIdx]?.[pIdx];
         const fixedOccasion = classFixed || globalFixed;
 
-        if (fixedOccasion) {
-            const label = typeof fixedOccasion === "string" ? fixedOccasion : (typeof fixedOccasion === "object" && fixedOccasion !== null && 'name' in fixedOccasion ? (fixedOccasion as any).name : "RESERVED");
+        const fixedLabel = getOccasionLabel(fixedOccasion);
+        if (fixedLabel) {
+            const label = fixedLabel;
             htmlContent += `
                 <td style="background-color: #1e293b; color: #fbbf24; font-weight: bold; font-size: 10px; border: 1px solid #0f172a;">
                     <div class="lesson-cell">

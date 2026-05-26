@@ -1,6 +1,7 @@
 import React from "react";
 import { AppData } from "../../../types";
 import { DAYS } from "../../../utils/constants";
+import { getOccasionLabel } from "../../../utils/utils";
 
 interface ReservationsGridSectionProps {
   data: AppData;
@@ -47,8 +48,7 @@ export const ReservationsGridSection: React.FC<ReservationsGridSectionProps> = (
                 {day.substring(0, 3)}
               </div>
               {Array.from({ length: periodsPerDay }).map((_, pIdx) => {
-                let occasionName: any = fixedOccasions[dIdx]?.[pIdx];
-                if (occasionName === true) occasionName = "Reserved";
+                const occasionName = getOccasionLabel(fixedOccasions[dIdx]?.[pIdx]);
                 return (
                   <button
                     key={`${dIdx}-${pIdx}`}

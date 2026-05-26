@@ -3,7 +3,28 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { GlobalConfigView } from '../src/features/configuration/GlobalConfigView';
 import { DEFAULT_DATA } from '../src/utils/constants';
-import { ProfileProvider } from '../src/contexts/ProfileContext';
+
+vi.mock('../src/contexts/ProfileContext', () => ({
+  ProfileProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  useProfile: () => ({
+    addActivity: vi.fn(),
+    profiles: [],
+    activeProfile: null,
+    isLoading: false,
+    isSaving: false,
+    isDirty: false,
+    createNewProfile: vi.fn(),
+    switchProfile: vi.fn(),
+    updateActiveProfile: vi.fn(),
+    reloadProfiles: vi.fn(),
+    undo: vi.fn(),
+    redo: vi.fn(),
+    pushToHistory: vi.fn(),
+    canUndo: false,
+    canRedo: false,
+    getClassSchedule: vi.fn(() => []),
+  }),
+}));
 
 // Mock the child components that we don't need for this test to reduce noise
 vi.mock('../src/features/configuration/components/SchoolIdentitySection', () => ({
@@ -41,11 +62,7 @@ describe('GlobalConfigView Synchronization', () => {
       }
     };
 
-    render(
-      <ProfileProvider>
-        <GlobalConfigView data={data} onUpdate={onUpdate} />
-      </ProfileProvider>
-    );
+    render(<GlobalConfigView data={data} onUpdate={onUpdate} />);
 
     const slider = screen.getByRole('slider');
     fireEvent.change(slider, { target: { value: '10' } });
@@ -68,11 +85,7 @@ describe('GlobalConfigView Synchronization', () => {
     const onUpdate = vi.fn();
     const data = DEFAULT_DATA;
 
-    render(
-      <ProfileProvider>
-        <GlobalConfigView data={data} onUpdate={onUpdate} />
-      </ProfileProvider>
-    );
+    render(<GlobalConfigView data={data} onUpdate={onUpdate} />);
 
     const automationBtn = screen.getByText(/Change Duration/i);
     fireEvent.click(automationBtn);

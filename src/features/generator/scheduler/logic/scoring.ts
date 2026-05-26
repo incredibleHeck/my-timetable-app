@@ -1,5 +1,5 @@
 import { AllocationUnit, SchedulerState } from "../core/types";
-import { AppData, Subject } from "../../../../types";
+import { AppData, Subject, Teacher } from "../../../../types";
 import { getPrevClassPeriod } from "../utils/utils";
 
 /**
@@ -105,7 +105,7 @@ const calculateScarcityPenalty = (
   d: number,
   teacherIds: string[],
   data: AppData,
-  teacherMap: Map<string, any>
+  teacherMap: Map<string, Teacher>
 ): number => {
   let penalty = 0;
   
@@ -234,8 +234,8 @@ export const calculateScore = (
   d: number,
   p: number,
   unit: AllocationUnit,
-  teacherMap: Map<string, any>,
-  subjectMap: Map<string, any>
+  teacherMap: Map<string, Teacher>,
+  subjectMap: Map<string, Subject>
 ): number => {
   let score = 0;
   const maxPeriods = data.settings.periodsPerDay;

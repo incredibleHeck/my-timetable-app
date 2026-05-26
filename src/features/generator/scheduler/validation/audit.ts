@@ -1,5 +1,6 @@
 import { AppData, Conflict, Teacher, Subject, ClassGroup, Room } from "../../../../types";
 import { SchedulerState } from "../core/types";
+import { getDaysPerWeek } from "../utils/utils";
 import { validateFullSchedule } from "./index";
 
 /**
@@ -85,7 +86,7 @@ function calculateTeacherUtilization(state: SchedulerState, data: AppData) {
 
 function calculateRoomUtilization(state: SchedulerState, data: AppData) {
   const stats: Record<string, number> = {};
-  const days = (data.settings as any).daysPerWeek || 5;
+  const days = getDaysPerWeek(data.settings);
 
   data.rooms.forEach(r => {
     let occupiedCount = 0;
