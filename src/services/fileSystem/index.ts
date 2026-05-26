@@ -2,6 +2,7 @@ import { AppData } from "../../types";
 import { sanitizeAppData } from "./sanitization";
 import * as NativeAdapter from "./nativeAdapter";
 import { isTauriEnv } from "../../utils/platform";
+import { notify } from "../../components/ui/Toast";
 
 export const FileService = {
   get isTauri(): boolean {
@@ -83,11 +84,18 @@ export const FileService = {
         if (savePath) {
           const arrayBuffer = await blob.arrayBuffer();
           await NativeAdapter.writeBinaryFile(savePath, new Uint8Array(arrayBuffer));
+          notify(`File saved to ${savePath}`, "success");
           return { success: true, path: savePath };
         }
         return { success: false };
       } catch (e) {
         console.error("Tauri Export Error:", e);
+        const detail =
+          e instanceof Error ? e.message : "Permission denied or path not writable.";
+        notify(
+          `Could not save file. ${detail} Try Desktop, Documents, or Downloads.`,
+          "error",
+        );
         return { success: false };
       }
     } else {

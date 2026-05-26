@@ -29,16 +29,13 @@ const getDialog = async () => {
  * @param content - The Uint8Array content.
  */
 export async function writeBinaryFile(path: string, content: Uint8Array): Promise<void> {
-  try {
-    const { writeFile, mkdir } = await getFs();
-    const { dirname } = await getPath();
-    const dir = await dirname(path);
+  const { writeFile, mkdir } = await getFs();
+  const { dirname } = await getPath();
+  const dir = await dirname(path);
+  if (dir) {
     await mkdir(dir, { recursive: true });
-    await writeFile(path, content);
-  } catch (error) {
-    console.error(`Failed to write binary file to ${path}:`, error);
-    throw error;
   }
+  await writeFile(path, content);
 }
 
 /**
