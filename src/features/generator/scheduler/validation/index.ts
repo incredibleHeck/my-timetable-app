@@ -367,7 +367,7 @@ export function auditFinalSchedule(
   const state = initializeState(auditData);
 
   const raw: Conflict[] = [];
-  raw.push(...curriculumGapsToConflicts(detectCurriculumGaps(auditData)));
+  raw.push(...curriculumGapsToConflicts(detectCurriculumGaps(auditData, state)));
   if (mode === "full") {
     raw.push(...validateFullSchedule(auditData, state));
   }

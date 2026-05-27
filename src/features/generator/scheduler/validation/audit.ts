@@ -24,7 +24,7 @@ export const runConflictAudit = (
 } => {
   const scheduleData = { ...data, schedule: state.schedule };
   const conflicts = auditFinalSchedule(scheduleData);
-  const curriculumGaps = detectCurriculumGaps(scheduleData);
+  const curriculumGaps = detectCurriculumGaps(scheduleData, state);
 
   const statistics = {
     totalLessonsPlaced: state.unitPlacements.size,

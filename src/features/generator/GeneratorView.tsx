@@ -420,7 +420,7 @@ export const GeneratorView: React.FC<ViewProps> = ({
         {/* Conflict Panel */}
         {(hoverConflict ||
           (!isGenerating &&
-            data.conflicts.some((c) => c.kind !== "quality"))) && (
+            (data.lastGenerated || data.conflicts.length > 0))) && (
           <div>
             {/* LIVE VALIDATION ERROR */}
             {hoverConflict && (
@@ -442,10 +442,10 @@ export const GeneratorView: React.FC<ViewProps> = ({
               </div>
             )}
 
-            {!isGenerating &&
-              data.conflicts.some((c) => c.kind !== "quality") && (
-              <ConflictPanel 
-                conflicts={data.conflicts} 
+            {!isGenerating && (data.lastGenerated || data.conflicts.length > 0) && (
+              <ConflictPanel
+                conflicts={data.conflicts}
+                selectedConflict={highlightedConflict}
                 onConflictSelect={setHighlightedConflict}
               />
             )}

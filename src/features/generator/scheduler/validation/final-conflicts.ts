@@ -1,4 +1,6 @@
-import { AppData, Conflict, ClassGroup, Teacher, Room } from "../../../../types";
+import { AppData, Conflict, ClassGroup, Teacher, Room, ScheduleSlot, PeriodConfig, PeriodType } from "../../../../types";
+import { SchedulerState } from "../core/types";
+import { getNextClassPeriod } from "../utils/utils";
 import { getType } from "./utils";
 
 export interface CurriculumGap {
@@ -130,58 +132,192 @@ export function dedupeConflicts(conflicts: Conflict[]): Conflict[] {
   return Array.from(map.values());
 }
 
-function countScheduledForSubject(
+/** Normalize IDs so string/number key drift never breaks equality checks. */
+function normalizeId(id: string | number | undefined | null): string {
+  return id == null ? "" : String(id);
+}
+
+/** Expected weekly periods from a curriculum row (matches ClassCurriculumSection). */
+function getExpectedPeriods(item: {
+  singles?: number;
+  doubles?: number;
+  periodsPerWeek?: number;
+}): number {
+  const fromSinglesDoubles = (item.singles || 0) + (item.doubles || 0) * 2;
+  if (fromSinglesDoubles > 0) return fromSinglesDoubles;
+  return item.periodsPerWeek || 0;
+}
+
+/**
+ * Resolve a class schedule slice using the same classId key the grid uses.
+ * Falls back to string-coerced keys when object keys were serialized differently.
+ */
+function resolveClassSchedule(
+  schedule: AppData["schedule"],
+  classId: string,
+): Record<number, Record<number, ScheduleSlot>> | undefined {
+  const direct = schedule[classId];
+  if (direct) return direct;
+
+  const asString = schedule[String(classId)];
+  if (asString) return asString;
+
+  // Last resort: locate by slot.classId (handles rare key drift after imports)
+  for (const key of Object.keys(schedule)) {
+    if (normalizeId(key) !== normalizeId(classId)) continue;
+    const grid = schedule[key];
+    if (grid) return grid;
+  }
+
+  return undefined;
+}
+
+/** Read day/period buckets whether keys arrived as numbers or numeric strings. */
+function readDaySchedule(
+  classSchedule: Record<number, Record<number, ScheduleSlot>>,
+  day: number,
+): Record<number, ScheduleSlot> | undefined {
+  return classSchedule[day] ?? (classSchedule as Record<string, Record<number, ScheduleSlot>>)[String(day)];
+}
+
+function readSlot(
+  daySchedule: Record<number, ScheduleSlot>,
+  period: number,
+): ScheduleSlot | undefined {
+  return daySchedule[period] ?? (daySchedule as Record<string, ScheduleSlot>)[String(period)];
+}
+
+/**
+ * Duration for a schedule head slot.
+ * Prefer the solver's `duration` field (ScheduleEntry), then bridge-aware tail
+ * lookup via getNextClassPeriod — NOT raw period + 1 (breaks skip class periods).
+ */
+function inferSlotDuration(
+  daySchedule: Record<number, ScheduleSlot>,
+  period: number,
+  slot: ScheduleSlot,
+  structure: (PeriodConfig | PeriodType)[],
+  periodLimit: number,
+): number {
+  const explicit = (slot as { duration?: number }).duration;
+  if (typeof explicit === "number" && explicit > 0) {
+    return explicit;
+  }
+
+  const nextP = getNextClassPeriod(period, structure, periodLimit);
+  if (nextP != null) {
+    const nextSlot = readSlot(daySchedule, nextP);
+    if (
+      nextSlot &&
+      nextSlot.isFixed &&
+      nextSlot.unitId &&
+      slot.unitId &&
+      normalizeId(nextSlot.unitId) === normalizeId(slot.unitId) &&
+      normalizeId(nextSlot.subjectId) === normalizeId(slot.subjectId)
+    ) {
+      return 2;
+    }
+  }
+
+  return 1;
+}
+
+/** True when this slot represents a placed lesson head (not a double tail). */
+function isPlacedLessonHead(slot: ScheduleSlot | undefined): slot is ScheduleSlot {
+  if (!slot?.subjectId) return false;
+  if (slot.isFixed === true) return false;
+  return true;
+}
+
+/**
+ * Count scheduled instructional periods for one (class, subject) on the FINAL grid.
+ * Traversal mirrors ScheduleGrid: schedule[classId][day][period] with numeric keys.
+ */
+export function countScheduledForSubject(
   data: AppData,
   classId: string,
   subjectId: string,
 ): number {
-  const classSchedule = data.schedule[classId];
+  const classSchedule = resolveClassSchedule(data.schedule, classId);
   if (!classSchedule) return 0;
+
+  const cls = data.classes.find((c) => normalizeId(c.id) === normalizeId(classId));
+  const structure = cls?.structure || data.settings.dayStructure;
+  const periodLimit = cls?.periodCount ?? data.settings.periodsPerDay;
+  const targetSubject = normalizeId(subjectId);
 
   let total = 0;
 
   for (const dayStr of Object.keys(classSchedule)) {
-    const day = parseInt(dayStr);
-    const daySchedule = classSchedule[day];
+    const day = Number(dayStr);
+    if (Number.isNaN(day)) continue;
+
+    const daySchedule = readDaySchedule(classSchedule, day);
     if (!daySchedule) continue;
 
     for (const periodStr of Object.keys(daySchedule)) {
-      const period = parseInt(periodStr);
-      const slot = daySchedule[period];
-      if (!slot || slot.isFixed) continue;
-      if (slot.subjectId !== subjectId) continue;
+      const period = Number(periodStr);
+      if (Number.isNaN(period)) continue;
 
-      let units = 1;
-      const nextSlot = daySchedule[period + 1];
-      if (
-        nextSlot?.isFixed &&
-        nextSlot.subjectId === subjectId &&
-        nextSlot.unitId === slot.unitId
-      ) {
-        units = 2;
-      }
-      total += units;
+      const slot = readSlot(daySchedule, period);
+      if (!isPlacedLessonHead(slot)) continue;
+      if (normalizeId(slot.subjectId) !== targetSubject) continue;
+
+      // Align with ScheduleGrid: only count CLASS instructional slots
+      if (getType(structure, period) !== "CLASS") continue;
+
+      total += inferSlotDuration(daySchedule, period, slot, structure, periodLimit);
     }
   }
 
   return total;
 }
 
-export function detectCurriculumGaps(data: AppData): CurriculumGap[] {
+/** O(1) count from a freshly-built SchedulerState (same burn-in as the solver). */
+function countScheduledFromState(
+  state: SchedulerState,
+  classId: string,
+  subjectId: string,
+): number {
+  const byClass = state.classSubjectDuration[classId];
+  if (!byClass) return 0;
+
+  const target = normalizeId(subjectId);
+  for (const [sid, count] of Object.entries(byClass)) {
+    if (normalizeId(sid) === target) return count;
+  }
+  return 0;
+}
+
+export function detectCurriculumGaps(
+  data: AppData,
+  state?: SchedulerState,
+): CurriculumGap[] {
   const gaps: CurriculumGap[] = [];
 
   for (const cls of data.classes) {
     if (!cls.curriculum?.length) continue;
 
     for (const item of cls.curriculum) {
-      const expected = (item.singles || 0) + (item.doubles || 0) * 2;
+      const expected = getExpectedPeriods(item);
       if (expected <= 0) continue;
 
-      const scheduled = countScheduledForSubject(data, cls.id, item.subjectId);
+      const fromGrid = countScheduledForSubject(data, cls.id, item.subjectId);
+      const fromState = state
+        ? countScheduledFromState(state, cls.id, item.subjectId)
+        : fromGrid;
+      const scheduled = Math.max(fromGrid, fromState);
+
       if (scheduled >= expected) continue;
 
       const missing = expected - scheduled;
-      const subject = data.subjects.find((s) => s.id === item.subjectId);
+      const subject = data.subjects.find(
+        (s) => normalizeId(s.id) === normalizeId(item.subjectId),
+      );
+
+      console.log(
+        `[CurriculumGap] Class: ${cls.name}, Subject: ${subject?.name || item.subjectId}, Required: ${expected}, Actually Counted on Grid: ${scheduled}`,
+      );
 
       gaps.push({
         classId: cls.id,
