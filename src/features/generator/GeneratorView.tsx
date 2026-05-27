@@ -60,6 +60,9 @@ export const GeneratorView: React.FC<ViewProps> = ({
   );
   const [elapsedMs, setElapsedMs] = useState(0);
   const generationStartRef = useRef<number | null>(null);
+  const generationBaseDataRef = useRef<AppData | null>(null);
+  const lastPerfectScheduleRef = useRef<AppData["schedule"] | null>(null);
+  const generationSessionRef = useRef(0);
 
   // Auto-hide conflict message after 6 seconds
   useEffect(() => {
@@ -112,9 +115,37 @@ export const GeneratorView: React.FC<ViewProps> = ({
     return () => window.clearInterval(interval);
   }, [isGenerating]);
 
+  const applyGeneratedSchedule = useCallback(
+    (
+      baseData: AppData,
+      schedule: AppData["schedule"],
+      toastMessage?: string,
+    ) => {
+      const settledData: AppData = {
+        ...baseData,
+        schedule,
+        conflicts: [],
+        lastGenerated: new Date().toISOString(),
+      };
+      const auditedConflicts = auditFinalSchedule(settledData, {
+        mode: "generated",
+      });
+      onUpdate({ ...settledData, conflicts: auditedConflicts });
+      if (toastMessage) {
+        showToast(toastMessage, "success");
+      }
+    },
+    [onUpdate, showToast],
+  );
+
   const terminateWorker = useCallback(() => {
-    workerRef.current = null;
+    if (workerRef.current) {
+      workerRef.current.terminate();
+      workerRef.current = null;
+    }
     generationStartRef.current = null;
+    generationBaseDataRef.current = null;
+    lastPerfectScheduleRef.current = null;
     setLiveProgress(null);
     setElapsedMs(0);
     setIsGenerating(false);
@@ -182,6 +213,9 @@ export const GeneratorView: React.FC<ViewProps> = ({
     // Update parent state immediately so UI shows "Empty" during generation
     onUpdate(clearedData);
 
+    generationBaseDataRef.current = clearedData;
+    lastPerfectScheduleRef.current = null;
+    const sessionId = ++generationSessionRef.current;
     setIsGenerating(true);
     setStats(null);
     setLiveProgress(null);
@@ -199,9 +233,16 @@ export const GeneratorView: React.FC<ViewProps> = ({
 
     // 3. Listen for Results
     workerRef.current.onmessage = (e) => {
+      if (generationSessionRef.current !== sessionId) {
+        return;
+      }
+
       const { type, payload } = e.data;
 
       if (type === "progress") {
+        if (payload.schedule) {
+          lastPerfectScheduleRef.current = payload.schedule;
+        }
         setLiveProgress({
           phase: payload.phase,
           iteration: payload.iteration,
@@ -223,27 +264,8 @@ export const GeneratorView: React.FC<ViewProps> = ({
           perfectRuns: payload.perfectRuns ?? 0,
         });
 
-        // GHOST-CONFLICT GUARD
-        // Build the *settled* timetable from scratch with an EMPTY conflicts array
-        // so that nothing from intermediate solver iterations (or the prior session)
-        // can survive into the final audit input.
-        const settledData: AppData = {
-          ...clearedData,
-          schedule: payload.schedule,
-          conflicts: [],
-          lastGenerated: new Date().toISOString(),
-        };
-
-        // Audit reads ONLY from settledData.schedule (and the static refs:
-        // classes/teachers/rooms/subjects). It never reads settledData.conflicts.
-        const auditedConflicts = auditFinalSchedule(settledData, {
-          mode: "generated",
-        });
-
-        // OVERWRITE-ONLY: never spread/merge previous conflicts.
-        // The line below intentionally omits any `[...prev, ...new]` pattern.
-        onUpdate({ ...settledData, conflicts: auditedConflicts });
-
+        const baseData = generationBaseDataRef.current ?? clearedData;
+        applyGeneratedSchedule(baseData, payload.schedule);
         terminateWorker();
       } else if (type === "error") {
         console.error("Worker error:", payload);
@@ -259,11 +281,38 @@ export const GeneratorView: React.FC<ViewProps> = ({
   };
 
   const handleStop = () => {
-    if (workerRef.current) {
-      workerRef.current.terminate();
-      console.log("Solver terminated by user.");
-    }
+    const baseData = generationBaseDataRef.current;
+    const perfectSchedule = lastPerfectScheduleRef.current;
+    const elapsed =
+      generationStartRef.current !== null
+        ? Date.now() - generationStartRef.current
+        : 0;
+    const progressSnapshot = liveProgress;
+
+    // Invalidate session and tear down worker/UI immediately (stops timer + overlay).
+    generationSessionRef.current++;
     terminateWorker();
+
+    if (baseData && perfectSchedule) {
+      setStats({
+        iterations: progressSnapshot?.iteration ?? 0,
+        duration: elapsed,
+        runIndex: progressSnapshot?.runIndex ?? 1,
+        totalRuns: progressSnapshot?.runIndex ?? 1,
+        unplaced: 0,
+        perfectRuns: progressSnapshot?.perfectRuns ?? 1,
+      });
+      applyGeneratedSchedule(
+        baseData,
+        perfectSchedule,
+        "Perfect timetable applied.",
+      );
+    } else {
+      showToast(
+        "Stopped — no perfect timetable was saved yet.",
+        "info",
+      );
+    }
   };
 
   const handleExcelExport = async () => {

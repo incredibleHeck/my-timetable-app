@@ -205,10 +205,15 @@ export function runConstructionQueue(
   ) => boolean,
   totalGangs?: number,
   mrvCache?: MrvCache,
+  shouldAbort?: () => boolean,
 ): ConstructionPhaseResult {
   leaderAvoidSlots.clear();
 
   while (queue.length > 0) {
+    if (shouldAbort?.()) {
+      return { steps, gangsPlaced, unplaced, backtrackAttempts };
+    }
+
     steps++;
 
     if (onProgress && steps % 10 === 0 && totalGangs !== undefined) {

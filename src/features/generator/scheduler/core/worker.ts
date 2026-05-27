@@ -58,6 +58,7 @@ ctx.onmessage = (e: MessageEvent<AppData>) => {
               perfectRuns: meta?.perfectRuns ?? 0,
               elapsedMs: meta?.elapsedMs ?? Date.now() - startTime,
               timeBudgetMs: meta?.timeBudgetMs ?? SOLVER_TARGET_MS,
+              schedule: meta?.scheduleSnapshot,
             },
           });
           return true;

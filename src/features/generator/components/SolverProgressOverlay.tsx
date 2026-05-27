@@ -142,21 +142,6 @@ export const SolverProgressOverlay: React.FC<Props> = ({
             </div>
           </div>
 
-          <div className="mb-5">
-            <div className="flex justify-between text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
-              <span>Time budget</span>
-              <span>{Math.round(timePct)}%</span>
-            </div>
-            <div className="h-2.5 rounded-full bg-slate-100 overflow-hidden">
-              <div
-                className={`h-full rounded-full bg-gradient-to-r ${meta.accent} transition-[width] duration-300 ease-out relative overflow-hidden`}
-                style={{ width: `${timePct}%` }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_2s_ease-in-out_infinite]" />
-              </div>
-            </div>
-          </div>
-
           {progress && total > 0 && (
             <div className="mb-5">
               <div className="flex justify-between text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">

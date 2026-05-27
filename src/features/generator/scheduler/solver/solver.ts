@@ -46,6 +46,8 @@ export type SolverProgressMeta = {
   perfectRuns: number;
   elapsedMs: number;
   timeBudgetMs?: number;
+  /** Snapshot of a zero-conflict timetable (sent when a run passes audit). */
+  scheduleSnapshot?: SchedulerState["schedule"];
 };
 
 export type SolverProgressCallback = (
@@ -225,6 +227,7 @@ function runSingleSolve(
     reportConstructionProgress,
     totalGangs,
     mrvCache,
+    shouldAbort,
   );
   steps = rank1Result.steps;
   gangsPlaced = rank1Result.gangsPlaced;
@@ -248,6 +251,7 @@ function runSingleSolve(
       reportConstructionProgress,
       totalGangs,
       mrvCache,
+      shouldAbort,
     );
     steps = levelResult.steps;
     gangsPlaced = levelResult.gangsPlaced;
@@ -474,6 +478,7 @@ export const solveSmart = (
       : data;
 
     const currentRun = run;
+    let runCancelled = false;
     const wrappedProgress: SolverProgressCallback = (
       phase,
       progress,
@@ -486,15 +491,18 @@ export const solveSmart = (
         bestUnplacedGangsSeen === Number.POSITIVE_INFINITY
           ? conflicts
           : bestUnplacedGangsSeen;
-      return (
+      const continueSolving =
         onProgress?.(phase, progress, total, conflicts, {
           runIndex: currentRun + 1,
           bestUnplaced,
           perfectRuns: perfectRunsFound,
           elapsedMs,
           timeBudgetMs: timeBudget,
-        }) ?? true
-      );
+        }) ?? true;
+      if (!continueSolving) {
+        runCancelled = true;
+      }
+      return continueSolving;
     };
 
     const result = runSingleSolve(
@@ -519,16 +527,22 @@ export const solveSmart = (
         bestUnplacedGangsSeen === Number.POSITIVE_INFINITY
           ? result.unplacedGangs
           : bestUnplacedGangsSeen;
+      const isPerfect = isPerfectGeneratedSchedule(data, result.schedule);
       onProgress("RUN_COMPLETE", currentRun + 1, run, result.unplacedGangs, {
         runIndex: currentRun + 1,
         bestUnplaced,
         perfectRuns: perfectRunsFound,
         elapsedMs,
         timeBudgetMs: timeBudget,
+        scheduleSnapshot: isPerfect ? result.schedule : undefined,
       });
     }
 
     run++;
+
+    if (runCancelled || isTimeBudgetExceeded()) {
+      break;
+    }
   }
 
   return { ...bestResult!, totalRuns: run, perfectRuns: perfectRunsFound };

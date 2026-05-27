@@ -97,7 +97,11 @@ export const useClassForm = ({
 
       // 3. Curriculum Logic
       const existingCurr = editingClass?.curriculum || [];
-      const fullCurr = data.subjects.map((subj) => {
+      const fullCurr = [...data.subjects]
+        .sort((a, b) =>
+          a.name.localeCompare(b.name, undefined, { numeric: true }),
+        )
+        .map((subj) => {
         const existing = existingCurr.find((c) => c.subjectId === subj.id);
         return existing
           ? { ...existing }
@@ -110,7 +114,7 @@ export const useClassForm = ({
               assignedTeacherId: undefined,
               isWorkloadExempt: false,
             };
-      });
+        });
       setCCurriculum(fullCurr as CurriculumItem[]);
       setModalSubTab("BASICS");
     }
