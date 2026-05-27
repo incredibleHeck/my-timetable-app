@@ -13,7 +13,7 @@
 export const SOLVER_TIME_LIMIT_MS = 28000; // 28 seconds (browser safety margin)
 
 /** Maximum iterations in the repair phase before stopping */
-export const MAX_REPAIR_STEPS = 1000;
+export const MAX_REPAIR_STEPS = 5000;
 
 /** Sample size for heuristic search (when full scan is too expensive) */
 export const HEURISTIC_SAMPLE_SIZE = 15;
@@ -67,6 +67,27 @@ export const TABU_LIST_SIZE = 10;
 
 /** Cleanup frequency for tabu list (remove entries after N iterations) */
 export const TABU_CLEANUP_FREQUENCY = 50;
+
+/** Repair iterations without net improvement before diversification */
+export const REPAIR_STAGNATION_LIMIT = 200;
+
+/** Failed repair attempts per gang before abandoning it */
+export const MAX_GANG_REPAIR_ATTEMPTS = 15;
+
+/** Low-priority placed gangs removed during diversification */
+export const REPAIR_DIVERSIFY_REMOVES = 2;
+
+/** Max occupied slots to evaluate for swap moves per repair step */
+export const MAX_SWAP_ATTEMPTS = 20;
+
+/** Small penalty so pure empty-slot placements beat equivalent swaps */
+export const REPAIR_SWAP_PENALTY = 500;
+
+/** How many recent placements to undo when construction backtracks */
+export const MAX_BACKTRACK_DEPTH = 3;
+
+/** Total construction backtrack attempts allowed per solve run */
+export const MAX_BACKTRACK_ATTEMPTS = 50;
 
 // --- HEURISTICS ---
 /**

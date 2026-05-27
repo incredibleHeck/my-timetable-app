@@ -1,8 +1,8 @@
 import { AppData, Subject, Teacher, ClassGroup, Room } from "../../../../types";
 import { AllocationUnit, SchedulerState } from "../core/types";
-import { checkHardConstraints, checkImmutableConstraints } from "./constraints";
+import { checkHardConstraints, checkImmutableConstraints, buildEvictionIgnoredSlots, computeTeacherLoadAdjustment } from "./constraints";
 import { calculateScore, calculateTeacherGapPenalty, calculateRoomPenalty } from "./scoring";
-import { countPotentialConflicts, findUnitsInSlot } from "../solver/search";
+import { countPotentialConflicts, findUnitsInSlot } from "../solver/slot-conflicts";
 import { forceDetermineRoom } from "./rooms";
 import { checkSubjectContinuity } from "../validation/load-checks";
 import { getNextClassPeriod } from "../utils/utils";
@@ -93,25 +93,54 @@ export class EvaluationEngine {
       return { isLegal: false, totalCost: Infinity, conflicts: ["No valid second period for double"] };
     }
 
-    // --- RANK 1: THE INVARIANTS (The Rules of Engagement) ---
-    // Includes Triple Lock, Shape Rules, and Teacher Welfare.
-    // If ANY of these fail, the move is physically impossible and must be rejected.
+    if (!checkImmutableConstraints(d, p, p2, unit, data, teacherMap, classMap)) {
+      return {
+        isLegal: false,
+        totalCost: Infinity,
+        conflicts: ["Rank 1: Immutable constraint violation"],
+      };
+    }
+
+    const victims = findUnitsInSlot(state, unit, d, p, p2);
+    const ignoredOccupants = new Set(victims);
+    ignoredOccupants.add(unit.id);
+
+    const teacherLoadAdjustment = computeTeacherLoadAdjustment(
+      state,
+      d,
+      p,
+      p2,
+      victims,
+      unitMap,
+    );
+    const ignoredSlots = buildEvictionIgnoredSlots(state, d, victims);
+
     const isLegal = checkHardConstraints(
-        state, data, d, p, p2, unit, 
-        teacherMap, classMap, subjectMap, roomMap
+      state,
+      data,
+      d,
+      p,
+      p2,
+      unit,
+      teacherMap,
+      classMap,
+      subjectMap,
+      roomMap,
+      {
+        ignoredOccupants,
+        teacherLoadAdjustment,
+        ignoredSlots,
+      },
     );
 
     if (!isLegal) {
-        return { isLegal: false, totalCost: Infinity, conflicts: ["Rank 1: Invariant Violation (Triple Lock/Shape/Welfare)"] };
+      return {
+        isLegal: false,
+        totalCost: Infinity,
+        conflicts: ["Rank 1: Invariant Violation (Triple Lock/Shape/Welfare)"],
+      };
     }
 
-    // Determining victims for evictions (Phase 2 allowing bumping)
-    // Note: Since checkHardConstraints above checks occupancy, we only get here if the slot 
-    // is physically reachable (e.g. during repair we temporarily ignore occupancy to find victims).
-    // WAIT: If Rank 1 is absolute, we shouldn't allow evicting Rank 1 units to satisfy Rank 1.
-    // Actually, checkHardConstraints in state.ts allows unit.id overlap.
-    
-    const victims = findUnitsInSlot(state, unit, d, p, p2);
     if (victims.size > 0) {
         victims.forEach(vId => {
             const vUnit = unitMap.get(vId); 
@@ -164,7 +193,7 @@ export class EvaluationEngine {
     if (p2 !== -1) proposedSet.add(p2);
 
     // --- RANK 5: THE CONNECTORS (Anti-Sandwich) ---
-    const continuityError = checkSubjectContinuity(ctx, proposedSet, new Set(), state);
+    const continuityError = checkSubjectContinuity(ctx, proposedSet, ignoredSlots, state);
     if (continuityError) totalCost += 5000; 
 
     // Quality Penalties

@@ -7,15 +7,24 @@ import {
   Room,
 } from "../../../../types";
 import { AllocationUnit, SchedulerState } from "../core/types";
-import {
-  initializeState,
-  applyGangToState,
-  removeGangFromState,
-} from "../core/state";
-import { findMostConstrainedGangIdx, calculatePriority } from "./heuristics";
-import { findValidMoves, findMinConflictMove } from "./search";
+import { initializeState } from "../core/state";
+import { calculatePriority } from "./heuristics";
 import { TabuManager } from "./tabu";
-import { PRIORITY_CRITICAL } from "../constants";
+import {
+  RepairController,
+  countUnplacedGangs,
+  diversifyRepairState,
+  getGangId,
+  isRepairActionFailed,
+} from "./repair-controller";
+import { executeRepairAction } from "./repair-executor";
+import { findBestRepairMove } from "./search";
+import {
+  runConstructionQueue,
+  PlacementRecord,
+  ConstructionMaps,
+} from "./construction";
+import { PRIORITY_CRITICAL, MAX_REPAIR_STEPS } from "../constants";
 
 /**
  * CSP SOLVER: Final Integrated Version
@@ -31,7 +40,6 @@ export const solveSmart = (
     conflicts: number,
   ) => boolean,
 ) => {
-  // 1. ARCHITECT: Initialize O(1) Lookups ONCE
   const teacherMap = new Map<string, Teacher>(
     data.teachers.map((t) => [t.id, t]),
   );
@@ -44,33 +52,50 @@ export const solveSmart = (
   const roomMap = new Map<string, Room>(data.rooms.map((r) => [r.id, r]));
   const unitMap = new Map<string, AllocationUnit>();
 
-  // 2. Initialize State
   const state = initializeState(data);
 
-  // 3. Pre-Process Gangs & Static Priority
   const gangMap = new Map<string, AllocationUnit[]>();
   for (const u of units) {
     unitMap.set(u.id, u);
     u.priority = calculatePriority(u, data, teacherMap, subjectMap);
 
-    const gangId = u.jointClassId || u.electiveBlockId || u.id;
+    const gangId = getGangId(u);
     if (!gangMap.has(gangId)) gangMap.set(gangId, []);
     gangMap.get(gangId)!.push(u);
   }
 
-  // Identify Gang Leaders for the Queue
   const unplacedGangLeaders = units.filter((u) => {
-    const gangId = u.jointClassId || u.electiveBlockId || u.id;
+    const gangId = getGangId(u);
     return gangMap.get(gangId)![0].id === u.id;
   });
 
   const totalGangs = unplacedGangLeaders.length;
+  const constructionMaps: ConstructionMaps = {
+    data,
+    gangMap,
+    teacherMap,
+    subjectMap,
+    classMap,
+    roomMap,
+  };
+
+  const placementStack: PlacementRecord[] = [];
+  let backtrackAttempts = 0;
+  let steps = 0;
+  let gangsPlaced = 0;
   const unplacedDuringConstruction: AllocationUnit[] = [];
+
+  const reportConstructionProgress = (
+    placed: number,
+    total: number,
+    unplacedCount: number,
+  ) => {
+    if (!onProgress) return true;
+    return onProgress("CONSTRUCTION", placed, total, unplacedCount);
+  };
 
   // --- PHASE 1: CONSTRUCTION ---
 
-  // RANK 1: GLOBAL BOTTLENECKS (Restricted / Part-Time Teachers)
-  // These must be handled first across all grades because their availability is the tightest.
   const rank1Queue = unplacedGangLeaders.filter(
     (u) => u.priority >= PRIORITY_CRITICAL,
   );
@@ -78,117 +103,54 @@ export const solveSmart = (
     (u) => u.priority < PRIORITY_CRITICAL,
   );
 
-  let steps = 0;
-  let gangsPlaced = 0;
+  let rank1Result = runConstructionQueue(
+    rank1Queue,
+    state,
+    constructionMaps,
+    placementStack,
+    backtrackAttempts,
+    steps,
+    gangsPlaced,
+    unplacedDuringConstruction,
+    reportConstructionProgress,
+    totalGangs,
+  );
+  steps = rank1Result.steps;
+  gangsPlaced = rank1Result.gangsPlaced;
+  backtrackAttempts = rank1Result.backtrackAttempts;
 
-  // Process Rank 1
-  while (rank1Queue.length > 0) {
-    steps++;
-    const leaderIdx = findMostConstrainedGangIdx(
-      rank1Queue,
-      state,
-      data,
-      gangMap,
-      teacherMap,
-      subjectMap,
-      classMap,
-      roomMap,
-    );
-    const leader = rank1Queue.splice(leaderIdx, 1)[0];
-    const gangId = leader.jointClassId || leader.electiveBlockId || leader.id;
-    const gangUnits = gangMap.get(gangId)!;
-
-    const moves = findValidMoves(
-      state,
-      data,
-      gangUnits,
-      teacherMap,
-      subjectMap,
-      classMap,
-      roomMap,
-    );
-    if (moves.length > 0) {
-      moves.sort((a, b) => b.score - a.score);
-      applyGangToState(state, gangUnits, moves[0]);
-      gangsPlaced++;
-    } else {
-      unplacedDuringConstruction.push(leader);
-    }
-  }
-
-  // RANK 2+: Group by grade level and process higher grades first.
   const levels = Array.from(
     new Set(remainingAfterRank1.map((u) => u.rankLevel)),
   ).sort((a, b) => b - a);
 
   for (const level of levels) {
     const levelQueue = remainingAfterRank1.filter((u) => u.rankLevel === level);
-
-    while (levelQueue.length > 0) {
-      steps++;
-      if (onProgress && steps % 10 === 0) {
-        if (
-          !onProgress(
-            "CONSTRUCTION",
-            gangsPlaced,
-            totalGangs,
-            unplacedDuringConstruction.length,
-          )
-        ) {
-          return {
-            schedule: state.schedule,
-            conflicts: [],
-            state,
-            iterations: steps,
-          };
-        }
-      }
-
-      const leaderIdx = findMostConstrainedGangIdx(
-        levelQueue,
-        state,
-        data,
-        gangMap,
-        teacherMap,
-        subjectMap,
-        classMap,
-        roomMap,
-      );
-      const leader = levelQueue.splice(leaderIdx, 1)[0];
-      const gangId = leader.jointClassId || leader.electiveBlockId || leader.id;
-      const gangUnits = gangMap.get(gangId)!;
-
-      const moves = findValidMoves(
-        state,
-        data,
-        gangUnits,
-        teacherMap,
-        subjectMap,
-        classMap,
-        roomMap,
-      );
-
-      if (moves.length > 0) {
-        moves.sort((a, b) => b.score - a.score);
-        applyGangToState(state, gangUnits, moves[0]);
-        gangsPlaced++;
-      } else {
-        unplacedDuringConstruction.push(leader);
-      }
-    }
+    const levelResult = runConstructionQueue(
+      levelQueue,
+      state,
+      constructionMaps,
+      placementStack,
+      backtrackAttempts,
+      steps,
+      gangsPlaced,
+      unplacedDuringConstruction,
+      reportConstructionProgress,
+      totalGangs,
+    );
+    steps = levelResult.steps;
+    gangsPlaced = levelResult.gangsPlaced;
+    backtrackAttempts = levelResult.backtrackAttempts;
   }
 
   // --- PHASE 2: REPAIR (Min-Conflicts + Tabu Search) ---
   let repairSteps = 0;
-  const MAX_REPAIR_STEPS = 5000;
   const tabu = new TabuManager(25);
 
   const repairQueue = [...unplacedDuringConstruction].sort(
     (a, b) => b.rankLevel - a.rankLevel,
   );
-  const repairSet = new Set(
-    repairQueue.map((u) => u.jointClassId || u.electiveBlockId || u.id),
-  );
+  const repairSet = new Set(repairQueue.map((u) => getGangId(u)));
+  const repairController = new RepairController(repairQueue.length);
 
   while (repairQueue.length > 0 && repairSteps < MAX_REPAIR_STEPS) {
     repairSteps++;
@@ -201,14 +163,21 @@ export const solveSmart = (
     }
 
     const leader = repairQueue.shift()!;
-    const gangId = leader.jointClassId || leader.electiveBlockId || leader.id;
+    const gangId = getGangId(leader);
     repairSet.delete(gangId);
+
+    if (repairController.shouldSkipGang(gangId)) {
+      repairController.recordProgress(countUnplacedGangs(repairQueue, repairController));
+      continue;
+    }
+
     const gangUnits = gangMap.get(gangId)!;
 
-    const bestMove = findMinConflictMove(
+    const repairAction = findBestRepairMove(
       state,
       data,
       gangUnits,
+      gangMap,
       unitMap,
       teacherMap,
       subjectMap,
@@ -218,40 +187,43 @@ export const solveSmart = (
       repairSteps,
     );
 
-    if (bestMove.cost < Infinity) {
-      if (bestMove.evictions.size > 0) {
-        bestMove.evictions.forEach((victimId) => {
-          const victimUnit = unitMap.get(victimId);
-          if (victimUnit) {
-            const vGangId =
-              victimUnit.jointClassId ||
-              victimUnit.electiveBlockId ||
-              victimUnit.id;
-
-            const currentPlace = state.unitPlacements.get(victimId);
-            if (currentPlace)
-              tabu.markTabu(
-                victimId,
-                currentPlace.d,
-                currentPlace.p,
-                repairSteps,
-              );
-
-            const vGang = gangMap.get(vGangId)!;
-            removeGangFromState(state, vGang, data);
-
-            if (!repairSet.has(vGangId)) {
-              repairQueue.push(vGang[0]);
-              repairQueue.sort((a, b) => b.rankLevel - a.rankLevel);
-              repairSet.add(vGangId);
-            }
-          }
-        });
-      }
-      applyGangToState(state, gangUnits, bestMove);
+    if (!isRepairActionFailed(repairAction)) {
+      repairController.recordSuccess(gangId);
+      executeRepairAction(
+        state,
+        gangUnits,
+        repairAction,
+        repairQueue,
+        repairSet,
+        gangMap,
+        unitMap,
+        data,
+        tabu,
+        repairSteps,
+      );
     } else {
-      repairQueue.push(leader);
-      repairSet.add(gangId);
+      repairController.recordFailedAttempt(gangId, leader);
+      if (!repairController.shouldSkipGang(gangId)) {
+        repairQueue.push(leader);
+        repairSet.add(gangId);
+      }
+    }
+
+    repairController.recordProgress(countUnplacedGangs(repairQueue, repairController));
+
+    if (repairController.shouldDiversify()) {
+      const shaken = diversifyRepairState(
+        state,
+        data,
+        gangMap,
+        unitMap,
+        repairQueue,
+        repairSet,
+      );
+      if (shaken > 0) {
+        repairController.resetStagnation();
+        repairController.recordProgress(countUnplacedGangs(repairQueue, repairController));
+      }
     }
   }
 
@@ -261,7 +233,14 @@ export const solveSmart = (
   const reportedUnits = new Set<string>();
 
   repairQueue.forEach((leader) => {
-    const gangId = leader.jointClassId || leader.electiveBlockId || leader.id;
+    reportUnplacedLeader(leader);
+  });
+  repairController.abandonedLeadersList.forEach((leader) => {
+    reportUnplacedLeader(leader);
+  });
+
+  function reportUnplacedLeader(leader: AllocationUnit) {
+    const gangId = getGangId(leader);
     if (reportedUnits.has(gangId)) return;
     reportedUnits.add(gangId);
 
@@ -280,7 +259,7 @@ export const solveSmart = (
         period: 0,
       });
     });
-  });
+  }
 
   return {
     schedule: state.schedule,

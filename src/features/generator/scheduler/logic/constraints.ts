@@ -14,12 +14,34 @@ import { ValidationContext } from "../validation/types";
 
 export const isGlobalSlotBlocked = isOccasionBlocked;
 
+export interface HardConstraintOptions {
+  /** Unit IDs whose grid occupancy is treated as free (repair evictions). */
+  ignoredOccupants?: Set<string>;
+  /** Teacher daily load freed by evicting victims on the target day. */
+  teacherLoadAdjustment?: Map<string, number>;
+  /** Slot keys (day-period) excluded from shape/continuity checks during repair. */
+  ignoredSlots?: Set<string>;
+}
+
+function blocksOccupant(
+  occupant: string | null | undefined,
+  unitId: string,
+  ignoredOccupants?: Set<string>,
+): boolean {
+  if (!occupant || occupant === "BLOCK") return false;
+  if (occupant === unitId) return false;
+  if (ignoredOccupants?.has(occupant)) return false;
+  return true;
+}
+
 // --- CORE HARD CONSTRAINTS: RANK 1 THE INVARIANTS ---
 
 /**
  * RANK 1: THE INVARIANTS (Rules of Engagement)
- * These are the active filters for the system. 
+ * These are the active filters for the system.
  * If a lesson violates any of these, it is rejected immediately.
+ *
+ * In repair mode, pass ignoredOccupants so occupied slots can be reclaimed via eviction.
  */
 export const checkHardConstraints = (
   state: SchedulerState,
@@ -31,63 +53,63 @@ export const checkHardConstraints = (
   teacherMap: Map<string, Teacher>,
   classMap: Map<string, ClassGroup>,
   subjectMap: Map<string, Subject>,
-  roomMap: Map<string, Room>
+  roomMap: Map<string, Room>,
+  options?: HardConstraintOptions,
 ): boolean => {
   const { duration, subjectId, teacherIds, classIds } = unit;
+  const ignoredOccupants = options?.ignoredOccupants;
+  const ignoredSlots = options?.ignoredSlots ?? new Set<string>();
+  const teacherLoadAdjustment = options?.teacherLoadAdjustment;
 
   // 1. RANK 1.1: STRUCTURAL HIERARCHY & BOUNDS
   if (!checkImmutableConstraints(d, p, p2, unit, data, teacherMap, classMap)) {
-      return false;
+    return false;
   }
 
   // 2. RANK 1.2: THE TRIPLE LOCK (Availability)
-  // Is the Teacher free? Is the Class free? Is the Room free?
-  
-  // A. Teacher Availability
   const maxTeacherLoad = data.settings.maxTeacherPeriodsPerDay || 6;
 
   for (const tid of teacherIds) {
     const occupantP1 = state.teacherOccupancy[tid]?.[d]?.[p];
-    if (occupantP1 && occupantP1 !== "BLOCK" && occupantP1 !== unit.id) return false;
-    
+    if (blocksOccupant(occupantP1, unit.id, ignoredOccupants)) return false;
+
     if (duration === 2) {
-        const occupantP2 = state.teacherOccupancy[tid]?.[d]?.[p2];
-        if (occupantP2 && occupantP2 !== "BLOCK" && occupantP2 !== unit.id) return false;
+      const occupantP2 = state.teacherOccupancy[tid]?.[d]?.[p2];
+      if (blocksOccupant(occupantP2, unit.id, ignoredOccupants)) return false;
     }
 
-    // RANK 1.3: TEACHER WELFARE — daily load cap only (consecutive is soft)
     const currentLoad = state.teacherDailyLoad[tid]?.[d] || 0;
+    const loadFreed = teacherLoadAdjustment?.get(tid) || 0;
     const teacher = teacherMap.get(tid);
     const maxLoad = teacher?.maxPeriodsPerDay ?? maxTeacherLoad;
 
-    if (currentLoad + duration > maxLoad) return false;
+    if (currentLoad - loadFreed + duration > maxLoad) return false;
   }
 
-  // B. Class Availability & Shape Rules
   const proposedSlots = new Set<number>([p]);
   if (duration === 2 && p2 !== -1) proposedSlots.add(p2);
 
   for (const cid of classIds) {
     const occupantP1 = state.classOccupancy[cid]?.[d]?.[p];
-    if (occupantP1 && occupantP1 !== unit.id) return false;
+    if (blocksOccupant(occupantP1, unit.id, ignoredOccupants)) return false;
     if (duration === 2) {
-        const occupantP2 = state.classOccupancy[cid]?.[d]?.[p2];
-        if (occupantP2 && occupantP2 !== unit.id) return false;
+      const occupantP2 = state.classOccupancy[cid]?.[d]?.[p2];
+      if (blocksOccupant(occupantP2, unit.id, ignoredOccupants)) return false;
     }
 
-    // RANK 1.4: CONSTRAINT CONTINUITY (Shape Rules)
-    // Daily Subject Limits: Max 2 periods of the same subject per day.
     const maxSubj = data.settings.maxSubjectPeriodsPerDay || 2;
     let count = 0;
     const daySched = state.schedule[cid]?.[d];
     if (daySched) {
-        Object.values(daySched).forEach(s => {
-            if (s.subjectId === subjectId) count += (s.duration || 1);
-        });
+      Object.entries(daySched).forEach(([pStr, slot]) => {
+        const pIdx = parseInt(pStr);
+        const occupantId = state.classOccupancy[cid]?.[d]?.[pIdx];
+        if (occupantId && ignoredOccupants?.has(occupantId)) return;
+        if (slot.subjectId === subjectId) count += slot.duration || 1;
+      });
     }
     if (count + duration > maxSubj) return false;
 
-    // RANK 1.5: Subject continuity (no XYX sandwiching)
     const cls = classMap.get(cid);
     const structure = cls?.structure || data.settings.dayStructure;
     const maxPeriods = cls?.periodCount ?? data.settings.periodsPerDay;
@@ -103,103 +125,125 @@ export const checkHardConstraints = (
       structure,
       classSchedule: state.classTimeRanges.get(cid) || [],
       allClassSchedules: state.classTimeRanges,
-      ignoredSlots: new Set(),
+      ignoredSlots,
     };
-    if (checkSubjectContinuity(continuityCtx, proposedSlots, new Set(), state)) {
+    if (checkSubjectContinuity(continuityCtx, proposedSlots, ignoredSlots, state)) {
       return false;
     }
   }
 
-  // C. Room Availability (Triple Lock Part 3)
   const subject = subjectMap.get(subjectId);
   const repClass = classMap.get(classIds[0]);
   const targetRoomId = subject?.requiredRoomId || repClass?.defaultRoomId;
 
   if (targetRoomId) {
     const roomOccP1 = state.roomOccupancy[targetRoomId]?.[d]?.[p];
-    if (roomOccP1 && roomOccP1 !== unit.id) return false;
-    
+    if (blocksOccupant(roomOccP1, unit.id, ignoredOccupants)) return false;
+
     if (duration === 2) {
-        const roomOccP2 = state.roomOccupancy[targetRoomId]?.[d]?.[p2];
-        if (roomOccP2 && roomOccP2 !== unit.id) return false;
+      const roomOccP2 = state.roomOccupancy[targetRoomId]?.[d]?.[p2];
+      if (blocksOccupant(roomOccP2, unit.id, ignoredOccupants)) return false;
     }
 
     const room = roomMap.get(targetRoomId);
-    if (room && repClass && (repClass.studentCount || 0) > room.capacity) return false; 
+    if (room && repClass && (repClass.studentCount || 0) > room.capacity) return false;
   }
 
-  // 5. SINGLE RESOURCE
   if (subject?.isSingleResource) {
     const resOccP1 = state.singleResourceUsage[subjectId]?.[d]?.[p];
-    if (resOccP1 && resOccP1 !== unit.id) return false;
+    if (blocksOccupant(resOccP1, unit.id, ignoredOccupants)) return false;
     if (duration === 2) {
-        const resOccP2 = state.singleResourceUsage[subjectId]?.[d]?.[p2];
-        if (resOccP2 && resOccP2 !== unit.id) return false;
+      const resOccP2 = state.singleResourceUsage[subjectId]?.[d]?.[p2];
+      if (blocksOccupant(resOccP2, unit.id, ignoredOccupants)) return false;
     }
   }
 
   return true;
 };
 
+export function computeTeacherLoadAdjustment(
+  state: SchedulerState,
+  d: number,
+  p: number,
+  p2: number,
+  victims: Set<string>,
+  unitMap: Map<string, AllocationUnit>,
+): Map<string, number> {
+  const adjustment = new Map<string, number>();
+
+  for (const vId of victims) {
+    const vUnit = unitMap.get(vId);
+    if (!vUnit) continue;
+
+    const placement = state.unitPlacements.get(vId);
+    if (!placement || placement.d !== d) continue;
+
+    for (const tid of vUnit.teacherIds) {
+      let freed = 0;
+      if (state.teacherOccupancy[tid]?.[d]?.[p] === vId) freed++;
+      if (p2 !== -1 && state.teacherOccupancy[tid]?.[d]?.[p2] === vId) freed++;
+      if (freed > 0) {
+        adjustment.set(tid, (adjustment.get(tid) || 0) + freed);
+      }
+    }
+  }
+
+  return adjustment;
+}
+
+export function buildEvictionIgnoredSlots(
+  state: SchedulerState,
+  d: number,
+  victims: Set<string>,
+): Set<string> {
+  const ignoredSlots = new Set<string>();
+
+  for (const vId of victims) {
+    const placement = state.unitPlacements.get(vId);
+    if (!placement || placement.d !== d) continue;
+    ignoredSlots.add(`${d}-${placement.p}`);
+    if (placement.p2 !== -1) ignoredSlots.add(`${d}-${placement.p2}`);
+  }
+
+  return ignoredSlots;
+}
+
 // --- IMMUTABLE CONSTRAINTS ---
 
-
-
 export function checkImmutableConstraints(
-
-    d: number, 
-
-    p: number, 
-
-    p2: number, 
-
-    unit: AllocationUnit, 
-
-    data: AppData,
-
-    teacherMap: Map<string, Teacher>, 
-
-    classMap: Map<string, ClassGroup>
-
+  d: number,
+  p: number,
+  p2: number,
+  unit: AllocationUnit,
+  data: AppData,
+  teacherMap: Map<string, Teacher>,
+  classMap: Map<string, ClassGroup>,
 ): boolean {
+  for (const cid of unit.classIds) {
+    const cls = classMap.get(cid);
+    const struct = cls?.structure || data.settings.dayStructure;
+    const limit = Math.min(cls?.periodCount ?? 99, struct.length);
 
-      // 0. Class-Specific Period Limits (The "13th Period" Fix)
+    if (p >= limit) return false;
+    if (unit.duration === 2 && p2 !== -1 && p2 >= limit) return false;
+  }
 
-      for (const cid of unit.classIds) {
+  if (isGlobalSlotBlocked(data.settings.fixedOccasions?.[d]?.[p])) return false;
+  if (unit.duration === 2 && p2 !== -1 && isGlobalSlotBlocked(data.settings.fixedOccasions?.[d]?.[p2])) {
+    return false;
+  }
 
-          const cls = classMap.get(cid);
+  for (const tid of unit.teacherIds) {
+    const t = teacherMap.get(tid);
+    if (t?.constraints?.[d]?.[p]) return false;
+    if (unit.duration === 2 && p2 !== -1 && t?.constraints?.[d]?.[p2]) return false;
+  }
 
-          const struct = cls?.structure || data.settings.dayStructure;
+  for (const cid of unit.classIds) {
+    const cls = classMap.get(cid);
+    if (cls?.fixedSessions?.[d]?.[p]) return false;
+    if (unit.duration === 2 && p2 !== -1 && cls?.fixedSessions?.[d]?.[p2]) return false;
+  }
 
-          const limit = Math.min(cls?.periodCount ?? 99, struct.length);
-
-          
-
-          if (p >= limit) return false;
-
-          if (unit.duration === 2 && p2 !== -1 && p2 >= limit) return false;
-
-      }
-
-
-
-   // 1. Global blocks
-
-   if (isGlobalSlotBlocked(data.settings.fixedOccasions?.[d]?.[p])) return false;
-   if (unit.duration === 2 && p2 !== -1 && isGlobalSlotBlocked(data.settings.fixedOccasions?.[d]?.[p2])) return false;
-
-   // Teacher Grid
-   for (const tid of unit.teacherIds) {
-       const t = teacherMap.get(tid);
-       if (t?.constraints?.[d]?.[p]) return false;
-       if (unit.duration === 2 && p2 !== -1 && t?.constraints?.[d]?.[p2]) return false;
-   }
-   
-   // Class Fixed Sessions
-   for (const cid of unit.classIds) {
-       const cls = classMap.get(cid);
-       if (cls?.fixedSessions?.[d]?.[p]) return false;
-       if (unit.duration === 2 && p2 !== -1 && cls?.fixedSessions?.[d]?.[p2]) return false;
-   }
-   return true;
+  return true;
 }
