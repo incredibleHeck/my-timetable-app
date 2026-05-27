@@ -4,13 +4,19 @@ import { AppData } from "../../../types";
 export interface ClassWorkloadBreakdown {
   classId: string;
   className: string;
+  subjectId: string;
+  subjectName: string;
   periods: number;
 }
 
 export const useWorkloadStats = (data: AppData) => {
   const workloadStats = useMemo(() => {
-    const { settings, teachers, classes, jointClasses, electives, schedule } =
+    const { settings, teachers, classes, jointClasses, electives, schedule, subjects } =
       data;
+
+    const subjectNameById = new Map(
+      subjects.map((s) => [s.id, s.name]),
+    );
 
     const maxWeeklyCapacity = settings.maxTeachingPeriodsPerWeek ?? 24;
 
@@ -25,12 +31,25 @@ export const useWorkloadStats = (data: AppData) => {
         const countedElectiveIds = new Set<string>();
         const classBreakdownMap = new Map<string, ClassWorkloadBreakdown>();
 
-        const addToBreakdown = (classId: string, className: string, periods: number) => {
-          const existing = classBreakdownMap.get(classId);
+        const addToBreakdown = (
+          classId: string,
+          className: string,
+          subjectId: string,
+          periods: number,
+        ) => {
+          const key = `${classId}:${subjectId}`;
+          const subjectName = subjectNameById.get(subjectId) ?? subjectId;
+          const existing = classBreakdownMap.get(key);
           if (existing) {
             existing.periods += periods;
           } else {
-            classBreakdownMap.set(classId, { classId, className, periods });
+            classBreakdownMap.set(key, {
+              classId,
+              className,
+              subjectId,
+              subjectName,
+              periods,
+            });
           }
         };
 
@@ -57,7 +76,12 @@ export const useWorkloadStats = (data: AppData) => {
                   joint.classIds.forEach((cid) => {
                     const cls = classes.find((x) => x.id === cid);
                     if (cls) {
-                      addToBreakdown(cls.id, cls.name, curr.periodsPerWeek);
+                      addToBreakdown(
+                        cls.id,
+                        cls.name,
+                        curr.subjectId,
+                        curr.periodsPerWeek,
+                      );
                     }
                   });
                 }
@@ -68,21 +92,37 @@ export const useWorkloadStats = (data: AppData) => {
                   elective.classIds.forEach((cid) => {
                     const cls = classes.find((x) => x.id === cid);
                     if (cls) {
-                      addToBreakdown(cls.id, cls.name, curr.periodsPerWeek);
+                      addToBreakdown(
+                        cls.id,
+                        cls.name,
+                        curr.subjectId,
+                        curr.periodsPerWeek,
+                      );
                     }
                   });
                 }
               } else {
                 assignedPeriods += curr.periodsPerWeek;
-                addToBreakdown(c.id, c.name, curr.periodsPerWeek);
+                addToBreakdown(
+                  c.id,
+                  c.name,
+                  curr.subjectId,
+                  curr.periodsPerWeek,
+                );
               }
             }
           });
         });
 
-        const classBreakdown = [...classBreakdownMap.values()].sort((a, b) =>
-          a.className.localeCompare(b.className, undefined, { numeric: true }),
-        );
+        const classBreakdown = [...classBreakdownMap.values()].sort((a, b) => {
+          const byClass = a.className.localeCompare(b.className, undefined, {
+            numeric: true,
+          });
+          if (byClass !== 0) return byClass;
+          return a.subjectName.localeCompare(b.subjectName, undefined, {
+            numeric: true,
+          });
+        });
 
         const uniqueScheduledSlots = new Set<string>();
         Object.keys(schedule).forEach((classId) => {
@@ -141,6 +181,7 @@ export const useWorkloadStats = (data: AppData) => {
     data.settings.periodsPerDay,
     data.settings.dayStructure,
     data.settings.maxTeachingPeriodsPerWeek,
+    data.subjects,
   ]);
 
   return { workloadStats };

@@ -45,7 +45,7 @@ describe('useWorkloadStats', () => {
       'c1': { 0: { 0: { subjectId: 's1', teacherId: 't1', isFixed: false } } },
       'c2': { 0: { 0: { subjectId: 's1', teacherId: 't1', isFixed: false } } },
     },
-    subjects: [],
+    subjects: [{ id: 's1', name: 'Mathematics', color: '#000' } as any],
     rooms: [],
     conflicts: [],
     lastGenerated: null,
@@ -72,7 +72,10 @@ describe('useWorkloadStats', () => {
     const stat = result.current.workloadStats.find((s) => s.t.id === 't1');
 
     expect(stat?.classBreakdown).toHaveLength(2);
-    stat?.classBreakdown.forEach((row) => expect(row.periods).toBe(2));
+    stat?.classBreakdown.forEach((row) => {
+      expect(row.periods).toBe(2);
+      expect(row.subjectName).toBe('Mathematics');
+    });
   });
 
   it('should de-duplicate scheduled workload for concurrent sessions', () => {

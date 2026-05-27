@@ -139,13 +139,17 @@ export const WorkloadTeacherDetail: React.FC<WorkloadTeacherDetailProps> = ({
             <ul className="space-y-1.5 max-h-48 overflow-y-auto custom-scrollbar">
               {classBreakdown.map((row) => (
                 <li
-                  key={row.classId}
-                  className="flex justify-between gap-3 text-[11px] border-b border-slate-50 pb-1 last:border-0"
+                  key={`${row.classId}:${row.subjectId}`}
+                  className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 text-[11px] border-b border-slate-50 pb-1.5 last:border-0"
+                  title={`${row.className} — ${row.subjectName}`}
                 >
-                  <span className="text-slate-700 truncate" title={row.className}>
+                  <span className="font-medium text-slate-800 whitespace-nowrap">
                     {row.className}
                   </span>
-                  <span className="font-bold text-slate-800 shrink-0">
+                  <span className="text-slate-500 truncate">
+                    {row.subjectName}
+                  </span>
+                  <span className="font-bold text-slate-800 whitespace-nowrap text-right">
                     {row.periods} {row.periods === 1 ? "period" : "periods"}
                   </span>
                 </li>
