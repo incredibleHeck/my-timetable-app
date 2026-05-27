@@ -195,11 +195,12 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     data.classes = updatedClasses;
     data.rooms = updatedRooms;
 
-    // Audit: generated timetables only need real failures (gaps + double-bookings).
-    // Full audit runs after manual edits.
-    const isFreshGeneration =
-      !!data.lastGenerated &&
-      data.lastGenerated !== activeProfile.data.lastGenerated;
+    // Audit tier: generated timetables use the lightweight audit (gaps +
+    // real double-bookings only). Full pedagogical audit runs only before
+    // the first generation (no lastGenerated timestamp yet).
+    // Using "full" on every drag/edit re-scanned the entire school and
+    // resurfaced unrelated historical collisions in the Resolution Center.
+    const auditMode = data.lastGenerated ? "generated" : "full";
 
     // GHOST-CONFLICT GUARD
     // 1. Build a "scrubbed" snapshot with an EMPTY conflicts array BEFORE auditing
@@ -208,9 +209,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     const auditInput: AppData = { ...data, conflicts: [] };
 
     // 2. Audit runs against a 1:1 snapshot of the final settled grid.
-    const conflicts = auditFinalSchedule(auditInput, {
-      mode: isFreshGeneration ? "generated" : "full",
-    });
+    const conflicts = auditFinalSchedule(auditInput, { mode: auditMode });
 
     // 3. OVERWRITE-ONLY: never spread/merge prior conflicts. The order below
     //    matters - `conflicts` MUST appear after `...auditInput` so it wins.

@@ -8,7 +8,7 @@ import { Room } from "../features/rooms/types";
 import { ClassGroup, JointClass, ElectiveBlock, CurriculumItem, Class } from "../features/classes/types";
 import { ExamSession, ExamRoster } from "../features/exams/types";
 import { DutyLocation, DutyAssignment, DutyRoster } from "../features/duty/types";
-import { ScheduleResult, Conflict, ScheduleSlot } from "../features/generator/types";
+import { ScoringWeightOverrides } from "../features/generator/scheduler/constants";
 
 // Re-exports for convenience and to avoid breaking existing imports
 export type { Teacher };
@@ -64,6 +64,10 @@ export interface Settings {
   maxTeachingPeriodsPerWeek?: number;
   /** Hard cap on core-subject periods per class per day (optional) */
   maxCorePeriodsPerDay?: number;
+  /** Spread each subject across the week: max ceil(N/D)+1 periods per day */
+  enforceSubjectDaySpread?: boolean;
+  /** Override default soft scoring weights used during construction */
+  scoringWeightOverrides?: ScoringWeightOverrides;
 }
 
 // ----------------------------------------------------------------------

@@ -10,7 +10,10 @@
 
 // --- PERFORMANCE & TIMING ---
 /** Maximum time (ms) web worker is allowed to run before timeout */
-export const SOLVER_TIME_LIMIT_MS = 28000; // 28 seconds (browser safety margin)
+export const SOLVER_TIME_LIMIT_MS = 22000; // 22 seconds (2s buffer for audit/post)
+
+/** Target solve time (ms) — solver keeps spawning runs until this elapses */
+export const SOLVER_TARGET_MS = 20000;
 
 /** Maximum iterations in the repair phase before stopping */
 export const MAX_REPAIR_STEPS = 5000;
@@ -95,6 +98,12 @@ export const MAX_SWAP_ATTEMPTS = 20;
 /** Small penalty so pure empty-slot placements beat equivalent swaps */
 export const REPAIR_SWAP_PENALTY = 500;
 
+/** Max recursion depth when re-homing evicted gangs in one repair step */
+export const MAX_CHAIN_DEPTH = 3;
+
+/** Per-relocation penalty so shallow chains are preferred */
+export const REPAIR_CHAIN_PENALTY = 300;
+
 /** How many recent placements to undo when construction backtracks */
 export const MAX_BACKTRACK_DEPTH = 3;
 
@@ -132,7 +141,11 @@ export const SCORING_WEIGHTS = {
   SUBJECT_ADJACENCY_REWARD: 5000,
   SUBJECT_SPLIT_PENALTY: -10000,
   TEACHER_LOAD_EXPONENT: -1000,
+  TEACHER_WEEKLY_VARIANCE: -150,
 } as const;
+
+export type ScoringWeightKey = keyof typeof SCORING_WEIGHTS;
+export type ScoringWeightOverrides = Partial<Record<ScoringWeightKey, number>>;
 
 /** Room penalty weights used in repair cost model */
 export const ROOM_PENALTY_DISPLACEMENT = 1000;

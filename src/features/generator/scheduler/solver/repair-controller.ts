@@ -29,7 +29,15 @@ export type SwapRepairMove = {
   score: number;
 };
 
-export type RepairAction = PlaceRepairMove | SwapRepairMove;
+export type ChainRepairMove = {
+  kind: "chain";
+  gangMove: SlotMove;
+  relocations: Array<{ gangId: string; move: SlotMove }>;
+  cost: number;
+  score: number;
+};
+
+export type RepairAction = PlaceRepairMove | SwapRepairMove | ChainRepairMove;
 
 /** @deprecated Use SlotMove / RepairAction instead */
 export interface RepairMove {

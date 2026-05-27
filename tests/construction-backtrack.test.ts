@@ -82,6 +82,22 @@ function buildBacktrackData() {
   };
 }
 
+function makeRecord(
+  leader: AllocationUnit,
+  gangUnits: AllocationUnit[],
+  move: { d: number; p: number; p2: number; rooms: Record<string, string> },
+  canBacktrack: boolean,
+): PlacementRecord {
+  return {
+    leader,
+    gangId: getGangId(leader),
+    gangUnits,
+    move,
+    canBacktrack,
+    avoidSlots: new Set<string>(),
+  };
+}
+
 describe("Construction backtracking (PR4)", () => {
   it("tryConstructionBacktrack removes recent placements and re-queues leaders", () => {
     const data = buildBacktrackData();
@@ -111,13 +127,7 @@ describe("Construction backtracking (PR4)", () => {
     });
 
     const stack: PlacementRecord[] = [
-      {
-        leader: blocker,
-        gangId: getGangId(blocker),
-        gangUnits: [blocker],
-        move: { d: 0, p: 0, p2: -1, rooms: { "u-blocker": "r1" } },
-        canBacktrack: true,
-      },
+      makeRecord(blocker, [blocker], { d: 0, p: 0, p2: -1, rooms: { "u-blocker": "r1" } }, true),
     ];
 
     const queue: AllocationUnit[] = [];
@@ -153,6 +163,7 @@ describe("Construction backtracking (PR4)", () => {
 
     const gangMap = new Map<string, AllocationUnit[]>([
       [getGangId(critical), [critical]],
+      [getGangId(incoming), [incoming]],
     ]);
     const maps = {
       data,
@@ -164,13 +175,7 @@ describe("Construction backtracking (PR4)", () => {
     };
 
     const stack: PlacementRecord[] = [
-      {
-        leader: critical,
-        gangId: getGangId(critical),
-        gangUnits: [critical],
-        move: { d: 0, p: 0, p2: -1, rooms: { "u-critical": "r1" } },
-        canBacktrack: false,
-      },
+      makeRecord(critical, [critical], { d: 0, p: 0, p2: -1, rooms: { "u-critical": "r1" } }, false),
     ];
 
     const queue: AllocationUnit[] = [];
@@ -216,13 +221,7 @@ describe("Construction backtracking (PR4)", () => {
     };
 
     const stack: PlacementRecord[] = [
-      {
-        leader: math,
-        gangId: getGangId(math),
-        gangUnits: [math],
-        move: { d: 0, p: 0, p2: -1, rooms: { "u-math": "r1" } },
-        canBacktrack: true,
-      },
+      makeRecord(math, [math], { d: 0, p: 0, p2: -1, rooms: { "u-math": "r1" } }, true),
     ];
     const queue = [english];
 
@@ -257,6 +256,87 @@ describe("Construction backtracking (PR4)", () => {
     expect(state.unitPlacements.size).toBe(2);
   });
 
+  it("conflict-directed backtrack targets the actual blocker, not just the most recent", () => {
+    const data = buildBacktrackData();
+    data.settings.daysPerWeek = 3;
+    data.settings.periodsPerDay = 1;
+    data.settings.dayStructure = [{ type: "CLASS" as const, label: "1" }];
+    data.settings.fixedOccasions = [[""], [""], [""]];
+    data.teachers = [
+      { id: "t-a", name: "A", specialtyIds: [], constraints: [[false], [false], [false]] },
+      { id: "t-b", name: "B", specialtyIds: [], constraints: [[false], [false], [false]] },
+      { id: "t-target", name: "Target", specialtyIds: [], constraints: [[false], [true], [true]] },
+    ];
+    data.classes = [
+      {
+        id: "c1",
+        name: "10A",
+        defaultRoomId: "r1",
+        periodCount: 1,
+        structure: data.settings.dayStructure,
+        curriculum: [],
+      },
+      {
+        id: "c2",
+        name: "10B",
+        defaultRoomId: "r1",
+        periodCount: 1,
+        structure: data.settings.dayStructure,
+        curriculum: [],
+      },
+    ];
+
+    const state = initializeState(data);
+
+    // unitA: teacher t-target, class c1, day 0 — this is the blocker
+    // unitB: teacher t-b, class c2, day 1 — completely unrelated
+    // incoming: teacher t-target, class c1 — needs day 0 (only available day)
+    const unitA: AllocationUnit = {
+      ...makeUnit("u-a", "s-math", "Math", "t-target"),
+      classIds: ["c1"],
+    };
+    const unitB: AllocationUnit = {
+      ...makeUnit("u-b", "s-eng", "English", "t-b"),
+      classIds: ["c2"],
+    };
+    const incoming: AllocationUnit = {
+      ...makeUnit("u-inc", "s-math", "Math", "t-target"),
+      classIds: ["c1"],
+    };
+
+    applyGangToState(state, [unitA], { d: 0, p: 0, p2: -1, rooms: { "u-a": "r1" } });
+    applyGangToState(state, [unitB], { d: 1, p: 0, p2: -1, rooms: { "u-b": "r1" } });
+
+    const gangMap = new Map([
+      [getGangId(unitA), [unitA]],
+      [getGangId(unitB), [unitB]],
+      [getGangId(incoming), [incoming]],
+    ]);
+    const maps = {
+      data,
+      gangMap,
+      teacherMap: new Map(data.teachers.map((t) => [t.id, t])),
+      subjectMap: new Map(data.subjects.map((s) => [s.id, s])),
+      classMap: new Map(data.classes.map((c) => [c.id, c])),
+      roomMap: new Map(data.rooms.map((r) => [r.id, r])),
+    };
+
+    const stack: PlacementRecord[] = [
+      makeRecord(unitA, [unitA], { d: 0, p: 0, p2: -1, rooms: { "u-a": "r1" } }, true),
+      makeRecord(unitB, [unitB], { d: 1, p: 0, p2: -1, rooms: { "u-b": "r1" } }, true),
+    ];
+
+    const queue: AllocationUnit[] = [];
+    const result = tryConstructionBacktrack(state, queue, incoming, stack, maps, 0);
+
+    expect(result.requeued).toBe(true);
+    expect(stack).toHaveLength(1);
+    expect(stack[0].gangId).toBe(getGangId(unitB));
+    expect(state.unitPlacements.has("u-a")).toBe(false);
+    expect(state.unitPlacements.has("u-b")).toBe(true);
+    expect(queue.map((u) => u.id)).toEqual(["u-inc", "u-a"]);
+  });
+
   it("respects MAX_BACKTRACK_ATTEMPTS before giving up", () => {
     const data = buildBacktrackData();
     const state = initializeState(data);
@@ -264,7 +344,10 @@ describe("Construction backtracking (PR4)", () => {
     const blocker = makeUnit("u-blocker", "s-math", "Math", "t-flex");
     const incoming = makeUnit("u-incoming", "s-eng", "English", "t-restricted");
 
-    const gangMap = new Map([[getGangId(blocker), [blocker]]]);
+    const gangMap = new Map<string, AllocationUnit[]>([
+      [getGangId(blocker), [blocker]],
+      [getGangId(incoming), [incoming]],
+    ]);
     const maps = {
       data,
       gangMap,
@@ -285,13 +368,9 @@ describe("Construction backtracking (PR4)", () => {
         p2: -1,
         rooms: { "u-blocker": "r1" },
       });
-      stack.push({
-        leader: blocker,
-        gangId: getGangId(blocker),
-        gangUnits: [blocker],
-        move: { d: 0, p: 0, p2: -1, rooms: { "u-blocker": "r1" } },
-        canBacktrack: true,
-      });
+      stack.push(
+        makeRecord(blocker, [blocker], { d: 0, p: 0, p2: -1, rooms: { "u-blocker": "r1" } }, true),
+      );
 
       const result = tryConstructionBacktrack(
         state,

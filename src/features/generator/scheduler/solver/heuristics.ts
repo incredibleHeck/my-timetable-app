@@ -194,3 +194,143 @@ export function countValidSlots(
   }
   return count;
 }
+
+// ---------------------------------------------------------------------------
+// Cached MRV with dirty-flag invalidation
+// ---------------------------------------------------------------------------
+
+/**
+ * Maintains cached domain sizes for gangs, only recomputing when a gang's
+ * resources overlap with a recently-placed unit.
+ */
+export class MrvCache {
+  private domainCache = new Map<string, number>();
+  private dirtyGangIds = new Set<string>();
+  /** gangId -> set of resource keys (teacher/class/room IDs) for fast overlap checks */
+  private gangResources = new Map<string, Set<string>>();
+
+  private data: AppData;
+  private gangMap: Map<string, AllocationUnit[]>;
+  private teacherMap: Map<string, Teacher>;
+  private subjectMap: Map<string, Subject>;
+  private classMap: Map<string, ClassGroup>;
+  private roomMap: Map<string, Room>;
+
+  constructor(
+    data: AppData,
+    gangMap: Map<string, AllocationUnit[]>,
+    teacherMap: Map<string, Teacher>,
+    subjectMap: Map<string, Subject>,
+    classMap: Map<string, ClassGroup>,
+    roomMap: Map<string, Room>,
+  ) {
+    this.data = data;
+    this.gangMap = gangMap;
+    this.teacherMap = teacherMap;
+    this.subjectMap = subjectMap;
+    this.classMap = classMap;
+    this.roomMap = roomMap;
+
+    for (const [gangId, gang] of gangMap) {
+      this.gangResources.set(gangId, this.extractResources(gang));
+    }
+  }
+
+  private extractResources(gang: AllocationUnit[]): Set<string> {
+    const res = new Set<string>();
+    for (const u of gang) {
+      for (const tid of u.teacherIds) res.add(`T:${tid}`);
+      for (const cid of u.classIds) res.add(`C:${cid}`);
+      if (u.defaultRoomId) res.add(`R:${u.defaultRoomId}`);
+      if (u.requiredRoomType) res.add(`RT:${u.requiredRoomType}`);
+      const sub = this.subjectMap.get(u.subjectId);
+      if (sub && (sub as any).requiredRoomId) res.add(`R:${(sub as any).requiredRoomId}`);
+    }
+    return res;
+  }
+
+  /** Mark all gangs sharing resources with the just-placed gang as dirty. */
+  invalidateAfterPlacement(placedGang: AllocationUnit[]): void {
+    const placedResources = new Set<string>();
+    for (const u of placedGang) {
+      for (const tid of u.teacherIds) placedResources.add(`T:${tid}`);
+      for (const cid of u.classIds) placedResources.add(`C:${cid}`);
+      if (u.defaultRoomId) placedResources.add(`R:${u.defaultRoomId}`);
+      if (u.requiredRoomType) placedResources.add(`RT:${u.requiredRoomType}`);
+      const sub = this.subjectMap.get(u.subjectId);
+      if (sub && (sub as any).requiredRoomId) placedResources.add(`R:${(sub as any).requiredRoomId}`);
+    }
+
+    for (const [gangId, resources] of this.gangResources) {
+      if (this.dirtyGangIds.has(gangId)) continue;
+      for (const r of placedResources) {
+        if (resources.has(r)) {
+          this.dirtyGangIds.add(gangId);
+          break;
+        }
+      }
+    }
+  }
+
+  /** Mark all gangs dirty (e.g. after a backtrack removes units). */
+  invalidateAll(): void {
+    for (const gangId of this.gangResources.keys()) {
+      this.dirtyGangIds.add(gangId);
+    }
+  }
+
+  /** Remove a gang from the cache (it's been placed or is no longer in the queue). */
+  removeGang(gangId: string): void {
+    this.domainCache.delete(gangId);
+    this.dirtyGangIds.delete(gangId);
+  }
+
+  /**
+   * Pick the leader with the smallest domain from the queue.
+   * Only recomputes domain for dirty entries; uses cache for the rest.
+   */
+  findMostConstrainedIdx(
+    leaders: AllocationUnit[],
+    state: SchedulerState,
+  ): number {
+    let minDomain = Infinity;
+    let bestIdx = 0;
+    let bestPriority = -1;
+
+    for (let i = 0; i < leaders.length; i++) {
+      const leader = leaders[i];
+      if (leader.priority >= PRIORITY_CRITICAL) return i;
+
+      const gangId = getGangId(leader);
+      let domainSize: number;
+
+      if (this.dirtyGangIds.has(gangId) || !this.domainCache.has(gangId)) {
+        const gang = this.gangMap.get(gangId)!;
+        domainSize = countValidSlots(
+          state,
+          this.data,
+          gang,
+          this.classMap,
+          this.teacherMap,
+          this.subjectMap,
+          this.roomMap,
+        );
+        this.domainCache.set(gangId, domainSize);
+        this.dirtyGangIds.delete(gangId);
+      } else {
+        domainSize = this.domainCache.get(gangId)!;
+      }
+
+      if (
+        domainSize < minDomain ||
+        (domainSize === minDomain && leader.priority > bestPriority)
+      ) {
+        minDomain = domainSize;
+        bestIdx = i;
+        bestPriority = leader.priority;
+      }
+    }
+
+    return bestIdx;
+  }
+}

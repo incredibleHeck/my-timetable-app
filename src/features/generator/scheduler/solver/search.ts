@@ -12,6 +12,8 @@ import {
   PENALTY_TABU_MOVE,
   MAX_SWAP_ATTEMPTS,
   REPAIR_SWAP_PENALTY,
+  MAX_CHAIN_DEPTH,
+  REPAIR_CHAIN_PENALTY,
 } from "../constants";
 import {
   getGangId,
@@ -19,6 +21,7 @@ import {
   RepairAction,
   SlotMove,
   SwapRepairMove,
+  ChainRepairMove,
 } from "./repair-controller";
 import { applyGangToState, removeGangFromState } from "../core/state";
 
@@ -101,7 +104,7 @@ const FAILED_SLOT_MOVE: SlotMove = {
   rooms: {},
 };
 
-function evaluateGangAtSlot(
+export function evaluateGangAtSlot(
   state: SchedulerState,
   data: AppData,
   gang: AllocationUnit[],
@@ -434,6 +437,200 @@ export function findSwapMove(
   return bestSwap;
 }
 
+function uniqueVictimGangIds(
+  victimUnitIds: Iterable<string>,
+  unitMap: Map<string, AllocationUnit>,
+): string[] {
+  const gangIds = new Set<string>();
+  for (const unitId of victimUnitIds) {
+    const unit = unitMap.get(unitId);
+    if (unit) gangIds.add(getGangId(unit));
+  }
+  return [...gangIds];
+}
+
+function tryRelocateEvictedGangs(
+  state: SchedulerState,
+  gangIds: string[],
+  depth: number,
+  data: AppData,
+  gangMap: Map<string, AllocationUnit[]>,
+  unitMap: Map<string, AllocationUnit>,
+  teacherMap: Map<string, Teacher>,
+  subjectMap: Map<string, Subject>,
+  classMap: Map<string, ClassGroup>,
+  roomMap: Map<string, Room>,
+  tabu: TabuManager | undefined,
+  iteration: number,
+): { relocations: ChainRepairMove["relocations"]; cost: number; score: number } | null {
+  if (gangIds.length === 0) {
+    return { relocations: [], cost: 0, score: 0 };
+  }
+  if (depth > MAX_CHAIN_DEPTH) return null;
+
+  const gangId = gangIds[0];
+  const remaining = gangIds.slice(1);
+  const gang = gangMap.get(gangId);
+  if (!gang) return null;
+
+  const move = findMinConflictMove(
+    state,
+    data,
+    gang,
+    unitMap,
+    teacherMap,
+    subjectMap,
+    classMap,
+    roomMap,
+    tabu,
+    iteration,
+  );
+  if (move.cost >= Infinity) return null;
+
+  const nestedVictims = uniqueVictimGangIds(move.evictions, unitMap).filter(
+    (id) => id !== gangId && !remaining.includes(id),
+  );
+
+  removeGangFromState(state, gang, data);
+  for (const victimId of move.evictions) {
+    const victimUnit = unitMap.get(victimId);
+    if (!victimUnit) continue;
+    const victimGang = gangMap.get(getGangId(victimUnit));
+    if (victimGang) removeGangFromState(state, victimGang, data);
+  }
+  applyGangToState(state, gang, move);
+
+  const nested = tryRelocateEvictedGangs(
+    state,
+    [...remaining, ...nestedVictims],
+    depth + 1,
+    data,
+    gangMap,
+    unitMap,
+    teacherMap,
+    subjectMap,
+    classMap,
+    roomMap,
+    tabu,
+    iteration,
+  );
+
+  removeGangFromState(state, gang, data);
+  for (const victimId of move.evictions) {
+    const victimUnit = unitMap.get(victimId);
+    if (!victimUnit) continue;
+    const victimGang = gangMap.get(getGangId(victimUnit));
+    if (victimGang) removeGangFromState(state, victimGang, data);
+  }
+
+  if (!nested) return null;
+
+  return {
+    relocations: [{ gangId, move }, ...nested.relocations],
+    cost: move.cost + nested.cost,
+    score: move.score + nested.score,
+  };
+}
+
+export function findChainRepairMove(
+  state: SchedulerState,
+  data: AppData,
+  gang: AllocationUnit[],
+  gangMap: Map<string, AllocationUnit[]>,
+  unitMap: Map<string, AllocationUnit>,
+  teacherMap: Map<string, Teacher>,
+  subjectMap: Map<string, Subject>,
+  classMap: Map<string, ClassGroup>,
+  roomMap: Map<string, Room>,
+  tabu: TabuManager | undefined,
+  iteration: number,
+): ChainRepairMove | null {
+  const days = getDaysPerWeek(data.settings);
+  const maxPossiblePeriods = 15;
+  let best: ChainRepairMove | null = null;
+
+  for (let d = 0; d < days; d++) {
+    for (let p = 0; p < maxPossiblePeriods; p++) {
+      const gangMove = evaluateGangAtSlot(
+        state,
+        data,
+        gang,
+        d,
+        p,
+        unitMap,
+        teacherMap,
+        subjectMap,
+        classMap,
+        roomMap,
+        tabu,
+        iteration,
+        best?.cost ?? Infinity,
+      );
+
+      if (gangMove.cost >= Infinity || gangMove.evictions.size === 0) continue;
+
+      const victimGangIds = uniqueVictimGangIds(gangMove.evictions, unitMap);
+      if (victimGangIds.length === 0) continue;
+
+      const involvedGangIds = [getGangId(gang[0]), ...victimGangIds];
+      const snapshots = new Map<string, SavedGangPlacement | null>();
+      for (const gangId of involvedGangIds) {
+        const g = gangMap.get(gangId);
+        snapshots.set(gangId, g ? saveGangPlacement(state, g) : null);
+      }
+
+      for (const gangId of involvedGangIds) {
+        const g = gangMap.get(gangId);
+        if (g) removeGangFromState(state, g, data);
+      }
+
+      applyGangToState(state, gang, gangMove);
+
+      const nested = tryRelocateEvictedGangs(
+        state,
+        victimGangIds,
+        1,
+        data,
+        gangMap,
+        unitMap,
+        teacherMap,
+        subjectMap,
+        classMap,
+        roomMap,
+        tabu,
+        iteration,
+      );
+
+      for (const gangId of involvedGangIds) {
+        const g = gangMap.get(gangId);
+        if (g) removeGangFromState(state, g, data);
+      }
+      for (const [gangId, snapshot] of snapshots) {
+        const g = gangMap.get(gangId);
+        if (g && snapshot) restoreGangPlacement(state, g, snapshot, data);
+      }
+
+      if (!nested) continue;
+
+      const totalCost =
+        gangMove.cost + nested.cost + REPAIR_CHAIN_PENALTY * nested.relocations.length;
+      const totalScore = gangMove.score + nested.score;
+
+      if (!best || totalCost < best.cost) {
+        best = {
+          kind: "chain",
+          gangMove,
+          relocations: nested.relocations,
+          cost: totalCost,
+          score: totalScore,
+        };
+      }
+    }
+  }
+
+  return best;
+}
+
 export function findBestRepairMove(
   state: SchedulerState,
   data: AppData,
@@ -460,9 +657,19 @@ export function findBestRepairMove(
     iteration,
   );
 
-  if (placeMove.cost < Infinity) {
-    return { kind: "place", ...placeMove };
-  }
+  const chainMove = findChainRepairMove(
+    state,
+    data,
+    gang,
+    gangMap,
+    unitMap,
+    teacherMap,
+    subjectMap,
+    classMap,
+    roomMap,
+    tabu,
+    iteration,
+  );
 
   const swapMove = findSwapMove(
     state,
@@ -478,9 +685,23 @@ export function findBestRepairMove(
     iteration,
   );
 
-  if (swapMove) return swapMove;
+  const candidates: RepairAction[] = [];
+  if (placeMove.cost < Infinity) {
+    candidates.push({ kind: "place", ...placeMove });
+  }
+  if (chainMove) candidates.push(chainMove);
+  if (swapMove) candidates.push(swapMove);
 
-  return { kind: "place", ...FAILED_SLOT_MOVE, evictions: new Set(), rooms: {} };
+  if (candidates.length === 0) {
+    return { kind: "place", ...FAILED_SLOT_MOVE, evictions: new Set(), rooms: {} };
+  }
+
+  candidates.sort((a, b) => {
+    if (a.cost !== b.cost) return a.cost - b.cost;
+    return b.score - a.score;
+  });
+
+  return candidates[0];
 }
 
 export { findUnitsInSlot, collectEvictions, countPotentialConflicts, findUnitFromConflict } from "./slot-conflicts";

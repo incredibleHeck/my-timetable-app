@@ -143,7 +143,8 @@ export const initializeState = (data: AppData): SchedulerState => {
                   const slot = clsSched[d][p];
                   if (!slot) return;
                   
-                  const unitId = slot.unitId || `LEGACY-${slot.subjectId}`;
+                  const unitId =
+                    slot.unitId || `LEGACY-${cId}-${d}-${p}-${slot.subjectId}`;
                   
                   // Update Grids
                   if (!state.schedule[cId]) state.schedule[cId] = {};

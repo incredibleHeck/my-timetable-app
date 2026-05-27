@@ -8,7 +8,7 @@ import {
 } from "../../../../types";
 import { AllocationUnit, SchedulerState } from "../core/types";
 import { initializeState } from "../core/state";
-import { calculatePriority } from "./heuristics";
+import { calculatePriority, MrvCache } from "./heuristics";
 import { TabuManager } from "./tabu";
 import {
   RepairController,
@@ -31,6 +31,10 @@ import {
   TABU_CLEANUP_FREQUENCY,
   MRV_CRITICAL_FIRST,
   SOLVER_RUN_COUNT,
+  SOLVER_TARGET_MS,
+  SCORING_WEIGHTS,
+  ScoringWeightKey,
+  ScoringWeightOverrides,
 } from "../constants";
 import { createSeededRng, shuffleInPlace } from "../utils/rng";
 
@@ -48,6 +52,12 @@ export type SolverOptions = {
   runs?: number;
   /** Shuffle construction queues between runs. */
   shuffleConstruction?: boolean;
+  /** Enable self-tuning calibration: perturb scoring weights across runs. */
+  calibrate?: boolean;
+  /** Time budget (ms). When set, solver keeps spawning runs until elapsed. */
+  timeBudgetMs?: number;
+  /** Shared wall-clock start (ms) for time-budget mode; usually worker start time. */
+  clockStartMs?: number;
 };
 
 export type SolverResult = {
@@ -65,12 +75,47 @@ function compareSolverResults(a: SolverResult, b: SolverResult): number {
   return b.state.unitPlacements.size - a.state.unitPlacements.size;
 }
 
+/**
+ * Generate perturbed scoring weights for a calibration run.
+ * Each weight is scaled by a random factor in [1-amplitude, 1+amplitude].
+ * Run 0 always uses the original (unperturbed) weights as a baseline.
+ */
+function perturbWeights(
+  baseOverrides: ScoringWeightOverrides | undefined,
+  runIndex: number,
+  seed: number,
+): ScoringWeightOverrides | undefined {
+  if (runIndex === 0) return baseOverrides;
+
+  const rng = createSeededRng(seed + runIndex * 7919);
+  const amplitude = 0.3;
+  const base = { ...SCORING_WEIGHTS, ...baseOverrides };
+  const perturbed: ScoringWeightOverrides = {};
+
+  for (const key of Object.keys(SCORING_WEIGHTS) as ScoringWeightKey[]) {
+    const original = base[key];
+    const factor = 1 + (rng() * 2 - 1) * amplitude;
+    perturbed[key] = Math.round(original * factor);
+  }
+
+  return perturbed;
+}
+
+function withPerturbedWeights(data: AppData, overrides: ScoringWeightOverrides | undefined): AppData {
+  if (!overrides) return data;
+  return {
+    ...data,
+    settings: { ...data.settings, scoringWeightOverrides: overrides },
+  };
+}
+
 function runSingleSolve(
   units: AllocationUnit[],
   data: AppData,
   onProgress: SolverProgressCallback | undefined,
   options: SolverOptions,
   runIndex: number,
+  shouldAbort?: () => boolean,
 ): SolverResult {
   const teacherMap = new Map<string, Teacher>(
     data.teachers.map((t) => [t.id, t]),
@@ -122,11 +167,23 @@ function runSingleSolve(
   let gangsPlaced = 0;
   const unplacedDuringConstruction: AllocationUnit[] = [];
 
+  const mrvCache = new MrvCache(
+    data,
+    gangMap,
+    teacherMap,
+    subjectMap,
+    classMap,
+    roomMap,
+  );
+
   const reportConstructionProgress = (
     placed: number,
     total: number,
     unplacedCount: number,
-  ) => onProgress?.("CONSTRUCTION", placed, total, unplacedCount) ?? true;
+  ) => {
+    if (shouldAbort?.()) return false;
+    return onProgress?.("CONSTRUCTION", placed, total, unplacedCount) ?? true;
+  };
 
   let rank1Queue = unplacedGangLeaders.filter(
     (u) => u.priority >= PRIORITY_CRITICAL,
@@ -151,6 +208,7 @@ function runSingleSolve(
     unplacedDuringConstruction,
     reportConstructionProgress,
     totalGangs,
+    mrvCache,
   );
   steps = rank1Result.steps;
   gangsPlaced = rank1Result.gangsPlaced;
@@ -173,6 +231,7 @@ function runSingleSolve(
       unplacedDuringConstruction,
       reportConstructionProgress,
       totalGangs,
+      mrvCache,
     );
     steps = levelResult.steps;
     gangsPlaced = levelResult.gangsPlaced;
@@ -188,8 +247,14 @@ function runSingleSolve(
   const repairSet = new Set(repairQueue.map((u) => getGangId(u)));
   const repairController = new RepairController(repairQueue.length);
 
+  tabu.adaptToSize(repairQueue.length);
+
   while (repairQueue.length > 0 && repairSteps < MAX_REPAIR_STEPS) {
     repairSteps++;
+
+    if (shouldAbort?.()) {
+      break;
+    }
 
     if (onProgress && repairSteps % 10 === 0) {
       if (
@@ -206,6 +271,7 @@ function runSingleSolve(
     const leader = repairQueue.shift()!;
     const gangId = getGangId(leader);
     repairSet.delete(gangId);
+    tabu.recordGangAttempt(gangId);
 
     if (repairController.shouldSkipGang(gangId)) {
       repairController.recordProgress(
@@ -321,6 +387,14 @@ function runSingleSolve(
 
 /**
  * CSP SOLVER: Construction + repair with optional multi-run restarts.
+ *
+ * Two modes:
+ * - **Count-driven** (`runs` set, no `timeBudgetMs`): runs exactly N attempts.
+ * - **Time-driven** (`timeBudgetMs` set): keeps spawning runs until the budget
+ *   elapses, guaranteeing at least `runs` attempts (default 3) and continuing
+ *   with more if time permits. This fills the entire solve window with work.
+ *
+ * When `calibrate` is true, each run uses perturbed scoring weights.
  */
 export const solveSmart = (
   units: AllocationUnit[],
@@ -328,27 +402,74 @@ export const solveSmart = (
   onProgress?: SolverProgressCallback,
   options: SolverOptions = {},
 ): SolverResult => {
-  const runCount = Math.max(1, options.runs ?? 1);
+  const minRuns = Math.max(1, options.runs ?? 1);
+  const calibrate = options.calibrate === true && minRuns > 1;
+  const calibrationSeed = options.seed ?? Date.now();
+  const timeBudget = options.timeBudgetMs;
+  const clockStartMs =
+    options.clockStartMs ?? (timeBudget !== undefined ? Date.now() : 0);
 
-  if (runCount === 1) {
+  const isTimeBudgetExceeded = (): boolean =>
+    timeBudget !== undefined && Date.now() - clockStartMs >= timeBudget;
+
+  const shouldAbort = (): boolean => isTimeBudgetExceeded();
+
+  if (minRuns === 1 && !timeBudget) {
     return runSingleSolve(units, data, onProgress, options, 0);
   }
 
   let bestResult: SolverResult | null = null;
+  let run = 0;
 
-  for (let run = 0; run < runCount; run++) {
-    const result = runSingleSolve(units, data, onProgress, options, run);
+  const shouldContinueRuns = (): boolean => {
+    if (isTimeBudgetExceeded()) return false;
+    // Count-only mode: stop early once every unit is placed.
+    if (
+      timeBudget === undefined &&
+      bestResult &&
+      bestResult.conflicts.length === 0
+    ) {
+      return false;
+    }
+    if (run < minRuns) return true;
+    return timeBudget !== undefined;
+  };
+
+  while (shouldContinueRuns()) {
+    const runData = calibrate && run > 0
+      ? withPerturbedWeights(
+          data,
+          perturbWeights(
+            data.settings.scoringWeightOverrides,
+            run,
+            calibrationSeed,
+          ),
+        )
+      : data;
+
+    const result = runSingleSolve(
+      units,
+      runData,
+      onProgress,
+      options,
+      run,
+      shouldAbort,
+    );
     if (!bestResult || compareSolverResults(result, bestResult) < 0) {
       bestResult = result;
     }
 
-    if (bestResult.conflicts.length === 0) break;
+    run++;
   }
 
   return bestResult!;
 };
 
-/** Worker entry: run multiple seeded attempts within the time budget. */
+/**
+ * Worker entry: time-driven solver that fills the full time budget.
+ * Keeps spawning seeded, shuffled, calibrated runs until 20 seconds elapse,
+ * returning the best result found across all attempts.
+ */
 export const solveSmartWithRestarts = (
   units: AllocationUnit[],
   data: AppData,
@@ -357,6 +478,9 @@ export const solveSmartWithRestarts = (
 ): SolverResult => {
   return solveSmart(units, data, onProgress, {
     runs: options.runs ?? SOLVER_RUN_COUNT,
+    timeBudgetMs: options.timeBudgetMs ?? SOLVER_TARGET_MS,
+    clockStartMs: options.clockStartMs,
+    calibrate: options.calibrate ?? true,
     shuffleConstruction: options.shuffleConstruction ?? true,
     seed: options.seed,
   });

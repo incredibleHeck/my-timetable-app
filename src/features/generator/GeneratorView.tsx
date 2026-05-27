@@ -13,6 +13,7 @@ import {
   ArrowLeft,
   FileSpreadsheet,
   Square,
+  Plus,
 } from "lucide-react";
 import { AppData, ViewState, Conflict } from "../../types";
 import { Button } from "../../components/ui";
@@ -39,6 +40,7 @@ export const GeneratorView: React.FC<ViewProps> = ({
   const [activeId, setActiveId] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isManualPlacementMode, setIsManualPlacementMode] = useState(false);
   const [hoverConflict, setHoverConflict] = useState<Conflict | null>(null);
   const [highlightedConflict, setHighlightedConflict] = useState<Conflict | null>(null);
   const [stats, setStats] = useState<{
@@ -72,6 +74,12 @@ export const GeneratorView: React.FC<ViewProps> = ({
       return () => clearTimeout(timer);
     }
   }, [highlightedConflict, mode, activeId]);
+
+  useEffect(() => {
+    if (!isEditMode) {
+      setIsManualPlacementMode(false);
+    }
+  }, [isEditMode]);
 
   // WORKER REF
   // We keep a reference to the active worker so we can terminate it if needed
@@ -293,6 +301,20 @@ export const GeneratorView: React.FC<ViewProps> = ({
               {isEditMode ? <Unlock size={14} /> : <Lock size={14} />}
               {isEditMode ? "Disable Edit" : "Enable Edit"}
             </button>
+            {isEditMode && mode === "CLASS" && (
+              <button
+                onClick={() => setIsManualPlacementMode(!isManualPlacementMode)}
+                disabled={isGenerating}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                  isManualPlacementMode
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    : "bg-white text-slate-500 border-slate-200"
+                }`}
+              >
+                <Plus size={14} />
+                {isManualPlacementMode ? "Manual Placement On" : "Manual Placement"}
+              </button>
+            )}
           </div>
         </div>
 
@@ -411,6 +433,7 @@ export const GeneratorView: React.FC<ViewProps> = ({
               mode={mode}
               onUpdate={onUpdate}
               editMode={isEditMode}
+              manualPlacementMode={isManualPlacementMode}
               setHoverConflict={setHoverConflict}
               highlightedConflict={highlightedConflict}
             />

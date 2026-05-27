@@ -10,7 +10,7 @@ import {
 } from "./final-conflicts";
 import { ValidationContext, ValidationResult } from "./types";
 import { SchedulerState } from "../core/types";
-import { getNextClassPeriod } from "../utils/utils";
+import { getNextClassPeriod, getPrevClassPeriod } from "../utils/utils";
 import {
   checkGlobalAndClassBlocks,
   checkResourceAndAvailability,
@@ -64,17 +64,23 @@ export const checkSlotValidity = (
 
     // If we are looking at the 'tail' of a double, move to the 'head'
     const entry = scheduleSource[classId]?.[d]?.[startP];
-    if (entry && (entry as any).isFixed) {
-        // Find the head by scanning backwards for the same unitId
-        let headP = startP - 1;
-        while (headP >= 0) {
-            const prevEntry = scheduleSource[classId]?.[d]?.[headP];
-            if (prevEntry && prevEntry.unitId === entry.unitId && !prevEntry.isFixed) {
-                startP = headP;
-                break;
-            }
-            headP--;
+    if (entry?.isFixed) {
+      const prev = getPrevClassPeriod(startP, structure);
+      if (prev !== null) {
+        const prevEntry = scheduleSource[classId]?.[d]?.[prev];
+        const sameUnit =
+          prevEntry?.unitId &&
+          entry.unitId &&
+          prevEntry.unitId === entry.unitId;
+        const sameLesson =
+          prevEntry &&
+          !prevEntry.isFixed &&
+          prevEntry.subjectId === entry.subjectId &&
+          prevEntry.teacherId === entry.teacherId;
+        if (sameUnit || sameLesson) {
+          startP = prev;
         }
+      }
     }
 
     let consumed = 0, offset = 0;
@@ -281,14 +287,21 @@ export const validateFullSchedule = (data: AppData, state: SchedulerState): Conf
         const nextP = getNextClassPeriod(period, structure, classLimit);
         if (nextP !== null) {
             const nextSlot = daySchedule[nextP];
-            if (nextSlot && nextSlot.isFixed && nextSlot.unitId === slot.unitId) {
+            if (
+              nextSlot &&
+              nextSlot.isFixed &&
+              nextSlot.subjectId === slot.subjectId &&
+              (!nextSlot.unitId ||
+                !slot.unitId ||
+                nextSlot.unitId === slot.unitId)
+            ) {
                 duration = 2;
             }
         }
 
-        // Resolve Effective Room (Subject Specific or Home Room Fallback)
+        // Shared/specialist rooms only — not implicit homerooms
         const subject = subjects.find((s) => s.id === slot.subjectId);
-        const effectiveRoomId = slot.roomId || subject?.requiredRoomId || cls.defaultRoomId;
+        const effectiveRoomId = slot.roomId || subject?.requiredRoomId;
 
         const result = checkSlotValidity(
           data, day, period, slot.teacherId, classId, slot.subjectId,

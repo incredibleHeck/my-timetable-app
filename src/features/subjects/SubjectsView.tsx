@@ -40,6 +40,7 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
   // Single Resource State
   const [isSingleResource, setIsSingleResource] = useState(false);
   const [isExaminable, setIsExaminable] = useState(true);
+  const [isCore, setIsCore] = useState(false);
   const [requiredRoomId, setRequiredRoomId] = useState<string | null>(null);
 
   // Smart Sort
@@ -55,6 +56,7 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
       color: subjColor,
       isSingleResource: isSingleResource,
       isExaminable: isExaminable,
+      isCore: isCore,
       requiredRoomId: requiredRoomId || undefined,
     };
 
@@ -123,6 +125,7 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
     setSubjColor(subj?.color || defaultHex);
     setIsSingleResource(subj?.isSingleResource || false);
     setIsExaminable(subj?.isExaminable !== undefined ? subj.isExaminable : true);
+    setIsCore(subj?.isCore ?? false);
     setRequiredRoomId(subj?.requiredRoomId || null);
     setModalOpen(true);
   };
@@ -365,6 +368,46 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
               </div>
               <p className="text-xs text-slate-500 mt-1">
                 If enabled, this subject will be automatically selected for inclusion when auto-generating the exam timetable.
+              </p>
+            </div>
+          </div>
+
+          {/* Core Subject Toggle */}
+          <div
+            className={`flex items-start gap-3 p-4 rounded-xl border transition-colors cursor-pointer ${
+              isCore
+                ? "bg-blue-50 border-blue-200"
+                : "bg-white border-slate-200 hover:border-slate-300"
+            }`}
+            onClick={() => setIsCore(!isCore)}
+          >
+            <div
+              className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors ${
+                isCore
+                  ? "bg-blue-600 border-blue-600"
+                  : "bg-white border-slate-300"
+              }`}
+            >
+              {isCore && <Check size={14} className="text-white" />}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4
+                  className={`text-sm font-bold ${
+                    isCore ? "text-blue-800" : "text-slate-700"
+                  }`}
+                >
+                  Core Subject
+                </h4>
+                <BookOpen
+                  size={14}
+                  className={isCore ? "text-blue-600" : "text-slate-400"}
+                />
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                Marks this as a core discipline for morning bias, weekly balance,
+                and spread heuristics. When unset, the scheduler falls back to
+                English name matching.
               </p>
             </div>
           </div>

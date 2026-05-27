@@ -7,6 +7,7 @@ import {
   PlaceRepairMove,
   RepairAction,
   SlotMove,
+  ChainRepairMove,
 } from "./repair-controller";
 
 function queueEvictedVictims(
@@ -161,6 +162,22 @@ export function executeRepairAction(
     return;
   }
 
+  if (action.kind === "chain") {
+    executeChainRepairMove(
+      state,
+      gang,
+      action,
+      repairQueue,
+      repairSet,
+      gangMap,
+      unitMap,
+      data,
+      tabu,
+      step,
+    );
+    return;
+  }
+
   const partnerGang = gangMap.get(action.partnerGangId);
   if (!partnerGang) return;
 
@@ -203,6 +220,58 @@ export function executeRepairAction(
   );
 
   repairSet.delete(action.partnerGangId);
+}
+
+export function executeChainRepairMove(
+  state: SchedulerState,
+  gang: AllocationUnit[],
+  action: ChainRepairMove,
+  repairQueue: AllocationUnit[],
+  repairSet: Set<string>,
+  gangMap: Map<string, AllocationUnit[]>,
+  unitMap: Map<string, AllocationUnit>,
+  data: AppData,
+  tabu?: TabuManager,
+  step: number = 0,
+): void {
+  const chainGangIds = new Set([
+    getGangId(gang[0]),
+    ...action.relocations.map((r) => r.gangId),
+  ]);
+
+  applySlotMove(
+    state,
+    gang,
+    action.gangMove,
+    chainGangIds,
+    repairQueue,
+    repairSet,
+    gangMap,
+    unitMap,
+    data,
+    tabu,
+    step,
+  );
+
+  for (const relocation of action.relocations) {
+    const relocatedGang = gangMap.get(relocation.gangId);
+    if (!relocatedGang) continue;
+
+    applySlotMove(
+      state,
+      relocatedGang,
+      relocation.move,
+      chainGangIds,
+      repairQueue,
+      repairSet,
+      gangMap,
+      unitMap,
+      data,
+      tabu,
+      step,
+    );
+    repairSet.delete(relocation.gangId);
+  }
 }
 
 export type RepairMaps = {

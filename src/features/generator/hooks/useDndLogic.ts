@@ -5,11 +5,13 @@ import { checkSlotValidity } from "../scheduler/validation";
 import { initializeState } from "../scheduler/core/state";
 import { useProfile } from "../../../contexts/ProfileContext";
 import { DAYS } from "../../../utils/constants";
+import { generateId } from "../../../utils/utils";
 // ARCHITECT: Import shared utils to ensure UI matches Solver logic
 import {
   getNextClassPeriod,
   getPrevClassPeriod,
 } from "../scheduler/utils/utils";
+import { isPeriodBlockingDoubleMove } from "../utils/doublePeriodMove";
 
 /**
  * ARCHITECT NOTES:
@@ -26,7 +28,7 @@ export const useDndLogic = (
   setHoverConflict?: (c: Conflict | null) => void,
 ) => {
   const [activeDragItem, setActiveDragItem] = useState<any>(null);
-  const { pushToHistory, addActivity } = useProfile();
+  const { pushToHistory } = useProfile();
 
   // 1. Initialize O(1) State for Validation
   const schedulerState = useMemo(() => initializeState(data), [data]);
@@ -128,9 +130,7 @@ export const useDndLogic = (
       (s) => s.id === activeDragItem.slot.subjectId,
     );
     const sourceEffectiveRoomId =
-      activeDragItem.slot.roomId ||
-      sourceSubject?.requiredRoomId ||
-      targetCls?.defaultRoomId;
+      activeDragItem.slot.roomId || sourceSubject?.requiredRoomId;
 
     // --- 3. CHECK DURATION / BOUNDS ---
     if (targetSlot) {
@@ -171,10 +171,22 @@ export const useDndLogic = (
           return false;
         }
 
-        // B. Overlap with existing lesson at P2
-        if (schedule[classId]?.[targetDay]?.[tP2]) {
+        // B. Overlap with existing lesson at P2 (allow shifting into adjacent gap)
+        const p2Slot = schedule[classId]?.[targetDay]?.[tP2];
+        if (
+          isPeriodBlockingDoubleMove(
+            p2Slot,
+            activeDragItem.slot,
+            tP2,
+            sourceDay,
+            targetDay,
+            sourcePeriod,
+            sourceDuration as 1 | 2,
+            targetStructure,
+            maxPeriods,
+          )
+        ) {
           if (isHoverCheck && setHoverConflict) {
-            const p2Slot = schedule[classId]?.[targetDay]?.[tP2];
             const p2Subj = subjects.find((s) => s.id === p2Slot?.subjectId);
             setHoverConflict({
               classId,
@@ -224,9 +236,7 @@ export const useDndLogic = (
     if (targetSlot) {
       const targetSubject = subjects.find((s) => s.id === targetSlot.subjectId);
       const targetEffectiveRoomId =
-        targetSlot.roomId ||
-        targetSubject?.requiredRoomId ||
-        targetCls?.defaultRoomId;
+        targetSlot.roomId || targetSubject?.requiredRoomId;
 
       const valSwap = checkSlotValidity(
         data,
@@ -317,7 +327,22 @@ export const useDndLogic = (
     } else {
       if (sourceDuration === 2) {
         if (tP2 === null) return;
-        if (data.schedule[classId]?.[tD]?.[tP2]) return;
+        const p2Slot = data.schedule[classId]?.[tD]?.[tP2];
+        if (
+          isPeriodBlockingDoubleMove(
+            p2Slot,
+            sData.slot,
+            tP2,
+            sD,
+            tD,
+            sP,
+            sourceDuration as 1 | 2,
+            targetStructure,
+            maxPeriods,
+          )
+        ) {
+          return;
+        }
       }
     }
 
@@ -372,10 +397,22 @@ export const useDndLogic = (
     } else {
       message = `Moved ${subjObj?.name} (${teacherObj?.name}) in ${classObj?.name} to ${DAYS[tD]} P${tP + 1}`;
     }
-    addActivity("SCHEDULING", message, nextData);
 
     pushToHistory(data);
-    onUpdate(nextData);
+    // Single update — ProfileContext.applyState re-audits with generated tier.
+    onUpdate({
+      ...nextData,
+      conflicts: [],
+      recentActivity: [
+        {
+          id: generateId(),
+          type: "SCHEDULING",
+          message,
+          timestamp: new Date().toISOString(),
+        },
+        ...(data.recentActivity || []),
+      ].slice(0, 50),
+    });
   };
 
   return {

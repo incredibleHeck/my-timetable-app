@@ -40,6 +40,8 @@ export function runMinConflictsRepair(
   const tabu = new TabuManager();
   const controller = new RepairController(repairQueue.length);
 
+  tabu.adaptToSize(repairQueue.length);
+
   for (let step = 0; step < maxSteps && repairQueue.length > 0; step++) {
     if (onProgress && step % 10 === 0) {
       onProgress("REPAIR", step, maxSteps);
@@ -48,6 +50,7 @@ export function runMinConflictsRepair(
     const leader = repairQueue.shift()!;
     const gangId = getGangId(leader);
     repairSet.delete(gangId);
+    tabu.recordGangAttempt(gangId);
 
     if (controller.shouldSkipGang(gangId)) {
       controller.recordProgress(countUnplacedGangs(repairQueue, controller));

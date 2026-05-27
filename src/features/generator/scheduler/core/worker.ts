@@ -1,31 +1,13 @@
 /* eslint-disable no-restricted-globals */
 import { AppData } from "../../../../types";
 import { prepareAllocationUnits } from "../logic/preparation";
+import { resolveSubjectIsCore } from "../logic/subject-core";
 import { solveSmartWithRestarts } from "../solver/solver";
 import { runConflictAudit } from "../validation/audit";
 import { auditFinalSchedule, dedupeConflicts } from "../validation";
-import { SOLVER_TIME_LIMIT_MS } from "../constants";
+import { SOLVER_TIME_LIMIT_MS, SOLVER_TARGET_MS } from "../constants";
 
 const ctx: Worker = self as any;
-
-/**
- * HELPER: Fast Core Subject Check
- * Identifies core subjects for pedagogical scoring (Math, Science, etc.)
- */
-const CORE_KEYWORDS = [
-  "math",
-  "english",
-  "science",
-  "physics",
-  "chem",
-  "bio",
-  "history",
-  "geography",
-];
-const isCoreSubject = (name: string) => {
-  const n = name.toLowerCase();
-  return CORE_KEYWORDS.some((k) => n.includes(k));
-};
 
 ctx.onmessage = (e: MessageEvent<AppData>) => {
   const data = e.data;
@@ -35,39 +17,51 @@ ctx.onmessage = (e: MessageEvent<AppData>) => {
     // 1. PREPARATION
     const units = prepareAllocationUnits(data);
 
+    const subjectMap = new Map(data.subjects.map((s) => [s.id, s]));
+
     units.forEach((u) => {
       if (u.isCore === undefined) {
-        u.isCore = isCoreSubject(u.subjectName || "");
+        u.isCore = resolveSubjectIsCore(
+          subjectMap.get(u.subjectId),
+          u.subjectName,
+        );
       }
     });
 
     // 2. HYBRID SOLVER
     const { schedule, state, iterations, conflicts: unplacedConflicts } =
       solveSmartWithRestarts(
-      units,
-      data,
-      (phase, progress, total, currentConflictCount) => {
-        if (Date.now() - startTime > SOLVER_TIME_LIMIT_MS) {
-          return false;
-        }
+        units,
+        data,
+        (phase, progress, total, currentConflictCount) => {
+          if (Date.now() - startTime >= SOLVER_TARGET_MS) {
+            return false;
+          }
 
-        ctx.postMessage({
-          type: "progress",
-          payload: {
-            phase,
-            iteration: progress,
-            total,
-            conflicts: currentConflictCount,
-          },
-        });
-        return true;
-      },
-    );
+          ctx.postMessage({
+            type: "progress",
+            payload: {
+              phase,
+              iteration: progress,
+              total,
+              conflicts: currentConflictCount,
+            },
+          });
+          return true;
+        },
+        { clockStartMs: startTime },
+      );
+
+    if (Date.now() - startTime > SOLVER_TIME_LIMIT_MS) {
+      throw new Error("Solver exceeded hard time limit");
+    }
 
     // 3. Statistics + conflicts (main thread audit on final grid)
     const audit = runConflictAudit(data, state);
     const scheduleData = { ...data, schedule };
-    const auditConflicts = auditFinalSchedule(scheduleData, { mode: "generated" });
+    const auditConflicts = auditFinalSchedule(scheduleData, {
+      mode: "generated",
+    });
     const conflicts = dedupeConflicts([...auditConflicts, ...unplacedConflicts]);
 
     ctx.postMessage({

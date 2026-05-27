@@ -9,6 +9,8 @@ export interface Subject {
   requiredRoomId?: string | null; 
   preferredRoomIds?: string[];
   requiredRoomType?: string;
+  /** When set, drives core-subject scheduling heuristics instead of name matching */
+  isCore?: boolean;
 
   // Exam Configuration Defaults
   examPaperCount?: number;

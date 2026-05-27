@@ -4,6 +4,8 @@ import { isOccasionBlocked } from "../../../../utils/utils";
 import { checkSubjectContinuity } from "../validation/load-checks";
 import { ValidationContext } from "../validation/types";
 import { getRoomCandidates } from "./rooms";
+import { getMaxSubjectPeriodsPerDayForClass } from "./subject-spread";
+import { getDaysPerWeek } from "../utils/utils";
 
 /**
  * ARCHITECT NOTES:
@@ -111,6 +113,29 @@ export const checkHardConstraints = (
     }
     if (count + duration > maxSubj) return false;
 
+    const cls = classMap.get(cid);
+
+    if (data.settings.enforceSubjectDaySpread) {
+      const spreadCap = getMaxSubjectPeriodsPerDayForClass(
+        cls,
+        subjectId,
+        getDaysPerWeek(data.settings),
+      );
+      let subjectDayCount = 0;
+      const daySchedSpread = state.schedule[cid]?.[d];
+      if (daySchedSpread) {
+        Object.entries(daySchedSpread).forEach(([pStr, slot]) => {
+          const pIdx = parseInt(pStr);
+          const occupantId = state.classOccupancy[cid]?.[d]?.[pIdx];
+          if (occupantId && ignoredOccupants?.has(occupantId)) return;
+          if (slot.subjectId === subjectId) {
+            subjectDayCount += slot.duration || 1;
+          }
+        });
+      }
+      if (subjectDayCount + duration > spreadCap) return false;
+    }
+
     const maxCorePerDay = data.settings.maxCorePeriodsPerDay;
     if (maxCorePerDay && unit.isCore) {
       let coreCount = 0;
@@ -126,7 +151,6 @@ export const checkHardConstraints = (
       if (coreCount + duration > maxCorePerDay) return false;
     }
 
-    const cls = classMap.get(cid);
     const structure = cls?.structure || data.settings.dayStructure;
     const maxPeriods = cls?.periodCount ?? data.settings.periodsPerDay;
     const continuityCtx: ValidationContext = {

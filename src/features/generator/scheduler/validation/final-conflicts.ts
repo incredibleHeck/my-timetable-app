@@ -210,10 +210,10 @@ function inferSlotDuration(
     if (
       nextSlot &&
       nextSlot.isFixed &&
-      nextSlot.unitId &&
-      slot.unitId &&
-      normalizeId(nextSlot.unitId) === normalizeId(slot.unitId) &&
-      normalizeId(nextSlot.subjectId) === normalizeId(slot.subjectId)
+      normalizeId(nextSlot.subjectId) === normalizeId(slot.subjectId) &&
+      (!nextSlot.unitId ||
+        !slot.unitId ||
+        normalizeId(nextSlot.unitId) === normalizeId(slot.unitId))
     ) {
       return 2;
     }
@@ -363,7 +363,11 @@ function getSlotSubjectId(
   day: number,
   period: number,
 ): string | undefined {
-  return data.schedule[classId]?.[day]?.[period]?.subjectId;
+  const classSchedule = resolveClassSchedule(data.schedule, classId);
+  if (!classSchedule) return undefined;
+  const daySchedule = readDaySchedule(classSchedule, day);
+  if (!daySchedule) return undefined;
+  return readSlot(daySchedule, period)?.subjectId;
 }
 
 /** True when all classes at this teacher slot are one joint-class session. */
@@ -454,32 +458,77 @@ export function collectResourceDoubleBookings(data: AppData): Conflict[] {
   const roomOccupancy: OccupancyMatrix = new Map();
 
   for (const classId of Object.keys(schedule)) {
-    const classSchedule = schedule[classId];
+    const classSchedule = resolveClassSchedule(schedule, classId);
     if (!classSchedule) continue;
 
     const cls = data.classes.find((c: ClassGroup) => c.id === classId);
+    const structure = cls?.structure || data.settings.dayStructure;
+    const periodLimit = cls?.periodCount ?? data.settings.periodsPerDay;
 
     for (const dayStr of Object.keys(classSchedule)) {
       const day = parseInt(dayStr);
-      const daySchedule = classSchedule[day];
+      if (Number.isNaN(day)) continue;
+
+      const daySchedule = readDaySchedule(classSchedule, day);
+      if (!daySchedule) continue;
 
       for (const periodStr of Object.keys(daySchedule)) {
         const period = parseInt(periodStr);
-        const slot = daySchedule[period];
-        if (!slot?.subjectId || !slot?.teacherId) continue;
-        if (!isValidTeacher(data, slot.teacherId)) continue;
+        if (Number.isNaN(period)) continue;
 
-        const structure = cls?.structure || data.settings.dayStructure;
+        const slot = readSlot(daySchedule, period);
+        if (!isPlacedLessonHead(slot)) continue;
+        if (!slot.teacherId || !isValidTeacher(data, slot.teacherId)) continue;
         if (getType(structure, period) !== "CLASS") continue;
 
+        const duration = inferSlotDuration(
+          daySchedule,
+          period,
+          slot,
+          structure,
+          periodLimit,
+        );
+
         recordOccupancy(teacherOccupancy, slot.teacherId, day, period, classId);
+        if (duration === 2) {
+          const p2 = getNextClassPeriod(period, structure, periodLimit);
+          if (p2 !== null) {
+            recordOccupancy(
+              teacherOccupancy,
+              slot.teacherId,
+              day,
+              p2,
+              classId,
+            );
+          }
+        }
 
+        // Only track shared/specialist rooms — not implicit homerooms.
+        // Matches initializeState / checkSlotValidity (explicit roomId only).
         const subject = data.subjects.find((s) => s.id === slot.subjectId);
-        const effectiveRoomId =
-          slot.roomId || subject?.requiredRoomId || cls?.defaultRoomId;
+        const effectiveRoomId = slot.roomId || subject?.requiredRoomId;
+        const room = effectiveRoomId
+          ? data.rooms.find((r) => r.id === effectiveRoomId)
+          : undefined;
 
-        if (effectiveRoomId && isValidRoom(data, effectiveRoomId)) {
+        if (
+          effectiveRoomId &&
+          isValidRoom(data, effectiveRoomId) &&
+          !room?.isHomeRoom
+        ) {
           recordOccupancy(roomOccupancy, effectiveRoomId, day, period, classId);
+          if (duration === 2) {
+            const p2 = getNextClassPeriod(period, structure, periodLimit);
+            if (p2 !== null) {
+              recordOccupancy(
+                roomOccupancy,
+                effectiveRoomId,
+                day,
+                p2,
+                classId,
+              );
+            }
+          }
         }
       }
     }
@@ -498,7 +547,11 @@ export function collectResourceDoubleBookings(data: AppData): Conflict[] {
 
         classes.forEach((classId) => {
           const cls = data.classes.find((c: ClassGroup) => c.id === classId);
-          const slot = schedule[classId]?.[day]?.[period];
+          const classSchedule = resolveClassSchedule(schedule, classId);
+          const daySchedule = classSchedule
+            ? readDaySchedule(classSchedule, day)
+            : undefined;
+          const slot = daySchedule ? readSlot(daySchedule, period) : undefined;
           const subject = slot
             ? data.subjects.find((s) => s.id === slot.subjectId)
             : undefined;
@@ -533,7 +586,11 @@ export function collectResourceDoubleBookings(data: AppData): Conflict[] {
 
         classes.forEach((classId) => {
           const cls = data.classes.find((c: ClassGroup) => c.id === classId);
-          const slot = schedule[classId]?.[day]?.[period];
+          const classSchedule = resolveClassSchedule(schedule, classId);
+          const daySchedule = classSchedule
+            ? readDaySchedule(classSchedule, day)
+            : undefined;
+          const slot = daySchedule ? readSlot(daySchedule, period) : undefined;
           const subject = slot
             ? data.subjects.find((s) => s.id === slot.subjectId)
             : undefined;

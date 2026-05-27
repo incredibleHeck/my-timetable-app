@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { 
   DndContext, 
   DragOverlay, 
@@ -14,9 +14,14 @@ import { DAYS } from "../../../utils/constants";
 import { getOccasionLabel } from "../../../utils/utils";
 import { calculateClassSchedule } from "../../../utils/timeUtils";
 import { useProfile } from "../../../contexts/ProfileContext";
+import { useToast } from "../../../components/ui/Toast";
 import { DraggableSlot } from "./DraggableSlot";
 import { DroppableCell } from "./DroppableCell";
+import { EmptySlotPlacementButton } from "./EmptySlotPlacementButton";
+import { ManualPlacementPicker } from "./ManualPlacementPicker";
 import { useDndLogic } from "../hooks/useDndLogic";
+import { useManualPlacement } from "../hooks/useManualPlacement";
+import { PendingPlacement } from "../utils/pendingPlacements";
 
 interface Props {
   data: AppData;
@@ -24,6 +29,7 @@ interface Props {
   mode: "CLASS" | "TEACHER";
   onUpdate: (d: AppData) => void;
   editMode: boolean;
+  manualPlacementMode?: boolean;
   setHoverConflict?: (c: Conflict | null) => void;
   highlightedConflict?: Conflict | null;
 }
@@ -34,9 +40,16 @@ export const ScheduleGrid: React.FC<Props> = ({
   mode,
   onUpdate,
   editMode,
+  manualPlacementMode = false,
   setHoverConflict,
   highlightedConflict,
 }) => {
+  const { showToast } = useToast();
+  const [placementTarget, setPlacementTarget] = useState<{
+    day: number;
+    period: number;
+  } | null>(null);
+
   // --- SENSORS ---
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), 
@@ -56,6 +69,38 @@ export const ScheduleGrid: React.FC<Props> = ({
     handleDragEnd, 
     checkDragValidity 
   } = useDndLogic(data, activeId, mode, onUpdate, setHoverConflict);
+
+  const {
+    listPendingForClass,
+    listValidPendingForSlot,
+    placePendingLesson,
+  } = useManualPlacement(data, onUpdate);
+
+  const showManualPlacement =
+    manualPlacementMode && editMode && mode === "CLASS" && !activeDragItem;
+
+  const pendingForClass = useMemo(
+    () => (mode === "CLASS" ? listPendingForClass(activeId) : []),
+    [mode, activeId, listPendingForClass],
+  );
+
+  const handlePlacementSelect = (pending: PendingPlacement) => {
+    if (!placementTarget || mode !== "CLASS") return;
+
+    const result = placePendingLesson(
+      activeId,
+      placementTarget.day,
+      placementTarget.period,
+      pending,
+    );
+
+    if (result.ok) {
+      showToast(`Placed ${pending.subjectName} on the grid.`, "success");
+      setPlacementTarget(null);
+    } else {
+      showToast(result.message, "error");
+    }
+  };
 
   // --- HELPERS ---
   const currentStructure = useMemo(() => {
@@ -162,9 +207,11 @@ export const ScheduleGrid: React.FC<Props> = ({
              {editMode ? <ArrowRightLeft size={14} /> : <Lock size={14} />}
           </div>
           <span>
-            {editMode
-              ? "Drag and drop lessons to move or swap."
-              : "Read-only mode. Enable editing to modify schedule."}
+            {manualPlacementMode && mode === "CLASS"
+              ? "Manual placement: click + on empty slots to assign unplaced lessons."
+              : editMode
+                ? "Drag and drop lessons to move or swap."
+                : "Read-only mode. Enable editing to modify schedule."}
           </span>
         </div>
 
@@ -300,6 +347,17 @@ export const ScheduleGrid: React.FC<Props> = ({
                   if (!content && activeDragItem && !isValidTarget) {
                       content = <div className="w-full h-full bg-slate-100/50 opacity-50"></div>;
                   }
+
+                  if (!content && showManualPlacement && !fixedText) {
+                    content = (
+                      <EmptySlotPlacementButton
+                        hasPending={pendingForClass.length > 0}
+                        onClick={() =>
+                          setPlacementTarget({ day: dIdx, period: pIdx })
+                        }
+                      />
+                    );
+                  }
                 }
 
                 return (
@@ -334,6 +392,24 @@ export const ScheduleGrid: React.FC<Props> = ({
             </div>
           ) : null}
         </DragOverlay>
+
+        {placementTarget && mode === "CLASS" && currentClass && (
+          <ManualPlacementPicker
+            isOpen={true}
+            onClose={() => setPlacementTarget(null)}
+            dayLabel={DAYS[placementTarget.day]}
+            periodLabel={`Period ${placementTarget.period + 1}`}
+            className={currentClass.name}
+            pendingOptions={listValidPendingForSlot(
+              activeId,
+              placementTarget.day,
+              placementTarget.period,
+            )}
+            allPendingCount={pendingForClass.length}
+            subjects={subjects}
+            onSelect={handlePlacementSelect}
+          />
+        )}
       </div>
     </DndContext>
   );

@@ -70,7 +70,7 @@ function getResolutionHint(c: Conflict): string {
     return `Assign ${n} more period${n === 1 ? "" : "s"} to ${c.className}'s grid in Edit mode, or reduce the curriculum target and regenerate.`;
   }
   if (r.includes("unplaced")) {
-    return "Free up teacher availability or reduce competing curriculum load, then regenerate the schedule.";
+    return "Enable Manual Placement in Edit mode, click + on an empty slot, and assign the missing lesson.";
   }
   if (r.includes("double booking") && r.includes("teacher")) {
     return "Drag one of the conflicting lessons to a free slot, or assign a different teacher in Edit mode.";

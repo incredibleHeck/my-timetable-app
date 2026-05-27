@@ -91,6 +91,45 @@ describe('Swap Integration - useDndLogic', () => {
     expect(isValid).toBe(true);
   });
 
+  it('should allow shifting a double period into an adjacent empty gap', () => {
+    const dataWithGap: AppData = {
+      ...baseData,
+      schedule: {
+        c1: {
+          0: {
+            2: { subjectId: 's1', teacherId: 't1', classId: 'c1', isFixed: false },
+            3: { subjectId: 's1', teacherId: 't1', classId: 'c1', isFixed: true },
+          },
+        },
+      },
+    };
+
+    const onUpdate = vi.fn();
+    const { result } = renderHook(
+      () => useDndLogic(dataWithGap, 'c1', 'CLASS', onUpdate),
+      { wrapper },
+    );
+
+    act(() => {
+      result.current.handleDragStart({
+        active: {
+          id: 'c1-0-2',
+          data: {
+            current: {
+              day: 0,
+              period: 2,
+              slot: dataWithGap.schedule.c1[0][2],
+              classGroup: mockClass,
+            },
+          },
+        },
+      } as any);
+    });
+
+    // Shift double from P2-P3 down to P1-P2 (empty gap before the double)
+    expect(result.current.checkDragValidity(0, 1)).toBe(true);
+  });
+
   it('should allow dragging a single period to swap with another single period of same teacher on same day (at load limit)', () => {
     const dataAtLimit: AppData = {
         ...baseData,
