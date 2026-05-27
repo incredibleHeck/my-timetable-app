@@ -212,7 +212,8 @@ export function runConstructionQueue(
     steps++;
 
     if (onProgress && steps % 10 === 0 && totalGangs !== undefined) {
-      if (!onProgress(gangsPlaced, totalGangs, unplaced.length)) {
+      const unplacedGangs = unplaced.length + queue.length;
+      if (!onProgress(gangsPlaced, totalGangs, unplacedGangs)) {
         return { steps, gangsPlaced, unplaced, backtrackAttempts };
       }
     }

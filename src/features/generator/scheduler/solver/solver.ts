@@ -13,6 +13,7 @@ import { TabuManager } from "./tabu";
 import {
   RepairController,
   countUnplacedGangs,
+  countUnplacedGangLeaders,
   diversifyRepairState,
   getGangId,
   isRepairActionFailed,
@@ -37,12 +38,22 @@ import {
   ScoringWeightOverrides,
 } from "../constants";
 import { createSeededRng, shuffleInPlace } from "../utils/rng";
+import { isPerfectGeneratedSchedule } from "../validation";
+
+export type SolverProgressMeta = {
+  runIndex: number;
+  bestUnplaced: number;
+  perfectRuns: number;
+  elapsedMs: number;
+  timeBudgetMs?: number;
+};
 
 export type SolverProgressCallback = (
   phase: string,
   progress: number,
   total: number,
   conflicts: number,
+  meta?: SolverProgressMeta,
 ) => boolean;
 
 export type SolverOptions = {
@@ -66,11 +77,16 @@ export type SolverResult = {
   state: SchedulerState;
   iterations: number;
   runIndex: number;
+  totalRuns: number;
+  /** Unplaced lesson gangs (not per-class conflict rows). */
+  unplacedGangs: number;
+  /** Completed runs that placed every lesson gang. */
+  perfectRuns: number;
 };
 
 function compareSolverResults(a: SolverResult, b: SolverResult): number {
-  if (a.conflicts.length !== b.conflicts.length) {
-    return a.conflicts.length - b.conflicts.length;
+  if (a.unplacedGangs !== b.unplacedGangs) {
+    return a.unplacedGangs - b.unplacedGangs;
   }
   return b.state.unitPlacements.size - a.state.unitPlacements.size;
 }
@@ -257,8 +273,9 @@ function runSingleSolve(
     }
 
     if (onProgress && repairSteps % 10 === 0) {
+      const unplacedNow = countUnplacedGangs(repairQueue, repairController);
       if (
-        !onProgress("REPAIR", repairSteps, MAX_REPAIR_STEPS, repairQueue.length)
+        !onProgress("REPAIR", repairSteps, MAX_REPAIR_STEPS, unplacedNow)
       ) {
         break;
       }
@@ -382,6 +399,13 @@ function runSingleSolve(
     state,
     iterations: steps + repairSteps,
     runIndex,
+    totalRuns: 1,
+    unplacedGangs: countUnplacedGangLeaders(
+      unplacedGangLeaders,
+      gangMap,
+      state,
+    ),
+    perfectRuns: 0,
   };
 }
 
@@ -419,6 +443,8 @@ export const solveSmart = (
   }
 
   let bestResult: SolverResult | null = null;
+  let bestUnplacedGangsSeen = Number.POSITIVE_INFINITY;
+  let perfectRunsFound = 0;
   let run = 0;
 
   const shouldContinueRuns = (): boolean => {
@@ -427,7 +453,7 @@ export const solveSmart = (
     if (
       timeBudget === undefined &&
       bestResult &&
-      bestResult.conflicts.length === 0
+      bestResult.unplacedGangs === 0
     ) {
       return false;
     }
@@ -447,27 +473,70 @@ export const solveSmart = (
         )
       : data;
 
+    const currentRun = run;
+    const wrappedProgress: SolverProgressCallback = (
+      phase,
+      progress,
+      total,
+      conflicts,
+    ) => {
+      bestUnplacedGangsSeen = Math.min(bestUnplacedGangsSeen, conflicts);
+      const elapsedMs = clockStartMs ? Date.now() - clockStartMs : 0;
+      const bestUnplaced =
+        bestUnplacedGangsSeen === Number.POSITIVE_INFINITY
+          ? conflicts
+          : bestUnplacedGangsSeen;
+      return (
+        onProgress?.(phase, progress, total, conflicts, {
+          runIndex: currentRun + 1,
+          bestUnplaced,
+          perfectRuns: perfectRunsFound,
+          elapsedMs,
+          timeBudgetMs: timeBudget,
+        }) ?? true
+      );
+    };
+
     const result = runSingleSolve(
       units,
       runData,
-      onProgress,
+      wrappedProgress,
       options,
       run,
       shouldAbort,
     );
+    bestUnplacedGangsSeen = Math.min(bestUnplacedGangsSeen, result.unplacedGangs);
+    if (isPerfectGeneratedSchedule(data, result.schedule)) {
+      perfectRunsFound++;
+    }
     if (!bestResult || compareSolverResults(result, bestResult) < 0) {
       bestResult = result;
+    }
+
+    if (onProgress) {
+      const elapsedMs = clockStartMs ? Date.now() - clockStartMs : 0;
+      const bestUnplaced =
+        bestUnplacedGangsSeen === Number.POSITIVE_INFINITY
+          ? result.unplacedGangs
+          : bestUnplacedGangsSeen;
+      onProgress("RUN_COMPLETE", currentRun + 1, run, result.unplacedGangs, {
+        runIndex: currentRun + 1,
+        bestUnplaced,
+        perfectRuns: perfectRunsFound,
+        elapsedMs,
+        timeBudgetMs: timeBudget,
+      });
     }
 
     run++;
   }
 
-  return bestResult!;
+  return { ...bestResult!, totalRuns: run, perfectRuns: perfectRunsFound };
 };
 
 /**
  * Worker entry: time-driven solver that fills the full time budget.
- * Keeps spawning seeded, shuffled, calibrated runs until 20 seconds elapse,
+ * Keeps spawning seeded, shuffled, calibrated runs until 60 seconds elapse,
  * returning the best result found across all attempts.
  */
 export const solveSmartWithRestarts = (

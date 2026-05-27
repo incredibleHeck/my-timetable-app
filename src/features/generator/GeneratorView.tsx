@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   Play,
   Users,
   BookOpen,
-  Loader2,
   Printer,
   Recycle,
   CheckCircle2,
@@ -19,10 +18,15 @@ import { AppData, ViewState, Conflict } from "../../types";
 import { Button } from "../../components/ui";
 import { ScheduleGrid } from "./components/ScheduleGrid";
 import { ConflictPanel } from "./components/ConflictPanel";
+import {
+  SolverProgressOverlay,
+  SolverLiveProgress,
+} from "./components/SolverProgressOverlay";
 import { exportScheduleToExcel } from "../../services/export/excel";
 import { printAllSchedules } from "../../services/export/print";
 import { useToast } from "../../components/ui/Toast";
 import { auditFinalSchedule, runPreflightCheck } from "./scheduler/validation";
+import { SOLVER_TARGET_MS } from "./scheduler/constants";
 
 interface ViewProps {
   data: AppData;
@@ -46,7 +50,16 @@ export const GeneratorView: React.FC<ViewProps> = ({
   const [stats, setStats] = useState<{
     iterations: number;
     duration: number;
+    runIndex: number;
+    totalRuns: number;
+    unplaced: number;
+    perfectRuns: number;
   } | null>(null);
+  const [liveProgress, setLiveProgress] = useState<SolverLiveProgress | null>(
+    null,
+  );
+  const [elapsedMs, setElapsedMs] = useState(0);
+  const generationStartRef = useRef<number | null>(null);
 
   // Auto-hide conflict message after 6 seconds
   useEffect(() => {
@@ -84,6 +97,28 @@ export const GeneratorView: React.FC<ViewProps> = ({
   // WORKER REF
   // We keep a reference to the active worker so we can terminate it if needed
   const workerRef = useRef<Worker | null>(null);
+
+  useEffect(() => {
+    if (!isGenerating || generationStartRef.current === null) {
+      return;
+    }
+
+    const tick = () => {
+      setElapsedMs(Date.now() - generationStartRef.current!);
+    };
+
+    tick();
+    const interval = window.setInterval(tick, 200);
+    return () => window.clearInterval(interval);
+  }, [isGenerating]);
+
+  const terminateWorker = useCallback(() => {
+    workerRef.current = null;
+    generationStartRef.current = null;
+    setLiveProgress(null);
+    setElapsedMs(0);
+    setIsGenerating(false);
+  }, []);
 
   // --- SORTING HELPERS ---
   const sortedClasses = useMemo(() => {
@@ -149,6 +184,9 @@ export const GeneratorView: React.FC<ViewProps> = ({
 
     setIsGenerating(true);
     setStats(null);
+    setLiveProgress(null);
+    generationStartRef.current = Date.now();
+    setElapsedMs(0);
 
     // 1. Initialize Worker
     workerRef.current = new Worker(
@@ -163,10 +201,26 @@ export const GeneratorView: React.FC<ViewProps> = ({
     workerRef.current.onmessage = (e) => {
       const { type, payload } = e.data;
 
-      if (type === "success") {
+      if (type === "progress") {
+        setLiveProgress({
+          phase: payload.phase,
+          iteration: payload.iteration,
+          total: payload.total,
+          conflicts: payload.conflicts,
+          runIndex: payload.runIndex ?? 1,
+          bestUnplaced: payload.bestUnplaced,
+          perfectRuns: payload.perfectRuns ?? 0,
+          elapsedMs: payload.elapsedMs ?? 0,
+          timeBudgetMs: payload.timeBudgetMs ?? SOLVER_TARGET_MS,
+        });
+      } else if (type === "success") {
         setStats({
           iterations: payload.iterations,
           duration: payload.duration,
+          runIndex: payload.runIndex ?? 1,
+          totalRuns: payload.totalRuns ?? 1,
+          unplaced: payload.unplaced ?? 0,
+          perfectRuns: payload.perfectRuns ?? 0,
         });
 
         // GHOST-CONFLICT GUARD
@@ -212,11 +266,6 @@ export const GeneratorView: React.FC<ViewProps> = ({
     terminateWorker();
   };
 
-  const terminateWorker = () => {
-    workerRef.current = null;
-    setIsGenerating(false);
-  };
-
   const handleExcelExport = async () => {
     try {
       // One .xlsx file: every class or every teacher as its own sheet tab
@@ -252,13 +301,34 @@ export const GeneratorView: React.FC<ViewProps> = ({
                 </span>
               )}
             </h2>
-            <p className="text-xs text-slate-500 mt-1 flex gap-2">
-              v10.0 (Worker-Enabled)
+            <p className="text-xs text-slate-500 mt-1 flex flex-wrap gap-x-2 gap-y-0.5">
+              <span>v10.0 (Worker-Enabled)</span>
               {stats && (
-                <span className="text-emerald-600 font-medium">
-                  • {stats.iterations} iterations in{" "}
-                  {(stats.duration / 1000).toFixed(1)}s
-                </span>
+                <>
+                  <span className="text-emerald-600 font-medium">
+                    • {(stats.duration / 1000).toFixed(1)}s
+                  </span>
+                  <span className="text-slate-400">
+                    • {stats.totalRuns} run{stats.totalRuns !== 1 ? "s" : ""}
+                  </span>
+                  <span className="text-slate-400">
+                    • {stats.iterations.toLocaleString()} moves
+                  </span>
+                  {stats.perfectRuns > 0 && (
+                    <span className="text-emerald-600 font-medium">
+                      • {stats.perfectRuns} perfect
+                    </span>
+                  )}
+                  {stats.unplaced === 0 ? (
+                    <span className="text-emerald-600 font-medium">
+                      • fully placed
+                    </span>
+                  ) : (
+                    <span className="text-amber-600 font-medium">
+                      • {stats.unplaced} unplaced
+                    </span>
+                  )}
+                </>
               )}
             </p>
           </div>
@@ -368,15 +438,10 @@ export const GeneratorView: React.FC<ViewProps> = ({
           }`}
         >
           {isGenerating && (
-            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm">
-              <Loader2 size={48} className="text-amber-500 animate-spin mb-4" />
-              <h3 className="text-lg font-bold text-slate-700">
-                Crunching Numbers...
-              </h3>
-              <p className="text-slate-500 text-sm">
-                Testing combinations in background...
-              </p>
-            </div>
+            <SolverProgressOverlay
+              progress={liveProgress}
+              elapsedMs={elapsedMs}
+            />
           )}
 
           {/* Sidebar */}

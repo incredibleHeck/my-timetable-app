@@ -10,10 +10,10 @@
 
 // --- PERFORMANCE & TIMING ---
 /** Maximum time (ms) web worker is allowed to run before timeout */
-export const SOLVER_TIME_LIMIT_MS = 22000; // 22 seconds (2s buffer for audit/post)
+export const SOLVER_TIME_LIMIT_MS = 65000; // 65 seconds (5s buffer for audit/post)
 
 /** Target solve time (ms) — solver keeps spawning runs until this elapses */
-export const SOLVER_TARGET_MS = 20000;
+export const SOLVER_TARGET_MS = 60000;
 
 /** Maximum iterations in the repair phase before stopping */
 export const MAX_REPAIR_STEPS = 5000;

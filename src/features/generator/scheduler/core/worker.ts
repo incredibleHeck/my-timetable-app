@@ -29,11 +29,19 @@ ctx.onmessage = (e: MessageEvent<AppData>) => {
     });
 
     // 2. HYBRID SOLVER
-    const { schedule, state, iterations, conflicts: unplacedConflicts } =
-      solveSmartWithRestarts(
+    const {
+      schedule,
+      state,
+      iterations,
+      conflicts: unplacedConflicts,
+      runIndex,
+      totalRuns,
+      unplacedGangs,
+      perfectRuns,
+    } = solveSmartWithRestarts(
         units,
         data,
-        (phase, progress, total, currentConflictCount) => {
+        (phase, progress, total, currentConflictCount, meta) => {
           if (Date.now() - startTime >= SOLVER_TARGET_MS) {
             return false;
           }
@@ -45,6 +53,11 @@ ctx.onmessage = (e: MessageEvent<AppData>) => {
               iteration: progress,
               total,
               conflicts: currentConflictCount,
+              runIndex: meta?.runIndex ?? 1,
+              bestUnplaced: meta?.bestUnplaced ?? currentConflictCount,
+              perfectRuns: meta?.perfectRuns ?? 0,
+              elapsedMs: meta?.elapsedMs ?? Date.now() - startTime,
+              timeBudgetMs: meta?.timeBudgetMs ?? SOLVER_TARGET_MS,
             },
           });
           return true;
@@ -73,6 +86,10 @@ ctx.onmessage = (e: MessageEvent<AppData>) => {
         statistics: audit.statistics,
         iterations,
         duration: Date.now() - startTime,
+        runIndex,
+        totalRuns,
+        unplaced: unplacedGangs,
+        perfectRuns,
       },
     });
   } catch (error) {
