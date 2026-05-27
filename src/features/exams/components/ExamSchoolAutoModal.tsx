@@ -12,6 +12,7 @@ import {
 
 // Import the Logic Engine
 import { generateExams, ScheduleMode } from "../logic/examGeneratorAlgorithms";
+import { useToast } from "../../../components/ui/Toast";
 
 interface Props {
   isOpen: boolean;
@@ -32,6 +33,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
   data,
   onSave,
 }) => {
+  const { showToast } = useToast();
   // --- STATE ---
   const [selectedConfigs, setSelectedConfigs] = useState<
     Record<string, SubjectConfig>
@@ -103,7 +105,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
   };
 
   const handleGenerate = () => {
-    const sessions = generateExams(data, {
+    const { sessions, unscheduled } = generateExams(data, {
       subjects: Object.values(selectedConfigs),
       selectedClassIds,
       mode,
@@ -113,6 +115,22 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
       gapMinutes: parseInt(gapMinutes),
       syncStreams,
     });
+
+    if (unscheduled.length > 0) {
+      const names = unscheduled
+        .map((u) => {
+          const sub = data.subjects.find((s) => s.id === u.subjectId);
+          return `${sub?.name || "Subject"} Paper ${u.paperNumber}`;
+        })
+        .slice(0, 5)
+        .join(", ");
+      const more =
+        unscheduled.length > 5 ? ` (+${unscheduled.length - 5} more)` : "";
+      showToast(
+        `Warning: ${unscheduled.length} exam unit(s) could not be scheduled within 60 days: ${names}${more}.`,
+        "error"
+      );
+    }
 
     onSave(sessions);
     onClose();

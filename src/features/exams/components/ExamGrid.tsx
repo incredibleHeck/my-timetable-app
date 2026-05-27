@@ -374,7 +374,11 @@ export const ExamGrid: React.FC<Props> = ({
     sessions.forEach((s) => {
       if (processedIds.has(s.id)) return;
       const siblings = sessions.filter(
-        (o) => o.subjectId === s.subjectId && !processedIds.has(o.id)
+        (o) =>
+          o.subjectId === s.subjectId &&
+          o.paperNumber === s.paperNumber &&
+          o.startTime === s.startTime &&
+          !processedIds.has(o.id)
       );
       if (siblings.length > 0) {
         stacks.push(siblings);

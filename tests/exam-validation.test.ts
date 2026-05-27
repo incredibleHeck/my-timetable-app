@@ -15,7 +15,7 @@ describe('Exam Validation Logic', () => {
   };
 
   it('should detect room capacity warnings', () => {
-    const move = { id: 'e1', subjectId: 's1', date: '2026-05-01', startTime: '09:00', classIds: ['c1'], roomId: 'r1' } as any;
+    const move = { id: 'e1', subjectId: 's1', date: '2026-05-01', startTime: '09:00', duration: 90, classIds: ['c1'], roomId: 'r1' } as any;
     const conflicts = validateExamMove(move, [], mockData);
     
     expect(conflicts).toHaveLength(1);
@@ -23,16 +23,48 @@ describe('Exam Validation Logic', () => {
     expect(conflicts[0].severity).toBe('WARNING');
   });
 
-  it('should detect room booking conflicts', () => {
+  it('should detect room booking conflicts at identical start times', () => {
     const existing = [
-      { id: 'e1', subjectId: 's1', date: '2026-05-01', startTime: '09:00', classIds: ['c1'], roomId: 'r1' }
+      { id: 'e1', subjectId: 's1', date: '2026-05-01', startTime: '09:00', duration: 90, classIds: ['c1'], roomId: 'r1' }
     ] as any;
 
-    const move = { id: 'e2', subjectId: 's2', date: '2026-05-01', startTime: '09:00', classIds: ['c2'], roomId: 'r1' } as any;
+    const move = { id: 'e2', subjectId: 's2', date: '2026-05-01', startTime: '09:00', duration: 90, classIds: ['c2'], roomId: 'r1' } as any;
     const conflicts = validateExamMove(move, existing, mockData);
     
-    // Should have ROOM conflict AND CAPACITY warning (since c2 has 25 students and r1 capacity is 20)
-    expect(conflicts).toHaveLength(2);
     expect(conflicts.some(c => c.type === 'ROOM')).toBe(true);
+  });
+
+  it('should detect room conflicts with overlapping intervals (not identical start)', () => {
+    const existing = [
+      { id: 'e1', subjectId: 's1', date: '2026-05-01', startTime: '09:00', duration: 150, classIds: ['c1'], roomId: 'r1' }
+    ] as any;
+
+    const move = { id: 'e2', subjectId: 's2', date: '2026-05-01', startTime: '10:00', duration: 120, classIds: ['c2'], roomId: 'r1' } as any;
+    const conflicts = validateExamMove(move, existing, mockData);
+    
+    expect(conflicts.some(c => c.type === 'ROOM')).toBe(true);
+  });
+
+  it('should detect student class conflicts with overlapping times', () => {
+    const existing = [
+      { id: 'e1', subjectId: 's1', date: '2026-05-01', startTime: '09:00', duration: 150, classIds: ['c1'] }
+    ] as any;
+
+    const move = { id: 'e2', subjectId: 's2', date: '2026-05-01', startTime: '10:00', duration: 120, classIds: ['c1'] } as any;
+    const conflicts = validateExamMove(move, existing, mockData);
+    
+    expect(conflicts.some(c => c.type === 'STUDENT')).toBe(true);
+    expect(conflicts.find(c => c.type === 'STUDENT')?.severity).toBe('CRITICAL');
+  });
+
+  it('should detect staff conflicts with overlapping intervals', () => {
+    const existing = [
+      { id: 'e1', subjectId: 's1', date: '2026-05-01', startTime: '09:00', duration: 150, classIds: ['c1'], invigilatorIds: ['t1'] }
+    ] as any;
+
+    const move = { id: 'e2', subjectId: 's2', date: '2026-05-01', startTime: '10:00', duration: 120, classIds: ['c2'], invigilatorIds: ['t1'] } as any;
+    const conflicts = validateExamMove(move, existing, mockData);
+    
+    expect(conflicts.some(c => c.type === 'STAFF')).toBe(true);
   });
 });

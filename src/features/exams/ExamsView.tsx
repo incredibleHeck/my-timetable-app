@@ -106,7 +106,14 @@ export const ExamsView: React.FC<ViewProps> = ({
 
   // 3. Helper: Regenerate/Overwrite Logic
   const handleRegenerateExams = (newSessions: ExamSession[]) => {
-    // Overwrite global state. This effectively "clears" old exams and sets new ones.
+    if (
+      exams.length > 0 &&
+      !confirm(
+        "Auto-schedule will replace all exams in this timetable. Continue?"
+      )
+    ) {
+      return;
+    }
     handleUpdateActiveRoster({
       ...activeData,
       exams: newSessions,
@@ -201,7 +208,7 @@ export const ExamsView: React.FC<ViewProps> = ({
   const handleClearAll = () => {
     if (
       confirm(
-        "Are you sure you want to delete ALL exams in this timetable? This cannot be undone."
+        "Delete ALL exams in this timetable? You can undo with Ctrl+Z."
       )
     ) {
       clearAllExams();
@@ -217,19 +224,36 @@ export const ExamsView: React.FC<ViewProps> = ({
   };
 
   const handleConfirmAllocation = (excludedIds: string[]) => {
+    if (minInv > maxInv) {
+      showToast(
+        "Minimum invigilators cannot exceed maximum. Adjust the range and try again.",
+        "error"
+      );
+      return;
+    }
+
     try {
-      const updatedExams = allocateInvigilators(activeData, {
-        minInvigilators: minInv,
-        maxInvigilators: maxInv,
-        excludedTeacherIds: excludedIds,
-      });
+      const { exams: updatedExams, warnings } = allocateInvigilators(
+        activeData,
+        {
+          minInvigilators: minInv,
+          maxInvigilators: maxInv,
+          excludedTeacherIds: excludedIds,
+        }
+      );
 
       handleUpdateActiveRoster({ ...activeData, exams: updatedExams });
       setExclusionModalOpen(false);
+
       showToast(
-        `Success! Staff assigned. Exam count is now: ${updatedExams.length}`,
-        "success",
+        `Staff assigned. ${updatedExams.length} sessions (expanded per class for invigilation roster).`,
+        "success"
       );
+
+      warnings.slice(0, 3).forEach((w) => showToast(w, "error"));
+      if (warnings.length > 3) {
+        showToast(`+${warnings.length - 3} more staffing warnings.`, "error");
+      }
     } catch (error) {
       console.error("Allocation failed", error);
       showToast("An error occurred during allocation. Please check console.", "error");
@@ -372,10 +396,10 @@ export const ExamsView: React.FC<ViewProps> = ({
                 type="number"
                 value={maxInv}
                 onChange={(e) =>
-                  setMaxInv(Math.max(1, parseInt(e.target.value) || 1))
+                  setMaxInv(Math.max(minInv, parseInt(e.target.value) || minInv))
                 }
                 className="w-10 h-7 text-center text-xs font-bold rounded border border-slate-200"
-                min="1"
+                min={minInv}
               />
             </div>
             <Button
@@ -542,6 +566,9 @@ export const ExamsView: React.FC<ViewProps> = ({
                   allExams={exams}
                   onEdit={() => handleEditClick(exam)}
                   onDelete={() => deleteExam(exam.id)}
+                  onToggleLock={() =>
+                    updateExam({ ...exam, locked: !exam.locked })
+                  }
                 />
               ))}
             </div>

@@ -1,33 +1,36 @@
-import { AppData, ExamSession, Subject, ClassGroup } from "../../../types";
+import { AppData, ExamSession } from "../../../types";
 import { generateId } from "../../../utils/utils";
+import {
+  formatTime,
+  getDayEndMinutes,
+  parseTime,
+  toLocalDateString,
+} from "./examUtils";
 
 export type ScheduleMode = "UNIFORM" | "RANDOM";
 
 interface GeneratorConfig {
   subjects: { id: string; papers: number; duration: number }[];
-  selectedClassIds?: string[]; // NEW: Optional filter for classes
+  selectedClassIds?: string[];
   mode: ScheduleMode;
   startDate: string;
   startTime: string;
   maxPerDay: number;
   gapMinutes: number;
-  syncStreams: boolean; // NEW: Forces classes of same level to sync
+  syncStreams: boolean;
 }
 
-// Helper: Parse HH:MM to minutes
-const parseTime = (t: string) => {
-  const [h, m] = t.split(":").map(Number);
-  return h * 60 + m;
-};
+export interface UnscheduledUnit {
+  subjectId: string;
+  paperNumber: number;
+  classIds: string[];
+}
 
-// Helper: Format minutes to HH:MM
-const formatTime = (mins: number) => {
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
-};
+export interface GenerateExamsResult {
+  sessions: ExamSession[];
+  unscheduled: UnscheduledUnit[];
+}
 
-// Helper: Shuffle
 const shuffle = <T>(array: T[]): T[] => {
   const arr = [...array];
   for (let i = arr.length - 1; i > 0; i--) {
@@ -40,21 +43,23 @@ const shuffle = <T>(array: T[]): T[] => {
 export const generateExams = (
   data: AppData,
   config: GeneratorConfig
-): ExamSession[] => {
-  if (!config.subjects || config.subjects.length === 0) return [];
-  
+): GenerateExamsResult => {
+  const empty: GenerateExamsResult = { sessions: [], unscheduled: [] };
+  if (!config.subjects || config.subjects.length === 0) return empty;
+
   const newSessions: ExamSession[] = [];
+  const unscheduled: UnscheduledUnit[] = [];
   const GLOBAL_MAX_DAYS = 60;
   const startMin = parseTime(config.startTime);
+  const dayEndLimit = getDayEndMinutes(data.settings.timeSlots);
 
-  // Filter classes based on selection
-  const targetClasses = config.selectedClassIds && config.selectedClassIds.length > 0
-    ? data.classes.filter(c => config.selectedClassIds?.includes(c.id))
-    : data.classes;
+  const targetClasses =
+    config.selectedClassIds && config.selectedClassIds.length > 0
+      ? data.classes.filter((c) => config.selectedClassIds?.includes(c.id))
+      : data.classes;
 
-  if (targetClasses.length === 0) return [];
+  if (targetClasses.length === 0) return empty;
 
-  // Ledger: ClassID -> Busy Time Ranges
   const classSchedules: Record<
     string,
     { start: number; end: number; date: string }[]
@@ -62,45 +67,38 @@ export const generateExams = (
   targetClasses.forEach((c) => (classSchedules[c.id] = []));
 
   const maxPapers = Math.max(0, ...config.subjects.map((c) => c.papers));
-  const baseDate = new Date(config.startDate);
+  const baseDate = new Date(config.startDate + "T12:00:00");
 
-  // LOOP THROUGH PAPERS (1, then 2...)
   for (let p = 1; p <= maxPapers; p++) {
-    // Get subjects for this paper, sorted by duration (Longest first)
     const currentSubjects = config.subjects
       .filter((s) => s.papers >= p)
       .sort((a, b) => b.duration - a.duration);
 
-    // -----------------------------------------------------------------------
-    // MODE A: UNIFORM (Entire Cohort Sync)
-    // -----------------------------------------------------------------------
     if (config.mode === "UNIFORM") {
       currentSubjects.forEach((sub) => {
         const involvedClassIds = targetClasses
-          .filter((c) => c.curriculum.some((curr) => curr.subjectId === sub.id))
+          .filter((c) =>
+            c.curriculum.some((curr) => curr.subjectId === sub.id)
+          )
           .map((c) => c.id);
 
         if (involvedClassIds.length === 0) return;
 
         attemptSchedule(
-          [involvedClassIds], // Treat as one giant block
+          [involvedClassIds],
           sub,
           p,
-          data,
           newSessions,
           classSchedules,
           config,
           baseDate,
           startMin,
-          GLOBAL_MAX_DAYS
+          GLOBAL_MAX_DAYS,
+          dayEndLimit,
+          unscheduled
         );
       });
-    }
-
-    // -----------------------------------------------------------------------
-    // MODE B: RANDOM (With Stream Linking)
-    // -----------------------------------------------------------------------
-    else {
+    } else {
       let schedulingUnits: {
         classIds: string[];
         subject: (typeof currentSubjects)[0];
@@ -112,64 +110,56 @@ export const generateExams = (
         );
 
         if (config.syncStreams) {
-          // GROUP BY LEVEL (or Joint Class)
-          // We group classes that share the same 'level' property (e.g. "10", "11")
           const levelGroups: Record<string, string[]> = {};
-
           involvedClasses.forEach((c) => {
-            const key = c.level || c.name.replace(/\D/g, "") || c.id; // Fallback to ID if no level
+            const key = c.level || c.name.replace(/\D/g, "") || c.id;
             if (!levelGroups[key]) levelGroups[key] = [];
             levelGroups[key].push(c.id);
           });
-
-          // Add these groups as units
           Object.values(levelGroups).forEach((group) => {
             schedulingUnits.push({ classIds: group, subject: sub });
           });
         } else {
-          // Pure Random (Individual)
           involvedClasses.forEach((c) => {
             schedulingUnits.push({ classIds: [c.id], subject: sub });
           });
         }
       });
 
-      // SHUFFLE THE UNITS
       schedulingUnits = shuffle(schedulingUnits);
-
-      // Schedule them
       schedulingUnits.forEach((unit) => {
         attemptSchedule(
           [unit.classIds],
           unit.subject,
           p,
-          data,
           newSessions,
           classSchedules,
           config,
           baseDate,
           startMin,
-          GLOBAL_MAX_DAYS
+          GLOBAL_MAX_DAYS,
+          dayEndLimit,
+          unscheduled
         );
       });
     }
   }
 
-  return newSessions;
+  return { sessions: newSessions, unscheduled };
 };
 
-// CORE SCHEDULING FUNCTION
 const attemptSchedule = (
-  groups: string[][], // Array of class ID arrays. Uniform = [[A,B,C]], Random = [[A], [B]]
+  groups: string[][],
   subject: { id: string; duration: number },
   paperNum: number,
-  data: AppData,
   sessions: ExamSession[],
-  ledger: Record<string, any[]>,
+  ledger: Record<string, { start: number; end: number; date: string }[]>,
   config: GeneratorConfig,
   baseDate: Date,
   startMin: number,
-  maxDays: number
+  maxDays: number,
+  dayEndLimit: number,
+  unscheduled: UnscheduledUnit[]
 ) => {
   groups.forEach((groupClassIds) => {
     let dayOffset = 0;
@@ -179,20 +169,17 @@ const attemptSchedule = (
       const currentD = new Date(baseDate);
       currentD.setDate(baseDate.getDate() + dayOffset);
 
-      // Skip Weekends
       if (currentD.getDay() === 0 || currentD.getDay() === 6) {
         dayOffset++;
         continue;
       }
 
-      const dateStr = currentD.toISOString().split("T")[0];
+      const dateStr = toLocalDateString(currentD);
       let attemptTime = startMin;
-      const dayEndLimit = 16 * 60; // 4 PM
 
       while (attemptTime + subject.duration <= dayEndLimit) {
         const attemptEnd = attemptTime + subject.duration;
 
-        // 1. Availability Check
         const allFree = groupClassIds.every((cid) => {
           const booked = ledger[cid].filter((b) => b.date === dateStr);
           return !booked.some(
@@ -202,13 +189,11 @@ const attemptSchedule = (
           );
         });
 
-        // 2. Daily Limit Check
         const underLimit = groupClassIds.every((cid) => {
           const count = ledger[cid].filter((b) => b.date === dateStr).length;
           return count < config.maxPerDay;
         });
 
-        // 3. Paper Clash Check (No Math P2 on same day as Math P1)
         const subjectClash = sessions.some(
           (s) =>
             s.subjectId === subject.id &&
@@ -217,15 +202,12 @@ const attemptSchedule = (
         );
 
         if (allFree && underLimit && !subjectClash) {
-          // Success
-          const timeStr = formatTime(attemptTime);
-
           sessions.push({
             id: generateId(),
             subjectId: subject.id,
             classIds: groupClassIds,
             date: dateStr,
-            startTime: timeStr,
+            startTime: formatTime(attemptTime),
             duration: subject.duration,
             paperNumber: paperNum,
             paperLabel: `Paper ${paperNum}`,
@@ -234,7 +216,6 @@ const attemptSchedule = (
             locked: false,
           });
 
-          // Update Ledger
           groupClassIds.forEach((cid) => {
             ledger[cid].push({
               date: dateStr,
@@ -246,9 +227,17 @@ const attemptSchedule = (
           scheduled = true;
           break;
         }
-        attemptTime += 30; // 30 min increments
+        attemptTime += 30;
       }
       if (!scheduled) dayOffset++;
+    }
+
+    if (!scheduled) {
+      unscheduled.push({
+        subjectId: subject.id,
+        paperNumber: paperNum,
+        classIds: groupClassIds,
+      });
     }
   });
 };

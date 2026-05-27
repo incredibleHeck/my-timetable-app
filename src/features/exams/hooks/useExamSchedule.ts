@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { AppData, ExamSession } from "../../../types";
 import { generateId } from "../../../utils/utils";
 import { validateExamMove, ExamConflict } from "../logic/examValidation";
+import { getStreamLevel } from "../logic/examUtils";
 import { useProfile } from "../../../contexts/ProfileContext";
 
 export const useExamSchedule = (
@@ -22,14 +23,10 @@ export const useExamSchedule = (
   }, [initialData]);
 
   // --- HELPERS ---
-  const getStreamLevel = useCallback((classId: string) => {
-    const allProjectClasses = dataRef.current.classes;
-    const cls = allProjectClasses.find((c) => c.id === classId);
-    if (!cls) return classId;
-    if (cls.level) return cls.level;
-    const match = cls.name.match(/(\d+)/);
-    return match ? match[1] : cls.name;
-  }, []);
+  const resolveStreamLevel = useCallback(
+    (classId: string) => getStreamLevel(classId, dataRef.current.classes),
+    []
+  );
 
   // --- VALIDATION ---
   const validateExam = useCallback(
@@ -97,9 +94,9 @@ export const useExamSchedule = (
     const allProjectClasses = dataRef.current.classes;
 
     const getFullStreamClassIds = (ids: string[]) => {
-      const targetLevels = new Set(ids.map(id => getStreamLevel(id)));
+      const targetLevels = new Set(ids.map(id => resolveStreamLevel(id)));
       const siblings = allProjectClasses
-        .filter((c) => targetLevels.has(getStreamLevel(c.id)))
+        .filter((c) => targetLevels.has(resolveStreamLevel(c.id)))
         .map((c) => c.id);
       return Array.from(new Set([...ids, ...siblings]));
     };
@@ -165,12 +162,12 @@ export const useExamSchedule = (
     // A stream is defined by the same Level and the same Subject
     const getStreamExams = (sourceExams: ExamSession[]) => {
       const streams = new Set(sourceExams.map(e => {
-        const levels = e.classIds.map(cid => getStreamLevel(cid));
+        const levels = e.classIds.map(cid => resolveStreamLevel(cid));
         return JSON.stringify({ levels, subId: e.subjectId });
       }));
 
       return exams.filter(e => {
-        const levels = e.classIds.map(cid => getStreamLevel(cid));
+        const levels = e.classIds.map(cid => resolveStreamLevel(cid));
         return streams.has(JSON.stringify({ levels, subId: e.subjectId }));
       }).map(e => e.id);
     };
@@ -217,12 +214,12 @@ export const useExamSchedule = (
 
     // Identify all related exams in the same streams
     const streams = new Set(targetExams.map(e => {
-      const levels = e.classIds.map(cid => getStreamLevel(cid));
+      const levels = e.classIds.map(cid => resolveStreamLevel(cid));
       return JSON.stringify({ levels, subId: e.subjectId });
     }));
 
     const streamIds = exams.filter(e => {
-      const levels = e.classIds.map(cid => getStreamLevel(cid));
+      const levels = e.classIds.map(cid => resolveStreamLevel(cid));
       return streams.has(JSON.stringify({ levels, subId: e.subjectId }));
     }).map(e => e.id);
 

@@ -4,6 +4,7 @@ import { Modal, Button, Select, Input } from "../../../components/ui";
 import { Layers, Users, BookOpen, Clock } from "lucide-react";
 import { generateId } from "../../../utils/utils";
 import { useToast } from "../../../components/ui/Toast";
+import { toLocalDateString } from "../logic/examUtils";
 
 interface Props {
   isOpen: boolean;
@@ -37,6 +38,7 @@ export const ExamManualModal: React.FC<Props> = ({
   const [paperLabel, setPaperLabel] = useState("Paper 1");
   const [hasTwoPapers, setHasTwoPapers] = useState(false);
   const [paper2StartTime, setPaper2StartTime] = useState("14:00");
+  const [examLocked, setExamLocked] = useState(false);
 
   // --- INITIALIZATION ---
   useEffect(() => {
@@ -53,6 +55,7 @@ export const ExamManualModal: React.FC<Props> = ({
       setPaperLabel(
         editingExam.paperLabel || `Paper ${editingExam.paperNumber || 1}`
       );
+      setExamLocked(!!editingExam.locked);
 
       // Smart Detection: Does a "Paper 2" already exist for this group?
       // We look for same Subject + Date + At least one overlapping class
@@ -80,7 +83,7 @@ export const ExamManualModal: React.FC<Props> = ({
       // If a specific class filter is active in the grid, auto-select it
       setExamClassIds(activeId !== "ALL" ? [activeId] : []);
 
-      setExamDate(new Date().toISOString().split("T")[0]);
+      setExamDate(toLocalDateString(new Date()));
       setExamStartTime("09:00");
       setPaper2StartTime("14:00");
       setExamDuration("120");
@@ -89,6 +92,7 @@ export const ExamManualModal: React.FC<Props> = ({
       setPaperNumber("1");
       setPaperLabel("Paper 1");
       setHasTwoPapers(false);
+      setExamLocked(false);
     }
   }, [editingExam, isOpen, data.subjects, data.exams, activeId]);
 
@@ -130,7 +134,7 @@ export const ExamManualModal: React.FC<Props> = ({
       paperNumber: parseInt(paperNumber) || 1,
       paperLabel: paperLabel,
       status: editingExam ? editingExam.status : "DRAFT",
-      locked: editingExam ? editingExam.locked : false,
+      locked: examLocked,
     };
 
     if (hasTwoPapers) {
@@ -391,6 +395,18 @@ export const ExamManualModal: React.FC<Props> = ({
               })}
             </div>
           </div>
+
+          <label className="flex items-center gap-2 cursor-pointer select-none pt-2">
+            <input
+              type="checkbox"
+              checked={examLocked}
+              onChange={(e) => setExamLocked(e.target.checked)}
+              className="rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+            />
+            <span className="text-xs font-bold text-slate-600">
+              Lock invigilator assignments (skipped when re-running Assign Staff)
+            </span>
+          </label>
         </div>
       </div>
     </Modal>

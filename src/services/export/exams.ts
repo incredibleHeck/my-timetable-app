@@ -1,5 +1,6 @@
 import type ExcelJS from "exceljs";
 import { AppData, ExamSession } from "../../types";
+import { getStreamLevel } from "../../features/exams/logic/examUtils";
 import { FileService } from "../fileSystem";
 import { loadExcelJS } from "./excelLoader";
 
@@ -33,16 +34,9 @@ export const exportExamsToExcel = async (data: AppData) => {
   workbook.creator = "EduScheduler Pro";
   workbook.created = new Date();
 
-  // Helper: Group classes by level/stream to avoid redundant sheets
-  const getStreamLevel = (cls: any) => {
-    if (cls.level) return cls.level;
-    const match = cls.name.match(/(\d+)/);
-    return match ? match[1] : cls.name;
-  };
-
   const levelGroups: Record<string, { ids: string[]; names: string[] }> = {};
   classes.forEach((cls) => {
-    const lvl = getStreamLevel(cls);
+    const lvl = getStreamLevel(cls.id, classes);
     if (!levelGroups[lvl]) levelGroups[lvl] = { ids: [], names: [] };
     levelGroups[lvl].ids.push(cls.id);
     levelGroups[lvl].names.push(cls.name);
@@ -298,15 +292,9 @@ export const exportExamsToExcel = async (data: AppData) => {
 export const exportExamsToPDF = (data: AppData) => {
   const { exams, subjects, classes, settings } = data;
 
-  const getStreamLevel = (cls: any) => {
-    if (cls.level) return cls.level;
-    const match = cls.name.match(/(\d+)/);
-    return match ? match[1] : cls.name;
-  };
-
   const levelGroups: Record<string, { ids: string[]; names: string[] }> = {};
   classes.forEach((cls) => {
-    const lvl = getStreamLevel(cls);
+    const lvl = getStreamLevel(cls.id, classes);
     if (!levelGroups[lvl]) levelGroups[lvl] = { ids: [], names: [] };
     levelGroups[lvl].ids.push(cls.id);
     levelGroups[lvl].names.push(cls.name);

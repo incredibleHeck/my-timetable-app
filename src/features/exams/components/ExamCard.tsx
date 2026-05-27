@@ -26,6 +26,7 @@ interface Props {
   allExams: ExamSession[];
   onEdit: () => void;
   onDelete: () => void;
+  onToggleLock?: () => void;
 }
 
 export const ExamCard: React.FC<Props> = ({
@@ -34,6 +35,7 @@ export const ExamCard: React.FC<Props> = ({
   allExams,
   onEdit,
   onDelete,
+  onToggleLock,
 }) => {
   const subject = data.subjects.find((s) => s.id === exam.subjectId);
   const teachers = data.teachers;
@@ -92,6 +94,26 @@ export const ExamCard: React.FC<Props> = ({
 
         {/* Action Buttons (Visible on Hover) */}
         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          {onToggleLock && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleLock();
+              }}
+              className={`p-1.5 rounded transition-colors ${
+                isLocked
+                  ? "bg-amber-50 text-amber-600 hover:bg-amber-100"
+                  : "hover:bg-slate-100 text-slate-400 hover:text-slate-600"
+              }`}
+              title={
+                isLocked
+                  ? "Unlock invigilator assignments"
+                  : "Lock invigilator assignments"
+              }
+            >
+              <Lock size={14} />
+            </button>
+          )}
           <button
             onClick={onEdit}
             className="p-1.5 hover:bg-slate-100 text-slate-400 hover:text-amber-600 rounded transition-colors"
