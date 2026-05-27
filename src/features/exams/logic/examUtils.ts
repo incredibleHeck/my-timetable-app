@@ -122,42 +122,158 @@ export const getWeekKey = (dateStr: string): string => {
   return `${d.getFullYear()}-W${weekNo.toString().padStart(2, "0")}`;
 };
 
+export interface ExamSessionColumn {
+  index: number;
+  label: string;
+  defaultStartTime: string;
+  minStartMins: number;
+  maxStartMins: number;
+  headerHint: string;
+}
+
 export interface ExamGridDefaults {
+  sessionsPerDay: number;
   sessionCutoff: string;
   session1DefaultTime: string;
   session2DefaultTime: string;
+  columns: ExamSessionColumn[];
 }
 
-export const getExamGridDefaults = (settings: Settings): ExamGridDefaults => {
+/** Build exam day session columns (grid + scheduler). */
+export const getExamSessionColumns = (settings: Settings): ExamSessionColumn[] => {
   const grid = settings.examGrid;
   const slots = settings.timeSlots || [];
+  const sessionsPerDay = Math.max(1, Math.min(4, grid?.sessionsPerDay ?? 2));
 
-  const session1DefaultTime =
+  const dayStart = parseTime(
     grid?.session1DefaultTime ||
-    slots[0]?.start ||
-    settings.schoolStartTime ||
-    "09:00";
+      slots[0]?.start ||
+      settings.schoolStartTime ||
+      "09:00"
+  );
+  const dayEnd = getDayEndMinutes(slots);
 
-  let session2DefaultTime = grid?.session2DefaultTime;
-  if (!session2DefaultTime && slots.length > 0) {
-    const afternoon = slots.find((s) => parseTime(s.start) >= 12 * 60);
-    session2DefaultTime = afternoon?.start || slots[Math.floor(slots.length / 2)]?.start;
+  if (sessionsPerDay === 1) {
+    return [
+      {
+        index: 0,
+        label: "Session 1",
+        defaultStartTime:
+          grid?.sessionDefaultTimes?.[0] ||
+          grid?.session1DefaultTime ||
+          formatTime(dayStart),
+        minStartMins: dayStart,
+        maxStartMins: dayEnd,
+        headerHint: `From ${formatTime(dayStart)}`,
+      },
+    ];
   }
-  session2DefaultTime = session2DefaultTime || "14:00";
 
-  let sessionCutoff = grid?.sessionCutoff;
-  if (!sessionCutoff && slots.length > 1) {
-    const morning = slots.filter((s) => parseTime(s.start) < 12 * 60);
-    const afternoon = slots.filter((s) => parseTime(s.start) >= 12 * 60);
-    if (morning.length && afternoon.length) {
-      const lastMorningEnd = parseTime(morning[morning.length - 1].end);
-      const firstAfternoonStart = parseTime(afternoon[0].start);
-      sessionCutoff = formatTime(Math.floor((lastMorningEnd + firstAfternoonStart) / 2));
+  if (sessionsPerDay === 2 && (grid?.sessionCutoff || grid?.session2DefaultTime)) {
+    let sessionCutoff = grid?.sessionCutoff;
+    const s1 =
+      grid?.sessionDefaultTimes?.[0] ||
+      grid?.session1DefaultTime ||
+      formatTime(dayStart);
+    let s2 = grid?.sessionDefaultTimes?.[1] || grid?.session2DefaultTime;
+
+    if (!sessionCutoff && s1 && s2) {
+      sessionCutoff = formatTime(Math.floor((parseTime(s1) + parseTime(s2)) / 2));
     }
-  }
-  sessionCutoff = sessionCutoff || "11:30";
+    if (!sessionCutoff && slots.length > 1) {
+      const mid = Math.floor(slots.length / 2);
+      const firstBlock = slots.slice(0, mid);
+      const secondBlock = slots.slice(mid);
+      if (firstBlock.length && secondBlock.length) {
+        const lastFirstEnd = parseTime(firstBlock[firstBlock.length - 1].end);
+        const firstSecondStart = parseTime(secondBlock[0].start);
+        sessionCutoff = formatTime(
+          Math.floor((lastFirstEnd + firstSecondStart) / 2)
+        );
+      }
+    }
+    sessionCutoff = sessionCutoff || "11:30";
+    const cutoffMins = parseTime(sessionCutoff);
 
-  return { sessionCutoff, session1DefaultTime, session2DefaultTime };
+    if (!s2 && slots.length > 0) {
+      const mid = Math.floor(slots.length / 2);
+      s2 = slots[mid]?.start || slots[slots.length - 1]?.start;
+    }
+    s2 = s2 || "14:00";
+
+    return [
+      {
+        index: 0,
+        label: "Session 1",
+        defaultStartTime: s1,
+        minStartMins: dayStart,
+        maxStartMins: cutoffMins,
+        headerHint: `Start before ${sessionCutoff}`,
+      },
+      {
+        index: 1,
+        label: "Session 2",
+        defaultStartTime: s2,
+        minStartMins: cutoffMins,
+        maxStartMins: dayEnd,
+        headerHint: `Start ${sessionCutoff} or later`,
+      },
+    ];
+  }
+
+  const windowSize = Math.floor((dayEnd - dayStart) / sessionsPerDay);
+  const columns: ExamSessionColumn[] = [];
+  for (let i = 0; i < sessionsPerDay; i++) {
+    const minStart = dayStart + i * windowSize;
+    const maxStart = i === sessionsPerDay - 1 ? dayEnd : minStart + windowSize;
+    columns.push({
+      index: i,
+      label: `Session ${i + 1}`,
+      defaultStartTime:
+        grid?.sessionDefaultTimes?.[i] || formatTime(minStart),
+      minStartMins: minStart,
+      maxStartMins: maxStart,
+      headerHint: `${formatTime(minStart)} – ${formatTime(maxStart)}`,
+    });
+  }
+  return columns;
+};
+
+export const getSessionIndexForStartTime = (
+  startTime: string,
+  columns: ExamSessionColumn[]
+): number => {
+  const t = parseTime(startTime);
+  for (let i = columns.length - 1; i >= 0; i--) {
+    if (t >= columns[i].minStartMins) return i;
+  }
+  return 0;
+};
+
+export const examFitsInSession = (
+  startTime: string,
+  duration: number,
+  column: ExamSessionColumn
+): boolean => {
+  const start = parseTime(startTime);
+  const end = start + duration;
+  return start >= column.minStartMins && end <= column.maxStartMins;
+};
+
+export const getExamGridDefaults = (settings: Settings): ExamGridDefaults => {
+  const columns = getExamSessionColumns(settings);
+  const sessionCutoff =
+    columns.length >= 2
+      ? formatTime(columns[1].minStartMins)
+      : formatTime(columns[0]?.maxStartMins ?? 12 * 60);
+
+  return {
+    sessionsPerDay: columns.length,
+    sessionCutoff,
+    session1DefaultTime: columns[0]?.defaultStartTime ?? "09:00",
+    session2DefaultTime: columns[1]?.defaultStartTime ?? "14:00",
+    columns,
+  };
 };
 
 export const pickExamRoom = (

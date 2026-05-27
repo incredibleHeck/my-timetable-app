@@ -4,6 +4,8 @@ import {
   getWeekKey,
   pickExamRoom,
   getExamGridDefaults,
+  getExamSessionColumns,
+  getSessionIndexForStartTime,
   seededShuffle,
 } from '../src/features/exams/logic/examUtils';
 import { DEFAULT_DATA } from '../src/utils/constants';
@@ -50,6 +52,16 @@ describe('examUtils', () => {
     expect(defaults.sessionCutoff).toBe('12:00');
     expect(defaults.session1DefaultTime).toBe('08:30');
     expect(defaults.session2DefaultTime).toBe('13:30');
+    expect(defaults.columns).toHaveLength(2);
+  });
+
+  it('builds a single session column when sessionsPerDay is 1', () => {
+    const columns = getExamSessionColumns({
+      ...DEFAULT_DATA.settings,
+      examGrid: { sessionsPerDay: 1 },
+    });
+    expect(columns).toHaveLength(1);
+    expect(getSessionIndexForStartTime('10:00', columns)).toBe(0);
   });
 
   it('seeded shuffle is deterministic', () => {

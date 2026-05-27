@@ -368,8 +368,8 @@ export const exportExamsToPDF = (data: AppData) => {
           <thead>
             <tr>
               <th style="width: 120px;">Exam Date</th>
-              <th>Session 1 (Morning)</th>
-              <th>Session 2 (Afternoon)</th>
+              <th>Session 1</th>
+              <th>Session 2</th>
             </tr>
           </thead>
           <tbody>

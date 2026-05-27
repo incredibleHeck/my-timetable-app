@@ -1,8 +1,11 @@
 import { AppData, ExamSession } from "../../../types";
 import { generateId } from "../../../utils/utils";
 import {
+  ExamSessionColumn,
+  examFitsInSession,
   formatTime,
   getDayEndMinutes,
+  getExamSessionColumns,
   parseTime,
   pickExamRoom,
   seededShuffle,
@@ -21,6 +24,7 @@ interface GeneratorConfig {
   gapMinutes: number;
   syncStreams: boolean;
   deterministic?: boolean;
+  sessionsPerDay?: number;
 }
 
 export interface UnscheduledUnit {
@@ -53,8 +57,17 @@ export const generateExams = (
   const newSessions: ExamSession[] = [];
   const unscheduled: UnscheduledUnit[] = [];
   const GLOBAL_MAX_DAYS = 60;
-  const startMin = parseTime(config.startTime);
   const dayEndLimit = getDayEndMinutes(data.settings.timeSlots);
+  const settingsForColumns = {
+    ...data.settings,
+    examGrid: {
+      ...data.settings.examGrid,
+      sessionsPerDay:
+        config.sessionsPerDay ?? data.settings.examGrid?.sessionsPerDay ?? 2,
+    },
+  };
+  const sessionColumns = getExamSessionColumns(settingsForColumns);
+  const startMin = parseTime(config.startTime);
 
   const targetClasses =
     config.selectedClassIds && config.selectedClassIds.length > 0
@@ -99,7 +112,8 @@ export const generateExams = (
           startMin,
           GLOBAL_MAX_DAYS,
           dayEndLimit,
-          unscheduled
+          unscheduled,
+          sessionColumns
         );
       });
     } else {
@@ -146,7 +160,8 @@ export const generateExams = (
           startMin,
           GLOBAL_MAX_DAYS,
           dayEndLimit,
-          unscheduled
+          unscheduled,
+          sessionColumns
         );
       });
     }
@@ -154,6 +169,19 @@ export const generateExams = (
 
   return { sessions: newSessions, unscheduled };
 };
+
+const countClassExamsInSessionOnDate = (
+  classId: string,
+  dateStr: string,
+  column: ExamSessionColumn,
+  ledger: Record<string, { start: number; end: number; date: string }[]>
+): number =>
+  ledger[classId].filter(
+    (b) =>
+      b.date === dateStr &&
+      b.start >= column.minStartMins &&
+      b.start < column.maxStartMins
+  ).length;
 
 const attemptSchedule = (
   data: AppData,
@@ -167,8 +195,13 @@ const attemptSchedule = (
   startMin: number,
   maxDays: number,
   dayEndLimit: number,
-  unscheduled: UnscheduledUnit[]
+  unscheduled: UnscheduledUnit[],
+  sessionColumns: ExamSessionColumn[]
 ) => {
+  const maxPerSession = Math.max(
+    1,
+    Math.ceil(config.maxPerDay / sessionColumns.length)
+  );
   groups.forEach((groupClassIds) => {
     let dayOffset = 0;
     let scheduled = false;
@@ -183,59 +216,80 @@ const attemptSchedule = (
       }
 
       const dateStr = toLocalDateString(currentD);
-      let attemptTime = startMin;
 
-      while (attemptTime + subject.duration <= dayEndLimit) {
-        const attemptEnd = attemptTime + subject.duration;
+      for (const column of sessionColumns) {
+        const sessionStart =
+          column.index === 0
+            ? Math.max(parseTime(column.defaultStartTime), startMin)
+            : parseTime(column.defaultStartTime);
+        let attemptTime = Math.max(sessionStart, column.minStartMins);
 
-        const allFree = groupClassIds.every((cid) => {
-          const booked = ledger[cid].filter((b) => b.date === dateStr);
-          return !booked.some(
-            (b) =>
-              attemptTime < b.end + config.gapMinutes &&
-              attemptEnd + config.gapMinutes > b.start
+        while (attemptTime + subject.duration <= column.maxStartMins) {
+          const attemptEnd = attemptTime + subject.duration;
+          const timeStr = formatTime(attemptTime);
+
+          const allFree = groupClassIds.every((cid) => {
+            const booked = ledger[cid].filter((b) => b.date === dateStr);
+            return !booked.some(
+              (b) =>
+                attemptTime < b.end + config.gapMinutes &&
+                attemptEnd + config.gapMinutes > b.start
+            );
+          });
+
+          const underDayLimit = groupClassIds.every((cid) => {
+            const count = ledger[cid].filter((b) => b.date === dateStr).length;
+            return count < config.maxPerDay;
+          });
+
+          const underSessionLimit = groupClassIds.every(
+            (cid) =>
+              countClassExamsInSessionOnDate(cid, dateStr, column, ledger) <
+              maxPerSession
           );
-        });
 
-        const underLimit = groupClassIds.every((cid) => {
-          const count = ledger[cid].filter((b) => b.date === dateStr).length;
-          return count < config.maxPerDay;
-        });
+          const subjectClash = sessions.some(
+            (s) =>
+              s.subjectId === subject.id &&
+              s.date === dateStr &&
+              s.classIds.some((c) => groupClassIds.includes(c))
+          );
 
-        const subjectClash = sessions.some(
-          (s) =>
-            s.subjectId === subject.id &&
-            s.date === dateStr &&
-            s.classIds.some((c) => groupClassIds.includes(c))
-        );
-
-        if (allFree && underLimit && !subjectClash) {
-          sessions.push({
-            id: generateId(),
-            subjectId: subject.id,
-            classIds: groupClassIds,
-            date: dateStr,
-            startTime: formatTime(attemptTime),
-            duration: subject.duration,
-            paperNumber: paperNum,
-            paperLabel: `Paper ${paperNum}`,
-            status: "DRAFT",
-            roomId: pickExamRoom(groupClassIds, data.classes, data.rooms),
-            locked: false,
-          });
-
-          groupClassIds.forEach((cid) => {
-            ledger[cid].push({
+          if (
+            allFree &&
+            underDayLimit &&
+            underSessionLimit &&
+            !subjectClash &&
+            examFitsInSession(timeStr, subject.duration, column)
+          ) {
+            sessions.push({
+              id: generateId(),
+              subjectId: subject.id,
+              classIds: groupClassIds,
               date: dateStr,
-              start: attemptTime,
-              end: attemptEnd,
+              startTime: timeStr,
+              duration: subject.duration,
+              paperNumber: paperNum,
+              paperLabel: `Paper ${paperNum}`,
+              status: "DRAFT",
+              roomId: pickExamRoom(groupClassIds, data.classes, data.rooms),
+              locked: false,
             });
-          });
 
-          scheduled = true;
-          break;
+            groupClassIds.forEach((cid) => {
+              ledger[cid].push({
+                date: dateStr,
+                start: attemptTime,
+                end: attemptEnd,
+              });
+            });
+
+            scheduled = true;
+            break;
+          }
+          attemptTime += 30;
         }
-        attemptTime += 30;
+        if (scheduled) break;
       }
       if (!scheduled) dayOffset++;
     }

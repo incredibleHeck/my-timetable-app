@@ -123,4 +123,38 @@ describe('generateExams', () => {
       b.sessions.map((s) => `${s.date}-${s.startTime}`)
     );
   });
+
+  it('places exams in Session 1 and Session 2 columns when two sessions configured', () => {
+    const twoSessionData = {
+      ...baseData,
+      settings: {
+        ...baseData.settings,
+        examGrid: {
+          sessionsPerDay: 2,
+          session1DefaultTime: '09:00',
+          session2DefaultTime: '14:00',
+          sessionCutoff: '12:00',
+        },
+      },
+    };
+
+    const { sessions } = generateExams(twoSessionData, {
+      subjects: [
+        { id: 'math', papers: 1, duration: 60 },
+        { id: 'eng', papers: 1, duration: 60 },
+      ],
+      mode: 'UNIFORM',
+      startDate: '2026-06-02',
+      startTime: '09:00',
+      maxPerDay: 2,
+      gapMinutes: 30,
+      syncStreams: false,
+      sessionsPerDay: 2,
+    });
+
+    const session1 = sessions.filter((s) => s.startTime < '12:00');
+    const session2 = sessions.filter((s) => s.startTime >= '12:00');
+    expect(session1.length).toBeGreaterThan(0);
+    expect(session2.length).toBeGreaterThan(0);
+  });
 });

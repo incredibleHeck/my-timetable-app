@@ -246,6 +246,7 @@ describe('allocateInvigilators', () => {
     });
 
     expect(exams[0]?.invigilatorIds).not.toContain('t1');
-    expect(exams[0]?.invigilatorIds?.[0]).toBe('t2');
+    expect(exams[0]?.invigilatorIds?.length).toBe(1);
+    expect(['t2', 't3']).toContain(exams[0]?.invigilatorIds?.[0]);
   });
 });

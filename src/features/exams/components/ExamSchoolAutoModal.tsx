@@ -19,6 +19,7 @@ interface Props {
   onClose: () => void;
   data: AppData;
   onSave: (sessions: ExamSession[]) => void;
+  onSessionsPerDayChange?: (sessionsPerDay: number) => void;
 }
 
 interface SubjectConfig {
@@ -32,6 +33,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
   onClose,
   data,
   onSave,
+  onSessionsPerDayChange,
 }) => {
   const { showToast } = useToast();
   // --- STATE ---
@@ -70,6 +72,15 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
   const [gapMinutes, setGapMinutes] = useState("30");
   const [syncStreams, setSyncStreams] = useState(true);
   const [deterministic, setDeterministic] = useState(false);
+  const [sessionsPerDay, setSessionsPerDay] = useState(
+    () => data.settings.examGrid?.sessionsPerDay ?? 2
+  );
+
+  useEffect(() => {
+    if (isOpen) {
+      setSessionsPerDay(data.settings.examGrid?.sessionsPerDay ?? 2);
+    }
+  }, [isOpen, data.settings.examGrid?.sessionsPerDay]);
 
   // --- HANDLERS ---
   const toggleSubject = (subject: Subject) => {
@@ -116,7 +127,10 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
       gapMinutes: parseInt(gapMinutes),
       syncStreams,
       deterministic,
+      sessionsPerDay,
     });
+
+    onSessionsPerDayChange?.(sessionsPerDay);
 
     if (unscheduled.length > 0) {
       const names = unscheduled
@@ -223,6 +237,38 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
             </p>
           </div>
           {deterministic && <Check size={16} className="text-amber-600" />}
+        </div>
+
+        {/* Sessions per day (grid columns) */}
+        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+          <h4 className="text-xs font-bold text-slate-400 uppercase mb-3">
+            Exam sessions per day
+          </h4>
+          <p className="text-xs text-slate-500 mb-3">
+            Choose how many session columns the timetable uses. Exams are placed
+            into the matching session column (Session 1 or Session 2).
+          </p>
+          <div className="flex gap-2">
+            {[1, 2].map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => {
+                  setSessionsPerDay(n);
+                  if (parseInt(maxPerDay, 10) < n) {
+                    setMaxPerDay(String(n));
+                  }
+                }}
+                className={`flex-1 py-2.5 rounded-lg border text-sm font-bold transition-all ${
+                  sessionsPerDay === n
+                    ? "bg-amber-50 border-amber-300 text-amber-700 shadow-sm"
+                    : "bg-white border-slate-200 text-slate-500 hover:border-slate-300"
+                }`}
+              >
+                {n} session{n > 1 ? "s" : ""}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* 3. SETTINGS GRID */}

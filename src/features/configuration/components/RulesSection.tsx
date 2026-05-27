@@ -186,8 +186,38 @@ export const RulesSection: React.FC<RulesSectionProps> = ({
             <h4 className="font-bold text-slate-700 text-sm">Exam Timetable Grid</h4>
           </div>
           <p className="text-xs text-slate-500 mb-3 leading-relaxed">
-            Session split cutoff and default drop times for the exam grid (morning vs afternoon columns).
+            Sessions per day (grid columns) and default drop times for each session.
           </p>
+          <div className="flex items-center gap-3 mb-3">
+            <span className="text-xs font-bold text-slate-500">Sessions per day</span>
+            {[1, 2].map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => {
+                  const nextData: AppData = {
+                    ...data,
+                    settings: {
+                      ...data.settings,
+                      examGrid: {
+                        ...data.settings.examGrid,
+                        sessionsPerDay: n,
+                      },
+                    },
+                  };
+                  onUpdate(nextData);
+                  addActivity("SYSTEM", `Exam sessions per day set to ${n}`, nextData);
+                }}
+                className={`px-3 py-1 rounded border text-xs font-bold ${
+                  (data.settings.examGrid?.sessionsPerDay ?? 2) === n
+                    ? "bg-amber-50 border-amber-300 text-amber-700"
+                    : "bg-white border-slate-200 text-slate-500"
+                }`}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
           <div className="grid grid-cols-3 gap-3">
             {(
               [

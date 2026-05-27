@@ -10,7 +10,10 @@ import {
   Users,
   Lock,
 } from "lucide-react";
-import { getExamGridDefaults } from "../logic/examUtils";
+import {
+  getExamGridDefaults,
+  getSessionIndexForStartTime,
+} from "../logic/examUtils";
 import {
   DndContext,
   DragOverlay,
@@ -316,7 +319,7 @@ export const ExamGrid: React.FC<Props> = ({
   onToggleLock,
   isEditMode,
 }) => {
-  const gridDefaults = useMemo(
+  const { columns: sessionColumns } = useMemo(
     () => getExamGridDefaults(data.settings),
     [data.settings]
   );
@@ -437,44 +440,26 @@ export const ExamGrid: React.FC<Props> = ({
               <th className="p-4 border-r border-slate-800 text-left text-[11px] font-black text-slate-400 uppercase tracking-widest w-[140px] sticky left-0 z-40 bg-slate-900 shadow-md">
                 Date / Day
               </th>
-              <th className="p-4 border-r border-slate-800 text-center min-w-[350px] sticky top-0 z-20 shadow-md">
-                <div className="flex flex-col gap-1">
-                  <span className="font-black text-sm uppercase tracking-widest">
-                    Session 1
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-bold tracking-widest">
-                    START BEFORE {gridDefaults.sessionCutoff} AM
-                  </span>
-                </div>
-              </th>
-              <th className="p-4 border-r border-slate-800 text-center min-w-[350px] sticky top-0 z-20 shadow-md">
-                <div className="flex flex-col gap-1">
-                  <span className="font-black text-sm uppercase tracking-widest">
-                    Session 2
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-bold tracking-widest">
-                    START {gridDefaults.sessionCutoff} AM OR LATER
-                  </span>
-                </div>
-              </th>
+              {sessionColumns.map((col) => (
+                <th
+                  key={col.index}
+                  className="p-4 border-r border-slate-800 text-center min-w-[300px] sticky top-0 z-20 shadow-md"
+                >
+                  <div className="flex flex-col gap-1">
+                    <span className="font-black text-sm uppercase tracking-widest">
+                      {col.label}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-bold tracking-widest">
+                      {col.headerHint}
+                    </span>
+                  </div>
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {uniqueDates.map((date) => {
               const examsOnDate = exams.filter((e) => e.date === date);
-              
-              // Use fixed cutoff for Sessions
-              const { sessionCutoff, session1DefaultTime, session2DefaultTime } =
-                gridDefaults;
-              const session1Exams = examsOnDate.filter(
-                (e) => e.startTime < sessionCutoff
-              );
-              const session2Exams = examsOnDate.filter(
-                (e) => e.startTime >= sessionCutoff
-              );
-
-              const time1 = session1DefaultTime;
-              const time2 = session2DefaultTime;
 
               return (
                 <tr
@@ -501,51 +486,48 @@ export const ExamGrid: React.FC<Props> = ({
                     </div>
                   </td>
 
-                  <DroppableGridCell
-                    date={date}
-                    startTime={time1}
-                    isEditMode={isEditMode}
-                    onClick={() => !session1Exams.length && onAddCell?.(date, time1)}
-                    activeConflicts={overCell?.date === date && overCell?.time === time1 ? currentConflicts : []}
-                  >
-                    <div className="flex flex-col h-full gap-3">
-                      {getStacks(session1Exams).map((stack) => (
-                        <DraggableExamCard
-                          key={stack[0].id}
-                          exams={stack}
-                          data={data}
-                          activeId={activeId}
-                          checkConflicts={checkConflicts}
-                          onEdit={onEdit}
-                          onToggleLock={onToggleLock}
-                          isEditMode={isEditMode}
-                        />
-                      ))}
-                    </div>
-                  </DroppableGridCell>
+                  {sessionColumns.map((col) => {
+                    const cellExams = examsOnDate.filter(
+                      (e) =>
+                        getSessionIndexForStartTime(
+                          e.startTime,
+                          sessionColumns
+                        ) === col.index
+                    );
+                    const dropTime = col.defaultStartTime;
 
-                  <DroppableGridCell
-                    date={date}
-                    startTime={time2}
-                    isEditMode={isEditMode}
-                    onClick={() => !session2Exams.length && onAddCell?.(date, time2)}
-                    activeConflicts={overCell?.date === date && overCell?.time === time2 ? currentConflicts : []}
-                  >
-                    <div className="flex flex-col h-full gap-3">
-                      {getStacks(session2Exams).map((stack) => (
-                        <DraggableExamCard
-                          key={stack[0].id}
-                          exams={stack}
-                          data={data}
-                          activeId={activeId}
-                          checkConflicts={checkConflicts}
-                          onEdit={onEdit}
-                          onToggleLock={onToggleLock}
-                          isEditMode={isEditMode}
-                        />
-                      ))}
-                    </div>
-                  </DroppableGridCell>
+                    return (
+                      <DroppableGridCell
+                        key={`${date}-${col.index}`}
+                        date={date}
+                        startTime={dropTime}
+                        isEditMode={isEditMode}
+                        onClick={() =>
+                          !cellExams.length && onAddCell?.(date, dropTime)
+                        }
+                        activeConflicts={
+                          overCell?.date === date && overCell?.time === dropTime
+                            ? currentConflicts
+                            : []
+                        }
+                      >
+                        <div className="flex flex-col h-full gap-3">
+                          {getStacks(cellExams).map((stack) => (
+                            <DraggableExamCard
+                              key={stack[0].id}
+                              exams={stack}
+                              data={data}
+                              activeId={activeId}
+                              checkConflicts={checkConflicts}
+                              onEdit={onEdit}
+                              onToggleLock={onToggleLock}
+                              isEditMode={isEditMode}
+                            />
+                          ))}
+                        </div>
+                      </DroppableGridCell>
+                    );
+                  })}
                 </tr>
               );
             })}

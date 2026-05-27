@@ -607,6 +607,18 @@ export const ExamsView: React.FC<ViewProps> = ({
         onClose={() => setAutoModalOpen(false)}
         data={activeData}
         onSave={handleRegenerateExams}
+        onSessionsPerDayChange={(sessionsPerDay) => {
+          onUpdate({
+            ...data,
+            settings: {
+              ...data.settings,
+              examGrid: {
+                ...data.settings.examGrid,
+                sessionsPerDay,
+              },
+            },
+          });
+        }}
       />
 
       <InvigilatorExclusionModal
