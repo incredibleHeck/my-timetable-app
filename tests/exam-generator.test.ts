@@ -20,12 +20,16 @@ describe('generateExams', () => {
       { id: 'math', name: 'Mathematics', color: '#000', type: 'CORE' as const, isExaminable: true, examPaperCount: 2 },
       { id: 'eng', name: 'English', color: '#111', type: 'CORE' as const, isExaminable: true, examPaperCount: 1 },
     ],
+    rooms: [
+      { id: 'r1', name: 'Hall', capacity: 40, type: 'HALL' },
+    ],
     classes: [
       {
         id: 'c1',
         name: '10A',
         level: '10',
         defaultRoomId: 'r1',
+        studentCount: 30,
         curriculum: [
           { id: 'cur1', subjectId: 'math', periodsPerWeek: 5, singles: 5, doubles: 0 },
           { id: 'cur2', subjectId: 'eng', periodsPerWeek: 4, singles: 4, doubles: 0 },
@@ -86,5 +90,37 @@ describe('generateExams', () => {
     expect(sessions.length).toBe(0);
     expect(unscheduled.length).toBeGreaterThan(0);
     expect(unscheduled[0].subjectId).toBe('math');
+  });
+
+  it('assigns roomId from class default room', () => {
+    const { sessions } = generateExams(baseData, {
+      subjects: [{ id: 'math', papers: 1, duration: 60 }],
+      mode: 'UNIFORM',
+      startDate: '2026-06-02',
+      startTime: '09:00',
+      maxPerDay: 1,
+      gapMinutes: 0,
+      syncStreams: false,
+    });
+    expect(sessions[0]?.roomId).toBe('r1');
+  });
+
+  it('produces identical output when deterministic', () => {
+    const config = {
+      subjects: [{ id: 'math', papers: 1, duration: 60 }],
+      selectedClassIds: ['c1'],
+      mode: 'RANDOM' as const,
+      startDate: '2026-06-02',
+      startTime: '09:00',
+      maxPerDay: 1,
+      gapMinutes: 0,
+      syncStreams: false,
+      deterministic: true,
+    };
+    const a = generateExams(baseData, config);
+    const b = generateExams(baseData, config);
+    expect(a.sessions.map((s) => `${s.date}-${s.startTime}`)).toEqual(
+      b.sessions.map((s) => `${s.date}-${s.startTime}`)
+    );
   });
 });

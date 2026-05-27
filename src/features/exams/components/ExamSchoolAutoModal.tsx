@@ -68,7 +68,8 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
   const [startTime, setStartTime] = useState("09:00");
   const [maxPerDay, setMaxPerDay] = useState("2");
   const [gapMinutes, setGapMinutes] = useState("30");
-  const [syncStreams, setSyncStreams] = useState(true); // Default to TRUE for Random mode
+  const [syncStreams, setSyncStreams] = useState(true);
+  const [deterministic, setDeterministic] = useState(false);
 
   // --- HANDLERS ---
   const toggleSubject = (subject: Subject) => {
@@ -114,6 +115,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
       maxPerDay: parseInt(maxPerDay),
       gapMinutes: parseInt(gapMinutes),
       syncStreams,
+      deterministic,
     });
 
     if (unscheduled.length > 0) {
@@ -203,6 +205,25 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
             {syncStreams && <Check size={16} className="text-amber-600" />}
           </div>
         )}
+
+        <div
+          onClick={() => setDeterministic(!deterministic)}
+          className={`flex items-center gap-3 p-3 rounded border cursor-pointer transition-colors ${
+            deterministic
+              ? "bg-amber-50 border-amber-200"
+              : "bg-white border-slate-200"
+          }`}
+        >
+          <div className="flex-1">
+            <p className="text-sm font-bold text-slate-800">
+              Fixed generation order
+            </p>
+            <p className="text-xs text-slate-500">
+              Use a deterministic shuffle so the same inputs produce the same timetable.
+            </p>
+          </div>
+          {deterministic && <Check size={16} className="text-amber-600" />}
+        </div>
 
         {/* 3. SETTINGS GRID */}
         <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-4">

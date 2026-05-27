@@ -8,7 +8,9 @@ import {
   GripVertical,
   CalendarDays,
   Users,
+  Lock,
 } from "lucide-react";
+import { getExamGridDefaults } from "../logic/examUtils";
 import {
   DndContext,
   DragOverlay,
@@ -23,11 +25,6 @@ import {
   DragOverEvent,
 } from "@dnd-kit/core";
 
-// --- CONSTANTS ---
-// Cutoff for Session 1 vs Session 2. 
-// 11:30 AM allows 8:00 AM -> Session 1 and 11:30 AM+ -> Session 2.
-const SESSION_CUTOFF = "11:30";
-
 // --- COMPONENTS ---
 
 const DraggableExamCard = ({
@@ -36,6 +33,7 @@ const DraggableExamCard = ({
   activeId,
   checkConflicts,
   onEdit,
+  onToggleLock,
   isEditMode,
 }: {
   exams: ExamSession[];
@@ -43,6 +41,7 @@ const DraggableExamCard = ({
   activeId: string;
   checkConflicts: (exam: ExamSession) => string[];
   onEdit: (e: ExamSession) => void;
+  onToggleLock?: (exam: ExamSession) => void;
   isEditMode: boolean;
 }) => {
   const mainExam = exams[0];
@@ -134,12 +133,41 @@ const DraggableExamCard = ({
                       >
                         {subject?.name}
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-1 border border-slate-200">
                           <Clock size={10} /> {exam.startTime}
                         </span>
+                        {exam.status && exam.status !== "DRAFT" && (
+                          <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-800 text-white">
+                            {exam.status}
+                          </span>
+                        )}
+                        {exam.locked && (
+                          <Lock size={10} className="text-amber-600" />
+                        )}
                       </div>
                     </div>
+                    {onToggleLock && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onToggleLock(exam);
+                        }}
+                        className={`p-1 rounded ${
+                          exam.locked
+                            ? "text-amber-600 bg-amber-50"
+                            : "text-slate-300 hover:text-slate-500"
+                        }`}
+                        title={
+                          exam.locked
+                            ? "Unlock invigilator assignments"
+                            : "Lock invigilator assignments"
+                        }
+                      >
+                        <Lock size={12} />
+                      </button>
+                    )}
                   </div>
                 )}
 
@@ -271,6 +299,7 @@ interface Props {
   checkMoveConflicts: (ids: string[], date: string, time: string, ignoreIds?: string[]) => ExamConflict[];
   onSwap: (ids1: string | string[], ids2: string | string[]) => void;
   onMoveToSlot: (ids: string[], date: string, startTime: string) => void;
+  onToggleLock?: (exam: ExamSession) => void;
   isEditMode: boolean;
 }
 
@@ -284,8 +313,13 @@ export const ExamGrid: React.FC<Props> = ({
   checkMoveConflicts,
   onSwap,
   onMoveToSlot,
+  onToggleLock,
   isEditMode,
 }) => {
+  const gridDefaults = useMemo(
+    () => getExamGridDefaults(data.settings),
+    [data.settings]
+  );
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [currentConflicts, setCurrentConflicts] = useState<ExamConflict[]>([]);
   const [overCell, setOverCell] = useState<{ date: string; time: string } | null>(null);
@@ -409,7 +443,7 @@ export const ExamGrid: React.FC<Props> = ({
                     Session 1
                   </span>
                   <span className="text-[10px] text-slate-400 font-bold tracking-widest">
-                    START BEFORE {SESSION_CUTOFF} AM
+                    START BEFORE {gridDefaults.sessionCutoff} AM
                   </span>
                 </div>
               </th>
@@ -419,7 +453,7 @@ export const ExamGrid: React.FC<Props> = ({
                     Session 2
                   </span>
                   <span className="text-[10px] text-slate-400 font-bold tracking-widest">
-                    START {SESSION_CUTOFF} AM OR LATER
+                    START {gridDefaults.sessionCutoff} AM OR LATER
                   </span>
                 </div>
               </th>
@@ -430,12 +464,17 @@ export const ExamGrid: React.FC<Props> = ({
               const examsOnDate = exams.filter((e) => e.date === date);
               
               // Use fixed cutoff for Sessions
-              const session1Exams = examsOnDate.filter(e => e.startTime < SESSION_CUTOFF);
-              const session2Exams = examsOnDate.filter(e => e.startTime >= SESSION_CUTOFF);
+              const { sessionCutoff, session1DefaultTime, session2DefaultTime } =
+                gridDefaults;
+              const session1Exams = examsOnDate.filter(
+                (e) => e.startTime < sessionCutoff
+              );
+              const session2Exams = examsOnDate.filter(
+                (e) => e.startTime >= sessionCutoff
+              );
 
-              // Target times for empty cells
-              const time1 = "09:00";
-              const time2 = "14:00";
+              const time1 = session1DefaultTime;
+              const time2 = session2DefaultTime;
 
               return (
                 <tr
@@ -478,6 +517,7 @@ export const ExamGrid: React.FC<Props> = ({
                           activeId={activeId}
                           checkConflicts={checkConflicts}
                           onEdit={onEdit}
+                          onToggleLock={onToggleLock}
                           isEditMode={isEditMode}
                         />
                       ))}
@@ -500,6 +540,7 @@ export const ExamGrid: React.FC<Props> = ({
                           activeId={activeId}
                           checkConflicts={checkConflicts}
                           onEdit={onEdit}
+                          onToggleLock={onToggleLock}
                           isEditMode={isEditMode}
                         />
                       ))}

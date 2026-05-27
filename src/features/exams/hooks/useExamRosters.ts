@@ -58,7 +58,7 @@ export const useExamRosters = (data: AppData, onUpdate: (newData: AppData) => vo
     const newRosters = data.examRosters?.map(r => 
       r.id === activeRoster.id ? { ...r, exams: updatedActiveData.exams } : r
     );
-    onUpdate({ ...data, examRosters: newRosters });
+    onUpdate({ ...data, examRosters: newRosters, exams: [] });
   };
 
   const createNewRoster = () => {

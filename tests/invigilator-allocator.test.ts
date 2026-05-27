@@ -49,6 +49,7 @@ describe('allocateInvigilators', () => {
     expect(exams).toHaveLength(2);
     expect(exams.every((e) => e.classIds.length === 1)).toBe(true);
     expect(exams.map((e) => e.classIds[0]).sort()).toEqual(['c1', 'c2']);
+    expect(exams.map((e) => e.id).sort()).toEqual(['e1__c1', 'e1__c2']);
   });
 
   it('assigns invigilators to each split row', () => {
@@ -166,5 +167,85 @@ describe('allocateInvigilators', () => {
     const assigned = exams.find((e) => e.classIds.includes('c1'));
     expect(assigned?.invigilatorIds?.length).toBeGreaterThan(0);
     expect(warnings.filter((w) => w.includes('No invigilators')).length).toBe(0);
+  });
+
+  it('scopes stream level restriction to calendar week', () => {
+    const week1: ExamSession = {
+      id: 'w1',
+      subjectId: 's1',
+      classIds: ['c1'],
+      date: '2026-06-03',
+      startTime: '09:00',
+      duration: 60,
+      paperNumber: 1,
+      status: 'DRAFT',
+    };
+    const week2: ExamSession = {
+      id: 'w2',
+      subjectId: 's1',
+      classIds: ['c1'],
+      date: '2026-06-10',
+      startTime: '09:00',
+      duration: 60,
+      paperNumber: 1,
+      status: 'DRAFT',
+    };
+
+    const { exams: first } = allocateInvigilators(
+      { ...data, classes: [{ id: 'c1', name: '10A', level: '10', defaultRoomId: 'r1', curriculum: [] }], exams: [week1] },
+      { minInvigilators: 1, maxInvigilators: 1 }
+    );
+    const t1Week1 = first[0]?.invigilatorIds?.[0];
+
+    const { exams: second } = allocateInvigilators(
+      {
+        ...data,
+        classes: [{ id: 'c1', name: '10A', level: '10', defaultRoomId: 'r1', curriculum: [] }],
+        exams: [week1, week2],
+      },
+      { minInvigilators: 1, maxInvigilators: 1 }
+    );
+
+    const week2Row = second.find((e) => e.id === 'w2__c1');
+    expect(week2Row?.invigilatorIds?.length).toBe(1);
+    expect(week2Row?.invigilatorIds?.[0]).not.toBe(t1Week1);
+  });
+
+  it('excludes teachers teaching during exam in class schedule', () => {
+    const exam: ExamSession = {
+      id: 'ex1',
+      subjectId: 's1',
+      classIds: ['c1'],
+      date: '2026-06-01',
+      startTime: '09:00',
+      duration: 60,
+      paperNumber: 1,
+      status: 'DRAFT',
+    };
+
+    const scheduleData = {
+      ...data,
+      classes: [{ id: 'c1', name: '10A', level: '10', defaultRoomId: 'r1', curriculum: [] }],
+      exams: [exam],
+      schedule: {
+        c1: {
+          0: {
+            1: {
+              subjectId: 's2',
+              teacherId: 't1',
+              classId: 'c1',
+            },
+          },
+        },
+      },
+    };
+
+    const { exams } = allocateInvigilators(scheduleData, {
+      minInvigilators: 1,
+      maxInvigilators: 1,
+    });
+
+    expect(exams[0]?.invigilatorIds).not.toContain('t1');
+    expect(exams[0]?.invigilatorIds?.[0]).toBe('t2');
   });
 });

@@ -543,6 +543,9 @@ export const ExamsView: React.FC<ViewProps> = ({
                 checkMoveConflicts={checkMoveConflicts}
                 onSwap={swapExams}
                 onMoveToSlot={moveExamToSlot}
+                onToggleLock={(exam) =>
+                  updateExam({ ...exam, locked: !exam.locked })
+                }
                 isEditMode={isEditMode}
               />
             </div>

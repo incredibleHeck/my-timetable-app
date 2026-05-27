@@ -89,6 +89,11 @@ export const ExamCard: React.FC<Props> = ({
               {exam.paperLabel || `Paper ${exam.paperNumber}`}
             </span>
             {isLocked && <Lock size={12} className="text-slate-400" />}
+            {exam.status && exam.status !== "DRAFT" && (
+              <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-700 text-white">
+                {exam.status}
+              </span>
+            )}
           </div>
         </div>
 

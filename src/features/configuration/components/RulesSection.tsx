@@ -179,6 +179,49 @@ export const RulesSection: React.FC<RulesSectionProps> = ({
           </div>
         </div>
 
+        {/* Exam grid defaults */}
+        <div className="space-y-2 md:col-span-2">
+          <div className="flex items-center gap-2 mb-2">
+            <Clock size={18} className="text-amber-600" />
+            <h4 className="font-bold text-slate-700 text-sm">Exam Timetable Grid</h4>
+          </div>
+          <p className="text-xs text-slate-500 mb-3 leading-relaxed">
+            Session split cutoff and default drop times for the exam grid (morning vs afternoon columns).
+          </p>
+          <div className="grid grid-cols-3 gap-3">
+            {(
+              [
+                ["sessionCutoff", "Session cutoff", "11:30"],
+                ["session1DefaultTime", "Session 1 default", "09:00"],
+                ["session2DefaultTime", "Session 2 default", "14:00"],
+              ] as const
+            ).map(([key, label, fallback]) => (
+              <label key={key} className="flex flex-col gap-1 text-xs">
+                <span className="font-bold text-slate-500">{label}</span>
+                <input
+                  type="time"
+                  className="border border-slate-200 rounded px-2 py-1.5 font-mono text-sm"
+                  value={data.settings.examGrid?.[key] || fallback}
+                  onChange={(e) => {
+                    const nextData: AppData = {
+                      ...data,
+                      settings: {
+                        ...data.settings,
+                        examGrid: {
+                          ...data.settings.examGrid,
+                          [key]: e.target.value,
+                        },
+                      },
+                    };
+                    onUpdate(nextData);
+                    addActivity("SYSTEM", `Updated exam grid ${label}`, nextData);
+                  }}
+                />
+              </label>
+            ))}
+          </div>
+        </div>
+
         {/* Summary Stats */}
         <div className="space-y-2">
           <div className="flex items-center gap-2 mb-2">

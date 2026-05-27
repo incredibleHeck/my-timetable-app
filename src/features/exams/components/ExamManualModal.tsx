@@ -5,6 +5,8 @@ import { Layers, Users, BookOpen, Clock } from "lucide-react";
 import { generateId } from "../../../utils/utils";
 import { useToast } from "../../../components/ui/Toast";
 import { toLocalDateString } from "../logic/examUtils";
+import { validateExamMove } from "../logic/examValidation";
+import { ExamStatus } from "../types";
 
 interface Props {
   isOpen: boolean;
@@ -39,6 +41,7 @@ export const ExamManualModal: React.FC<Props> = ({
   const [hasTwoPapers, setHasTwoPapers] = useState(false);
   const [paper2StartTime, setPaper2StartTime] = useState("14:00");
   const [examLocked, setExamLocked] = useState(false);
+  const [examStatus, setExamStatus] = useState<ExamStatus>("DRAFT");
 
   // --- INITIALIZATION ---
   useEffect(() => {
@@ -56,6 +59,7 @@ export const ExamManualModal: React.FC<Props> = ({
         editingExam.paperLabel || `Paper ${editingExam.paperNumber || 1}`
       );
       setExamLocked(!!editingExam.locked);
+      setExamStatus(editingExam.status || "DRAFT");
 
       // Smart Detection: Does a "Paper 2" already exist for this group?
       // We look for same Subject + Date + At least one overlapping class
@@ -93,8 +97,26 @@ export const ExamManualModal: React.FC<Props> = ({
       setPaperLabel("Paper 1");
       setHasTwoPapers(false);
       setExamLocked(false);
+      setExamStatus("DRAFT");
     }
   }, [editingExam, isOpen, data.subjects, data.exams, activeId]);
+
+  const validateSessions = (
+    sessions: ExamSession[],
+    excludeIds: string[]
+  ): boolean => {
+    const others = (data.exams || []).filter((e) => !excludeIds.includes(e.id));
+    for (const session of sessions) {
+      const critical = validateExamMove(session, others, data).filter(
+        (c) => c.severity === "CRITICAL"
+      );
+      if (critical.length > 0) {
+        showToast(critical[0].message, "error");
+        return false;
+      }
+    }
+    return true;
+  };
 
   // --- HANDLERS ---
 
@@ -133,7 +155,7 @@ export const ExamManualModal: React.FC<Props> = ({
       roomId: examRoomId || undefined,
       paperNumber: parseInt(paperNumber) || 1,
       paperLabel: paperLabel,
-      status: editingExam ? editingExam.status : "DRAFT",
+      status: examStatus,
       locked: examLocked,
     };
 
@@ -147,36 +169,34 @@ export const ExamManualModal: React.FC<Props> = ({
       };
 
       // 2. Prepare Paper 2
-      const paper2: ExamSession = {
-        ...baseExam,
-        id: generateId(), // Default to new ID
-        startTime: paper2StartTime, // User-defined P2 time
-        paperNumber: 2,
-        paperLabel: "Paper 2",
-        roomId: undefined, // Usually P2 room needs re-confirmation or same? Leaving blank is safer to avoid conflicts.
-        invigilatorIds: [], // Clear invigilators for P2 as they are likely different
-      };
-
-      // 3. Try to find existing Paper 2 ID to update instead of creating duplicate
+      let existingP2: ExamSession | undefined;
       if (editingExam) {
-        const existingP2 = data.exams?.find(
+        existingP2 = data.exams?.find(
           (e) =>
             e.subjectId === paper1.subjectId &&
             e.date === paper1.date &&
             e.paperNumber === 2 &&
-            // Matches any of the selected classes (Loose matching)
             e.classIds.some((cid) => paper1.classIds.includes(cid))
         );
-
-        if (existingP2) {
-          paper2.id = existingP2.id;
-          // Optionally preserve existing P2 staff/room if not explicitly cleared
-          // paper2.invigilatorIds = existingP2.invigilatorIds;
-        }
       }
+
+      const paper2: ExamSession = {
+        ...baseExam,
+        id: existingP2?.id ?? generateId(),
+        startTime: paper2StartTime,
+        paperNumber: 2,
+        paperLabel: "Paper 2",
+        roomId: existingP2?.roomId ?? (examRoomId || undefined),
+        invigilatorIds: existingP2?.invigilatorIds ?? [],
+      };
+
+      const excludeIds = [paper1.id, paper2.id];
+      if (!validateSessions([paper1, paper2], excludeIds)) return;
 
       onSave([paper1, paper2]);
     } else {
+      const excludeIds = [baseExam.id].filter(Boolean);
+      if (!validateSessions([baseExam], excludeIds)) return;
       onSave(baseExam);
     }
 
@@ -216,6 +236,16 @@ export const ExamManualModal: React.FC<Props> = ({
       <div className="space-y-5 max-h-[75vh] overflow-y-auto px-1 custom-scrollbar">
         {/* SECTION 1: CORE DETAILS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Select
+            label="Status"
+            value={examStatus}
+            onChange={(e) => setExamStatus(e.target.value as ExamStatus)}
+            options={[
+              { value: "DRAFT", label: "Draft" },
+              { value: "PUBLISHED", label: "Published" },
+              { value: "COMPLETED", label: "Completed" },
+            ]}
+          />
           <div className="md:col-span-2">
             <Select
               label="Subject"

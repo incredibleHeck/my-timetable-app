@@ -1,0 +1,59 @@
+import { describe, it, expect } from 'vitest';
+import {
+  getPeriodIndicesOverlapping,
+  getWeekKey,
+  pickExamRoom,
+  getExamGridDefaults,
+  seededShuffle,
+} from '../src/features/exams/logic/examUtils';
+import { DEFAULT_DATA } from '../src/utils/constants';
+
+describe('examUtils', () => {
+  const timeSlots = [
+    { start: '08:00', end: '09:00' },
+    { start: '09:00', end: '10:00' },
+    { start: '10:00', end: '11:00' },
+    { start: '13:00', end: '14:00' },
+  ];
+
+  it('returns multiple overlapping period indices', () => {
+    const indices = getPeriodIndicesOverlapping(timeSlots, 9 * 60 + 30, 10 * 60 + 30);
+    expect(indices).toContain(1);
+    expect(indices).toContain(2);
+  });
+
+  it('produces stable week keys', () => {
+    expect(getWeekKey('2026-06-03')).toBe(getWeekKey('2026-06-05'));
+    expect(getWeekKey('2026-06-03')).not.toBe(getWeekKey('2026-06-10'));
+  });
+
+  it('picks a room that fits student count', () => {
+    const classes = [
+      { id: 'c1', name: '10A', defaultRoomId: 'r1', studentCount: 25, curriculum: [] },
+    ];
+    const rooms = [
+      { id: 'r1', name: 'Hall', capacity: 30, type: 'HALL' },
+      { id: 'r2', name: 'Small', capacity: 10, type: 'CLASS' },
+    ];
+    expect(pickExamRoom(['c1'], classes as any, rooms as any)).toBe('r1');
+  });
+
+  it('derives exam grid defaults from settings', () => {
+    const defaults = getExamGridDefaults({
+      ...DEFAULT_DATA.settings,
+      examGrid: {
+        sessionCutoff: '12:00',
+        session1DefaultTime: '08:30',
+        session2DefaultTime: '13:30',
+      },
+    });
+    expect(defaults.sessionCutoff).toBe('12:00');
+    expect(defaults.session1DefaultTime).toBe('08:30');
+    expect(defaults.session2DefaultTime).toBe('13:30');
+  });
+
+  it('seeded shuffle is deterministic', () => {
+    const input = [1, 2, 3, 4, 5];
+    expect(seededShuffle(input, 99)).toEqual(seededShuffle(input, 99));
+  });
+});

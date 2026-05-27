@@ -1,10 +1,13 @@
 import { AppData, ExamSession } from "../../../types";
-import { generateId } from "../../../utils/utils";
 import {
   getConstraintDayIndex,
-  getPeriodIndex,
+  getExamTimeRange,
+  getInvigilationSplitId,
+  getPeriodIndicesOverlapping,
   getStreamLevel,
+  getWeekKey,
   isOverlapping,
+  isTeacherBusyInClassSchedule,
   parseTime,
 } from "./examUtils";
 
@@ -28,16 +31,44 @@ const shuffleArray = <T>(array: T[]): T[] => {
   return result;
 };
 
+type DaySlotRange = {
+  start: number;
+  end: number;
+  periodIndices: number[];
+};
+
+const buildDaySlots = (
+  classExams: ExamSession[],
+  timeSlots: AppData["settings"]["timeSlots"]
+): DaySlotRange[] =>
+  classExams.map((e) => {
+    const { start, end } = getExamTimeRange(e);
+    return {
+      start,
+      end,
+      periodIndices: getPeriodIndicesOverlapping(timeSlots, start, end),
+    };
+  });
+
 const isBlockedByConstraints = (
   teacher: AppData["teachers"][0],
   dayIdx: number | null,
-  daySlots: { periodIdx: number }[]
+  daySlots: DaySlotRange[]
 ): boolean => {
   if (dayIdx === null) return false;
-  return daySlots.some(
-    (slot) => teacher.constraints?.[dayIdx]?.[slot.periodIdx] === true
+  return daySlots.some((slot) =>
+    slot.periodIndices.some(
+      (pIdx) => teacher.constraints?.[dayIdx]?.[pIdx] === true
+    )
   );
 };
+
+const isTeachingDuringSlots = (
+  teacherId: string,
+  classExams: ExamSession[],
+  data: AppData
+): boolean =>
+  classExams.some((e) => isTeacherBusyInClassSchedule(teacherId, e, data));
 
 export const allocateInvigilators = (
   data: AppData,
@@ -50,8 +81,16 @@ export const allocateInvigilators = (
   const teacherLoad: Record<string, number> = {};
   teachers.forEach((t) => (teacherLoad[t.id] = 0));
 
-  const teacherWeeklyStreams: Record<string, Set<string>> = {};
-  teachers.forEach((t) => (teacherWeeklyStreams[t.id] = new Set()));
+  /** weekKey -> teacherId -> Set of stream levels */
+  const weeklyStreamsByWeek: Record<string, Record<string, Set<string>>> = {};
+
+  const getWeekStreams = (weekKey: string, teacherId: string): Set<string> => {
+    if (!weeklyStreamsByWeek[weekKey]) weeklyStreamsByWeek[weekKey] = {};
+    if (!weeklyStreamsByWeek[weekKey][teacherId]) {
+      weeklyStreamsByWeek[weekKey][teacherId] = new Set();
+    }
+    return weeklyStreamsByWeek[weekKey][teacherId];
+  };
 
   const resolveLevel = (classId: string) =>
     getStreamLevel(classId, classes);
@@ -59,21 +98,19 @@ export const allocateInvigilators = (
   exams
     .filter((e) => e.locked)
     .forEach((ex) => {
+      const weekKey = getWeekKey(ex.date);
       (ex.invigilatorIds || []).forEach((tId) => {
         teacherLoad[tId]++;
         ex.classIds.forEach((cid) => {
-          const lvl = resolveLevel(cid);
-          teacherWeeklyStreams[tId]?.add(lvl);
+          getWeekStreams(weekKey, tId).add(resolveLevel(cid));
         });
       });
     });
 
-  const getPeriodIdx = (timeStr: string) =>
-    getPeriodIndex(timeStr, settings.timeSlots);
-
   const uniqueDates = Array.from(new Set(exams.map((e) => e.date))).sort();
 
   uniqueDates.forEach((date) => {
+    const weekKey = getWeekKey(date);
     const examsOnDate = exams.filter((e) => e.date === date);
     const lockedExams = examsOnDate.filter((e) => e.locked);
     const unlockedExams = examsOnDate.filter((e) => !e.locked);
@@ -84,8 +121,7 @@ export const allocateInvigilators = (
     const busyTeachers: Record<string, { start: number; end: number }[]> = {};
 
     lockedExams.forEach((exam) => {
-      const start = parseTime(exam.startTime);
-      const end = start + exam.duration;
+      const { start, end } = getExamTimeRange(exam);
       (exam.invigilatorIds || []).forEach((tId) => {
         if (!busyTeachers[tId]) busyTeachers[tId] = [];
         busyTeachers[tId].push({ start, end });
@@ -102,7 +138,6 @@ export const allocateInvigilators = (
     const formatClass = (classId: string) =>
       classes.find((c) => c.id === classId)?.name || classId;
 
-    // STEP A: Assign MINIMUM teachers
     shuffledClasses.forEach((classId) => {
       const classLevel = resolveLevel(classId);
       const classExams = unlockedExams.filter((e) =>
@@ -110,19 +145,13 @@ export const allocateInvigilators = (
       );
       if (classExams.length === 0) return;
 
-      const daySlots = classExams.map((e) => {
-        const start = parseTime(e.startTime);
-        return {
-          start,
-          end: start + e.duration,
-          periodIdx: getPeriodIdx(e.startTime),
-        };
-      });
+      const daySlots = buildDaySlots(classExams, settings.timeSlots);
 
       const availableTeachers = teachers.filter((t) => {
         if (config.excludedTeacherIds?.includes(t.id)) return false;
-        if (teacherWeeklyStreams[t.id].has(classLevel)) return false;
+        if (getWeekStreams(weekKey, t.id).has(classLevel)) return false;
         if (isBlockedByConstraints(t, dayIdx, daySlots)) return false;
+        if (isTeachingDuringSlots(t.id, classExams, data)) return false;
 
         if (busyTeachers[t.id]) {
           const isBusyLocked = busyTeachers[t.id].some((busySlot) =>
@@ -145,10 +174,9 @@ export const allocateInvigilators = (
               e.classIds.includes(otherClassId)
             );
             return otherClassExams.some((oe) => {
-              const oStart = parseTime(oe.startTime);
-              const oEnd = oStart + oe.duration;
+              const oRange = getExamTimeRange(oe);
               return daySlots.some((s) =>
-                isOverlapping(s.start, s.end, oStart, oEnd)
+                isOverlapping(s.start, s.end, oRange.start, oRange.end)
               );
             });
           }
@@ -173,7 +201,7 @@ export const allocateInvigilators = (
       classTeams[classId] = selectedIds;
       selectedIds.forEach((id) => {
         teacherLoad[id]++;
-        teacherWeeklyStreams[id].add(classLevel);
+        getWeekStreams(weekKey, id).add(classLevel);
       });
 
       if (selectedIds.length === 0) {
@@ -183,7 +211,6 @@ export const allocateInvigilators = (
       }
     });
 
-    // STEP B: Distribute EXTRA teachers
     if (config.maxInvigilators > config.minInvigilators) {
       shuffledClasses.forEach((classId) => {
         const classLevel = resolveLevel(classId);
@@ -193,22 +220,15 @@ export const allocateInvigilators = (
         const classExams = unlockedExams.filter((e) =>
           e.classIds.includes(classId)
         );
-        const daySlots = classExams.map((e) => {
-          const start = parseTime(e.startTime);
-          return {
-            start,
-            end: start + e.duration,
-            periodIdx: getPeriodIdx(e.startTime),
-          };
-        });
-
+        const daySlots = buildDaySlots(classExams, settings.timeSlots);
         const extrasNeeded = config.maxInvigilators - currentTeam.length;
 
         const availableExtras = teachers.filter((t) => {
           if (currentTeam.includes(t.id)) return false;
           if (config.excludedTeacherIds?.includes(t.id)) return false;
-          if (teacherWeeklyStreams[t.id].has(classLevel)) return false;
+          if (getWeekStreams(weekKey, t.id).has(classLevel)) return false;
           if (isBlockedByConstraints(t, dayIdx, daySlots)) return false;
+          if (isTeachingDuringSlots(t.id, classExams, data)) return false;
 
           if (busyTeachers[t.id]) {
             const isBusyLocked = busyTeachers[t.id].some((busySlot) =>
@@ -231,10 +251,9 @@ export const allocateInvigilators = (
                 e.classIds.includes(otherClassId)
               );
               return otherClassExams.some((oe) => {
-                const oStart = parseTime(oe.startTime);
-                const oEnd = oStart + oe.duration;
+                const oRange = getExamTimeRange(oe);
                 return daySlots.some((s) =>
-                  isOverlapping(s.start, s.end, oStart, oEnd)
+                  isOverlapping(s.start, s.end, oRange.start, oRange.end)
                 );
               });
             }
@@ -252,24 +271,22 @@ export const allocateInvigilators = (
         classTeams[classId] = [...currentTeam, ...extraIds];
         extraIds.forEach((id) => {
           teacherLoad[id]++;
-          teacherWeeklyStreams[id].add(classLevel);
+          getWeekStreams(weekKey, id).add(classLevel);
         });
       });
     }
 
-    // STEP C: Per-class split rows
     unlockedExams.forEach((originalExam) => {
       originalExam.classIds.forEach((cid) => {
         const team = classTeams[cid] || [];
         if (team.length === 0) {
-          const clsName = formatClass(cid);
           warnings.push(
-            `No invigilators for ${clsName} — ${originalExam.startTime} on ${date}.`
+            `No invigilators for ${formatClass(cid)} — ${originalExam.startTime} on ${date}.`
           );
         }
         resultExams.push({
           ...originalExam,
-          id: generateId(),
+          id: getInvigilationSplitId(originalExam.id, cid),
           classIds: [cid],
           invigilatorIds: team,
         });

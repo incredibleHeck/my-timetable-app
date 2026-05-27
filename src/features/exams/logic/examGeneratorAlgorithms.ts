@@ -4,6 +4,8 @@ import {
   formatTime,
   getDayEndMinutes,
   parseTime,
+  pickExamRoom,
+  seededShuffle,
   toLocalDateString,
 } from "./examUtils";
 
@@ -18,6 +20,7 @@ interface GeneratorConfig {
   maxPerDay: number;
   gapMinutes: number;
   syncStreams: boolean;
+  deterministic?: boolean;
 }
 
 export interface UnscheduledUnit {
@@ -85,6 +88,7 @@ export const generateExams = (
         if (involvedClassIds.length === 0) return;
 
         attemptSchedule(
+          data,
           [involvedClassIds],
           sub,
           p,
@@ -126,9 +130,12 @@ export const generateExams = (
         }
       });
 
-      schedulingUnits = shuffle(schedulingUnits);
+      schedulingUnits = config.deterministic
+        ? seededShuffle(schedulingUnits)
+        : shuffle(schedulingUnits);
       schedulingUnits.forEach((unit) => {
         attemptSchedule(
+          data,
           [unit.classIds],
           unit.subject,
           p,
@@ -149,6 +156,7 @@ export const generateExams = (
 };
 
 const attemptSchedule = (
+  data: AppData,
   groups: string[][],
   subject: { id: string; duration: number },
   paperNum: number,
@@ -212,7 +220,7 @@ const attemptSchedule = (
             paperNumber: paperNum,
             paperLabel: `Paper ${paperNum}`,
             status: "DRAFT",
-            roomId: undefined,
+            roomId: pickExamRoom(groupClassIds, data.classes, data.rooms),
             locked: false,
           });
 

@@ -1,5 +1,5 @@
 import { AppData, ExamSession } from "../../../types";
-import { examsOverlap } from "./examUtils";
+import { examsOverlap, isTeacherBusyInClassSchedule } from "./examUtils";
 
 export interface ExamConflict {
   type: "STUDENT" | "ROOM" | "STAFF" | "CAPACITY";
@@ -90,6 +90,19 @@ export function validateExamMove(
         message: `Staff Conflict: ${staffNames} is already invigilating elsewhere.`,
         affectedIds: [staffClash.id],
       });
+    }
+
+    for (const tId of exam.invigilatorIds) {
+      if (isTeacherBusyInClassSchedule(tId, exam, data)) {
+        const tName = data.teachers.find((t) => t.id === tId)?.name || "Teacher";
+        conflicts.push({
+          type: "STAFF",
+          severity: "WARNING",
+          message: `Schedule Warning: ${tName} is teaching a class during this exam.`,
+          affectedIds: [],
+        });
+        break;
+      }
     }
   }
 

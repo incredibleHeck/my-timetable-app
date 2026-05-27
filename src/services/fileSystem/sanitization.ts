@@ -48,8 +48,13 @@ export const sanitizeAppData = (raw: any): AppData => {
     classes,
     jointClasses: Array.isArray(raw.jointClasses) ? raw.jointClasses : [],
     electives: Array.isArray(raw.electives) ? raw.electives : [],
-    exams: Array.isArray(raw.exams) ? raw.exams : [],
     examRosters: Array.isArray(raw.examRosters) ? raw.examRosters : [],
+    exams:
+      Array.isArray(raw.examRosters) && raw.examRosters.length > 0
+        ? []
+        : Array.isArray(raw.exams)
+          ? raw.exams
+          : [],
     dutyLocations: Array.isArray(raw.dutyLocations) ? raw.dutyLocations : [],
     dutyAssignments: Array.isArray(raw.dutyAssignments)
       ? raw.dutyAssignments

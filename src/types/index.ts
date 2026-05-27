@@ -68,6 +68,12 @@ export interface Settings {
   enforceSubjectDaySpread?: boolean;
   /** Override default soft scoring weights used during construction */
   scoringWeightOverrides?: ScoringWeightOverrides;
+  /** Exam timetable grid: session split and default drop times */
+  examGrid?: {
+    sessionCutoff?: string;
+    session1DefaultTime?: string;
+    session2DefaultTime?: string;
+  };
 }
 
 // ----------------------------------------------------------------------
