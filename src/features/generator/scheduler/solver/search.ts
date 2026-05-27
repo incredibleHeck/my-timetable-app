@@ -73,7 +73,7 @@ export function findValidMoves(
                 }
                 
                 // 3. Room Assignment
-                const rId = determineRoom(d, p, p2, u, state, data, subjectMap, classMap);
+                const rId = determineRoom(d, p, p2, u, state, data, subjectMap, classMap, roomMap);
                 if (!rId) {
                     gangValid = false; break;
                 }
@@ -114,6 +114,7 @@ function evaluateGangAtSlot(
   roomMap: Map<string, Room>,
   tabu?: TabuManager,
   iteration: number = 0,
+  bestKnownCost: number = Infinity,
 ): SlotMove {
   const globalPeriods = data.settings.periodsPerDay;
   let possible = true;
@@ -165,7 +166,7 @@ function evaluateGangAtSlot(
     }
     totalPenalty += evalResult.totalCost;
 
-    const rId = forceDetermineRoom(d, p, p2, u, state, data, subjectMap, classMap);
+    const rId = forceDetermineRoom(d, p, p2, u, state, data, subjectMap, classMap, roomMap);
     if (!rId) {
       possible = false;
       break;
@@ -175,13 +176,25 @@ function evaluateGangAtSlot(
 
   if (!possible) return FAILED_SLOT_MOVE;
 
-  const isTabu = tabu ? tabu.isTabu(primaryUnit.id, d, p, iteration) : false;
-  if (isTabu && totalPenalty > 0) totalPenalty += PENALTY_TABU_MOVE;
+  if (
+    tabu?.shouldPenalizeTabu(
+      primaryUnit.id,
+      d,
+      p,
+      iteration,
+      totalPenalty,
+      bestKnownCost,
+    )
+  ) {
+    totalPenalty += PENALTY_TABU_MOVE;
+  }
 
   const score = calculateScore(state, data, d, p, primaryUnit, teacherMap, subjectMap);
   const evictions = new Set<string>();
   gang.forEach((gUnit) => {
-    findUnitsInSlot(state, gUnit, d, p, sharedP2).forEach((v) => evictions.add(v));
+    findUnitsInSlot(state, gUnit, d, p, sharedP2, subjectMap, classMap, roomMap).forEach(
+      (v) => evictions.add(v),
+    );
   });
 
   return {
@@ -202,11 +215,14 @@ function getSinglePartnerGangAtSlot(
   p: number,
   p2: number,
   unitMap: Map<string, AllocationUnit>,
+  subjectMap: Map<string, Subject>,
+  classMap: Map<string, ClassGroup>,
+  roomMap: Map<string, Room>,
 ): string | null {
   const victimGangIds = new Set<string>();
 
   gang.forEach((unit) => {
-    findUnitsInSlot(state, unit, d, p, p2).forEach((victimId) => {
+    findUnitsInSlot(state, unit, d, p, p2, subjectMap, classMap, roomMap).forEach((victimId) => {
       const victimUnit = unitMap.get(victimId);
       if (victimUnit) victimGangIds.add(getGangId(victimUnit));
     });
@@ -279,6 +295,7 @@ export function findMinConflictMove(
         roomMap,
         tabu,
         iteration,
+        bestMove.cost,
       );
 
       if (slotMove.cost >= Infinity) continue;
@@ -341,6 +358,9 @@ export function findSwapMove(
         p,
         p2,
         unitMap,
+        subjectMap,
+        classMap,
+        roomMap,
       );
       if (!partnerGangId) continue;
 

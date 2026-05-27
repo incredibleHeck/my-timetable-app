@@ -63,6 +63,10 @@ export class RepairController {
     return this.abandonedLeaders;
   }
 
+  getBestUnplaced(): number {
+    return this.bestUnplaced;
+  }
+
   isAbandoned(gangId: string): boolean {
     return this.abandonedGangIds.has(gangId);
   }

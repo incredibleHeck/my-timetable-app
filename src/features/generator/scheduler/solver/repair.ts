@@ -37,7 +37,7 @@ export function runMinConflictsRepair(
     .map((id) => gangMap.get(id)?.[0])
     .filter((leader): leader is AllocationUnit => !!leader);
   const repairSet = new Set(repairQueue.map((u) => getGangId(u)));
-  const tabu = new TabuManager(10);
+  const tabu = new TabuManager();
   const controller = new RepairController(repairQueue.length);
 
   for (let step = 0; step < maxSteps && repairQueue.length > 0; step++) {

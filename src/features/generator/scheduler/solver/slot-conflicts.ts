@@ -1,5 +1,19 @@
-import { AppData, Conflict, Teacher, Subject } from "../../../../types";
+import { AppData, Conflict, Teacher, Subject, ClassGroup, Room } from "../../../../types";
 import { AllocationUnit, SchedulerState } from "../core/types";
+import { getRoomCandidates } from "../logic/rooms";
+
+function resolvePrimaryRoomId(
+  unit: AllocationUnit,
+  subjectMap: Map<string, Subject>,
+  classMap: Map<string, ClassGroup>,
+  roomMap: Map<string, Room>,
+): string | undefined {
+  const subject = subjectMap.get(unit.subjectId);
+  const classGroup = classMap.get(unit.classIds[0]);
+  const candidates = getRoomCandidates(unit, subject, classGroup, roomMap);
+  if (candidates.length > 0) return candidates[0];
+  return subject?.requiredRoomId || unit.defaultRoomId || undefined;
+}
 
 export function countPotentialConflicts(
   unit: AllocationUnit,
@@ -10,6 +24,8 @@ export function countPotentialConflicts(
   p2: number,
   teacherMap: Map<string, Teacher>,
   subjectMap: Map<string, Subject>,
+  classMap: Map<string, ClassGroup>,
+  roomMap: Map<string, Room>,
 ): number {
   let count = 0;
 
@@ -24,8 +40,7 @@ export function countPotentialConflicts(
     if (currentLoad + unit.duration > max) count += 2;
   }
 
-  const subject = subjectMap.get(unit.subjectId);
-  const roomId = subject?.requiredRoomId || unit.defaultRoomId;
+  const roomId = resolvePrimaryRoomId(unit, subjectMap, classMap, roomMap);
   if (roomId) {
     if (state.roomOccupancy[roomId]?.[d]?.[p]) count++;
     if (p2 !== -1 && state.roomOccupancy[roomId]?.[d]?.[p2]) count++;
@@ -50,6 +65,9 @@ export function findUnitsInSlot(
   d: number,
   p: number,
   p2: number,
+  subjectMap?: Map<string, Subject>,
+  classMap?: Map<string, ClassGroup>,
+  roomMap?: Map<string, Room>,
 ): Set<string> {
   const victimIds = new Set<string>();
 
@@ -61,8 +79,19 @@ export function findUnitsInSlot(
     collectEvictions(state, d, p, p2, cid, "CLASS", victimIds),
   );
 
-  const roomId = unit.defaultRoomId;
-  if (roomId) {
+  const roomIds =
+    subjectMap && classMap && roomMap
+      ? getRoomCandidates(
+          unit,
+          subjectMap.get(unit.subjectId),
+          classMap.get(unit.classIds[0]),
+          roomMap,
+        )
+      : unit.defaultRoomId
+        ? [unit.defaultRoomId]
+        : [];
+
+  for (const roomId of roomIds) {
     collectEvictions(state, d, p, p2, roomId, "ROOM", victimIds);
   }
 

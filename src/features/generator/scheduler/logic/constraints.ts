@@ -3,6 +3,7 @@ import { AllocationUnit, SchedulerState } from "../core/types";
 import { isOccasionBlocked } from "../../../../utils/utils";
 import { checkSubjectContinuity } from "../validation/load-checks";
 import { ValidationContext } from "../validation/types";
+import { getRoomCandidates } from "./rooms";
 
 /**
  * ARCHITECT NOTES:
@@ -110,6 +111,21 @@ export const checkHardConstraints = (
     }
     if (count + duration > maxSubj) return false;
 
+    const maxCorePerDay = data.settings.maxCorePeriodsPerDay;
+    if (maxCorePerDay && unit.isCore) {
+      let coreCount = 0;
+      const daySched = state.schedule[cid]?.[d];
+      if (daySched) {
+        Object.entries(daySched).forEach(([pStr, slot]) => {
+          const pIdx = parseInt(pStr);
+          const occupantId = state.classOccupancy[cid]?.[d]?.[pIdx];
+          if (occupantId && ignoredOccupants?.has(occupantId)) return;
+          if (slot?.isCore) coreCount += slot.duration || 1;
+        });
+      }
+      if (coreCount + duration > maxCorePerDay) return false;
+    }
+
     const cls = classMap.get(cid);
     const structure = cls?.structure || data.settings.dayStructure;
     const maxPeriods = cls?.periodCount ?? data.settings.periodsPerDay;
@@ -134,7 +150,9 @@ export const checkHardConstraints = (
 
   const subject = subjectMap.get(subjectId);
   const repClass = classMap.get(classIds[0]);
-  const targetRoomId = subject?.requiredRoomId || repClass?.defaultRoomId;
+  const candidates = getRoomCandidates(unit, subject, repClass, roomMap);
+  const targetRoomId =
+    candidates[0] ?? subject?.requiredRoomId ?? repClass?.defaultRoomId ?? unit.defaultRoomId;
 
   if (targetRoomId) {
     const roomOccP1 = state.roomOccupancy[targetRoomId]?.[d]?.[p];
@@ -147,6 +165,8 @@ export const checkHardConstraints = (
 
     const room = roomMap.get(targetRoomId);
     if (room && repClass && (repClass.studentCount || 0) > room.capacity) return false;
+  } else if (candidates.length > 0 || subject?.requiredRoomId) {
+    return false;
   }
 
   if (subject?.isSingleResource) {

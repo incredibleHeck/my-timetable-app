@@ -62,6 +62,8 @@ export interface Settings {
   maxTeacherPeriodsPerDay?: number;
   /** School-wide weekly cap for workload analysis (per profile) */
   maxTeachingPeriodsPerWeek?: number;
+  /** Hard cap on core-subject periods per class per day (optional) */
+  maxCorePeriodsPerDay?: number;
 }
 
 // ----------------------------------------------------------------------

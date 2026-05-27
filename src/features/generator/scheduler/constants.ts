@@ -15,7 +15,7 @@ export const SOLVER_TIME_LIMIT_MS = 28000; // 28 seconds (browser safety margin)
 /** Maximum iterations in the repair phase before stopping */
 export const MAX_REPAIR_STEPS = 5000;
 
-/** Sample size for heuristic search (when full scan is too expensive) */
+/** @deprecated Tournament sampling removed; kept for compatibility */
 export const HEURISTIC_SAMPLE_SIZE = 15;
 
 // --- PRIORITY TIERS ---
@@ -62,11 +62,23 @@ export const PENALTY_TABU_MOVE = 10000; // Penaliz recent moves (tabu search)
 export const PENALTY_SUBJECT_REPETITION = 5000; // Multiple occurrences same period
 
 // --- SEARCH STRATEGY ---
-/** Size of tabu list (number of recent moves to remember) */
-export const TABU_LIST_SIZE = 10;
+/** Default tabu tenure (iterations a move stays forbidden) */
+export const TABU_TENURE_DEFAULT = 25;
 
-/** Cleanup frequency for tabu list (remove entries after N iterations) */
+/** Minimum tabu tenure after successful repair moves */
+export const TABU_TENURE_MIN = 10;
+
+/** Maximum tabu tenure when repair stagnates */
+export const TABU_TENURE_MAX = 40;
+
+/** @deprecated Use TABU_TENURE_DEFAULT */
+export const TABU_LIST_SIZE = TABU_TENURE_DEFAULT;
+
+/** Cleanup frequency for tabu list (remove expired entries) */
 export const TABU_CLEANUP_FREQUENCY = 50;
+
+/** Number of independent solver attempts within the time budget */
+export const SOLVER_RUN_COUNT = 3;
 
 /** Repair iterations without net improvement before diversification */
 export const REPAIR_STAGNATION_LIMIT = 200;
@@ -94,8 +106,42 @@ export const MAX_BACKTRACK_ATTEMPTS = 50;
  * MRV (Minimum Remaining Values) Configuration
  * Controls how aggressively we sort units by constraint tightness
  */
-export const MRV_CRITICAL_FIRST = true; // Process critical units before others
-export const MRV_SAMPLE_THRESHOLD = 20; // Use sampling if > N units to evaluate
+/** Process critical units before others (used in construction queue split) */
+export const MRV_CRITICAL_FIRST = true;
+
+/** Full MRV scan when queue size is below this threshold */
+export const MRV_SAMPLE_THRESHOLD = 20;
+
+// --- SCORING WEIGHTS (construction soft objectives) ---
+export const SCORING_WEIGHTS = {
+  TEACHER_GAP: -50,
+  CLASS_GAP: -400,
+  TEACHER_CONTINUITY: -600,
+  TEACHER_CONSECUTIVE: -500,
+  SUBJECT_DISTRIBUTION: -30,
+  ROOM_EFFICIENCY: 10,
+  LUNCH_PROTECTION: -100,
+  MORNING_BIAS: 0.1,
+  HCD_PRIME_BIAS: 500,
+  SCARCITY_PENALTY: -500,
+  TEACHER_WINDOW: -200,
+  ROOM_CHANGE: -50,
+  VARIETY_PENALTY: -150,
+  FRIDAY_AFTERNOON: -30,
+  WEEKLY_UNBALANCE: -100,
+  SUBJECT_ADJACENCY_REWARD: 5000,
+  SUBJECT_SPLIT_PENALTY: -10000,
+  TEACHER_LOAD_EXPONENT: -1000,
+} as const;
+
+/** Room penalty weights used in repair cost model */
+export const ROOM_PENALTY_DISPLACEMENT = 1000;
+export const ROOM_PENALTY_WANDERING = 500;
+export const REPAIR_NO_ROOM_COST = 5000;
+export const REPAIR_CONTINUITY_COST = 5000;
+export const EVICTION_COST_PART_TIMER = 18000;
+export const EVICTION_COST_SPECIALIST_DOUBLE = 15000;
+export const EVICTION_COST_SPECIALIST_SINGLE = 12000;
 
 /**
  * CONSTRAINT CHECKING MODES

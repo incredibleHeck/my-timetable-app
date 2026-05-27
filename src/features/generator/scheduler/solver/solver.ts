@@ -24,22 +24,54 @@ import {
   PlacementRecord,
   ConstructionMaps,
 } from "./construction";
-import { PRIORITY_CRITICAL, MAX_REPAIR_STEPS } from "../constants";
+import {
+  PRIORITY_CRITICAL,
+  MAX_REPAIR_STEPS,
+  TABU_TENURE_DEFAULT,
+  TABU_CLEANUP_FREQUENCY,
+  MRV_CRITICAL_FIRST,
+  SOLVER_RUN_COUNT,
+} from "../constants";
+import { createSeededRng, shuffleInPlace } from "../utils/rng";
 
-/**
- * CSP SOLVER: Final Integrated Version
- * Orchestrates Phase 1 (Construction) and Phase 2 (Repair) with O(1) performance.
- */
-export const solveSmart = (
+export type SolverProgressCallback = (
+  phase: string,
+  progress: number,
+  total: number,
+  conflicts: number,
+) => boolean;
+
+export type SolverOptions = {
+  /** Base seed for shuffled construction order (run N uses seed + N). */
+  seed?: number;
+  /** Independent solve attempts; best result is returned. */
+  runs?: number;
+  /** Shuffle construction queues between runs. */
+  shuffleConstruction?: boolean;
+};
+
+export type SolverResult = {
+  schedule: SchedulerState["schedule"];
+  conflicts: Conflict[];
+  state: SchedulerState;
+  iterations: number;
+  runIndex: number;
+};
+
+function compareSolverResults(a: SolverResult, b: SolverResult): number {
+  if (a.conflicts.length !== b.conflicts.length) {
+    return a.conflicts.length - b.conflicts.length;
+  }
+  return b.state.unitPlacements.size - a.state.unitPlacements.size;
+}
+
+function runSingleSolve(
   units: AllocationUnit[],
   data: AppData,
-  onProgress?: (
-    phase: string,
-    progress: number,
-    total: number,
-    conflicts: number,
-  ) => boolean,
-) => {
+  onProgress: SolverProgressCallback | undefined,
+  options: SolverOptions,
+  runIndex: number,
+): SolverResult {
   const teacherMap = new Map<string, Teacher>(
     data.teachers.map((t) => [t.id, t]),
   );
@@ -53,8 +85,8 @@ export const solveSmart = (
   const unitMap = new Map<string, AllocationUnit>();
 
   const state = initializeState(data);
-
   const gangMap = new Map<string, AllocationUnit[]>();
+
   for (const u of units) {
     unitMap.set(u.id, u);
     u.priority = calculatePriority(u, data, teacherMap, subjectMap);
@@ -64,10 +96,15 @@ export const solveSmart = (
     gangMap.get(gangId)!.push(u);
   }
 
-  const unplacedGangLeaders = units.filter((u) => {
+  let unplacedGangLeaders = units.filter((u) => {
     const gangId = getGangId(u);
     return gangMap.get(gangId)![0].id === u.id;
   });
+
+  if (options.shuffleConstruction === true || runIndex > 0) {
+    const seed = (options.seed ?? Date.now()) + runIndex * 9973;
+    shuffleInPlace(unplacedGangLeaders, createSeededRng(seed));
+  }
 
   const totalGangs = unplacedGangLeaders.length;
   const constructionMaps: ConstructionMaps = {
@@ -89,19 +126,19 @@ export const solveSmart = (
     placed: number,
     total: number,
     unplacedCount: number,
-  ) => {
-    if (!onProgress) return true;
-    return onProgress("CONSTRUCTION", placed, total, unplacedCount);
-  };
+  ) => onProgress?.("CONSTRUCTION", placed, total, unplacedCount) ?? true;
 
-  // --- PHASE 1: CONSTRUCTION ---
-
-  const rank1Queue = unplacedGangLeaders.filter(
+  let rank1Queue = unplacedGangLeaders.filter(
     (u) => u.priority >= PRIORITY_CRITICAL,
   );
-  const remainingAfterRank1 = unplacedGangLeaders.filter(
+  let remainingAfterRank1 = unplacedGangLeaders.filter(
     (u) => u.priority < PRIORITY_CRITICAL,
   );
+
+  if (!MRV_CRITICAL_FIRST) {
+    rank1Queue = [...unplacedGangLeaders];
+    remainingAfterRank1 = [];
+  }
 
   let rank1Result = runConstructionQueue(
     rank1Queue,
@@ -142,9 +179,8 @@ export const solveSmart = (
     backtrackAttempts = levelResult.backtrackAttempts;
   }
 
-  // --- PHASE 2: REPAIR (Min-Conflicts + Tabu Search) ---
   let repairSteps = 0;
-  const tabu = new TabuManager(25);
+  const tabu = new TabuManager({ tenure: TABU_TENURE_DEFAULT });
 
   const repairQueue = [...unplacedDuringConstruction].sort(
     (a, b) => b.rankLevel - a.rankLevel,
@@ -158,8 +194,13 @@ export const solveSmart = (
     if (onProgress && repairSteps % 10 === 0) {
       if (
         !onProgress("REPAIR", repairSteps, MAX_REPAIR_STEPS, repairQueue.length)
-      )
+      ) {
         break;
+      }
+    }
+
+    if (repairSteps % TABU_CLEANUP_FREQUENCY === 0) {
+      tabu.cleanup(repairSteps);
     }
 
     const leader = repairQueue.shift()!;
@@ -167,7 +208,9 @@ export const solveSmart = (
     repairSet.delete(gangId);
 
     if (repairController.shouldSkipGang(gangId)) {
-      repairController.recordProgress(countUnplacedGangs(repairQueue, repairController));
+      repairController.recordProgress(
+        countUnplacedGangs(repairQueue, repairController),
+      );
       continue;
     }
 
@@ -189,6 +232,7 @@ export const solveSmart = (
 
     if (!isRepairActionFailed(repairAction)) {
       repairController.recordSuccess(gangId);
+      tabu.recordSuccess();
       executeRepairAction(
         state,
         gangUnits,
@@ -209,9 +253,12 @@ export const solveSmart = (
       }
     }
 
-    repairController.recordProgress(countUnplacedGangs(repairQueue, repairController));
+    repairController.recordProgress(
+      countUnplacedGangs(repairQueue, repairController),
+    );
 
     if (repairController.shouldDiversify()) {
+      tabu.recordStagnation();
       const shaken = diversifyRepairState(
         state,
         data,
@@ -222,7 +269,9 @@ export const solveSmart = (
       );
       if (shaken > 0) {
         repairController.resetStagnation();
-        repairController.recordProgress(countUnplacedGangs(repairQueue, repairController));
+        repairController.recordProgress(
+          countUnplacedGangs(repairQueue, repairController),
+        );
       }
     }
   }
@@ -266,5 +315,49 @@ export const solveSmart = (
     conflicts: finalConflicts,
     state,
     iterations: steps + repairSteps,
+    runIndex,
   };
+}
+
+/**
+ * CSP SOLVER: Construction + repair with optional multi-run restarts.
+ */
+export const solveSmart = (
+  units: AllocationUnit[],
+  data: AppData,
+  onProgress?: SolverProgressCallback,
+  options: SolverOptions = {},
+): SolverResult => {
+  const runCount = Math.max(1, options.runs ?? 1);
+
+  if (runCount === 1) {
+    return runSingleSolve(units, data, onProgress, options, 0);
+  }
+
+  let bestResult: SolverResult | null = null;
+
+  for (let run = 0; run < runCount; run++) {
+    const result = runSingleSolve(units, data, onProgress, options, run);
+    if (!bestResult || compareSolverResults(result, bestResult) < 0) {
+      bestResult = result;
+    }
+
+    if (bestResult.conflicts.length === 0) break;
+  }
+
+  return bestResult!;
+};
+
+/** Worker entry: run multiple seeded attempts within the time budget. */
+export const solveSmartWithRestarts = (
+  units: AllocationUnit[],
+  data: AppData,
+  onProgress?: SolverProgressCallback,
+  options: SolverOptions = {},
+): SolverResult => {
+  return solveSmart(units, data, onProgress, {
+    runs: options.runs ?? SOLVER_RUN_COUNT,
+    shuffleConstruction: options.shuffleConstruction ?? true,
+    seed: options.seed,
+  });
 };

@@ -1,68 +1,137 @@
-import { AppData, Subject, ClassGroup } from "../../../../types";
+import { AppData, Subject, ClassGroup, Room } from "../../../../types";
 import { AllocationUnit, SchedulerState } from "../core/types";
 
-/**
- * ARCHITECT NOTES:
- * 1. Performance: Replaced .find() with Map.get() for O(1) access.
- * 2. Logic: Maintains distinction between Phase 1 (Strict) and Phase 2 (Force/Evict).
- */
+export type RoomResolveOptions = {
+  /** When true, only return a room that is free for the slot(s). */
+  requireAvailable?: boolean;
+  /** When false, return the ideal room even if occupied (repair eviction). */
+  allowFallback?: boolean;
+};
 
-/**
- * determineRoom: Used in Phase 1 (Greedy).
- * Checks availability. If specific room is busy, returns undefined (Constraint Failure).
- */
-export function determineRoom(
-  d: number, 
-  p: number, 
-  p2: number, 
-  unit: AllocationUnit, 
-  state: SchedulerState, 
-  data: AppData,
-  subjectMap: Map<string, Subject>, 
-  classMap: Map<string, ClassGroup> 
-): string | undefined {
-  
-  const subject = subjectMap.get(unit.subjectId);
-  const classGroup = classMap.get(unit.classIds[0]); 
-
-  if (!subject || !classGroup) return undefined;
-
-  // 1. RESOLVE TARGET ROOM
-  // Priority: Subject-specific Specialist Room > Class Homeroom
-  const targetRoomId = subject.requiredRoomId || classGroup.defaultRoomId;
-
-  if (!targetRoomId) return undefined;
-
-  // 2. AVAILABILITY CHECK
-  const roomGrid = state.roomOccupancy[targetRoomId];
-  if (!roomGrid) return targetRoomId; 
-
-  if (roomGrid[d]?.[p]) return undefined;
-  if (unit.duration === 2 && roomGrid[d]?.[p2]) return undefined;
-
-  return targetRoomId;
+function isRoomFree(
+  state: SchedulerState,
+  roomId: string,
+  d: number,
+  p: number,
+  p2: number,
+  duration: number,
+): boolean {
+  const grid = state.roomOccupancy[roomId];
+  if (!grid) return true;
+  if (grid[d]?.[p]) return false;
+  if (duration === 2 && p2 !== -1 && grid[d]?.[p2]) return false;
+  return true;
 }
 
 /**
- * forceDetermineRoom: Used in Phase 2 (Repair).
- * Returns the intended room even if occupied, triggering an eviction.
+ * Ordered room candidates for a unit.
+ * requiredRoomId → preferredRoomIds → homeroom → type-matched rooms.
  */
-export function forceDetermineRoom(
-  d: number, 
-  p: number, 
-  p2: number, 
-  unit: AllocationUnit, 
-  state: SchedulerState, 
-  data: AppData,
+export function getRoomCandidates(
+  unit: AllocationUnit,
+  subject: Subject | undefined,
+  classGroup: ClassGroup | undefined,
+  roomMap: Map<string, Room>,
+): string[] {
+  const candidates: string[] = [];
+  const seen = new Set<string>();
+
+  const add = (roomId: string | null | undefined) => {
+    if (!roomId || seen.has(roomId) || !roomMap.has(roomId)) return;
+    seen.add(roomId);
+    candidates.push(roomId);
+  };
+
+  add(subject?.requiredRoomId);
+  if (subject?.requiredRoomId) {
+    return candidates;
+  }
+
+  unit.preferredRoomIds?.forEach(add);
+  add(classGroup?.defaultRoomId);
+  add(unit.defaultRoomId);
+
+  if (unit.requiredRoomType) {
+    for (const room of roomMap.values()) {
+      if (room.type === unit.requiredRoomType) add(room.id);
+    }
+  }
+
+  return candidates;
+}
+
+/**
+ * Shared room resolution for construction, repair, and conflict detection.
+ */
+export function resolveTargetRoom(
+  d: number,
+  p: number,
+  p2: number,
+  unit: AllocationUnit,
+  state: SchedulerState,
   subjectMap: Map<string, Subject>,
-  classMap: Map<string, ClassGroup>
+  classMap: Map<string, ClassGroup>,
+  roomMap: Map<string, Room>,
+  options: RoomResolveOptions = {},
 ): string | undefined {
-  
+  const { requireAvailable = false, allowFallback = true } = options;
   const subject = subjectMap.get(unit.subjectId);
   const classGroup = classMap.get(unit.classIds[0]);
-
   if (!subject || !classGroup) return undefined;
 
-  // Return the Ideal Room
-  return subject.requiredRoomId || classGroup.defaultRoomId;
+  const candidates = getRoomCandidates(unit, subject, classGroup, roomMap);
+  if (candidates.length === 0) return undefined;
+
+  if (!requireAvailable) {
+    return candidates[0];
+  }
+
+  if (!allowFallback && subject.requiredRoomId) {
+    return isRoomFree(state, subject.requiredRoomId, d, p, p2, unit.duration)
+      ? subject.requiredRoomId
+      : undefined;
+  }
+
+  for (const roomId of candidates) {
+    if (isRoomFree(state, roomId, d, p, p2, unit.duration)) {
+      return roomId;
+    }
+  }
+
+  return undefined;
+}
+
+/** Phase 1: first available room in the fallback chain. */
+export function determineRoom(
+  d: number,
+  p: number,
+  p2: number,
+  unit: AllocationUnit,
+  state: SchedulerState,
+  _data: AppData,
+  subjectMap: Map<string, Subject>,
+  classMap: Map<string, ClassGroup>,
+  roomMap: Map<string, Room>,
+): string | undefined {
+  return resolveTargetRoom(d, p, p2, unit, state, subjectMap, classMap, roomMap, {
+    requireAvailable: true,
+    allowFallback: true,
+  });
+}
+
+/** Phase 2: ideal room (first candidate), even if occupied. */
+export function forceDetermineRoom(
+  d: number,
+  p: number,
+  p2: number,
+  unit: AllocationUnit,
+  state: SchedulerState,
+  _data: AppData,
+  subjectMap: Map<string, Subject>,
+  classMap: Map<string, ClassGroup>,
+  roomMap: Map<string, Room>,
+): string | undefined {
+  return resolveTargetRoom(d, p, p2, unit, state, subjectMap, classMap, roomMap, {
+    requireAvailable: false,
+  });
 }

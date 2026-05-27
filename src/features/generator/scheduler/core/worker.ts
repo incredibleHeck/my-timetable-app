@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-globals */
 import { AppData } from "../../../../types";
 import { prepareAllocationUnits } from "../logic/preparation";
-import { solveSmart } from "../solver/solver";
+import { solveSmartWithRestarts } from "../solver/solver";
 import { runConflictAudit } from "../validation/audit";
 import { auditFinalSchedule, dedupeConflicts } from "../validation";
 import { SOLVER_TIME_LIMIT_MS } from "../constants";
@@ -42,7 +42,8 @@ ctx.onmessage = (e: MessageEvent<AppData>) => {
     });
 
     // 2. HYBRID SOLVER
-    const { schedule, state, iterations, conflicts: unplacedConflicts } = solveSmart(
+    const { schedule, state, iterations, conflicts: unplacedConflicts } =
+      solveSmartWithRestarts(
       units,
       data,
       (phase, progress, total, currentConflictCount) => {

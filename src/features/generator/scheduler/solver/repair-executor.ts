@@ -73,6 +73,9 @@ function applySlotMove(
     step,
   );
   applyGangToState(state, gang, move);
+  if (tabu) {
+    tabu.markTabu(gang[0].id, move.d, move.p, step);
+  }
 }
 
 export function executePlaceRepairMove(

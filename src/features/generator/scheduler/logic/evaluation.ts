@@ -6,6 +6,15 @@ import { countPotentialConflicts, findUnitsInSlot } from "../solver/slot-conflic
 import { forceDetermineRoom } from "./rooms";
 import { checkSubjectContinuity } from "../validation/load-checks";
 import { getNextClassPeriod } from "../utils/utils";
+import {
+  EVICTION_COST_NORMAL,
+  EVICTION_COST_SKELETON,
+  EVICTION_COST_PART_TIMER,
+  EVICTION_COST_SPECIALIST_DOUBLE,
+  EVICTION_COST_SPECIALIST_SINGLE,
+  REPAIR_CONTINUITY_COST,
+  REPAIR_NO_ROOM_COST,
+} from "../constants";
 
 // ARCHITECT: Removed dependency on legacy 'validation.ts'. 
 // We now rely on the unified O(1) Constraint Engine.
@@ -56,7 +65,7 @@ export class EvaluationEngine {
     // 3. Penalty (Conflicts)
     const penalty = countPotentialConflicts(
         unit, state, data, move.d, move.p, move.p2, 
-        teacherMap, subjectMap
+        teacherMap, subjectMap, classMap, roomMap
     );
     
     return { score, penalty, isLegal };
@@ -101,7 +110,7 @@ export class EvaluationEngine {
       };
     }
 
-    const victims = findUnitsInSlot(state, unit, d, p, p2);
+    const victims = findUnitsInSlot(state, unit, d, p, p2, subjectMap, classMap, roomMap);
     const ignoredOccupants = new Set(victims);
     ignoredOccupants.add(unit.id);
 
@@ -144,31 +153,34 @@ export class EvaluationEngine {
     if (victims.size > 0) {
         victims.forEach(vId => {
             const vUnit = unitMap.get(vId); 
-            let evictionCost = 1000; // Base
+            let evictionCost = EVICTION_COST_NORMAL;
             
             if (vUnit) {
-                // RANK 3: THE BOTTLENECKS (High displacement cost)
                 const vSubject = subjectMap.get(vUnit.subjectId);
                 const isVSpecialist = vSubject?.requiredRoomId || vUnit.requiredRoomType;
                 const isVComplex = vUnit.classIds.length > 1 || vUnit.jointClassId || vUnit.electiveBlockId;
 
                 if (isVComplex) {
-                    evictionCost = 20000; // Most protected (Skeleton)
+                    evictionCost = EVICTION_COST_SKELETON;
                 } else {
-                    // Check for restricted teachers
                     for (const tid of vUnit.teacherIds) {
                         const teacher = teacherMap.get(tid);
                         if (teacher?.constraints) {
                             let availableSlots = 0;
                             teacher.constraints.forEach(row => row.forEach(isBlocked => { if (!isBlocked) availableSlots++; }));
                             if (availableSlots < 45) {
-                                evictionCost = Math.max(evictionCost, 18000); // High protection for part-timers
+                                evictionCost = Math.max(evictionCost, EVICTION_COST_PART_TIMER);
                             }
                         }
                     }
                     
                     if (isVSpecialist) {
-                        evictionCost = Math.max(evictionCost, vUnit.duration === 2 ? 15000 : 12000);
+                        evictionCost = Math.max(
+                          evictionCost,
+                          vUnit.duration === 2
+                            ? EVICTION_COST_SPECIALIST_DOUBLE
+                            : EVICTION_COST_SPECIALIST_SINGLE,
+                        );
                     }
                 }
             }
@@ -194,19 +206,17 @@ export class EvaluationEngine {
 
     // --- RANK 5: THE CONNECTORS (Anti-Sandwich) ---
     const continuityError = checkSubjectContinuity(ctx, proposedSet, ignoredSlots, state);
-    if (continuityError) totalCost += 5000; 
+    if (continuityError) totalCost += REPAIR_CONTINUITY_COST; 
 
-    // Quality Penalties
     const gapPenalty = calculateTeacherGapPenalty(state, d, p, unit.teacherIds, unit.classIds);
     totalCost += Math.abs(gapPenalty); 
 
-    // Room Penalty
-    const targetRoomId = forceDetermineRoom(d, p, p2, unit, state, data, subjectMap, classMap);
+    const targetRoomId = forceDetermineRoom(d, p, p2, unit, state, data, subjectMap, classMap, roomMap);
     if (targetRoomId) {
         totalCost += calculateRoomPenalty(state, unit, d, p, targetRoomId);
         if (p2 !== -1) totalCost += calculateRoomPenalty(state, unit, d, p2, targetRoomId);
     } else {
-        totalCost += 5000; 
+        totalCost += REPAIR_NO_ROOM_COST; 
         conflicts.push("No valid room found");
     }
 

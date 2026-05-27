@@ -2,27 +2,9 @@ import { AllocationUnit, SchedulerState } from "../core/types";
 import { AppData, Subject, Teacher } from "../../../../types";
 import { getPrevClassPeriod } from "../utils/utils";
 
-/**
- * CONFIGURATION: Weights for different soft constraints.
- * Higher score is better. Penalties are negative.
- */
-const WEIGHTS = {
-  TEACHER_GAP: -50,
-  CLASS_GAP: -400,          // From load-checks.ts
-  TEACHER_CONTINUITY: -600,   // From load-checks.ts
-  TEACHER_CONSECUTIVE: -500,  // Rank 9: Very strongly discourage clustering
-  SUBJECT_DISTRIBUTION: -30,
-  ROOM_EFFICIENCY: 10,
-  LUNCH_PROTECTION: -100,
-  MORNING_BIAS: 0.1,          // Reduced bias to allow better distribution
-  HCD_PRIME_BIAS: 500,        // Rank 4: Boost for core subjects in morning
-  SCARCITY_PENALTY: -500,
-  TEACHER_WINDOW: -200,
-  ROOM_CHANGE: -50,
-  VARIETY_PENALTY: -150,
-  FRIDAY_AFTERNOON: -30,
-  WEEKLY_UNBALANCE: -100 // Rank 10: Final polish for even week
-};
+import { SCORING_WEIGHTS, ROOM_PENALTY_DISPLACEMENT, ROOM_PENALTY_WANDERING } from "../constants";
+
+const WEIGHTS = SCORING_WEIGHTS;
 
 /**
  * RANK 10: WEEKLY BALANCE (The Final Polish)
@@ -65,7 +47,7 @@ export function calculateTeacherLoadBalance(
     const dailyLoad = state.teacherDailyLoad[teacherId]?.[d] || 0;
     // Exponential penalty for high daily loads to FORCE even distribution
     if (dailyLoad >= 2) {
-        return -1000 * Math.pow(2, dailyLoad - 2);
+        return WEIGHTS.TEACHER_LOAD_EXPONENT * Math.pow(2, dailyLoad - 2);
     }
     return 0;
 }
@@ -86,12 +68,11 @@ export function calculateRoomPenalty(
   // 1. DISPLACEMENT PENALTY
   const victimId = state.roomOccupancy[targetRoomId]?.[d]?.[p];
   if (victimId && victimId !== "BLOCK") {
-    penalty += 1000; // High cost for evicting someone
+    penalty += ROOM_PENALTY_DISPLACEMENT;
   }
 
-  // 2. WANDERING PENALTY
   if (!unit.requiredRoomType && unit.defaultRoomId && targetRoomId !== unit.defaultRoomId) {
-    penalty += 500; // Penalty for not using homeroom
+    penalty += ROOM_PENALTY_WANDERING;
   }
 
   return penalty;
@@ -297,9 +278,9 @@ export const calculateScore = (
             if (daySched[p2+1]?.subjectId === unit.subjectId) isAdjacent = true;
 
             if (isAdjacent) {
-                score += 5000; // Rank 5 Reward: High for adjacency
+                score += WEIGHTS.SUBJECT_ADJACENCY_REWARD;
             } else {
-                score -= 10000; // Rank 5 Penalty: Massive for splitting (The XYX Sandwich)
+                score += WEIGHTS.SUBJECT_SPLIT_PENALTY;
             }
         }
     }

@@ -6,18 +6,8 @@ import {
   PRIORITY_CRITICAL,
   CRITICAL_UNIT_PRIORITY_BOOST,
   SPECIALIST_SINGLE_BOOST,
-  MRV_SAMPLE_THRESHOLD,
-  HEURISTIC_SAMPLE_SIZE,
 } from "../constants";
-
-/**
- * ARCHITECT NOTES:
- * 1. Performance: Implemented "Tournament MRV" to kill the O(N^2) loop.
- * 2. Optimization: Injected Maps for all lookups.
- * 3. Priority Hierarchy: Follows Ranks 1-4.
- */
-
-// --- STATIC PRIORITY (Calculated Once) ---
+import { getGangId } from "./repair-controller";
 
 const getTeacherConstraintScore = (
   teacherId: string,
@@ -53,7 +43,6 @@ export const calculatePriority = (
   let score = 0;
   const subject = subjectMap.get(unit.subjectId);
 
-  // --- RANK 1: Restricted / Part-Time Teachers (Absolute Global Priority) ---
   for (const tid of unit.teacherIds) {
     const teacher = teacherMap.get(tid);
     if (teacher?.constraints) {
@@ -69,26 +58,21 @@ export const calculatePriority = (
     }
   }
 
-  // --- RANK 3: THE BOTTLENECKS ---
-  // 3.1 Complex Groupings (Joint Classes / Electives)
   if (unit.classIds.length > 1 || unit.jointClassId || unit.electiveBlockId) {
     score += 30000;
   }
 
-  // 3.2 Specialist Rooms (Labs/Workshops)
   const isSpecialist = subject?.requiredRoomId || unit.requiredRoomType;
   if (isSpecialist) {
     if (unit.duration === 2) {
-      score += 25000; // Specialist Double
+      score += 25000;
     } else {
       score += SPECIALIST_SINGLE_BOOST;
     }
   }
 
-  // --- RANK 2: Structural Hierarchy (Grade Level) ---
   score += unit.rankLevel * 100;
 
-  // --- RANK 4: THE BIG ROCKS (Standard Doubles) ---
   if (
     !isSpecialist &&
     unit.duration === 2 &&
@@ -99,7 +83,6 @@ export const calculatePriority = (
     score += 15000;
   }
 
-  // Teacher Constraints Tie-breaker
   for (const tid of unit.teacherIds) {
     score += getTeacherConstraintScore(tid, teacherMap, data) * 10;
   }
@@ -107,75 +90,8 @@ export const calculatePriority = (
   return score;
 };
 
-// --- DYNAMIC HEURISTICS ---
-
+/** Full MRV scan: pick the leader with the smallest valid domain, tie-break on priority. */
 export function findMostConstrainedGangIdx(
-  leaders: AllocationUnit[],
-  state: SchedulerState,
-  data: AppData,
-  gangMap: Map<string, AllocationUnit[]>,
-  teacherMap: Map<string, Teacher>,
-  subjectMap: Map<string, Subject>,
-  classMap: Map<string, ClassGroup>,
-  roomMap: Map<string, Room>,
-): number {
-  if (leaders.length < MRV_SAMPLE_THRESHOLD) {
-    return scanAll(
-      leaders,
-      state,
-      data,
-      gangMap,
-      teacherMap,
-      subjectMap,
-      classMap,
-      roomMap,
-    );
-  }
-
-  let bestIdx = -1;
-  let minDomain = Infinity;
-  let bestPriority = -1;
-
-  const sampleSize = Math.max(
-    HEURISTIC_SAMPLE_SIZE,
-    Math.floor(leaders.length * 0.1),
-  );
-
-  for (let k = 0; k < sampleSize; k++) {
-    const idx = Math.floor(Math.random() * leaders.length);
-    const leader = leaders[idx];
-
-    if (leader.priority >= PRIORITY_CRITICAL) return idx;
-
-    const gangId = leader.jointClassId || leader.electiveBlockId || leader.id;
-    const gang = gangMap.get(gangId)!;
-
-    const domainSize = countValidSlots(
-      state,
-      data,
-      gang,
-      classMap,
-      teacherMap,
-      subjectMap,
-      roomMap,
-    );
-
-    if (domainSize < minDomain) {
-      minDomain = domainSize;
-      bestIdx = idx;
-      bestPriority = leader.priority;
-    } else if (domainSize === minDomain) {
-      if (leader.priority > bestPriority) {
-        bestIdx = idx;
-        bestPriority = leader.priority;
-      }
-    }
-  }
-
-  return bestIdx === -1 ? 0 : bestIdx;
-}
-
-function scanAll(
   leaders: AllocationUnit[],
   state: SchedulerState,
   data: AppData,
@@ -187,12 +103,13 @@ function scanAll(
 ): number {
   let minDomain = Infinity;
   let bestIdx = 0;
+  let bestPriority = -1;
 
   for (let i = 0; i < leaders.length; i++) {
     const leader = leaders[i];
     if (leader.priority >= PRIORITY_CRITICAL) return i;
 
-    const gangId = leader.jointClassId || leader.electiveBlockId || leader.id;
+    const gangId = getGangId(leader);
     const gang = gangMap.get(gangId)!;
     const domainSize = countValidSlots(
       state,
@@ -204,15 +121,16 @@ function scanAll(
       roomMap,
     );
 
-    if (domainSize < minDomain) {
+    if (
+      domainSize < minDomain ||
+      (domainSize === minDomain && leader.priority > bestPriority)
+    ) {
       minDomain = domainSize;
       bestIdx = i;
-    } else if (domainSize === minDomain) {
-      if (leader.priority > leaders[bestIdx].priority) {
-        bestIdx = i;
-      }
+      bestPriority = leader.priority;
     }
   }
+
   return bestIdx;
 }
 
@@ -225,7 +143,7 @@ export function countValidSlots(
   subjectMap: Map<string, Subject>,
   roomMap: Map<string, Room>,
 ): number {
-  const globalPeriods = 15; // Scan full range
+  const globalPeriods = 15;
   const days = getDaysPerWeek(data.settings);
   let count = 0;
 
