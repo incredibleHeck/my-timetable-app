@@ -126,6 +126,23 @@ export function countUnplacedGangs(
   return repairQueue.length + controller.abandonedCount;
 }
 
+/** Gang leaders with at least one unit missing from the committed state. */
+export function countUnplacedGangLeaders(
+  gangLeaders: AllocationUnit[],
+  gangMap: Map<string, AllocationUnit[]>,
+  state: SchedulerState,
+): number {
+  let count = 0;
+  for (const leader of gangLeaders) {
+    const gangUnits = gangMap.get(getGangId(leader));
+    if (!gangUnits) continue;
+    if (!gangUnits.every((u) => state.unitPlacements.has(u.id))) {
+      count++;
+    }
+  }
+  return count;
+}
+
 /**
  * Shakes the schedule by removing low-priority placed gangs and re-queuing them.
  */

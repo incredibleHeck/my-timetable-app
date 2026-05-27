@@ -389,6 +389,17 @@ export function auditFinalSchedule(
   return dedupeConflicts(raw);
 }
 
+/** True when the committed grid has no generated-mode audit conflicts. */
+export function isPerfectGeneratedSchedule(
+  data: AppData,
+  schedule: AppData["schedule"],
+): boolean {
+  return (
+    auditFinalSchedule({ ...data, schedule, conflicts: [] }, { mode: "generated" })
+      .length === 0
+  );
+}
+
 export {
   detectCurriculumGaps,
   dedupeConflicts,
