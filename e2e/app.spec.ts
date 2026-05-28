@@ -34,12 +34,12 @@ test.describe("Profile bootstrap", () => {
     await page.getByRole("button", { name: "Create First Profile" }).click();
     await page.getByLabel(/profile name/i).fill("Playwright School");
     await page.getByRole("button", { name: /create profile/i }).click();
-    await expect(page.getByText("Playwright School")).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('strong:has-text("Playwright School")')).toBeVisible({ timeout: 15_000 });
   });
 
   test("loads seeded profile to dashboard", async ({ page }) => {
     await seedProfile(page);
-    await expect(page.getByText("E2E School")).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('strong:has-text("E2E School")')).toBeVisible({ timeout: 15_000 });
   });
 });
 

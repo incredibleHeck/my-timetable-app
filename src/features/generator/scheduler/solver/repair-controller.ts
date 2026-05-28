@@ -116,7 +116,7 @@ export class RepairController {
 }
 
 export function getGangId(unit: AllocationUnit): string {
-  return unit.jointClassId || unit.electiveBlockId || unit.id;
+  return unit.electiveBlockId || unit.id;
 }
 
 export function countUnplacedGangs(
