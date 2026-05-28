@@ -1,15 +1,17 @@
-import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
-import { GlobalConfigView } from '../src/features/configuration/GlobalConfigView';
-import { DEFAULT_DATA } from '../src/utils/constants';
+import React from "react";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { GlobalConfigView } from "../src/features/configuration/GlobalConfigView";
+import { DEFAULT_DATA } from "../src/utils/constants";
 
-vi.mock('../src/contexts/ProfileContext', () => ({
+const pushToHistory = vi.fn();
+
+vi.mock("../src/contexts/ProfileContext", () => ({
   ProfileProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   useProfile: () => ({
     addActivity: vi.fn(),
     profiles: [],
-    activeProfile: null,
+    activeProfile: { id: "1", name: "Test Profile" },
     isLoading: false,
     isSaving: false,
     isDirty: false,
@@ -19,83 +21,74 @@ vi.mock('../src/contexts/ProfileContext', () => ({
     reloadProfiles: vi.fn(),
     undo: vi.fn(),
     redo: vi.fn(),
-    pushToHistory: vi.fn(),
+    pushToHistory,
     canUndo: false,
     canRedo: false,
     getClassSchedule: vi.fn(() => []),
   }),
 }));
 
-// Mock the child components that we don't need for this test to reduce noise
-vi.mock('../src/features/configuration/components/SchoolIdentitySection', () => ({
-  SchoolIdentitySection: () => <div data-testid="school-identity" />
-}));
-vi.mock('../src/features/configuration/components/TimelineAutomationSection', () => ({
-  TimelineAutomationSection: (props: any) => (
-    <div data-testid="timeline-automation">
-        <button onClick={() => props.handleDurationChange('defaultClassDuration', 60)}>Change Duration</button>
-    </div>
-  )
-}));
-vi.mock('../src/features/configuration/components/RulesSection', () => ({
-  RulesSection: () => <div data-testid="rules" />
-}));
-vi.mock('../src/features/configuration/components/ScheduleChainSection', () => ({
-  ScheduleChainSection: () => <div data-testid="schedule-chain" />
-}));
-vi.mock('../src/features/configuration/components/ReservationsGridSection', () => ({
-  ReservationsGridSection: () => <div data-testid="reservations-grid" />
-}));
-vi.mock('../src/features/configuration/components/SlotEditModal', () => ({
-  SlotEditModal: () => <div data-testid="slot-edit-modal" />
-}));
+describe("GlobalConfigView Synchronization", () => {
+  beforeEach(() => {
+    pushToHistory.mockClear();
+    vi.stubGlobal("confirm", vi.fn(() => true));
+  });
 
-describe('GlobalConfigView Synchronization', () => {
-  it('updates dayStructure when period slider is changed', () => {
+  it("updates dayStructure when period slider is changed", () => {
     const onUpdate = vi.fn();
     const data = {
       ...DEFAULT_DATA,
       settings: {
         ...DEFAULT_DATA.settings,
         periodsPerDay: 8,
-        dayStructure: Array(8).fill({ type: 'CLASS', label: 'P' })
-      }
+        dayStructure: Array(8).fill({ type: "CLASS", label: "P" }),
+      },
     };
 
     render(<GlobalConfigView data={data} onUpdate={onUpdate} />);
 
-    const slider = screen.getByRole('slider');
-    fireEvent.change(slider, { target: { value: '10' } });
+    fireEvent.click(screen.getByRole("button", { name: "Day structure" }));
 
-    // Expect onUpdate to be called with 10 periods AND 10 items in dayStructure
-    expect(onUpdate).toHaveBeenCalledWith(expect.objectContaining({
-      settings: expect.objectContaining({
-        periodsPerDay: 10,
-        dayStructure: expect.arrayContaining([
-            expect.objectContaining({ type: 'CLASS' })
-        ])
-      })
-    }));
-    
-    const lastCall = onUpdate.mock.calls[onUpdate.mock.calls.length - 1][0];
+    const slider = screen.getByRole("slider");
+    fireEvent.change(slider, { target: { value: "10" } });
+
+    expect(pushToHistory).toHaveBeenCalledTimes(1);
+    expect(onUpdate).toHaveBeenCalledTimes(1);
+    expect(onUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        settings: expect.objectContaining({
+          periodsPerDay: 10,
+          dayStructure: expect.arrayContaining([
+            expect.objectContaining({ type: "CLASS" }),
+          ]),
+        }),
+      }),
+    );
+
+    const lastCall = onUpdate.mock.calls[0][0];
     expect(lastCall.settings.dayStructure.length).toBe(10);
   });
 
-  it('updates timeSlots when timeline automation changes', () => {
+  it("updates timeSlots when timeline automation changes", () => {
     const onUpdate = vi.fn();
     const data = DEFAULT_DATA;
 
     render(<GlobalConfigView data={data} onUpdate={onUpdate} />);
 
-    const automationBtn = screen.getByText(/Change Duration/i);
-    fireEvent.click(automationBtn);
+    fireEvent.click(screen.getByRole("button", { name: "Day structure" }));
 
-    // handleDurationChange in useGlobalConfig recalculates timeline
-    expect(onUpdate).toHaveBeenCalledWith(expect.objectContaining({
-      settings: expect.objectContaining({
-        defaultClassDuration: 60,
-        timeSlots: expect.any(Array)
-      })
-    }));
+    const startInput = screen.getByLabelText(/start of day/i);
+    fireEvent.change(startInput, { target: { value: "07:30" } });
+
+    expect(pushToHistory).toHaveBeenCalledTimes(1);
+    expect(onUpdate).toHaveBeenCalledTimes(1);
+    expect(onUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        settings: expect.objectContaining({
+          schoolStartTime: "07:30",
+          timeSlots: expect.any(Array),
+        }),
+      }),
+    );
   });
 });

@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
-import { AppData, PeriodType } from "../../../types";
+import { AppData, PeriodType, Settings } from "../../../types";
+import { trimScheduleToPeriods } from "../logic/configUtils";
 
-// Helper for time math
 const addMinutes = (time: string, minutes: number): string => {
   const [h, m] = time.split(":").map(Number);
   const totalMins = h * 60 + m + minutes;
@@ -10,10 +10,7 @@ const addMinutes = (time: string, minutes: number): string => {
   return `${String(newH).padStart(2, "0")}:${String(newM).padStart(2, "0")}`;
 };
 
-export const useGlobalConfig = (
-  data: AppData,
-  onUpdate: (d: AppData) => void
-) => {
+export const useGlobalConfig = (data: AppData) => {
   const [editingSlot, setEditingSlot] = useState<{
     d: number;
     p: number;
@@ -23,14 +20,13 @@ export const useGlobalConfig = (
   const [editingLabelIdx, setEditingLabelIdx] = useState<number | null>(null);
   const [tempLabel, setTempLabel] = useState("");
 
-  // --- LOGIC: Recalculate Timeline ---
   const recalculateTimeline = useCallback(
     (
-      structure: typeof data.settings.dayStructure,
+      structure: Settings["dayStructure"],
       start: string,
       cDur: number,
       bDur: number,
-      lDur: number
+      lDur: number,
     ) => {
       let currentTime = start;
       const newTimes: { start: string; end: string }[] = [];
@@ -39,6 +35,7 @@ export const useGlobalConfig = (
         let duration = cDur;
         if (block.type === "BREAK") duration = bDur;
         if (block.type === "LUNCH") duration = lDur;
+        if (block.type === "ASSEMBLY") duration = cDur;
 
         const endTime = addMinutes(currentTime, duration);
         newTimes.push({ start: currentTime, end: endTime });
@@ -47,15 +44,13 @@ export const useGlobalConfig = (
 
       return newTimes;
     },
-    []
+    [],
   );
 
-  // --- HANDLERS ---
-
   const handleDurationChange = (
-    field: keyof typeof data.settings,
-    value: any
-  ) => {
+    field: keyof Settings,
+    value: string | number,
+  ): AppData => {
     const newSettings = { ...data.settings, [field]: value };
 
     const newTimes = recalculateTimeline(
@@ -63,26 +58,25 @@ export const useGlobalConfig = (
       newSettings.schoolStartTime || "08:00",
       newSettings.defaultClassDuration || 50,
       newSettings.defaultBreakDuration || 15,
-      newSettings.defaultLunchDuration || 60
+      newSettings.defaultLunchDuration || 60,
     );
 
-    const nextData = { ...data, settings: { ...newSettings, timeSlots: newTimes } };
-    onUpdate(nextData);
-    return nextData;
+    return { ...data, settings: { ...newSettings, timeSlots: newTimes } };
   };
 
-  const handleStructureChange = (index: number) => {
+  const recalculateAllSlotTimes = (): AppData =>
+    handleDurationChange("periodsPerDay", data.settings.periodsPerDay);
+
+  const setPeriodType = (index: number, nextType: PeriodType): AppData => {
     const newStructure = [...data.settings.dayStructure];
-    const types: PeriodType[] = ["CLASS", "BREAK", "LUNCH"];
-    const currentTypeIdx = types.indexOf(newStructure[index].type);
-    const nextType = types[(currentTypeIdx + 1) % 3];
 
     let newLabel = newStructure[index].label;
     if (nextType === "BREAK") newLabel = "Break";
     else if (nextType === "LUNCH") newLabel = "Lunch";
+    else if (nextType === "ASSEMBLY") newLabel = "Assembly";
     else if (
       nextType === "CLASS" &&
-      (newLabel === "Break" || newLabel === "Lunch")
+      (newLabel === "Break" || newLabel === "Lunch" || newLabel === "Assembly")
     )
       newLabel = `Period ${index + 1}`;
 
@@ -97,10 +91,10 @@ export const useGlobalConfig = (
       data.settings.schoolStartTime || "08:00",
       data.settings.defaultClassDuration || 50,
       data.settings.defaultBreakDuration || 15,
-      data.settings.defaultLunchDuration || 60
+      data.settings.defaultLunchDuration || 60,
     );
 
-    const nextData = {
+    return {
       ...data,
       settings: {
         ...data.settings,
@@ -108,17 +102,15 @@ export const useGlobalConfig = (
         timeSlots: newTimes,
       },
     };
-    onUpdate(nextData);
-    return nextData;
   };
 
-  const handlePeriodCountChange = (val: number) => {
+  const handlePeriodCountChange = (val: number): AppData => {
     let newStructure = [...data.settings.dayStructure];
     const newFixed = data.settings.fixedOccasions.map((row) => {
       const safeRow = row || [];
       if (val > safeRow.length)
         return [...safeRow, ...Array(val - safeRow.length).fill(null)];
-      else return safeRow.slice(0, val);
+      return safeRow.slice(0, val);
     });
 
     if (val > newStructure.length) {
@@ -133,11 +125,17 @@ export const useGlobalConfig = (
       data.settings.schoolStartTime || "08:00",
       data.settings.defaultClassDuration || 50,
       data.settings.defaultBreakDuration || 15,
-      data.settings.defaultLunchDuration || 60
+      data.settings.defaultLunchDuration || 60,
     );
 
-    const nextData = {
+    const trimSchedule =
+      val < data.settings.periodsPerDay
+        ? trimScheduleToPeriods(data.schedule, val)
+        : data.schedule;
+
+    return {
       ...data,
+      schedule: trimSchedule,
       settings: {
         ...data.settings,
         periodsPerDay: val,
@@ -146,95 +144,82 @@ export const useGlobalConfig = (
         timeSlots: newTimes,
       },
     };
-    onUpdate(nextData);
-    return nextData;
   };
 
   const handleIdentityUpdate = (
     field: "schoolName" | "academicYear",
-    val: string
-  ) => {
-    const nextData = { ...data, settings: { ...data.settings, [field]: val } };
-    onUpdate(nextData);
-    return nextData;
-  };
+    val: string,
+  ): AppData => ({
+    ...data,
+    settings: { ...data.settings, [field]: val },
+  });
 
   const updateTimeSlot = (
     idx: number,
     field: "start" | "end",
-    value: string
-  ) => {
+    value: string,
+  ): AppData => {
     const newTimes = [...data.settings.timeSlots];
     while (newTimes.length <= idx)
       newTimes.push({ start: "00:00", end: "00:00" });
     newTimes[idx] = { ...newTimes[idx], [field]: value };
-    const nextData = { ...data, settings: { ...data.settings, timeSlots: newTimes } };
-    onUpdate(nextData);
-    return nextData;
+    return { ...data, settings: { ...data.settings, timeSlots: newTimes } };
   };
 
-  const saveCustomLabel = () => {
-    if (editingLabelIdx === null) return;
+  const saveCustomLabel = (): AppData | undefined => {
+    if (editingLabelIdx === null) return undefined;
     const newStructure = [...data.settings.dayStructure];
     newStructure[editingLabelIdx] = {
       ...newStructure[editingLabelIdx],
       label: tempLabel,
     };
-    const nextData = {
+    setEditingLabelIdx(null);
+    return {
       ...data,
       settings: { ...data.settings, dayStructure: newStructure },
     };
-    onUpdate(nextData);
-    setEditingLabelIdx(null);
-    return nextData;
   };
 
-  const updateMaxConsecutive = (val: number) => {
-    const nextData = {
-      ...data,
-      settings: { ...data.settings, maxConsecutivePeriods: val },
-    };
-    onUpdate(nextData);
-    return nextData;
-  };
+  const updateMaxConsecutive = (val: number): AppData => ({
+    ...data,
+    settings: { ...data.settings, maxConsecutivePeriods: val },
+  });
 
-  const updateMaxSubjectPeriods = (val: number) => {
-    const nextData = {
-      ...data,
-      settings: { ...data.settings, maxSubjectPeriodsPerDay: val },
-    };
-    onUpdate(nextData);
-    return nextData;
-  };
+  const updateMaxSubjectPeriods = (val: number): AppData => ({
+    ...data,
+    settings: { ...data.settings, maxSubjectPeriodsPerDay: val },
+  });
 
-  const updateMaxTeacherPeriods = (val: number) => {
-    const nextData = {
-      ...data,
-      settings: { ...data.settings, maxTeacherPeriodsPerDay: val },
-    };
-    onUpdate(nextData);
-    return nextData;
-  };
+  const updateMaxTeacherPeriods = (val: number): AppData => ({
+    ...data,
+    settings: { ...data.settings, maxTeacherPeriodsPerDay: val },
+  });
 
-  const updateMaxTeachingPeriodsPerWeek = (val: number) => {
-    const nextData = {
-      ...data,
-      settings: { ...data.settings, maxTeachingPeriodsPerWeek: val },
-    };
-    onUpdate(nextData);
-    return nextData;
-  };
+  const updateMaxTeachingPeriodsPerWeek = (val: number): AppData => ({
+    ...data,
+    settings: { ...data.settings, maxTeachingPeriodsPerWeek: val },
+  });
+
+  const updateExamGrid = (
+    patch: Partial<NonNullable<Settings["examGrid"]>>,
+  ): AppData => ({
+    ...data,
+    settings: {
+      ...data.settings,
+      examGrid: { ...data.settings.examGrid, ...patch },
+    },
+  });
 
   const handleSlotClick = (d: number, p: number) => {
-    let val: any = data.settings.fixedOccasions[d]?.[p];
+    let val: unknown = data.settings.fixedOccasions[d]?.[p];
     if (val === true) val = "Reserved";
     if (val === false || val === null) val = "";
     setEditingSlot({ d, p, label: val as string });
     setApplyToAllDays(false);
   };
 
-  const saveSlot = (label: string) => {
-    if (!editingSlot) return;
+  const saveSlot = (label: string): AppData | undefined => {
+    if (!editingSlot) return undefined;
     const { d, p } = editingSlot;
     const newFixed = [...data.settings.fixedOccasions];
 
@@ -248,13 +233,11 @@ export const useGlobalConfig = (
       newFixed[d][p] = label;
     }
 
-    const nextData = {
+    setEditingSlot(null);
+    return {
       ...data,
       settings: { ...data.settings, fixedOccasions: newFixed },
     };
-    onUpdate(nextData);
-    setEditingSlot(null);
-    return nextData;
   };
 
   return {
@@ -267,7 +250,8 @@ export const useGlobalConfig = (
     tempLabel,
     setTempLabel,
     handleDurationChange,
-    handleStructureChange,
+    recalculateAllSlotTimes,
+    setPeriodType,
     handlePeriodCountChange,
     handleIdentityUpdate,
     updateTimeSlot,
@@ -276,6 +260,7 @@ export const useGlobalConfig = (
     updateMaxSubjectPeriods,
     updateMaxTeacherPeriods,
     updateMaxTeachingPeriodsPerWeek,
+    updateExamGrid,
     handleSlotClick,
     saveSlot,
   };

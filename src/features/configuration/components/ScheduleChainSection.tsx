@@ -1,29 +1,46 @@
 import React from "react";
-import { School, Coffee, Utensils, ArrowRight } from "lucide-react";
-import { AppData } from "../../../types";
+import { School, Coffee, Utensils, Users, ArrowRight } from "lucide-react";
+import { AppData, PeriodType } from "../../../types";
+import { ConfigCommitFn } from "../hooks/useConfigCommit";
+
+const PERIOD_TYPES: PeriodType[] = ["CLASS", "BREAK", "LUNCH", "ASSEMBLY"];
+
+const TYPE_ICONS: Record<PeriodType, React.ReactNode> = {
+  CLASS: <School size={12} aria-hidden />,
+  BREAK: <Coffee size={12} aria-hidden />,
+  LUNCH: <Utensils size={12} aria-hidden />,
+  ASSEMBLY: <Users size={12} aria-hidden />,
+};
 
 interface ScheduleChainSectionProps {
   data: AppData;
+  commit: ConfigCommitFn;
   editingLabelIdx: number | null;
   setEditingLabelIdx: (idx: number | null) => void;
   tempLabel: string;
   setTempLabel: (label: string) => void;
-  handleStructureChange: (idx: number) => AppData;
+  setPeriodType: (idx: number, type: PeriodType) => AppData;
   updateTimeSlot: (idx: number, field: "start" | "end", value: string) => AppData;
   saveCustomLabel: () => AppData | undefined;
 }
 
 export const ScheduleChainSection: React.FC<ScheduleChainSectionProps> = ({
   data,
+  commit,
   editingLabelIdx,
   setEditingLabelIdx,
   tempLabel,
   setTempLabel,
-  handleStructureChange,
+  setPeriodType,
   updateTimeSlot,
   saveCustomLabel,
 }) => {
   const { dayStructure, timeSlots } = data.settings;
+
+  const handleSaveLabel = () => {
+    const nextData = saveCustomLabel();
+    if (nextData) commit("Updated period label", nextData);
+  };
 
   return (
     <div className="w-full">
@@ -37,71 +54,97 @@ export const ScheduleChainSection: React.FC<ScheduleChainSectionProps> = ({
         {dayStructure.map((period, idx) => (
           <div
             key={idx}
-            className="flex items-center gap-3 bg-white border border-slate-200 p-2 rounded-lg hover:border-amber-400 transition-colors group min-w-[200px]"
+            className="flex items-center gap-3 bg-white border border-slate-200 p-3 rounded-lg hover:border-amber-400 transition-colors group min-w-[220px]"
           >
-            {/* Type Toggle */}
             <div
-              onClick={() => handleStructureChange(idx)}
-              className={`
-                w-20 h-12 flex flex-col items-center justify-center rounded cursor-pointer border-2 font-bold text-[10px] select-none shadow-sm transition-transform active:scale-95 shrink-0
-                ${period.type === "CLASS" ? "bg-white border-slate-200 text-slate-700" : ""}
-                ${period.type === "BREAK" ? "bg-amber-50 border-amber-300 text-amber-700" : ""}
-                ${period.type === "LUNCH" ? "bg-orange-50 border-orange-300 text-orange-700" : ""}
-              `}
+              className="flex flex-col gap-0.5 shrink-0"
+              role="group"
+              aria-label={`Period ${idx + 1} type`}
             >
-              {period.type === "CLASS" && <School size={14} />}
-              {period.type === "BREAK" && <Coffee size={14} />}
-              {period.type === "LUNCH" && <Utensils size={14} />}
-              <span className="mt-0.5">{period.type}</span>
+              {PERIOD_TYPES.map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  aria-pressed={period.type === type}
+                  onClick={() => {
+                    if (period.type === type) return;
+                    const nextData = setPeriodType(idx, type);
+                    commit(`Updated period ${idx + 1} to ${type}`, nextData);
+                  }}
+                  className={`
+                    flex items-center justify-center gap-1 px-2 py-1 rounded text-[10px] font-bold border transition-colors
+                    ${
+                      period.type === type
+                        ? type === "CLASS"
+                          ? "bg-white border-slate-400 text-slate-800"
+                          : type === "BREAK"
+                            ? "bg-amber-50 border-amber-400 text-amber-800"
+                            : type === "LUNCH"
+                              ? "bg-orange-50 border-orange-400 text-orange-800"
+                              : "bg-violet-50 border-violet-400 text-violet-800"
+                        : "bg-slate-50 border-slate-200 text-slate-400 hover:border-slate-300"
+                    }
+                  `}
+                >
+                  {TYPE_ICONS[type]}
+                  <span>{type}</span>
+                </button>
+              ))}
             </div>
 
-            {/* Label & Time Editor */}
             <div className="flex-1 flex flex-col justify-center min-w-0">
-              {/* Label Editor */}
               <div className="flex items-center mb-1">
                 {editingLabelIdx === idx ? (
                   <input
-                    className="text-[10px] font-bold text-slate-700 bg-slate-100 border border-amber-300 rounded px-1 py-0.5 w-full focus:outline-none"
+                    className="text-sm font-bold text-slate-700 bg-slate-100 border border-amber-300 rounded-lg px-2 py-1 w-full focus:outline-none focus:border-amber-500"
                     value={tempLabel}
                     onChange={(e) => setTempLabel(e.target.value)}
                     autoFocus
-                    onBlur={saveCustomLabel}
-                    onKeyDown={(e) => e.key === "Enter" && saveCustomLabel()}
+                    onBlur={handleSaveLabel}
+                    onKeyDown={(e) => e.key === "Enter" && handleSaveLabel()}
                   />
                 ) : (
-                  <div
+                  <button
+                    type="button"
                     onClick={() => {
                       setEditingLabelIdx(idx);
                       setTempLabel(period.label);
                     }}
-                    className="text-[10px] font-bold text-slate-500 uppercase cursor-pointer hover:text-amber-600 truncate"
+                    className="text-sm font-bold text-slate-500 uppercase text-left cursor-pointer hover:text-amber-600 truncate"
                   >
                     {period.label}
-                  </div>
+                  </button>
                 )}
               </div>
 
-              {/* Time Inputs */}
               <div className="flex items-center gap-1">
                 <input
                   type="time"
-                  className="bg-slate-50 border border-slate-200 rounded px-1 py-0.5 text-[10px] font-bold text-slate-700 focus:border-amber-500 outline-none w-16"
+                  aria-label={`Period ${idx + 1} start`}
+                  className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-sm font-bold text-slate-700 focus:border-amber-500 outline-none w-[5.5rem]"
                   value={timeSlots[idx]?.start || "00:00"}
-                  onChange={(e) => updateTimeSlot(idx, "start", e.target.value)}
+                  onChange={(e) => {
+                    const nextData = updateTimeSlot(idx, "start", e.target.value);
+                    commit(`Updated period ${idx + 1} start time`, nextData);
+                  }}
                 />
-                <ArrowRight size={10} className="text-slate-300 shrink-0" />
+                <ArrowRight size={12} className="text-slate-300 shrink-0" aria-hidden />
                 <input
                   type="time"
-                  className="bg-slate-50 border border-slate-200 rounded px-1 py-0.5 text-[10px] font-bold text-slate-700 focus:border-amber-500 outline-none w-16"
+                  aria-label={`Period ${idx + 1} end`}
+                  className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-sm font-bold text-slate-700 focus:border-amber-500 outline-none w-[5.5rem]"
                   value={timeSlots[idx]?.end || "00:00"}
-                  onChange={(e) => updateTimeSlot(idx, "end", e.target.value)}
+                  onChange={(e) => {
+                    const nextData = updateTimeSlot(idx, "end", e.target.value);
+                    commit(`Updated period ${idx + 1} end time`, nextData);
+                  }}
                 />
               </div>
-              <div className="text-[8px] text-slate-400 mt-0.5">
+              <div className="text-xs text-slate-400 mt-0.5">
                 {Math.round(
                   (new Date(`1970-01-01T${timeSlots[idx]?.end}`).getTime() -
                     new Date(`1970-01-01T${timeSlots[idx]?.start}`).getTime()) /
-                    60000
+                    60000,
                 )}
                 m
               </div>

@@ -2,6 +2,19 @@ import React from "react";
 import { PlusCircle, FolderOpen, Save, Globe } from "lucide-react";
 import { ViewState } from "../../types";
 import { isTauriEnv } from "../../utils/platform";
+
+const VIEW_TITLES: Record<ViewState, string> = {
+  DASHBOARD: "Dashboard",
+  CONFIG: "Configuration",
+  SUBJECTS: "Subjects",
+  TEACHERS: "Teachers",
+  ROOMS: "Rooms",
+  CLASSES: "Classes",
+  WORKLOAD: "Workload Analysis",
+  GENERATOR: "Auto-Generator",
+  EXAMS: "Exam Timetable",
+  DUTY: "Duty Roster",
+};
 import { UndoRedoControls } from "./UndoRedoControls";
 import { ProfileSwitcher } from "./header/ProfileSwitcher";
 
@@ -22,8 +35,7 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const isTauri = isTauriEnv();
 
-  // Helper to format view name
-  const title = view.charAt(0) + view.slice(1).toLowerCase().replace("_", " ");
+  const title = VIEW_TITLES[view] ?? view;
 
   return (
     <header className={`h-16 border-b flex items-center justify-between px-8 shadow-sm z-10 transition-colors ${

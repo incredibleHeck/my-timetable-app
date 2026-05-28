@@ -168,6 +168,8 @@ function App() {
               <GlobalConfigView
                 data={activeProfile.data}
                 onUpdate={updateActiveData}
+                profileName={activeProfile.name}
+                onNavigate={setView}
               />
             )}
             {view === "SUBJECTS" && (

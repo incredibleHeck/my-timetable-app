@@ -1,19 +1,20 @@
 import React from "react";
 import { Calculator, RotateCcw } from "lucide-react";
 import { AppData, Settings } from "../../../types";
+import { ConfigCommitFn } from "../hooks/useConfigCommit";
 
 interface TimelineAutomationSectionProps {
   data: AppData;
-  onUpdate: (newData: AppData) => void;
-  addActivity: (type: "SCHEDULING" | "ACADEMIC" | "SYSTEM", message: string, nextData?: AppData) => void;
-  handleDurationChange: (field: keyof Settings, value: any) => AppData;
+  commit: ConfigCommitFn;
+  handleDurationChange: (field: keyof Settings, value: string | number) => AppData;
+  recalculateAllSlotTimes: () => AppData;
 }
 
 export const TimelineAutomationSection: React.FC<TimelineAutomationSectionProps> = ({
   data,
-  onUpdate,
-  addActivity,
+  commit,
   handleDurationChange,
+  recalculateAllSlotTimes,
 }) => {
   const {
     schoolStartTime,
@@ -25,22 +26,25 @@ export const TimelineAutomationSection: React.FC<TimelineAutomationSectionProps>
   return (
     <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 mb-8">
       <div className="flex items-center gap-2 mb-4">
-        <Calculator size={18} className="text-amber-600" />
+        <Calculator size={18} className="text-amber-600" aria-hidden />
         <h4 className="font-bold text-slate-700 text-sm">Smart Timeline Automation</h4>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
         <div>
-          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+          <label
+            htmlFor="school-start-time"
+            className="block text-[10px] font-bold text-slate-500 uppercase mb-1"
+          >
             Start of Day
           </label>
           <input
+            id="school-start-time"
             type="time"
             value={schoolStartTime || "08:00"}
             onChange={(e) => {
               const val = e.target.value;
-              const nextData = handleDurationChange("schoolStartTime", val);
-              addActivity("SYSTEM", `Updated Start time: ${val}`, nextData);
+              commit(`Updated Start time: ${val}`, handleDurationChange("schoolStartTime", val));
             }}
             className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 focus:border-amber-500 outline-none"
           />
@@ -55,9 +59,12 @@ export const TimelineAutomationSection: React.FC<TimelineAutomationSectionProps>
             max="120"
             value={classDur || 50}
             onChange={(e) => {
-              const val = parseInt(e.target.value);
-              const nextData = handleDurationChange("defaultClassDuration", val);
-              addActivity("SYSTEM", `Updated Class Duration: ${val}m`, nextData);
+              const val = parseInt(e.target.value, 10);
+              if (!Number.isNaN(val))
+                commit(
+                  `Updated Class Duration: ${val}m`,
+                  handleDurationChange("defaultClassDuration", val),
+                );
             }}
             className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 focus:border-amber-500 outline-none"
           />
@@ -72,9 +79,12 @@ export const TimelineAutomationSection: React.FC<TimelineAutomationSectionProps>
             max="60"
             value={breakDur || 15}
             onChange={(e) => {
-              const val = parseInt(e.target.value);
-              const nextData = handleDurationChange("defaultBreakDuration", val);
-              addActivity("SYSTEM", `Updated Break Duration: ${val}m`, nextData);
+              const val = parseInt(e.target.value, 10);
+              if (!Number.isNaN(val))
+                commit(
+                  `Updated Break Duration: ${val}m`,
+                  handleDurationChange("defaultBreakDuration", val),
+                );
             }}
             className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 focus:border-amber-500 outline-none"
           />
@@ -89,20 +99,26 @@ export const TimelineAutomationSection: React.FC<TimelineAutomationSectionProps>
             max="120"
             value={lunchDur || 60}
             onChange={(e) => {
-              const val = parseInt(e.target.value);
-              const nextData = handleDurationChange("defaultLunchDuration", val);
-              addActivity("SYSTEM", `Updated Lunch Duration: ${val}m`, nextData);
+              const val = parseInt(e.target.value, 10);
+              if (!Number.isNaN(val))
+                commit(
+                  `Updated Lunch Duration: ${val}m`,
+                  handleDurationChange("defaultLunchDuration", val),
+                );
             }}
             className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 focus:border-amber-500 outline-none"
           />
         </div>
         <div className="flex flex-col justify-end">
           <button
-            onClick={() => handleDurationChange("periodsPerDay", data.settings.periodsPerDay)}
+            type="button"
+            onClick={() =>
+              commit("Recalculated all slot times from defaults", recalculateAllSlotTimes())
+            }
             className="flex items-center justify-center gap-2 bg-slate-200 hover:bg-slate-300 text-slate-600 text-xs font-bold py-2.5 rounded-lg transition-colors"
-            title="Force Recalculate"
+            title="Recalculate every period start/end from start time and class, break, and lunch durations"
           >
-            <RotateCcw size={14} /> Reset Times
+            <RotateCcw size={14} aria-hidden /> Recalculate all slot times
           </button>
         </div>
       </div>
