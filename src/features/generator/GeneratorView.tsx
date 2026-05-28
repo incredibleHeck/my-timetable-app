@@ -231,7 +231,10 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
         applyGeneratedSchedule(baseData, payload.schedule);
         terminateWorker();
       } else if (type === "error") {
-        console.error("Worker error:", payload);
+        console.error("Worker error:", payload.message);
+        if (payload.stack) {
+          console.error("Worker stack trace:", payload.stack);
+        }
         terminateWorker();
         showToast("An error occurred during generation.", "error");
       }

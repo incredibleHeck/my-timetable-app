@@ -25,6 +25,14 @@
       "csp": "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self' ipc: http://ipc.localhost https://ipc.localhost"
     }
   },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://releases.myapp.com/update/{{target}}/{{current_version}}"
+      ],
+      "dialog": true
+    }
+  },
   "bundle": {
     "active": true,
     "targets": "all",

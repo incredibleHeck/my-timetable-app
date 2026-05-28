@@ -1,14 +1,18 @@
 import React, { useState } from "react";
 import { useProfile } from "./contexts/ProfileContext";
+import { useActivation } from "./hooks/useActivation";
 import { FileService } from "./services/fileSystem";
 import { Button } from "./components/ui";
 import { Sidebar } from "./components/layout/Sidebar";
 import { Header } from "./components/layout/Header";
 import { ProfileWizard } from "./features/configuration/components/ProfileWizard";
+import { ActivationScreen } from "./features/activation/components/ActivationScreen";
 import { ViewRouter, isFullScreenView } from "./routing/ViewRouter";
 import { ViewState } from "./types";
 
 function App() {
+  const { isActivated, isLoading: isActivationLoading, activate, error: activationError } = useActivation();
+  
   const {
     profiles,
     activeProfile,
@@ -23,6 +27,27 @@ function App() {
   const [view, setView] = useState<ViewState>("DASHBOARD");
   const [activeFilePath, setActiveFilePath] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  if (isActivationLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-slate-900 text-slate-400">
+        <div className="flex flex-col items-center gap-2">
+          <span className="animate-spin text-2xl text-amber-500">⟳</span>
+          <p>Verifying License...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isActivated) {
+    return (
+      <ActivationScreen 
+        onActivate={activate} 
+        error={activationError} 
+        isLoading={false} 
+      />
+    );
+  }
 
   const autoSaveStatus = isSaving ? "SAVING" : "SAVED";
 

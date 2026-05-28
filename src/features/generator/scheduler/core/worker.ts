@@ -93,7 +93,10 @@ ctx.onmessage = (e: MessageEvent<AppData>) => {
     console.error("Critical Worker Failure:", error);
     ctx.postMessage({
       type: "error",
-      payload: error instanceof Error ? error.message : "Internal Scheduler Error",
+      payload:
+        error instanceof Error
+          ? { message: error.message, stack: error.stack }
+          : { message: "Internal Scheduler Error", stack: undefined },
     });
   }
 };

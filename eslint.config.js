@@ -33,5 +33,12 @@ export default tseslint.config(
       "@typescript-eslint/ban-ts-comment": "warn",
     },
   },
+  {
+    files: ["tests/**/*.{ts,tsx}", "**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": "off"
+    },
+  },
   eslintConfigPrettier,
 );
