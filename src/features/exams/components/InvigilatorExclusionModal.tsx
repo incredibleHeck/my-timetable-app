@@ -67,8 +67,9 @@ export const InvigilatorExclusionModal: React.FC<Props> = ({
               Exclude Staff Members
             </p>
             <p className="text-[10px] text-amber-700 mt-0.5">
-              Uncheck teachers who should NOT be included in the auto-assignment
-              process for this schedule.
+              Uncheck teachers who should NOT be assigned. During exams, teaching
+              stops — all other staff can invigilate. Use the min–max range on
+              the toolbar for how many invigilators each stream gets per day.
             </p>
           </div>
         </div>

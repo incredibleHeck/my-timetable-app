@@ -1,6 +1,9 @@
 import type ExcelJS from "exceljs";
 import { AppData, ExamSession } from "../../types";
-import { getStreamLevel } from "../../features/exams/logic/examUtils";
+import {
+  getStreamLevel,
+  getClassDayInvigilationTeam,
+} from "../../features/exams/logic/examUtils";
 import { FileService } from "../fileSystem";
 import { loadExcelJS } from "./excelLoader";
 
@@ -575,15 +578,11 @@ export const exportInvigilatorsToExcel = async (
   sortedClasses.forEach((cls) => {
     const rowData: any = { className: cls.name };
     uniqueDates.forEach((date) => {
-      const cellExams = exams.filter(
-        (e) => e.date === date && e.classIds.includes(cls.id)
-      );
-      const staff = cellExams
-        .flatMap((e) => e.invigilatorIds || [])
+      const teamIds = getClassDayInvigilationTeam(exams, cls.id, date);
+      rowData[date] = teamIds
         .map((id) => teachers.find((t) => t.id === id)?.name)
-        .filter(Boolean);
-
-      rowData[date] = Array.from(new Set(staff)).join("\n");
+        .filter(Boolean)
+        .join("\n");
     });
     const row = worksheet.addRow(rowData);
     row.height = 60;
@@ -637,7 +636,7 @@ export const exportInvigilatorsToPDF = (
     </head>
     <body>
       <h1>${settings.schoolName || "School"} Invigilation Master Roster</h1>
-      <h2>Class vs Date Allocation (Staff Copy)</h2>
+      <h2>Class vs Date — one invigilator per session</h2>
       <table>
         <thead>
           <tr>
@@ -656,18 +655,15 @@ export const exportInvigilatorsToPDF = (
   sortedClasses.forEach((cls) => {
     html += `<tr><td class="class-col">${cls.name}</td>`;
     uniqueDates.forEach((date) => {
-      const cellExams = exams.filter(
-        (e) => e.date === date && e.classIds.includes(cls.id)
-      );
-      const staff = Array.from(
-        new Set(cellExams.flatMap((e) => e.invigilatorIds || []))
-      )
-        .map((id) => teachers.find((t) => t.id === id)?.name)
-        .filter(Boolean);
+      const teamIds = getClassDayInvigilationTeam(exams, cls.id, date);
+      const tags = teamIds
+        .map((id) => {
+          const name = teachers.find((t) => t.id === id)?.name;
+          return name ? `<span class="staff-tag">${name}</span>` : "";
+        })
+        .join("");
 
-      html += `<td>${staff
-        .map((s) => `<span class="staff-tag">${s}</span>`)
-        .join("")}</td>`;
+      html += `<td>${tags}</td>`;
     });
     html += `</tr>`;
   });

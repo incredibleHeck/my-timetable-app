@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
-import { AppData, ExamSession, ClassGroup, Teacher } from "../../../types";
-import { Users, Calendar } from "lucide-react";
+import { AppData, ExamSession } from "../../../types";
+import { Users } from "lucide-react";
+import { getClassDayInvigilationTeam } from "../logic/examUtils";
 
 interface Props {
   data: AppData;
@@ -32,22 +33,18 @@ export const InvigilatorRoster: React.FC<Props> = ({ data, exams }) => {
     });
   };
 
-  // 4. Resolve Names Helper
   const getInvigilatorsForCell = (classId: string, date: string) => {
-    // Find all exams for this class on this date
-    const cellExams = exams.filter(
+    const hasExams = exams.some(
       (e) => e.date === date && e.classIds.includes(classId)
     );
+    if (!hasExams) return null;
 
-    if (cellExams.length === 0) return null;
+    const teamIds = getClassDayInvigilationTeam(exams, classId, date);
+    if (teamIds.length === 0) return null;
 
-    // We want a list of unique names from all exams this class writes today
-    const allTeacherIds = cellExams.flatMap((e) => e.invigilatorIds || []);
-    const uniqueIds = Array.from(new Set(allTeacherIds));
-
-    return uniqueIds
+    return teamIds
       .map((id) => teachers.find((t) => t.id === id)?.name)
-      .filter(Boolean);
+      .filter(Boolean) as string[];
   };
 
   return (
@@ -59,7 +56,7 @@ export const InvigilatorRoster: React.FC<Props> = ({ data, exams }) => {
             Master Invigilation Roster
           </h3>
           <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mt-0.5">
-            Class vs Date Allocation
+            Invigilation team per stream per day (all sessions)
           </p>
         </div>
         <div className="text-[10px] bg-amber-100 text-amber-700 px-2 py-1 rounded font-bold uppercase">
@@ -107,7 +104,7 @@ export const InvigilatorRoster: React.FC<Props> = ({ data, exams }) => {
                       }`}
                     >
                       {names ? (
-                        <div className="flex flex-col items-center gap-1">
+                        <div className="flex flex-col items-center gap-1 w-full">
                           {names.map((name, idx) => (
                             <span
                               key={idx}

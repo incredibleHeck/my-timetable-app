@@ -68,7 +68,7 @@ describe('Exam Validation Logic', () => {
     expect(conflicts.some(c => c.type === 'STAFF')).toBe(true);
   });
 
-  it('warns when invigilator is teaching during exam', () => {
+  it('does not warn when invigilator is on the class timetable during exam time', () => {
     const exam = {
       id: 'e1',
       subjectId: 's1',
@@ -81,7 +81,7 @@ describe('Exam Validation Logic', () => {
 
     const dataWithSchedule = {
       ...mockData,
-      teachers: [{ id: 't1', name: 'Busy Teacher', subjects: [], constraints: {} }],
+      teachers: [{ id: 't1', name: 'Teacher', subjects: [], constraints: {} }],
       settings: {
         ...mockData.settings,
         timeSlots: [
@@ -99,6 +99,10 @@ describe('Exam Validation Logic', () => {
     };
 
     const conflicts = validateExamMove(exam, [], dataWithSchedule);
-    expect(conflicts.some((c) => c.type === 'STAFF' && c.severity === 'WARNING')).toBe(true);
+    expect(
+      conflicts.some(
+        (c) => c.type === 'STAFF' && c.message.includes('teaching')
+      )
+    ).toBe(false);
   });
 });

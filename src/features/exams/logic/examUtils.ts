@@ -276,6 +276,22 @@ export const getExamGridDefaults = (settings: Settings): ExamGridDefaults => {
   };
 };
 
+/** Invigilation team for one class (stream) on one exam day — same pair for all sessions. */
+export const getClassDayInvigilationTeam = (
+  exams: ExamSession[],
+  classId: string,
+  date: string
+): string[] => {
+  const cellExams = exams.filter(
+    (e) => e.date === date && e.classIds.includes(classId)
+  );
+  if (cellExams.length === 0) return [];
+
+  const ids = new Set<string>();
+  cellExams.forEach((e) => (e.invigilatorIds || []).forEach((id) => ids.add(id)));
+  return Array.from(ids);
+};
+
 export const pickExamRoom = (
   classIds: string[],
   classes: ClassGroup[],

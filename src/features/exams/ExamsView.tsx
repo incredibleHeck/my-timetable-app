@@ -100,9 +100,8 @@ export const ExamsView: React.FC<ViewProps> = ({
   const [exclusionModalOpen, setExclusionModalOpen] = useState(false);
   const [editingExam, setEditingExam] = useState<ExamSession | null>(null);
 
-  // Invigilator Allocation State
   const [minInv, setMinInv] = useState(2);
-  const [maxInv, setMaxInv] = useState(3);
+  const [maxInv, setMaxInv] = useState(4);
 
   // 3. Helper: Regenerate/Overwrite Logic
   const handleRegenerateExams = (newSessions: ExamSession[]) => {
@@ -246,7 +245,7 @@ export const ExamsView: React.FC<ViewProps> = ({
       setExclusionModalOpen(false);
 
       showToast(
-        `Staff assigned. ${updatedExams.length} sessions (expanded per class for invigilation roster).`,
+        `Staff assigned: ${minInv}${minInv !== maxInv ? `–${maxInv}` : ""} invigilator(s) per stream per exam day (all sessions).`,
         "success"
       );
 
@@ -376,30 +375,38 @@ export const ExamsView: React.FC<ViewProps> = ({
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Allocation Controls */}
           <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-lg border mr-2">
             <div className="px-2 py-1 text-[9px] font-bold text-slate-400 uppercase">
-              Invig Range
+              Staff / stream
             </div>
             <div className="flex items-center gap-1">
               <input
                 type="number"
                 value={minInv}
                 onChange={(e) =>
-                  setMinInv(Math.max(1, parseInt(e.target.value) || 1))
+                  setMinInv(Math.max(1, Math.min(8, parseInt(e.target.value) || 1)))
                 }
                 className="w-10 h-7 text-center text-xs font-bold rounded border border-slate-200"
-                min="1"
+                min={1}
+                max={8}
+                title="Minimum invigilators per stream per exam day"
               />
-              <span className="text-slate-400 text-xs">-</span>
+              <span className="text-slate-400 text-xs">–</span>
               <input
                 type="number"
                 value={maxInv}
                 onChange={(e) =>
-                  setMaxInv(Math.max(minInv, parseInt(e.target.value) || minInv))
+                  setMaxInv(
+                    Math.max(
+                      minInv,
+                      Math.min(8, parseInt(e.target.value) || minInv)
+                    )
+                  )
                 }
                 className="w-10 h-7 text-center text-xs font-bold rounded border border-slate-200"
                 min={minInv}
+                max={8}
+                title="Maximum invigilators per stream per exam day"
               />
             </div>
             <Button
@@ -407,6 +414,7 @@ export const ExamsView: React.FC<ViewProps> = ({
               size="sm"
               className="h-7 text-[10px] px-2 bg-white hover:bg-amber-50 text-amber-700 font-bold"
               onClick={handleAutoAssignInvigilators}
+              title="Assign min–max staff per stream; same team covers all sessions that day"
             >
               Assign Staff
             </Button>
