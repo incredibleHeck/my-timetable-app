@@ -21,8 +21,7 @@ export const Button: React.FC<ButtonProps> = ({
 }) => {
   const isIconOnly = !children;
 
-  const baseStyles =
-    `inline-flex items-center justify-center ${isIconOnly ? "" : "gap-2"} font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`;
+  const baseStyles = `inline-flex items-center justify-center ${isIconOnly ? "" : "gap-2"} font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`;
 
   const variantStyles = {
     primary:
@@ -31,8 +30,7 @@ export const Button: React.FC<ButtonProps> = ({
       "bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 hover:text-slate-800 active:scale-95",
     danger:
       "bg-red-500 text-white border border-red-600 hover:bg-red-600 shadow-sm hover:shadow-md active:scale-95",
-    ghost:
-      "bg-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-800",
+    ghost: "bg-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-800",
   };
 
   const sizeStyles = {
@@ -47,9 +45,7 @@ export const Button: React.FC<ButtonProps> = ({
       disabled={disabled || isLoading}
       {...props}
     >
-      {isLoading && (
-        <span className="animate-spin mr-1">⟳</span>
-      )}
+      {isLoading && <span className="animate-spin mr-1">⟳</span>}
       {!isLoading && icon && <span className="flex items-center justify-center">{icon}</span>}
       {children}
     </button>

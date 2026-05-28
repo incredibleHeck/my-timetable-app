@@ -7,15 +7,12 @@ export interface ScheduleSlot {
   isFixed?: boolean;
   locked?: boolean;
   electiveBlockId?: string;
-  
+
   /** ID of the AllocationUnit that created this slot (for Solver/Repair tracking) */
   unitId?: string;
 }
 
-export type ScheduleResult = Record<
-  string,
-  Record<number, Record<number, ScheduleSlot>>
->;
+export type ScheduleResult = Record<string, Record<number, Record<number, ScheduleSlot>>>;
 
 export interface Conflict {
   classId: string;

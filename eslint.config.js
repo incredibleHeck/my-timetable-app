@@ -16,6 +16,9 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/purity": "warn",
+      "react-hooks/refs": "warn",
       "react-refresh/only-export-components": [
         "warn",
         { allowConstantExport: true },
@@ -25,6 +28,9 @@ export default tseslint.config(
         "warn",
         { argsIgnorePattern: "^_" },
       ],
+      "no-useless-assignment": "warn",
+      "no-empty": "warn",
+      "@typescript-eslint/ban-ts-comment": "warn",
     },
   },
   eslintConfigPrettier,

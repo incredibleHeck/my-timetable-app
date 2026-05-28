@@ -8,19 +8,15 @@ import { Settings, PeriodType, PeriodConfig, TimeSlot } from "../types";
 export function getEffectiveDuration(
   classGroup: ClassGroup,
   globalSettings: Settings,
-  type: PeriodType
+  type: PeriodType,
 ): number {
   switch (type) {
     case "CLASS":
       return classGroup.duration ?? globalSettings.defaultClassDuration ?? 40;
     case "BREAK":
-      return (
-        classGroup.breakDuration ?? globalSettings.defaultBreakDuration ?? 15
-      );
+      return classGroup.breakDuration ?? globalSettings.defaultBreakDuration ?? 15;
     case "LUNCH":
-      return (
-        classGroup.lunchDuration ?? globalSettings.defaultLunchDuration ?? 45
-      );
+      return classGroup.lunchDuration ?? globalSettings.defaultLunchDuration ?? 45;
     case "ASSEMBLY":
       return 40;
     default:
@@ -35,7 +31,7 @@ export function getEffectiveDuration(
 export function calculateSchedule(
   startTime: string,
   structure: (PeriodType | PeriodConfig)[],
-  durationResolver: (type: PeriodType) => number
+  durationResolver: (type: PeriodType) => number,
 ): TimeSlot[] {
   const schedule: TimeSlot[] = [];
   let currentMinutes = timeToMinutes(startTime);
@@ -63,11 +59,11 @@ export function calculateSchedule(
 export function calculateClassSchedule(
   classGroup: ClassGroup,
   globalSettings: Settings,
-  dayStructure: (PeriodType | PeriodConfig)[]
+  dayStructure: (PeriodType | PeriodConfig)[],
 ): TimeSlot[] {
   const startTime = globalSettings.schoolStartTime || "08:00";
-  return calculateSchedule(startTime, dayStructure, (type) => 
-    getEffectiveDuration(classGroup, globalSettings, type)
+  return calculateSchedule(startTime, dayStructure, (type) =>
+    getEffectiveDuration(classGroup, globalSettings, type),
   );
 }
 
@@ -88,10 +84,7 @@ export function generateDefaultTimeSlots(structure: (PeriodType | PeriodConfig)[
  * Uses the logic: (StartA < EndB) AND (StartB < EndA).
  * This correctly treats back-to-back classes (EndA === StartB) as NOT overlapping.
  */
-export function doTimeRangesOverlap(
-  range1: TimeSlot,
-  range2: TimeSlot
-): boolean {
+export function doTimeRangesOverlap(range1: TimeSlot, range2: TimeSlot): boolean {
   const s1 = timeToMinutes(range1.start);
   const e1 = timeToMinutes(range1.end);
   const s2 = timeToMinutes(range2.start);
@@ -128,7 +121,5 @@ export function minutesToTime(minutes: number): string {
   const hours = Math.floor(normalizedMinutes / 60);
   const mins = Math.floor(normalizedMinutes % 60);
 
-  return `${hours.toString().padStart(2, "0")}:${mins
-    .toString()
-    .padStart(2, "0")}`;
+  return `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}`;
 }

@@ -7,13 +7,19 @@ describe("Reproduction: Same-Day Double Swap False Positive", () => {
   const mockData: AppData = {
     settings: {
       periodsPerDay: 8,
-      dayStructure: Array(8).fill({ type: 'CLASS', label: 'C' }),
+      dayStructure: Array(8).fill({ type: "CLASS", label: "C" }),
       timeSlots: [],
       maxConsecutivePeriods: 4,
       fixedOccasions: [],
     },
     classes: [
-      { id: "c1", name: "Class 1", periodCount: 8, structure: Array(8).fill({ type: 'CLASS', label: 'C' }), curriculum: [] } as any,
+      {
+        id: "c1",
+        name: "Class 1",
+        periodCount: 8,
+        structure: Array(8).fill({ type: "CLASS", label: "C" }),
+        curriculum: [],
+      } as any,
     ],
     teachers: [{ id: "t1", name: "Teacher 1", constraints: [] }] as any,
     subjects: [
@@ -25,9 +31,9 @@ describe("Reproduction: Same-Day Double Swap False Positive", () => {
       c1: {
         0: {
           0: { subjectId: "s1", teacherId: "t1", duration: 2, isFixed: false }, // English Part 1
-          1: { subjectId: "s1", teacherId: "t1", duration: 2, isFixed: true },  // English Part 2
+          1: { subjectId: "s1", teacherId: "t1", duration: 2, isFixed: true }, // English Part 2
           2: { subjectId: "s2", teacherId: "t1", duration: 2, isFixed: false }, // Math Part 1
-          3: { subjectId: "s2", teacherId: "t1", duration: 2, isFixed: true },  // Math Part 2
+          3: { subjectId: "s2", teacherId: "t1", duration: 2, isFixed: true }, // Math Part 2
         },
       },
     },
@@ -53,7 +59,7 @@ describe("Reproduction: Same-Day Double Swap False Positive", () => {
       state,
       { day: 0, period: 0, duration: 2 }, // Source (P0)
       undefined,
-      2 // Duration
+      2, // Duration
     );
 
     expect(result.valid).toBe(true);
@@ -63,12 +69,16 @@ describe("Reproduction: Same-Day Double Swap False Positive", () => {
     const state = initializeState(mockData);
     const result = checkSlotValidity(
       mockData,
-      0, 0, "t1", "c1", "s2",
+      0,
+      0,
+      "t1",
+      "c1",
+      "s2",
       state,
       { day: 0, period: 2, duration: 2 }, // Source (P2)
       undefined,
       2,
-      { day: 0, period: 0, duration: 2 } // Ignore Target (English)
+      { day: 0, period: 0, duration: 2 }, // Ignore Target (English)
     );
 
     expect(result.valid).toBe(true);
@@ -86,15 +96,19 @@ describe("Reproduction: Same-Day Double Swap False Positive", () => {
     const state = initializeState(dataWithTightConstraint);
     const result = checkSlotValidity(
       dataWithTightConstraint,
-      0, 2, "t1", "c1", "s1",
+      0,
+      2,
+      "t1",
+      "c1",
+      "s1",
       state,
       { day: 0, period: 0, duration: 2 },
       undefined,
-      2
+      2,
     );
 
     if (!result.valid) {
-        console.log("Consecutive check failed:", result.message);
+      console.log("Consecutive check failed:", result.message);
     }
     expect(result.valid).toBe(true);
   });
@@ -102,23 +116,27 @@ describe("Reproduction: Same-Day Double Swap False Positive", () => {
   it("should fail if there is a 3rd English period (Verification of test)", () => {
     // Add a 3rd English period at P4
     mockData.schedule.c1[0][4] = { subjectId: "s1", teacherId: "t1", duration: 1, isFixed: false };
-    
+
     const state = initializeState(mockData);
     const result = checkSlotValidity(
       mockData,
-      0, 2, "t1", "c1", "s1",
+      0,
+      2,
+      "t1",
+      "c1",
+      "s1",
       state,
       { day: 0, period: 0, duration: 2 },
       undefined,
       2,
       { day: 0, period: 2, duration: 2 },
-      true // isAuto
+      true, // isAuto
     );
 
     // Should detect 2 (Proposed) + 1 (Existing at P4) = 3.
     expect(result.valid).toBe(false);
     expect(result.message).toContain("Max 2 periods");
-    
+
     // Cleanup
     delete mockData.schedule.c1[0][4];
   });

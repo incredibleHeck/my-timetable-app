@@ -7,10 +7,7 @@ import { ConfigCommitFn } from "../hooks/useConfigCommit";
 interface SchoolIdentitySectionProps {
   data: AppData;
   commit: ConfigCommitFn;
-  handleIdentityUpdate: (
-    field: "schoolName" | "academicYear",
-    val: string,
-  ) => AppData;
+  handleIdentityUpdate: (field: "schoolName" | "academicYear", val: string) => AppData;
 }
 
 export const SchoolIdentitySection: React.FC<SchoolIdentitySectionProps> = ({
@@ -26,11 +23,7 @@ export const SchoolIdentitySection: React.FC<SchoolIdentitySectionProps> = ({
     setAcademicYear(data.settings.academicYear || "");
   }, [data.settings.schoolName, data.settings.academicYear]);
 
-  const commitField = (
-    field: "schoolName" | "academicYear",
-    val: string,
-    label: string,
-  ) => {
+  const commitField = (field: "schoolName" | "academicYear", val: string, label: string) => {
     const stored = data.settings[field] || "";
     if (val === stored) return;
     const nextData = handleIdentityUpdate(field, val);

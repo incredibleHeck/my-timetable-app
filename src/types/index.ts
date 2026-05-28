@@ -5,10 +5,17 @@
 import { Teacher } from "../features/teachers/types";
 import { Subject } from "../features/subjects/types";
 import { Room } from "../features/rooms/types";
-import { ClassGroup, JointClass, ElectiveBlock, CurriculumItem, Class } from "../features/classes/types";
+import {
+  ClassGroup,
+  JointClass,
+  ElectiveBlock,
+  CurriculumItem,
+  Class,
+} from "../features/classes/types";
 import { ExamSession, ExamRoster } from "../features/exams/types";
 import { DutyLocation, DutyAssignment, DutyRoster } from "../features/duty/types";
 import { ScoringWeightOverrides } from "../features/generator/scheduler/constants";
+import { ScheduleResult, Conflict, ScheduleSlot } from "../features/generator/types";
 
 // Re-exports for convenience and to avoid breaking existing imports
 export type { Teacher };
@@ -32,11 +39,7 @@ export interface TimeSlot {
 }
 
 // Helper type for Fixed Events (can be simple boolean, string name, or object)
-export type FixedOccasion =
-  | string
-  | boolean
-  | { name: string; color?: string }
-  | null;
+export type FixedOccasion = string | boolean | { name: string; color?: string } | null;
 
 export interface Settings {
   // Core Structure

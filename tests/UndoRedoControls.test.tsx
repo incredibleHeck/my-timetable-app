@@ -1,21 +1,15 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { UndoRedoControls } from "../src/components/layout/UndoRedoControls";
 import { describe, it, expect, vi } from "vitest";
-import { useProfile } from "../src/contexts/ProfileContext";
-import React from "react";
+import { useHistory } from "../src/contexts/HistoryContext";
 
-// Minimal mock of the profile context usage
-vi.mock("../src/contexts/ProfileContext", async (importOriginal) => {
-  const actual = await importOriginal() as any;
-  return {
-    ...actual,
-    useProfile: vi.fn(),
-  };
-});
+vi.mock("../src/contexts/HistoryContext", () => ({
+  useHistory: vi.fn(),
+}));
 
 describe("UndoRedoControls", () => {
   it("renders undo and redo buttons", () => {
-    (useProfile as any).mockReturnValue({
+    (useHistory as ReturnType<typeof vi.fn>).mockReturnValue({
       undo: vi.fn(),
       redo: vi.fn(),
       canUndo: true,
@@ -28,7 +22,7 @@ describe("UndoRedoControls", () => {
   });
 
   it("disables buttons when cannot undo/redo", () => {
-    (useProfile as any).mockReturnValue({
+    (useHistory as ReturnType<typeof vi.fn>).mockReturnValue({
       undo: vi.fn(),
       redo: vi.fn(),
       canUndo: false,
@@ -38,7 +32,7 @@ describe("UndoRedoControls", () => {
     render(<UndoRedoControls />);
     const undoBtn = screen.getByLabelText("Undo") as HTMLButtonElement;
     const redoBtn = screen.getByLabelText("Redo") as HTMLButtonElement;
-    
+
     expect(undoBtn.disabled).toBe(true);
     expect(redoBtn.disabled).toBe(true);
   });
@@ -46,7 +40,7 @@ describe("UndoRedoControls", () => {
   it("calls undo/redo on click", () => {
     const undo = vi.fn();
     const redo = vi.fn();
-    (useProfile as any).mockReturnValue({
+    (useHistory as ReturnType<typeof vi.fn>).mockReturnValue({
       undo,
       redo,
       canUndo: true,

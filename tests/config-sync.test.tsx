@@ -19,19 +19,23 @@ vi.mock("../src/contexts/ProfileContext", () => ({
     switchProfile: vi.fn(),
     updateActiveProfile: vi.fn(),
     reloadProfiles: vi.fn(),
+    getClassSchedule: vi.fn(() => []),
+  }),
+}));
+
+vi.mock("../src/contexts/HistoryContext", () => ({
+  useHistory: () => ({
     undo: vi.fn(),
     redo: vi.fn(),
     pushToHistory,
     canUndo: false,
     canRedo: false,
-    getClassSchedule: vi.fn(() => []),
   }),
 }));
 
 describe("GlobalConfigView Synchronization", () => {
   beforeEach(() => {
     pushToHistory.mockClear();
-    vi.stubGlobal("confirm", vi.fn(() => true));
   });
 
   it("updates dayStructure when period slider is changed", () => {
@@ -47,7 +51,7 @@ describe("GlobalConfigView Synchronization", () => {
 
     render(<GlobalConfigView data={data} onUpdate={onUpdate} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Day structure" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Day structure" }));
 
     const slider = screen.getByRole("slider");
     fireEvent.change(slider, { target: { value: "10" } });
@@ -58,9 +62,7 @@ describe("GlobalConfigView Synchronization", () => {
       expect.objectContaining({
         settings: expect.objectContaining({
           periodsPerDay: 10,
-          dayStructure: expect.arrayContaining([
-            expect.objectContaining({ type: "CLASS" }),
-          ]),
+          dayStructure: expect.arrayContaining([expect.objectContaining({ type: "CLASS" })]),
         }),
       }),
     );
@@ -75,7 +77,7 @@ describe("GlobalConfigView Synchronization", () => {
 
     render(<GlobalConfigView data={data} onUpdate={onUpdate} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Day structure" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Day structure" }));
 
     const startInput = screen.getByLabelText(/start of day/i);
     fireEvent.change(startInput, { target: { value: "07:30" } });

@@ -154,8 +154,7 @@ export function diversifyRepairState(
   repairQueue: AllocationUnit[],
   repairSet: Set<string>,
 ): number {
-  const candidates: { gangId: string; leader: AllocationUnit; priority: number }[] =
-    [];
+  const candidates: { gangId: string; leader: AllocationUnit; priority: number }[] = [];
   const seen = new Set<string>();
 
   for (const unitId of state.unitPlacements.keys()) {

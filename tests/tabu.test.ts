@@ -33,7 +33,11 @@ describe("TabuManager", () => {
   });
 
   it("shortens tenure after success and lengthens after stagnation", () => {
-    const tabu = new TabuManager({ tenure: 20, minTenure: TABU_TENURE_MIN, maxTenure: TABU_TENURE_MAX });
+    const tabu = new TabuManager({
+      tenure: 20,
+      minTenure: TABU_TENURE_MIN,
+      maxTenure: TABU_TENURE_MAX,
+    });
     const initial = tabu.getTenure();
 
     tabu.recordSuccess();

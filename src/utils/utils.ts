@@ -2,18 +2,10 @@ import { AppData, FixedOccasion } from "../types";
 
 // Utility for safe ID generation
 export const generateId = () => {
-  if (
-    typeof crypto !== "undefined" &&
-    typeof crypto.randomUUID === "function"
-  ) {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return crypto.randomUUID();
   }
-  return (
-    "id-" +
-    Math.random().toString(36).substring(2, 9) +
-    "-" +
-    Date.now().toString(36)
-  );
+  return "id-" + Math.random().toString(36).substring(2, 9) + "-" + Date.now().toString(36);
 };
 
 // Faster & Safer Deep Clone (Generic)
@@ -48,14 +40,9 @@ export const triggerDownload = (data: any, filename: string) => {
 };
 
 // CSV Export Helper
-export const exportToCSV = (
-  headers: string[],
-  rows: (string | number)[],
-  filename: string
-) => {
+export const exportToCSV = (headers: string[], rows: (string | number)[], filename: string) => {
   const csvContent =
-    "data:text/csv;charset=utf-8," +
-    [headers.join(","), ...rows.map((e) => String(e))].join("\n");
+    "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((e) => String(e))].join("\n");
   const encodedUri = encodeURI(csvContent);
   const link = document.createElement("a");
   link.setAttribute("href", encodedUri);
@@ -74,17 +61,17 @@ export const formatRelativeTime = (dateStr: string): string => {
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
   if (diffInSeconds < 60) return "Just now";
-  
+
   const diffInMinutes = Math.floor(diffInSeconds / 60);
   if (diffInMinutes < 60) return `${diffInMinutes} minute${diffInMinutes > 1 ? "s" : ""} ago`;
-  
+
   const diffInHours = Math.floor(diffInMinutes / 60);
   if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? "s" : ""} ago`;
-  
+
   const diffInDays = Math.floor(diffInHours / 24);
   if (diffInDays === 1) return "Yesterday";
   if (diffInDays < 7) return `${diffInDays} days ago`;
-  
+
   return date.toLocaleDateString();
 };
 
@@ -113,6 +100,6 @@ export const mergeWithDefaults = (loadedData: AppData, defaults: AppData): AppDa
     settings: {
       ...defaults.settings,
       ...loadedData.settings,
-    }
+    },
   };
 };

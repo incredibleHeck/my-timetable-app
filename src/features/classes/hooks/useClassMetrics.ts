@@ -4,9 +4,7 @@ export const useClassMetrics = (data: AppData) => {
   const getLoadMetrics = (cls: ClassGroup) => {
     // Use class-specific structure if defined, otherwise global default
     const structure =
-      cls.structure && cls.structure.length > 0
-        ? cls.structure
-        : data.settings.dayStructure;
+      cls.structure && cls.structure.length > 0 ? cls.structure : data.settings.dayStructure;
 
     // Use class specific period count or global
     const pCount = cls.periodCount || data.settings.periodsPerDay;
@@ -39,10 +37,7 @@ export const useClassMetrics = (data: AppData) => {
       }
     }
 
-    const curriculumLoad = cls.curriculum.reduce(
-      (acc, curr) => acc + curr.periodsPerWeek,
-      0
-    );
+    const curriculumLoad = cls.curriculum.reduce((acc, curr) => acc + curr.periodsPerWeek, 0);
 
     return {
       assigned: curriculumLoad + fixedLoad,

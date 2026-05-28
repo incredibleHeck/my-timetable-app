@@ -24,9 +24,7 @@ export const ProfileSwitcher: React.FC<ProfileSwitcherProps> = ({
           <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">
             Current Profile
           </p>
-          <p className="text-sm font-bold text-slate-700">
-            {activeProfile.name}
-          </p>
+          <p className="text-sm font-bold text-slate-700">{activeProfile.name}</p>
         </div>
         <ChevronDown size={16} className="text-slate-400" />
       </button>
@@ -34,10 +32,7 @@ export const ProfileSwitcher: React.FC<ProfileSwitcherProps> = ({
       {/* Dropdown */}
       {isMenuOpen && (
         <>
-          <div
-            className="fixed inset-0 z-10"
-            onClick={() => setIsMenuOpen(false)}
-          />
+          <div className="fixed inset-0 z-10" onClick={() => setIsMenuOpen(false)} />
           <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-100 p-2 z-20 animate-in fade-in zoom-in-95 duration-200">
             <div className="max-h-60 overflow-y-auto custom-scrollbar mb-2">
               {profiles.map((p) => (

@@ -6,3 +6,4 @@ export * from "./Card";
 export * from "./Badge";
 export * from "./Toast";
 export * from "./NumberStepper";
+export * from "./ConfirmDialog";

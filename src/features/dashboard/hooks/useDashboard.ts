@@ -5,10 +5,7 @@ import { sanitizeAppData } from "../../../services/fileSystem/sanitization";
 import { useWorkloadStats } from "../../workload/hooks/useWorkloadStats";
 import { useToast } from "../../../components/ui/Toast";
 
-export const useDashboard = (
-  data: AppData,
-  onUpdate: (d: AppData) => void
-) => {
+export const useDashboard = (data: AppData, onUpdate: (d: AppData) => void) => {
   const { showToast } = useToast();
   const { workloadStats } = useWorkloadStats(data);
 
@@ -23,10 +20,13 @@ export const useDashboard = (
     const classCount = data.classes.length;
     const subjectCount = data.subjects.length;
 
-    const overloadedCount = workloadStats.filter(s => s.utilizationPct > 100).length;
-    const avgUtilization = workloadStats.length > 0 
-      ? Math.round(workloadStats.reduce((acc, s) => acc + s.utilizationPct, 0) / workloadStats.length)
-      : 0;
+    const overloadedCount = workloadStats.filter((s) => s.utilizationPct > 100).length;
+    const avgUtilization =
+      workloadStats.length > 0
+        ? Math.round(
+            workloadStats.reduce((acc, s) => acc + s.utilizationPct, 0) / workloadStats.length,
+          )
+        : 0;
 
     let totalSlots = 0;
     let filledSlots = 0;
@@ -34,9 +34,7 @@ export const useDashboard = (
     data.classes.forEach((cls) => {
       const pCount = cls.periodCount || data.settings.periodsPerDay;
       const structure =
-        cls.structure && cls.structure.length > 0
-          ? cls.structure
-          : data.settings.dayStructure;
+        cls.structure && cls.structure.length > 0 ? cls.structure : data.settings.dayStructure;
 
       for (let d = 0; d < 5; d++) {
         for (let p = 0; p < pCount; p++) {
@@ -58,17 +56,16 @@ export const useDashboard = (
         }
       }
     });
-    const saturation =
-      totalSlots > 0 ? Math.round((filledSlots / totalSlots) * 100) : 0;
-    
-    return { 
-      teacherCount, 
-      classCount, 
-      subjectCount, 
-      saturation, 
+    const saturation = totalSlots > 0 ? Math.round((filledSlots / totalSlots) * 100) : 0;
+
+    return {
+      teacherCount,
+      classCount,
+      subjectCount,
+      saturation,
       filledSlots,
       overloadedCount,
-      avgUtilization
+      avgUtilization,
     };
   }, [data, workloadStats]);
 
@@ -85,10 +82,10 @@ export const useDashboard = (
     const emptyClasses = data.classes.filter((c) => c.curriculum.length === 0);
     if (emptyClasses.length > 0) {
       const names = emptyClasses.slice(0, 3).map((c) => c.name);
-      let message = `Class ${names.join(", ")} ${
+      const message = `Class ${names.join(", ")} ${
         emptyClasses.length > 3 ? `and ${emptyClasses.length - 3} more ` : ""
       } ${emptyClasses.length === 1 ? "has" : "have"} no curriculum.`;
-      
+
       issues.push({
         type: "error",
         message,
@@ -98,8 +95,8 @@ export const useDashboard = (
     }
 
     // 2. Unused teachers (using de-duplicated stats)
-    const unusedTeachers = workloadStats.filter(s => s.assignedPeriods === 0);
-    
+    const unusedTeachers = workloadStats.filter((s) => s.assignedPeriods === 0);
+
     if (unusedTeachers.length > 0 && data.classes.length > 0) {
       const names = unusedTeachers.slice(0, 3).map((s) => s.t.name);
       const moreText = unusedTeachers.length > 3 ? ` and ${unusedTeachers.length - 3} more` : "";
@@ -115,9 +112,9 @@ export const useDashboard = (
     }
 
     // 3. Overloaded teachers
-    const overloaded = workloadStats.filter(s => s.utilizationPct > 100);
+    const overloaded = workloadStats.filter((s) => s.utilizationPct > 100);
     if (overloaded.length > 0) {
-       issues.push({
+      issues.push({
         type: "error",
         message: `${overloaded.length} teachers are overloaded (>100% utilization).`,
         action: "Review",

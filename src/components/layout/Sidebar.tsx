@@ -40,7 +40,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSwitchProfile,
 }) => {
   return (
-    <aside className="w-64 bg-slate-900 flex flex-col h-screen text-slate-300 shadow-2xl shrink-0 z-20" aria-label="Main navigation">
+    <aside
+      className="w-64 bg-slate-900 flex flex-col h-screen text-slate-300 shadow-2xl shrink-0 z-20"
+      aria-label="Main navigation"
+    >
       {/* Brand */}
       <div className="p-6 flex items-center gap-3">
         <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center text-slate-900 shadow-lg shadow-amber-500/20">
@@ -50,14 +53,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <h1 className="font-bold text-white leading-none text-lg">
             Edu <span className="text-amber-400">Scheduler</span>
           </h1>
-          <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-1">
-            Pro
-          </p>
+          <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-1">Pro</p>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto custom-scrollbar py-4" aria-label="Application sections">
+      <nav
+        className="flex-1 overflow-y-auto custom-scrollbar py-4"
+        aria-label="Application sections"
+      >
         <SidebarSection label="General" isFirst />
         <NavItem
           id="DASHBOARD"
@@ -141,7 +145,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Profiles Section */}
         <SidebarSection label="Profiles" />
         <div className="px-4 mb-4 space-y-1">
-          {profiles.map(p => (
+          {profiles.map((p) => (
             <button
               key={p.id}
               onClick={() => onSwitchProfile(p.id)}
@@ -164,11 +168,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           className="w-full flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-amber-400 py-3 rounded-xl transition-all shadow-lg text-sm font-bold active:scale-95 group"
         >
           <HardDrive size={18} className="mr-2 group-hover:animate-bounce" />
-          {FileService.isTauri
-            ? activeFilePath
-              ? "Save"
-              : "Save As..."
-            : "Save to Device"}
+          {FileService.isTauri ? (activeFilePath ? "Save" : "Save As...") : "Save to Device"}
         </button>
         {hasUnsavedChanges && (
           <p className="text-center text-[10px] text-amber-500 mt-2 font-bold animate-pulse">

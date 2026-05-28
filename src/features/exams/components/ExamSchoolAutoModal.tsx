@@ -1,14 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { AppData, ExamSession, Subject } from "../../../types";
 import { Modal, Button, Input } from "../../../components/ui";
-import {
-  Plus,
-  Minus,
-  Check,
-  Users,
-  Shuffle,
-  Link as LinkIcon,
-} from "lucide-react";
+import { Plus, Minus, Check, Users, Shuffle, Link as LinkIcon } from "lucide-react";
 
 // Import the Logic Engine
 import { generateExams, ScheduleMode } from "../logic/examGeneratorAlgorithms";
@@ -37,9 +30,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
 }) => {
   const { showToast } = useToast();
   // --- STATE ---
-  const [selectedConfigs, setSelectedConfigs] = useState<
-    Record<string, SubjectConfig>
-  >({});
+  const [selectedConfigs, setSelectedConfigs] = useState<Record<string, SubjectConfig>>({});
   const [selectedClassIds, setSelectedClassIds] = useState<string[]>([]);
   const [mode, setMode] = useState<ScheduleMode>("UNIFORM");
 
@@ -47,7 +38,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
   useEffect(() => {
     if (isOpen) {
       const initialConfigs: Record<string, SubjectConfig> = {};
-      data.subjects.forEach(s => {
+      data.subjects.forEach((s) => {
         // Default to examinable if not explicitly false
         if (s.isExaminable !== false) {
           initialConfigs[s.id] = {
@@ -59,21 +50,19 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
       });
       setSelectedConfigs(initialConfigs);
       // Default to all classes selected
-      setSelectedClassIds(data.classes.map(c => c.id));
+      setSelectedClassIds(data.classes.map((c) => c.id));
     }
   }, [isOpen, data.subjects, data.classes]);
 
   // Settings
-  const [startDate, setStartDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
+  const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [startTime, setStartTime] = useState("09:00");
   const [maxPerDay, setMaxPerDay] = useState("2");
   const [gapMinutes, setGapMinutes] = useState("30");
   const [syncStreams, setSyncStreams] = useState(true);
   const [deterministic, setDeterministic] = useState(false);
   const [sessionsPerDay, setSessionsPerDay] = useState(
-    () => data.settings.examGrid?.sessionsPerDay ?? 2
+    () => data.settings.examGrid?.sessionsPerDay ?? 2,
   );
 
   useEffect(() => {
@@ -102,10 +91,8 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
   };
 
   const toggleClass = (classId: string) => {
-    setSelectedClassIds(prev => 
-      prev.includes(classId) 
-        ? prev.filter(id => id !== classId) 
-        : [...prev, classId]
+    setSelectedClassIds((prev) =>
+      prev.includes(classId) ? prev.filter((id) => id !== classId) : [...prev, classId],
     );
   };
 
@@ -140,11 +127,10 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
         })
         .slice(0, 5)
         .join(", ");
-      const more =
-        unscheduled.length > 5 ? ` (+${unscheduled.length - 5} more)` : "";
+      const more = unscheduled.length > 5 ? ` (+${unscheduled.length - 5} more)` : "";
       showToast(
         `Warning: ${unscheduled.length} exam unit(s) could not be scheduled within 60 days: ${names}${more}.`,
-        "error"
+        "error",
       );
     }
 
@@ -167,9 +153,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
           >
             <Users size={20} className="mb-2" />
             <span className="text-xs font-bold">Uniform (Cohorts)</span>
-            <span className="text-[10px] opacity-70">
-              All classes write together
-            </span>
+            <span className="text-[10px] opacity-70">All classes write together</span>
           </button>
 
           <button
@@ -182,9 +166,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
           >
             <Shuffle size={20} className="mb-2" />
             <span className="text-xs font-bold">Random / Staggered</span>
-            <span className="text-[10px] opacity-70">
-              Optimized slot filling
-            </span>
+            <span className="text-[10px] opacity-70">Optimized slot filling</span>
           </button>
         </div>
 
@@ -193,27 +175,21 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
           <div
             onClick={() => setSyncStreams(!syncStreams)}
             className={`flex items-center gap-3 p-3 rounded border cursor-pointer transition-colors ${
-              syncStreams
-                ? "bg-amber-50 border-amber-200"
-                : "bg-white border-slate-200"
+              syncStreams ? "bg-amber-50 border-amber-200" : "bg-white border-slate-200"
             }`}
           >
             <div
               className={`p-1.5 rounded-full ${
-                syncStreams
-                  ? "bg-amber-500 text-white"
-                  : "bg-slate-200 text-slate-400"
+                syncStreams ? "bg-amber-500 text-white" : "bg-slate-200 text-slate-400"
               }`}
             >
               <LinkIcon size={14} />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-bold text-slate-800">
-                Sync Parallel Streams
-              </p>
+              <p className="text-sm font-bold text-slate-800">Sync Parallel Streams</p>
               <p className="text-xs text-slate-500">
-                Ensure classes in the same level (e.g. 10A & 10B) always write
-                the same exam at the same time.
+                Ensure classes in the same level (e.g. 10A & 10B) always write the same exam at the
+                same time.
               </p>
             </div>
             {syncStreams && <Check size={16} className="text-amber-600" />}
@@ -223,15 +199,11 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
         <div
           onClick={() => setDeterministic(!deterministic)}
           className={`flex items-center gap-3 p-3 rounded border cursor-pointer transition-colors ${
-            deterministic
-              ? "bg-amber-50 border-amber-200"
-              : "bg-white border-slate-200"
+            deterministic ? "bg-amber-50 border-amber-200" : "bg-white border-slate-200"
           }`}
         >
           <div className="flex-1">
-            <p className="text-sm font-bold text-slate-800">
-              Fixed generation order
-            </p>
+            <p className="text-sm font-bold text-slate-800">Fixed generation order</p>
             <p className="text-xs text-slate-500">
               Use a deterministic shuffle so the same inputs produce the same timetable.
             </p>
@@ -241,12 +213,10 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
 
         {/* Sessions per day (grid columns) */}
         <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-          <h4 className="text-xs font-bold text-slate-400 uppercase mb-3">
-            Exam sessions per day
-          </h4>
+          <h4 className="text-xs font-bold text-slate-400 uppercase mb-3">Exam sessions per day</h4>
           <p className="text-xs text-slate-500 mb-3">
-            Choose how many session columns the timetable uses. Exams are placed
-            into the matching session column (Session 1 or Session 2).
+            Choose how many session columns the timetable uses. Exams are placed into the matching
+            session column (Session 1 or Session 2).
           </p>
           <div className="flex gap-2">
             {[1, 2].map((n) => (
@@ -306,18 +276,16 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
         {/* 4. CLASS SELECTION */}
         <div>
           <div className="flex justify-between items-center mb-2">
-            <h4 className="text-xs font-bold text-slate-400 uppercase">
-              Select Classes
-            </h4>
+            <h4 className="text-xs font-bold text-slate-400 uppercase">Select Classes</h4>
             <div className="flex gap-2">
-              <button 
-                onClick={() => setSelectedClassIds(data.classes.map(c => c.id))}
+              <button
+                onClick={() => setSelectedClassIds(data.classes.map((c) => c.id))}
                 className="text-[10px] font-bold text-amber-600 hover:underline"
               >
                 Select All
               </button>
               <span className="text-slate-300">|</span>
-              <button 
+              <button
                 onClick={() => setSelectedClassIds([])}
                 className="text-[10px] font-bold text-slate-400 hover:underline"
               >
@@ -344,9 +312,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
 
         {/* 5. SUBJECT SELECTION */}
         <div>
-          <h4 className="text-xs font-bold text-slate-400 uppercase mb-2">
-            Select Subjects
-          </h4>
+          <h4 className="text-xs font-bold text-slate-400 uppercase mb-2">Select Subjects</h4>
           <div className="grid grid-cols-1 gap-2">
             {data.subjects.map((s) => {
               const config = selectedConfigs[s.id];
@@ -354,9 +320,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
                 <div
                   key={s.id}
                   className={`flex justify-between items-center p-2 rounded border ${
-                    config
-                      ? "bg-amber-50 border-amber-300"
-                      : "bg-white border-slate-100"
+                    config ? "bg-amber-50 border-amber-300" : "bg-white border-slate-100"
                   }`}
                 >
                   <button
@@ -365,17 +329,12 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
                   >
                     <div
                       className={`w-4 h-4 rounded border flex items-center justify-center ${
-                        config
-                          ? "bg-amber-500 border-amber-500"
-                          : "border-slate-300"
+                        config ? "bg-amber-500 border-amber-500" : "border-slate-300"
                       }`}
                     >
                       {config && <Check size={10} className="text-white" />}
                     </div>
-                    <div
-                      className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: s.color }}
-                    />
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: s.color }} />
                     <span className="text-sm text-slate-700">{s.name}</span>
                   </button>
                   {config && (
@@ -386,9 +345,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
                       >
                         <Minus size={10} />
                       </button>
-                      <span className="px-2 text-xs font-mono">
-                        {config.papers} Papers
-                      </span>
+                      <span className="px-2 text-xs font-mono">{config.papers} Papers</span>
                       <button
                         onClick={() => updatePaper(s.id, 1)}
                         className="px-2 border-l hover:bg-slate-50"

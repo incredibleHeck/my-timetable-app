@@ -1,12 +1,12 @@
 import React, { useMemo, useState } from "react";
-import { 
-  DndContext, 
-  DragOverlay, 
-  useSensor, 
-  useSensors, 
+import {
+  DndContext,
+  DragOverlay,
+  useSensor,
+  useSensors,
   PointerSensor,
   MouseSensor,
-  TouchSensor
+  TouchSensor,
 } from "@dnd-kit/core";
 import { Lock, ArrowRightLeft } from "lucide-react";
 import { AppData, Conflict } from "../../../types";
@@ -52,9 +52,9 @@ export const ScheduleGrid: React.FC<Props> = ({
 
   // --- SENSORS ---
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), 
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(MouseSensor),
-    useSensor(TouchSensor)
+    useSensor(TouchSensor),
   );
 
   const { settings, schedule, classes, teachers, subjects } = data;
@@ -63,18 +63,18 @@ export const ScheduleGrid: React.FC<Props> = ({
   const currentTeacher = teachers.find((t) => t.id === activeId);
 
   // --- LOGIC HOOK ---
-  const { 
-    activeDragItem, 
-    handleDragStart, 
-    handleDragEnd, 
-    checkDragValidity 
-  } = useDndLogic(data, activeId, mode, onUpdate, setHoverConflict);
+  const { activeDragItem, handleDragStart, handleDragEnd, checkDragValidity } = useDndLogic(
+    data,
+    activeId,
+    mode,
+    onUpdate,
+    setHoverConflict,
+  );
 
-  const {
-    listPendingForClass,
-    listValidPendingForSlot,
-    placePendingLesson,
-  } = useManualPlacement(data, onUpdate);
+  const { listPendingForClass, listValidPendingForSlot, placePendingLesson } = useManualPlacement(
+    data,
+    onUpdate,
+  );
 
   const showManualPlacement =
     manualPlacementMode && editMode && mode === "CLASS" && !activeDragItem;
@@ -112,7 +112,7 @@ export const ScheduleGrid: React.FC<Props> = ({
 
   const classSchedule = useMemo(() => {
     if (mode === "CLASS" && currentClass) {
-        return calculateClassSchedule(currentClass, settings, currentStructure);
+      return calculateClassSchedule(currentClass, settings, currentStructure);
     }
     return [];
   }, [mode, currentClass, settings, currentStructure]);
@@ -120,14 +120,14 @@ export const ScheduleGrid: React.FC<Props> = ({
   let periodsToRender = settings.periodsPerDay;
   if (mode === "CLASS" && currentClass) {
     if (currentClass.structure?.length) {
-       periodsToRender = currentClass.structure.length;
+      periodsToRender = currentClass.structure.length;
     } else {
-       periodsToRender = currentClass.periodCount || settings.periodsPerDay;
+      periodsToRender = currentClass.periodCount || settings.periodsPerDay;
     }
   } else if (mode === "TEACHER" && currentTeacher) {
     const maxClassPeriod = Math.max(
       settings.periodsPerDay,
-      ...classes.map((c) => Math.max(c.periodCount || 0, c.structure?.length || 0))
+      ...classes.map((c) => Math.max(c.periodCount || 0, c.structure?.length || 0)),
     );
     periodsToRender = maxClassPeriod;
   }
@@ -149,52 +149,52 @@ export const ScheduleGrid: React.FC<Props> = ({
 
   const getPeriodLabel = (index: number) => {
     const item = currentStructure?.[index];
-    const type = typeof item === "object" ? item.type : (item || "CLASS");
-    const effectiveType = type || "CLASS"; 
+    const type = typeof item === "object" ? item.type : item || "CLASS";
+    const effectiveType = type || "CLASS";
 
     let label = "";
     if (effectiveType !== "CLASS") {
-        const l = typeof item === "string" ? item : (item as any)?.label || effectiveType;
-        label = l || "Break";
+      const l = typeof item === "string" ? item : (item as any)?.label || effectiveType;
+      label = l || "Break";
     } else {
-        let classCount = 0;
-        for (let i = 0; i <= index; i++) {
-            const pItem = currentStructure?.[i];
-            const pType = typeof pItem === "object" ? pItem.type : (pItem || "CLASS");
-            if ((pType || "CLASS") === "CLASS") {
-                classCount++;
-            }
+      let classCount = 0;
+      for (let i = 0; i <= index; i++) {
+        const pItem = currentStructure?.[i];
+        const pType = typeof pItem === "object" ? pItem.type : pItem || "CLASS";
+        if ((pType || "CLASS") === "CLASS") {
+          classCount++;
         }
-        label = `Period ${classCount}`;
+      }
+      label = `Period ${classCount}`;
     }
 
     const time = classSchedule[index];
     if (time && mode === "CLASS") {
-        return (
-            <div className="flex flex-col items-center">
-                <span>{label}</span>
-                <span className="text-[10px] font-normal lowercase opacity-70">
-                    ({time.start} - {time.end})
-                </span>
-            </div>
-        );
+      return (
+        <div className="flex flex-col items-center">
+          <span>{label}</span>
+          <span className="text-[10px] font-normal lowercase opacity-70">
+            ({time.start} - {time.end})
+          </span>
+        </div>
+      );
     }
 
     return label;
   };
 
   const handleDragOver = (event: any) => {
-      const { over } = event;
-      if (!over) {
-          if (setHoverConflict) setHoverConflict(null);
-          return;
-      }
-      const { day, period } = over.data.current;
-      checkDragValidity(day, period, true);
+    const { over } = event;
+    if (!over) {
+      if (setHoverConflict) setHoverConflict(null);
+      return;
+    }
+    const { day, period } = over.data.current;
+    checkDragValidity(day, period, true);
   };
 
   return (
-    <DndContext 
+    <DndContext
       sensors={sensors}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
@@ -203,8 +203,10 @@ export const ScheduleGrid: React.FC<Props> = ({
       <div className="flex flex-col h-full min-w-full w-fit print:min-w-0">
         {/* STATUS BAR */}
         <div className="mb-3 p-3 rounded-lg text-xs font-bold flex items-center gap-3 transition-all shadow-sm border bg-white text-slate-500 border-slate-200">
-          <div className={`p-1 rounded ${editMode ? "bg-amber-100 text-amber-600" : "bg-slate-100"}`}>
-             {editMode ? <ArrowRightLeft size={14} /> : <Lock size={14} />}
+          <div
+            className={`p-1 rounded ${editMode ? "bg-amber-100 text-amber-600" : "bg-slate-100"}`}
+          >
+            {editMode ? <ArrowRightLeft size={14} /> : <Lock size={14} />}
           </div>
           <span>
             {manualPlacementMode && mode === "CLASS"
@@ -252,87 +254,105 @@ export const ScheduleGrid: React.FC<Props> = ({
               {Array.from({ length: periodsToRender }).map((_, pIdx) => {
                 const { slot, classId } = getCellData(dIdx, pIdx);
                 const structItem = currentStructure?.[pIdx];
-                const structType = typeof structItem === "object" ? structItem.type : (structItem || "CLASS");
+                const structType =
+                  typeof structItem === "object" ? structItem.type : structItem || "CLASS";
                 const isBreakSlot = structType && structType !== "CLASS";
 
                 let content = null;
                 const isValidTarget = activeDragItem ? checkDragValidity(dIdx, pIdx) : true;
-                const opacityClass = !isValidTarget ? "opacity-30 grayscale cursor-not-allowed" : "";
+                const opacityClass = !isValidTarget
+                  ? "opacity-30 grayscale cursor-not-allowed"
+                  : "";
 
-                const isHighlighted = highlightedConflict && 
-                    highlightedConflict.day === dIdx && 
-                    highlightedConflict.period === pIdx;
-                    
-                const highlightClass = isHighlighted ? "ring-4 ring-red-400 ring-opacity-70 shadow-lg scale-[1.02] z-20 transition-all duration-300" : "";
+                const isHighlighted =
+                  highlightedConflict &&
+                  highlightedConflict.day === dIdx &&
+                  highlightedConflict.period === pIdx;
+
+                const highlightClass = isHighlighted
+                  ? "ring-4 ring-red-400 ring-opacity-70 shadow-lg scale-[1.02] z-20 transition-all duration-300"
+                  : "";
 
                 if (slot) {
                   if (slot.electiveBlockId) {
-                     const block = data.electives?.find(e => e.id === slot.electiveBlockId);
-                     const blockSubjects = block?.subjectIds.map(sid => subjects.find(s => s.id === sid)).filter(Boolean) || [];
-                     
-                     content = (
-                       <div className={`flex flex-col h-full w-full bg-white border border-slate-200 p-0 overflow-hidden hover:shadow-md transition-shadow ${opacityClass}`}>
-                         {blockSubjects.map((subj, idx) => (
-                           <div 
-                             key={subj?.id || idx} 
-                             className={`flex-1 flex items-center px-2 text-[9px] font-bold truncate relative ${
-                               idx < blockSubjects.length - 1 ? "border-b border-slate-200" : ""
-                             }`}
-                             style={{ backgroundColor: `${subj?.color}15`, color: subj?.color }}
-                           >
-                              <div className="w-1.5 h-1.5 rounded-full mr-1 shrink-0" style={{ backgroundColor: subj?.color }}></div>
-                              <span className="truncate">{subj?.name}</span>
-                           </div>
-                         ))}
-                         {blockSubjects.length === 0 && (
-                           <div className="flex-1 flex items-center justify-center text-[9px] text-slate-400 italic">
-                             Unknown Elective
-                           </div>
-                         )}
-                       </div>
-                     );
-                  } 
-                  else {
+                    const block = data.electives?.find((e) => e.id === slot.electiveBlockId);
+                    const blockSubjects =
+                      block?.subjectIds
+                        .map((sid) => subjects.find((s) => s.id === sid))
+                        .filter(Boolean) || [];
+
+                    content = (
+                      <div
+                        className={`flex flex-col h-full w-full bg-white border border-slate-200 p-0 overflow-hidden hover:shadow-md transition-shadow ${opacityClass}`}
+                      >
+                        {blockSubjects.map((subj, idx) => (
+                          <div
+                            key={subj?.id || idx}
+                            className={`flex-1 flex items-center px-2 text-[9px] font-bold truncate relative ${
+                              idx < blockSubjects.length - 1 ? "border-b border-slate-200" : ""
+                            }`}
+                            style={{ backgroundColor: `${subj?.color}15`, color: subj?.color }}
+                          >
+                            <div
+                              className="w-1.5 h-1.5 rounded-full mr-1 shrink-0"
+                              style={{ backgroundColor: subj?.color }}
+                            ></div>
+                            <span className="truncate">{subj?.name}</span>
+                          </div>
+                        ))}
+                        {blockSubjects.length === 0 && (
+                          <div className="flex-1 flex items-center justify-center text-[9px] text-slate-400 italic">
+                            Unknown Elective
+                          </div>
+                        )}
+                      </div>
+                    );
+                  } else {
                     const subject = subjects.find((s) => s.id === slot.subjectId);
                     const teacher = teachers.find((t) => t.id === slot.teacherId);
                     const classGroup = classes.find((c) => c.id === classId);
 
                     let timeRange = "";
                     if (mode === "TEACHER" && classGroup) {
-                        const classSched = calculateClassSchedule(classGroup, settings, classGroup.structure || settings.dayStructure);
-                        const slotTime = classSched[pIdx];
-                        if (slotTime) {
-                            timeRange = `${slotTime.start} - ${slotTime.end}`;
-                        }
+                      const classSched = calculateClassSchedule(
+                        classGroup,
+                        settings,
+                        classGroup.structure || settings.dayStructure,
+                      );
+                      const slotTime = classSched[pIdx];
+                      if (slotTime) {
+                        timeRange = `${slotTime.start} - ${slotTime.end}`;
+                      }
                     }
 
                     content = (
-                       <div className={`w-full h-full ${opacityClass}`}>
-                          <DraggableSlot
-                            slot={slot}
-                            day={dIdx}
-                            period={pIdx}
-                            subject={subject}
-                            teacher={teacher}
-                            classGroup={classGroup}
-                            mode={mode}
-                            disabled={!editMode}
-                            timeRange={timeRange}
-                          />
-                       </div>
+                      <div className={`w-full h-full ${opacityClass}`}>
+                        <DraggableSlot
+                          slot={slot}
+                          day={dIdx}
+                          period={pIdx}
+                          subject={subject}
+                          teacher={teacher}
+                          classGroup={classGroup}
+                          mode={mode}
+                          disabled={!editMode}
+                          timeRange={timeRange}
+                        />
+                      </div>
                     );
                   }
                 } else if (isBreakSlot) {
                   content = (
                     <div className="flex items-center justify-center h-full">
-                       <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">
+                      <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">
                         {structType}
-                       </span>
+                      </span>
                     </div>
                   );
                 } else {
                   const fixedLabel = data.settings.fixedOccasions?.[dIdx]?.[pIdx];
-                  const classFixedLabel = mode === "CLASS" ? currentClass?.fixedSessions?.[dIdx]?.[pIdx] : null;
+                  const classFixedLabel =
+                    mode === "CLASS" ? currentClass?.fixedSessions?.[dIdx]?.[pIdx] : null;
                   const finalFixed = classFixedLabel || fixedLabel;
 
                   const fixedText = getOccasionLabel(finalFixed);
@@ -343,18 +363,16 @@ export const ScheduleGrid: React.FC<Props> = ({
                       </div>
                     );
                   }
-                  
+
                   if (!content && activeDragItem && !isValidTarget) {
-                      content = <div className="w-full h-full bg-slate-100/50 opacity-50"></div>;
+                    content = <div className="w-full h-full bg-slate-100/50 opacity-50"></div>;
                   }
 
                   if (!content && showManualPlacement && !fixedText) {
                     content = (
                       <EmptySlotPlacementButton
                         hasPending={pendingForClass.length > 0}
-                        onClick={() =>
-                          setPlacementTarget({ day: dIdx, period: pIdx })
-                        }
+                        onClick={() => setPlacementTarget({ day: dIdx, period: pIdx })}
                       />
                     );
                   }
@@ -376,19 +394,23 @@ export const ScheduleGrid: React.FC<Props> = ({
           ))}
         </div>
 
-        <DragOverlay dropAnimation={{ duration: 200, easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)' }}>
+        <DragOverlay
+          dropAnimation={{ duration: 200, easing: "cubic-bezier(0.18, 0.67, 0.6, 1.22)" }}
+        >
           {activeDragItem ? (
             <div className="h-16 w-32 shadow-2xl opacity-90 rotate-2">
-               <DraggableSlot
-                  slot={activeDragItem.slot}
-                  day={activeDragItem.day}
-                  period={activeDragItem.period}
-                  subject={subjects.find(s => s.id === activeDragItem.slot.subjectId)}
-                  teacher={teachers.find(t => t.id === activeDragItem.slot.teacherId)}
-                  classGroup={classes.find(c => c.id === (mode === "CLASS" ? activeId : activeDragItem.classGroup?.id))}
-                  mode={mode}
-                  disabled={false}
-               />
+              <DraggableSlot
+                slot={activeDragItem.slot}
+                day={activeDragItem.day}
+                period={activeDragItem.period}
+                subject={subjects.find((s) => s.id === activeDragItem.slot.subjectId)}
+                teacher={teachers.find((t) => t.id === activeDragItem.slot.teacherId)}
+                classGroup={classes.find(
+                  (c) => c.id === (mode === "CLASS" ? activeId : activeDragItem.classGroup?.id),
+                )}
+                mode={mode}
+                disabled={false}
+              />
             </div>
           ) : null}
         </DragOverlay>

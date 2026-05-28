@@ -12,7 +12,10 @@ export const exportDutyToExcel = async (data: AppData, roster: DutyRoster) => {
 
   const worksheet = workbook.addWorksheet(roster.name.substring(0, 30));
 
-  const rowLabels = roster.type === "DAILY" ? DAYS : Array.from({ length: roster.weeklyParams.weeks }, (_, i) => `Week ${i + 1}`);
+  const rowLabels =
+    roster.type === "DAILY"
+      ? DAYS
+      : Array.from({ length: roster.weeklyParams.weeks }, (_, i) => `Week ${i + 1}`);
   const assignments = roster.type === "DAILY" ? roster.dailyAssignments : roster.weeklyAssignments;
   const slotCount = roster.type === "DAILY" ? roster.dailyParams.max : roster.weeklyParams.max;
 
@@ -49,8 +52,8 @@ export const exportDutyToExcel = async (data: AppData, roster: DutyRoster) => {
 
     for (let sIdx = 0; sIdx < slotCount; sIdx++) {
       const cell = row.getCell(sIdx + 2);
-      const asgn = assignments.find(a => a.day === rIdx && a.period === sIdx);
-      const teacher = asgn ? data.teachers.find(t => t.id === asgn.teacherId) : null;
+      const asgn = assignments.find((a) => a.day === rIdx && a.period === sIdx);
+      const teacher = asgn ? data.teachers.find((t) => t.id === asgn.teacherId) : null;
 
       cell.value = teacher ? teacher.name : "—";
       cell.alignment = { vertical: "middle", horizontal: "center" };
@@ -60,7 +63,7 @@ export const exportDutyToExcel = async (data: AppData, roster: DutyRoster) => {
         bottom: { style: "thin", color: { argb: "FFE2E8F0" } },
         right: { style: "thin", color: { argb: "FFE2E8F0" } },
       };
-      
+
       if (teacher) {
         cell.font = { bold: true, color: { argb: "FF1E293B" } };
         cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFAF2" } };
@@ -70,16 +73,21 @@ export const exportDutyToExcel = async (data: AppData, roster: DutyRoster) => {
 
   const buffer = await workbook.xlsx.writeBuffer();
   const fileName = `${roster.name.replace(/\s+/g, "_")}_Export.xlsx`;
-  const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const blob = new Blob([buffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
   await FileService.saveExport(blob, fileName, "xlsx");
 };
 
 export const printDutyRoster = (data: AppData, roster: DutyRoster) => {
-  const rowLabels = roster.type === "DAILY" ? DAYS : Array.from({ length: roster.weeklyParams.weeks }, (_, i) => `Week ${i + 1}`);
+  const rowLabels =
+    roster.type === "DAILY"
+      ? DAYS
+      : Array.from({ length: roster.weeklyParams.weeks }, (_, i) => `Week ${i + 1}`);
   const assignments = roster.type === "DAILY" ? roster.dailyAssignments : roster.weeklyAssignments;
   const slotCount = roster.type === "DAILY" ? roster.dailyParams.max : roster.weeklyParams.max;
 
-  let htmlContent = `
+  const htmlContent = `
     <!DOCTYPE html>
     <html>
     <head>
@@ -112,20 +120,28 @@ export const printDutyRoster = (data: AppData, roster: DutyRoster) => {
         <thead>
           <tr>
             <th class="row-label">${roster.type === "DAILY" ? "Day" : "Week"}</th>
-            ${Array.from({ length: slotCount }).map((_, i) => `<th>Slot ${i + 1}</th>`).join("")}
+            ${Array.from({ length: slotCount })
+              .map((_, i) => `<th>Slot ${i + 1}</th>`)
+              .join("")}
           </tr>
         </thead>
         <tbody>
-          ${rowLabels.map((label, rIdx) => `
+          ${rowLabels
+            .map(
+              (label, rIdx) => `
             <tr>
               <td class="row-label">${label}</td>
-              ${Array.from({ length: slotCount }).map((_, sIdx) => {
-                const asgn = assignments.find(a => a.day === rIdx && a.period === sIdx);
-                const teacher = asgn ? data.teachers.find(t => t.id === asgn.teacherId) : null;
-                return `<td><span class="${teacher ? 'staff-name' : 'empty-slot'}">${teacher ? teacher.name : '—'}</span></td>`;
-              }).join("")}
+              ${Array.from({ length: slotCount })
+                .map((_, sIdx) => {
+                  const asgn = assignments.find((a) => a.day === rIdx && a.period === sIdx);
+                  const teacher = asgn ? data.teachers.find((t) => t.id === asgn.teacherId) : null;
+                  return `<td><span class="${teacher ? "staff-name" : "empty-slot"}">${teacher ? teacher.name : "—"}</span></td>`;
+                })
+                .join("")}
             </tr>
-          `).join("")}
+          `,
+            )
+            .join("")}
         </tbody>
       </table>
       <div class="footer">

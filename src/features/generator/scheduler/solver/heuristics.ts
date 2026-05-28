@@ -28,8 +28,7 @@ const getTeacherConstraintScore = (
 
   const totalSlots = 60;
   const maxWeekly =
-    data.settings.maxTeachingPeriodsPerWeek ??
-    (data.settings.maxTeacherPeriodsPerDay || 6) * 5;
+    data.settings.maxTeachingPeriodsPerWeek ?? (data.settings.maxTeacherPeriodsPerDay || 6) * 5;
   const maxLoad = Math.min(maxWeekly, totalSlots);
   return blockedCount + (totalSlots - maxLoad);
 };
@@ -121,10 +120,7 @@ export function findMostConstrainedGangIdx(
       roomMap,
     );
 
-    if (
-      domainSize < minDomain ||
-      (domainSize === minDomain && leader.priority > bestPriority)
-    ) {
+    if (domainSize < minDomain || (domainSize === minDomain && leader.priority > bestPriority)) {
       minDomain = domainSize;
       bestIdx = i;
       bestPriority = leader.priority;
@@ -172,18 +168,7 @@ export function countValidSlots(
         }
 
         if (
-          !checkHardConstraints(
-            state,
-            data,
-            d,
-            p,
-            p2,
-            u,
-            teacherMap,
-            classMap,
-            subjectMap,
-            roomMap,
-          )
+          !checkHardConstraints(state, data, d, p, p2, u, teacherMap, classMap, subjectMap, roomMap)
         ) {
           gangValid = false;
           break;
@@ -258,7 +243,8 @@ export class MrvCache {
       if (u.defaultRoomId) placedResources.add(`R:${u.defaultRoomId}`);
       if (u.requiredRoomType) placedResources.add(`RT:${u.requiredRoomType}`);
       const sub = this.subjectMap.get(u.subjectId);
-      if (sub && (sub as any).requiredRoomId) placedResources.add(`R:${(sub as any).requiredRoomId}`);
+      if (sub && (sub as any).requiredRoomId)
+        placedResources.add(`R:${(sub as any).requiredRoomId}`);
     }
 
     for (const [gangId, resources] of this.gangResources) {
@@ -289,10 +275,7 @@ export class MrvCache {
    * Pick the leader with the smallest domain from the queue.
    * Only recomputes domain for dirty entries; uses cache for the rest.
    */
-  findMostConstrainedIdx(
-    leaders: AllocationUnit[],
-    state: SchedulerState,
-  ): number {
+  findMostConstrainedIdx(leaders: AllocationUnit[], state: SchedulerState): number {
     let minDomain = Infinity;
     let bestIdx = 0;
     let bestPriority = -1;
@@ -321,10 +304,7 @@ export class MrvCache {
         domainSize = this.domainCache.get(gangId)!;
       }
 
-      if (
-        domainSize < minDomain ||
-        (domainSize === minDomain && leader.priority > bestPriority)
-      ) {
+      if (domainSize < minDomain || (domainSize === minDomain && leader.priority > bestPriority)) {
         minDomain = domainSize;
         bestIdx = i;
         bestPriority = leader.priority;

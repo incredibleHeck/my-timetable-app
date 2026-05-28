@@ -1,28 +1,30 @@
-import { describe, it, expect } from 'vitest';
-import { checkSlotValidity } from '../src/features/generator/scheduler/validation/index';
-import { initializeState } from '../src/features/generator/scheduler/core/state';
-import { AppData, Teacher, Class, Subject, Room } from '../src/types';
-import { DEFAULT_DATA } from '../src/utils/constants';
+import { describe, it, expect } from "vitest";
+import { checkSlotValidity } from "../src/features/generator/scheduler/validation/index";
+import { initializeState } from "../src/features/generator/scheduler/core/state";
+import { AppData, Teacher, Class, Subject, Room } from "../src/types";
+import { DEFAULT_DATA } from "../src/utils/constants";
 
-describe('Reproduction: Swap Daily Limit Logic', () => {
+describe("Reproduction: Swap Daily Limit Logic", () => {
   const mockTeacher: Teacher = {
-    id: 't1',
-    name: 'John Doe',
-    specialtyIds: ['math', 'eng', 'hist'],
-    constraints: Array(5).fill(null).map(() => Array(8).fill(false)),
+    id: "t1",
+    name: "John Doe",
+    specialtyIds: ["math", "eng", "hist"],
+    constraints: Array(5)
+      .fill(null)
+      .map(() => Array(8).fill(false)),
   };
 
   const mockClass: Class = {
-    id: 'c1',
-    name: '10A',
+    id: "c1",
+    name: "10A",
     curriculum: [],
     studentCount: 30,
     periodCount: 6, // 6 periods per day
-    structure: Array(6).fill({ type: 'CLASS', label: 'C' }),
+    structure: Array(6).fill({ type: "CLASS", label: "C" }),
   };
 
-  const mockMath: Subject = { id: 'math', name: 'Math', color: 'red' };
-  const mockEng: Subject = { id: 'eng', name: 'English', color: 'blue' };
+  const mockMath: Subject = { id: "math", name: "Math", color: "red" };
+  const mockEng: Subject = { id: "eng", name: "English", color: "blue" };
 
   const baseData: AppData = {
     ...DEFAULT_DATA,
@@ -30,7 +32,7 @@ describe('Reproduction: Swap Daily Limit Logic', () => {
       ...DEFAULT_DATA.settings,
       periodsPerDay: 6,
       maxConsecutivePeriods: 2, // Strict consecutive limit
-      dayStructure: Array(6).fill({ type: 'CLASS', label: 'C' }),
+      dayStructure: Array(6).fill({ type: "CLASS", label: "C" }),
     },
     teachers: [mockTeacher],
     classes: [mockClass],
@@ -38,8 +40,8 @@ describe('Reproduction: Swap Daily Limit Logic', () => {
     rooms: [],
   };
 
-  it('should allow swapping without false consecutive chain', () => {
-    // Setup: 
+  it("should allow swapping without false consecutive chain", () => {
+    // Setup:
     // P0-P1: Math (Double)
     // P2-P3: English (Double)
     // Consecutive Limit: 2.
@@ -47,15 +49,16 @@ describe('Reproduction: Swap Daily Limit Logic', () => {
     const data: AppData = {
       ...baseData,
       schedule: {
-        'c1': {
-          0: { // Monday
-            0: { subjectId: 'math', teacherId: 't1', classId: 'c1', duration: 2, isFixed: false },
-            1: { subjectId: 'math', teacherId: 't1', classId: 'c1', duration: 2, isFixed: true }, 
-            2: { subjectId: 'eng', teacherId: 't1', classId: 'c1', duration: 2, isFixed: false },
-            3: { subjectId: 'eng', teacherId: 't1', classId: 'c1', duration: 2, isFixed: true },
-          }
-        }
-      }
+        c1: {
+          0: {
+            // Monday
+            0: { subjectId: "math", teacherId: "t1", classId: "c1", duration: 2, isFixed: false },
+            1: { subjectId: "math", teacherId: "t1", classId: "c1", duration: 2, isFixed: true },
+            2: { subjectId: "eng", teacherId: "t1", classId: "c1", duration: 2, isFixed: false },
+            3: { subjectId: "eng", teacherId: "t1", classId: "c1", duration: 2, isFixed: true },
+          },
+        },
+      },
     };
 
     // Action: Swap Math (P0-P1) to P2 (English).
@@ -65,13 +68,13 @@ describe('Reproduction: Swap Daily Limit Logic', () => {
       data,
       0, // day
       2, // targetPeriod (P2)
-      't1', // teacherId
-      'c1', // classId
-      'math', // subjectId
+      "t1", // teacherId
+      "c1", // classId
+      "math", // subjectId
       state,
       { day: 0, period: 0, duration: 2 }, // ignoreSlot (P0)
       undefined,
-      2 // duration
+      2, // duration
     );
 
     // Expectation:

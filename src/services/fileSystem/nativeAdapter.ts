@@ -1,26 +1,26 @@
-import { isTauriEnv } from '../../utils/platform';
+import { isTauriEnv } from "../../utils/platform";
 
 // Dynamic imports for Tauri plugins to prevent crashes in non-Tauri environments.
 
 const getFs = async () => {
   if (isTauriEnv()) {
-    return await import('@tauri-apps/plugin-fs');
+    return await import("@tauri-apps/plugin-fs");
   }
-  throw new Error('Tauri FS plugin is not available in this environment');
+  throw new Error("Tauri FS plugin is not available in this environment");
 };
 
 const getPath = async () => {
   if (isTauriEnv()) {
-    return await import('@tauri-apps/api/path');
+    return await import("@tauri-apps/api/path");
   }
-  throw new Error('Tauri Path API is not available in this environment');
+  throw new Error("Tauri Path API is not available in this environment");
 };
 
 const getDialog = async () => {
   if (isTauriEnv()) {
-    return await import('@tauri-apps/plugin-dialog');
+    return await import("@tauri-apps/plugin-dialog");
   }
-  throw new Error('Tauri Dialog plugin is not available in this environment');
+  throw new Error("Tauri Dialog plugin is not available in this environment");
 };
 
 /**
@@ -77,13 +77,13 @@ export async function readFile(path: string): Promise<string> {
  * @returns True if exists, false otherwise.
  */
 export async function fileExists(path: string): Promise<boolean> {
-    try {
-        const { exists } = await getFs();
-        return await exists(path);
-    } catch (error) {
-        console.error(`Failed to check existence of ${path}:`, error);
-        return false;
-    }
+  try {
+    const { exists } = await getFs();
+    return await exists(path);
+  } catch (error) {
+    console.error(`Failed to check existence of ${path}:`, error);
+    return false;
+  }
 }
 
 /**
@@ -91,7 +91,10 @@ export async function fileExists(path: string): Promise<boolean> {
  * @param options - Dialog options (filters, default path).
  * @returns The selected path or null if cancelled.
  */
-export async function saveDialog(options?: { defaultPath?: string; filters?: { name: string; extensions: string[] }[] }): Promise<string | null> {
+export async function saveDialog(options?: {
+  defaultPath?: string;
+  filters?: { name: string; extensions: string[] }[];
+}): Promise<string | null> {
   try {
     const { save } = await getDialog();
     const result = await save({
@@ -100,7 +103,7 @@ export async function saveDialog(options?: { defaultPath?: string; filters?: { n
     });
     return result;
   } catch (error) {
-    console.error('Failed to open save dialog:', error);
+    console.error("Failed to open save dialog:", error);
     return null;
   }
 }
@@ -110,7 +113,10 @@ export async function saveDialog(options?: { defaultPath?: string; filters?: { n
  * @param options - Dialog options.
  * @returns The selected path(s) or null.
  */
-export async function openDialog(options?: { multiple?: boolean; filters?: { name: string; extensions: string[] }[] }): Promise<string | string[] | null> {
+export async function openDialog(options?: {
+  multiple?: boolean;
+  filters?: { name: string; extensions: string[] }[];
+}): Promise<string | string[] | null> {
   try {
     const { open } = await getDialog();
     const result = await open({
@@ -119,7 +125,7 @@ export async function openDialog(options?: { multiple?: boolean; filters?: { nam
     });
     return result;
   } catch (error) {
-    console.error('Failed to open dialog:', error);
+    console.error("Failed to open dialog:", error);
     return null;
   }
 }
@@ -129,11 +135,11 @@ export async function openDialog(options?: { multiple?: boolean; filters?: { nam
  * @param path - The absolute path.
  */
 export async function removeFile(path: string): Promise<void> {
-    try {
-        const { remove } = await getFs();
-        await remove(path);
-    } catch (error) {
-        console.error(`Failed to remove file ${path}:`, error);
-        throw error;
-    }
+  try {
+    const { remove } = await getFs();
+    await remove(path);
+  } catch (error) {
+    console.error(`Failed to remove file ${path}:`, error);
+    throw error;
+  }
 }

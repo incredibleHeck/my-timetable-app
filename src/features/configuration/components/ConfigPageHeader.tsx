@@ -5,9 +5,7 @@ interface ConfigPageHeaderProps {
   profileName?: string;
 }
 
-export const ConfigPageHeader: React.FC<ConfigPageHeaderProps> = ({
-  profileName,
-}) => (
+export const ConfigPageHeader: React.FC<ConfigPageHeaderProps> = ({ profileName }) => (
   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
     <div>
       <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">

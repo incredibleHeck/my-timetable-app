@@ -14,7 +14,7 @@ export const useExamRosters = (data: AppData, onUpdate: (newData: AppData) => vo
         id: generateId(),
         name: "Imported Timetable",
         exams: data.exams,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
       rosters = [legacyRoster];
       updated = true;
@@ -25,17 +25,17 @@ export const useExamRosters = (data: AppData, onUpdate: (newData: AppData) => vo
         id: generateId(),
         name: "Standard Timetable",
         exams: [],
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
       rosters = [defaultRoster];
       updated = true;
     }
 
     if (updated) {
-      onUpdate({ 
-        ...data, 
+      onUpdate({
+        ...data,
         examRosters: rosters,
-        exams: [] 
+        exams: [],
       });
     }
 
@@ -46,7 +46,7 @@ export const useExamRosters = (data: AppData, onUpdate: (newData: AppData) => vo
 
   const activeRoster = useMemo(() => {
     if (!data.examRosters || data.examRosters.length === 0) return null;
-    return data.examRosters.find(r => r.id === activeRosterId) || data.examRosters[0];
+    return data.examRosters.find((r) => r.id === activeRosterId) || data.examRosters[0];
   }, [data.examRosters, activeRosterId]);
 
   const activeData = useMemo(() => {
@@ -55,8 +55,8 @@ export const useExamRosters = (data: AppData, onUpdate: (newData: AppData) => vo
 
   const handleUpdateActiveRoster = (updatedActiveData: AppData) => {
     if (!activeRoster) return;
-    const newRosters = data.examRosters?.map(r => 
-      r.id === activeRoster.id ? { ...r, exams: updatedActiveData.exams } : r
+    const newRosters = data.examRosters?.map((r) =>
+      r.id === activeRoster.id ? { ...r, exams: updatedActiveData.exams } : r,
     );
     onUpdate({ ...data, examRosters: newRosters, exams: [] });
   };
@@ -66,7 +66,7 @@ export const useExamRosters = (data: AppData, onUpdate: (newData: AppData) => vo
       id: generateId(),
       name: `New Timetable ${data.examRosters?.length ? data.examRosters.length + 1 : 1}`,
       exams: [],
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
     onUpdate({ ...data, examRosters: [...(data.examRosters || []), newRoster] });
     setActiveRosterId(newRoster.id);
@@ -74,7 +74,7 @@ export const useExamRosters = (data: AppData, onUpdate: (newData: AppData) => vo
 
   const deleteRoster = (id: string) => {
     if (!confirm("Are you sure you want to delete this timetable?")) return;
-    const filtered = data.examRosters?.filter(r => r.id !== id) || [];
+    const filtered = data.examRosters?.filter((r) => r.id !== id) || [];
     onUpdate({ ...data, examRosters: filtered });
     if (activeRosterId === id) {
       setActiveRosterId(filtered[0]?.id || null);
@@ -83,8 +83,8 @@ export const useExamRosters = (data: AppData, onUpdate: (newData: AppData) => vo
 
   const renameRoster = (name: string) => {
     if (!activeRoster) return;
-    const newRosters = data.examRosters?.map(r => 
-      r.id === activeRoster.id ? { ...r, name } : r
+    const newRosters = data.examRosters?.map((r) =>
+      r.id === activeRoster.id ? { ...r, name } : r,
     );
     onUpdate({ ...data, examRosters: newRosters });
   };
@@ -97,6 +97,6 @@ export const useExamRosters = (data: AppData, onUpdate: (newData: AppData) => vo
     handleUpdateActiveRoster,
     createNewRoster,
     deleteRoster,
-    renameRoster
+    renameRoster,
   };
 };

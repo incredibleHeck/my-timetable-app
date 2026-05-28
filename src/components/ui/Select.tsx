@@ -6,12 +6,7 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   options: { value: string; label: string }[];
 }
 
-export const Select: React.FC<SelectProps> = ({
-  label,
-  options,
-  className = "",
-  ...props
-}) => (
+export const Select: React.FC<SelectProps> = ({ label, options, className = "", ...props }) => (
   <div className="w-full relative">
     {label && (
       <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">

@@ -29,42 +29,29 @@ export const useClassForm = ({
 
   // New State for Class-Specific Reservations
   const [cFixedSessions, setCFixedSessions] = useState<(string | null)[][]>([]);
-  const [activeSlot, setActiveSlot] = useState<{ d: number; p: number } | null>(
-    null
-  );
+  const [activeSlot, setActiveSlot] = useState<{ d: number; p: number } | null>(null);
   const [slotLabel, setSlotLabel] = useState("");
 
-  const [modalSubTab, setModalSubTab] = useState<"BASICS" | "STRUCTURE">(
-    "BASICS"
-  );
+  const [modalSubTab, setModalSubTab] = useState<"BASICS" | "STRUCTURE">("BASICS");
 
   // Hydrate state when modal opens or editingClass changes
   useEffect(() => {
     if (isOpen) {
       setCName(editingClass?.name || "");
       setCDefaultRoomId(editingClass?.defaultRoomId || editingClass?.classroomId || null);
-      setCDuration(
-        editingClass?.duration || data.settings.defaultClassDuration || 50
-      );
-      setCBreakDuration(
-        editingClass?.breakDuration || data.settings.defaultBreakDuration || 20
-      );
-      setCLunchDuration(
-        editingClass?.lunchDuration || data.settings.defaultLunchDuration || 60
-      );
-      const targetCount =
-        editingClass?.periodCount || data.settings.periodsPerDay;
+      setCDuration(editingClass?.duration || data.settings.defaultClassDuration || 50);
+      setCBreakDuration(editingClass?.breakDuration || data.settings.defaultBreakDuration || 20);
+      setCLunchDuration(editingClass?.lunchDuration || data.settings.defaultLunchDuration || 60);
+      const targetCount = editingClass?.periodCount || data.settings.periodsPerDay;
       setCPeriodCount(targetCount);
 
       // 1. Structure Logic
-      const defaultStruct = data.settings.dayStructure.map(
-        (s) => s.type || "CLASS"
-      );
+      const defaultStruct = data.settings.dayStructure.map((s) => s.type || "CLASS");
       let initialStruct: PeriodType[] = [];
 
       if (editingClass?.structure && editingClass.structure.length > 0) {
         initialStruct = editingClass.structure.map(
-          (s) => (typeof s === "object" ? s.type : s) || "CLASS"
+          (s) => (typeof s === "object" ? s.type : s) || "CLASS",
         );
       } else {
         initialStruct = [...defaultStruct];
@@ -98,22 +85,20 @@ export const useClassForm = ({
       // 3. Curriculum Logic
       const existingCurr = editingClass?.curriculum || [];
       const fullCurr = [...data.subjects]
-        .sort((a, b) =>
-          a.name.localeCompare(b.name, undefined, { numeric: true }),
-        )
+        .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
         .map((subj) => {
-        const existing = existingCurr.find((c) => c.subjectId === subj.id);
-        return existing
-          ? { ...existing }
-          : {
-              id: generateId(),
-              subjectId: subj.id,
-              periodsPerWeek: 0,
-              doubles: 0,
-              singles: 0,
-              assignedTeacherId: undefined,
-              isWorkloadExempt: false,
-            };
+          const existing = existingCurr.find((c) => c.subjectId === subj.id);
+          return existing
+            ? { ...existing }
+            : {
+                id: generateId(),
+                subjectId: subj.id,
+                periodsPerWeek: 0,
+                doubles: 0,
+                singles: 0,
+                assignedTeacherId: undefined,
+                isWorkloadExempt: false,
+              };
         });
       setCCurriculum(fullCurr as CurriculumItem[]);
       setModalSubTab("BASICS");
@@ -125,18 +110,14 @@ export const useClassForm = ({
 
     // Resize Structure
     if (val > cStructure.length) {
-      setCStructure([
-        ...cStructure,
-        ...Array(val - cStructure.length).fill("CLASS"),
-      ]);
+      setCStructure([...cStructure, ...Array(val - cStructure.length).fill("CLASS")]);
     } else {
       setCStructure(cStructure.slice(0, val));
     }
 
     // Resize Fixed Sessions
     const newFixed = cFixedSessions.map((row) => {
-      if (val > row.length)
-        return [...row, ...Array(val - row.length).fill(null)];
+      if (val > row.length) return [...row, ...Array(val - row.length).fill(null)];
       return row.slice(0, val);
     });
     setCFixedSessions(newFixed);
@@ -188,18 +169,30 @@ export const useClassForm = ({
   };
 
   return {
-    cName, setCName,
-    cDefaultRoomId, setCDefaultRoomId,
-    cDuration, setCDuration,
-    cBreakDuration, setCBreakDuration,
-    cLunchDuration, setCLunchDuration,
-    cPeriodCount, setCPeriodCount,
-    cStructure, setCStructure,
-    cCurriculum, setCCurriculum,
-    cFixedSessions, setCFixedSessions,
-    activeSlot, setActiveSlot,
-    slotLabel, setSlotLabel,
-    modalSubTab, setModalSubTab,
+    cName,
+    setCName,
+    cDefaultRoomId,
+    setCDefaultRoomId,
+    cDuration,
+    setCDuration,
+    cBreakDuration,
+    setCBreakDuration,
+    cLunchDuration,
+    setCLunchDuration,
+    cPeriodCount,
+    setCPeriodCount,
+    cStructure,
+    setCStructure,
+    cCurriculum,
+    setCCurriculum,
+    cFixedSessions,
+    setCFixedSessions,
+    activeSlot,
+    setActiveSlot,
+    slotLabel,
+    setSlotLabel,
+    modalSubTab,
+    setModalSubTab,
     handlePeriodCountChange,
     saveSlotLabel,
     handleSave,

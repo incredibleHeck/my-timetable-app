@@ -9,7 +9,7 @@ import { getOccasionLabel } from "../../../../utils/utils";
  */
 export const checkGlobalAndClassBlocks = (
   ctx: ValidationContext,
-  p: number
+  p: number,
 ): ValidationResult | null => {
   const { data, targetDay, classId, structure } = ctx;
   const cls = data.classes.find((c) => c.id === classId);
@@ -22,7 +22,7 @@ export const checkGlobalAndClassBlocks = (
       message: `Invalid Period Type: ${getType(structure, p)}`,
       severity: "HIGH",
       penaltyPoints: 2000, // Absolute wall
-      conflictCount: 0, 
+      conflictCount: 0,
     };
   }
 
@@ -64,21 +64,21 @@ export const checkGlobalAndClassBlocks = (
 export const checkResourceAndAvailability = (
   ctx: ValidationContext,
   p: number,
-  state?: SchedulerState
+  state?: SchedulerState,
 ): ValidationResult | null => {
   const { data, subjectId, targetDay, classId, teacherId, ignoredSlots } = ctx;
 
   // 1. TEACHER STATIC CONSTRAINT CHECK
-  // We distinguish between "Busy with another class" (Dynamic) 
+  // We distinguish between "Busy with another class" (Dynamic)
   // and "Unavailable to teach" (Static Block).
   if (state) {
     const occupantId = state.teacherOccupancy[teacherId]?.[targetDay]?.[p];
-    
+
     // Sentinel check: "BLOCK" represents a hard teacher constraint from their settings.
     if (occupantId === "BLOCK") {
       return {
         valid: false,
-        message: `${data.teachers.find(t=>t.id === teacherId)?.name || "Teacher"} is unavailable`,
+        message: `${data.teachers.find((t) => t.id === teacherId)?.name || "Teacher"} is unavailable`,
         severity: "HIGH",
         penaltyPoints: 1000,
         conflictCount: 1,
@@ -108,13 +108,13 @@ export const checkResourceAndAvailability = (
     if (state) {
       const resourceUser = state.singleResourceUsage[subjectId]?.[targetDay]?.[p];
       if (resourceUser && resourceUser !== "AVAILABLE" && resourceUser !== "BLOCK") {
-          return {
-            valid: false,
-            message: `${subject.name} Resource bottleneck`,
-            severity: "HIGH",
-            penaltyPoints: 1000,
-            conflictCount: 1,
-          };
+        return {
+          valid: false,
+          message: `${subject.name} Resource bottleneck`,
+          severity: "HIGH",
+          penaltyPoints: 1000,
+          conflictCount: 1,
+        };
       }
     } else {
       // O(N) Fallback scan for UI moves

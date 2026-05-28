@@ -105,17 +105,9 @@ describe("Solver roadmap improvements", () => {
     const classMap = new Map(data.classes.map((c) => [c.id, c]));
     const roomMap = new Map(data.rooms.map((r) => [r.id, r]));
 
-    const room = resolveTargetRoom(
-      0,
-      0,
-      -1,
-      unit,
-      state,
-      subjectMap,
-      classMap,
-      roomMap,
-      { requireAvailable: true },
-    );
+    const room = resolveTargetRoom(0, 0, -1, unit, state, subjectMap, classMap, roomMap, {
+      requireAvailable: true,
+    });
 
     expect(room).toBe("r-alt");
   });

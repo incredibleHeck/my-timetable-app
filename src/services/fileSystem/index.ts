@@ -14,12 +14,10 @@ export const FileService = {
    */
   async saveProject(
     data: AppData,
-    filename: string = "school_schedule"
+    filename: string = "school_schedule",
   ): Promise<{ success: boolean; path?: string }> {
     const content = JSON.stringify(data, null, 2);
-    const defaultName = `${filename}_${
-      new Date().toISOString().split("T")[0]
-    }.json`;
+    const defaultName = `${filename}_${new Date().toISOString().split("T")[0]}.json`;
 
     if (this.isTauri) {
       try {
@@ -72,7 +70,7 @@ export const FileService = {
   async saveExport(
     blob: Blob,
     defaultName: string,
-    extension: string
+    extension: string,
   ): Promise<{ success: boolean; path?: string }> {
     if (this.isTauri) {
       try {
@@ -90,12 +88,8 @@ export const FileService = {
         return { success: false };
       } catch (e) {
         console.error("Tauri Export Error:", e);
-        const detail =
-          e instanceof Error ? e.message : "Permission denied or path not writable.";
-        notify(
-          `Could not save file. ${detail} Try Desktop, Documents, or Downloads.`,
-          "error",
-        );
+        const detail = e instanceof Error ? e.message : "Permission denied or path not writable.";
+        notify(`Could not save file. ${detail} Try Desktop, Documents, or Downloads.`, "error");
         return { success: false };
       }
     } else {
@@ -147,4 +141,3 @@ export const FileService = {
     });
   },
 };
-

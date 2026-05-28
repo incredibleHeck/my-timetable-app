@@ -13,10 +13,10 @@ export const useClassActions = (data: AppData, onUpdate: (newData: AppData) => v
     newClass.name = `${cls.name} (Copy)`;
     newClass.defaultRoomId = ""; // Force new room creation in syncHomeRooms
     newClass.curriculum.forEach((c) => (c.id = generateId()));
-    
+
     const newClasses = [...data.classes, newClass];
     const { updatedClasses, updatedRooms } = syncHomeRooms(newClasses, data.rooms);
-    
+
     const nextData = { ...data, classes: updatedClasses, rooms: updatedRooms };
     addActivity("ACADEMIC", `Duplicated Class: ${cls.name}`, nextData);
     onUpdate(nextData);
@@ -27,9 +27,7 @@ export const useClassActions = (data: AppData, onUpdate: (newData: AppData) => v
     let msg = "";
     if (editingClass) {
       msg = `Updated Class: ${newClass.name}`;
-      newClasses = newClasses.map((c) =>
-        c.id === editingClass.id ? newClass : c
-      );
+      newClasses = newClasses.map((c) => (c.id === editingClass.id ? newClass : c));
     } else {
       msg = `Added Class: ${newClass.name}`;
       newClasses.push(newClass);
@@ -46,13 +44,11 @@ export const useClassActions = (data: AppData, onUpdate: (newData: AppData) => v
   const confirmDelete = (classToDelete: ClassGroup) => {
     // 1. Find the associated home room
     const homeRoomId = classToDelete.defaultRoomId;
-    const isHomeRoom = data.rooms.find(r => r.id === homeRoomId)?.isHomeRoom;
+    const isHomeRoom = data.rooms.find((r) => r.id === homeRoomId)?.isHomeRoom;
 
     // 2. Remove class and room
     const newClasses = data.classes.filter((c) => c.id !== classToDelete.id);
-    const newRooms = isHomeRoom 
-      ? data.rooms.filter(r => r.id !== homeRoomId)
-      : data.rooms;
+    const newRooms = isHomeRoom ? data.rooms.filter((r) => r.id !== homeRoomId) : data.rooms;
 
     // 3. Cleanup Joint Classes and Electives
     const newJoints = data.jointClasses
@@ -61,7 +57,7 @@ export const useClassActions = (data: AppData, onUpdate: (newData: AppData) => v
         classIds: j.classIds.filter((id) => id !== classToDelete.id),
       }))
       .filter((j) => j.classIds.length >= 2);
-      
+
     const newElectives = (data.electives || [])
       .map((e) => ({
         ...e,
@@ -76,7 +72,7 @@ export const useClassActions = (data: AppData, onUpdate: (newData: AppData) => v
       jointClasses: newJoints,
       electives: newElectives,
     };
-    
+
     addActivity("ACADEMIC", `Deleted Class: ${classToDelete.name}`, nextData);
     onUpdate(nextData);
   };
@@ -89,7 +85,7 @@ export const useClassActions = (data: AppData, onUpdate: (newData: AppData) => v
   };
 
   const handleRemoveGroup = (id: string) => {
-    const joint = data.jointClasses.find(j => j.id === id);
+    const joint = data.jointClasses.find((j) => j.id === id);
     const nextData = {
       ...data,
       jointClasses: data.jointClasses.filter((j) => j.id !== id),
@@ -107,7 +103,7 @@ export const useClassActions = (data: AppData, onUpdate: (newData: AppData) => v
   };
 
   const handleRemoveBlock = (id: string) => {
-    const elec = (data.electives || []).find(e => e.id === id);
+    const elec = (data.electives || []).find((e) => e.id === id);
     const nextData = {
       ...data,
       electives: (data.electives || []).filter((e) => e.id !== id),

@@ -234,10 +234,7 @@ export function executeChainRepairMove(
   tabu?: TabuManager,
   step: number = 0,
 ): void {
-  const chainGangIds = new Set([
-    getGangId(gang[0]),
-    ...action.relocations.map((r) => r.gangId),
-  ]);
+  const chainGangIds = new Set([getGangId(gang[0]), ...action.relocations.map((r) => r.gangId)]);
 
   applySlotMove(
     state,

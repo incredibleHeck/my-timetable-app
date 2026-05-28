@@ -18,9 +18,7 @@ export const InvigilatorRoster: React.FC<Props> = ({ data, exams }) => {
 
   // 2. Get Sorted Classes
   const sortedClasses = useMemo(() => {
-    return [...classes].sort((a, b) =>
-      a.name.localeCompare(b.name, undefined, { numeric: true })
-    );
+    return [...classes].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
   }, [classes]);
 
   // 3. Helper to format date
@@ -34,17 +32,13 @@ export const InvigilatorRoster: React.FC<Props> = ({ data, exams }) => {
   };
 
   const getInvigilatorsForCell = (classId: string, date: string) => {
-    const hasExams = exams.some(
-      (e) => e.date === date && e.classIds.includes(classId)
-    );
+    const hasExams = exams.some((e) => e.date === date && e.classIds.includes(classId));
     if (!hasExams) return null;
 
     const teamIds = getClassDayInvigilationTeam(exams, classId, date);
     if (teamIds.length === 0) return null;
 
-    return teamIds
-      .map((id) => teachers.find((t) => t.id === id)?.name)
-      .filter(Boolean) as string[];
+    return teamIds.map((id) => teachers.find((t) => t.id === id)?.name).filter(Boolean) as string[];
   };
 
   return (
@@ -78,10 +72,13 @@ export const InvigilatorRoster: React.FC<Props> = ({ data, exams }) => {
                 >
                   <div className="flex flex-col items-center">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
-                      {new Date(date).toLocaleDateString("en-GB", { weekday: 'short' })}
+                      {new Date(date).toLocaleDateString("en-GB", { weekday: "short" })}
                     </span>
                     <span className="text-sm font-black text-slate-800 leading-none">
-                      {new Date(date).toLocaleDateString("en-GB", { day: 'numeric', month: 'short' })}
+                      {new Date(date).toLocaleDateString("en-GB", {
+                        day: "numeric",
+                        month: "short",
+                      })}
                     </span>
                   </div>
                 </th>

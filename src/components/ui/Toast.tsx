@@ -37,16 +37,13 @@ const VARIANT_ICONS: Record<ToastVariant, React.ReactNode> = {
 export const ToastProvider = ({ children }: { children: ReactNode }) => {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const showToast = useCallback(
-    (message: string, variant: ToastVariant = "info") => {
-      const id = crypto.randomUUID();
-      setToasts((prev) => [...prev, { id, message, variant }]);
-      setTimeout(() => {
-        setToasts((prev) => prev.filter((t) => t.id !== id));
-      }, 5000);
-    },
-    [],
-  );
+  const showToast = useCallback((message: string, variant: ToastVariant = "info") => {
+    const id = crypto.randomUUID();
+    setToasts((prev) => [...prev, { id, message, variant }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 5000);
+  }, []);
 
   useEffect(() => {
     registerToastHandler(showToast);
@@ -98,16 +95,11 @@ export const useToast = (): ToastContextType => {
 /** Non-hook helper for use outside React components (e.g. export services). */
 let _showToast: ToastContextType["showToast"] | null = null;
 
-export const registerToastHandler = (
-  handler: ToastContextType["showToast"],
-) => {
+export const registerToastHandler = (handler: ToastContextType["showToast"]) => {
   _showToast = handler;
 };
 
-export const notify = (
-  message: string,
-  variant: ToastVariant = "info",
-) => {
+export const notify = (message: string, variant: ToastVariant = "info") => {
   if (_showToast) {
     _showToast(message, variant);
   } else {

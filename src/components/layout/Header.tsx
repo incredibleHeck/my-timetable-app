@@ -38,12 +38,14 @@ export const Header: React.FC<HeaderProps> = ({
   const title = VIEW_TITLES[view] ?? view;
 
   return (
-    <header className={`h-16 border-b flex items-center justify-between px-8 shadow-sm z-10 transition-colors ${
-      isTauri ? "bg-white border-slate-200" : "bg-slate-50 border-blue-100"
-    }`}>
+    <header
+      className={`h-16 border-b flex items-center justify-between px-8 shadow-sm z-10 transition-colors ${
+        isTauri ? "bg-white border-slate-200" : "bg-slate-50 border-blue-100"
+      }`}
+    >
       <div className="flex items-center gap-4">
         <h2 className="text-xl font-bold text-slate-800">{title}</h2>
-        
+
         {!isTauri && (
           <div className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-[10px] font-bold uppercase tracking-wider border border-blue-200">
             <Globe size={12} />
@@ -56,9 +58,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Auto-Save Indicator */}
         <div
           className={`text-xs font-bold transition-all duration-300 flex items-center gap-2 px-3 py-1.5 rounded-full ${
-            autoSaveStatus === "SAVED"
-              ? "text-slate-400"
-              : "bg-amber-50 text-amber-600"
+            autoSaveStatus === "SAVED" ? "text-slate-400" : "bg-amber-50 text-amber-600"
           }`}
         >
           {autoSaveStatus === "SAVING" ? (
@@ -76,10 +76,10 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="h-6 w-px bg-slate-200 mx-2"></div>
 
         {/* Profile Switcher */}
-        <ProfileSwitcher 
-            activeProfile={activeProfile}
-            profiles={profiles}
-            onSwitchProfile={onSwitchProfile}
+        <ProfileSwitcher
+          activeProfile={activeProfile}
+          profiles={profiles}
+          onSwitchProfile={onSwitchProfile}
         />
       </div>
     </header>

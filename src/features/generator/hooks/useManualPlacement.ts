@@ -2,14 +2,11 @@ import { useMemo, useCallback } from "react";
 import { AppData, ScheduleSlot } from "../../../types";
 import { checkSlotValidity } from "../scheduler/validation";
 import { initializeState } from "../scheduler/core/state";
-import { useProfile } from "../../../contexts/ProfileContext";
+import { useHistory } from "../../../contexts/HistoryContext";
 import { DAYS } from "../../../utils/constants";
 import { generateId } from "../../../utils/utils";
 import { getNextClassPeriod } from "../scheduler/utils/utils";
-import {
-  getPendingPlacementsForClass,
-  PendingPlacement,
-} from "../utils/pendingPlacements";
+import { getPendingPlacementsForClass, PendingPlacement } from "../utils/pendingPlacements";
 
 export function canPlacePendingAt(
   data: AppData,
@@ -55,11 +52,8 @@ export function canPlacePendingAt(
     : { valid: false, message: result.message || "Invalid placement" };
 }
 
-export const useManualPlacement = (
-  data: AppData,
-  onUpdate: (d: AppData) => void,
-) => {
-  const { pushToHistory } = useProfile();
+export const useManualPlacement = (data: AppData, onUpdate: (d: AppData) => void) => {
+  const { pushToHistory } = useHistory();
 
   const listPendingForClass = useCallback(
     (classId: string) => getPendingPlacementsForClass(data, classId),
@@ -68,8 +62,8 @@ export const useManualPlacement = (
 
   const listValidPendingForSlot = useCallback(
     (classId: string, day: number, period: number) => {
-      return getPendingPlacementsForClass(data, classId).filter((pending) =>
-        canPlacePendingAt(data, classId, day, period, pending).valid,
+      return getPendingPlacementsForClass(data, classId).filter(
+        (pending) => canPlacePendingAt(data, classId, day, period, pending).valid,
       );
     },
     [data],
@@ -129,7 +123,7 @@ export const useManualPlacement = (
         recentActivity: [
           {
             id: generateId(),
-            type: "SCHEDULING",
+            type: "SCHEDULING" as const,
             message,
             timestamp: new Date().toISOString(),
           },

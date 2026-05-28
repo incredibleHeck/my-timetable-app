@@ -1,2 +1,2 @@
-export { GeneratorView } from './GeneratorView';
-export * from './types';
+export { GeneratorView } from "./GeneratorView";
+export * from "./types";

@@ -1,11 +1,4 @@
-import {
-  AppData,
-  ClassGroup,
-  ExamSession,
-  Room,
-  Settings,
-  TimeSlot,
-} from "../../../types";
+import { AppData, ClassGroup, ExamSession, Room, Settings, TimeSlot } from "../../../types";
 
 export const parseTime = (t: string): number => {
   const [h, m] = t.split(":").map(Number);
@@ -18,15 +11,11 @@ export const formatTime = (mins: number): string => {
   return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
 };
 
-export const isOverlapping = (
-  s1: number,
-  e1: number,
-  s2: number,
-  e2: number
-): boolean => s1 < e2 && e1 > s2;
+export const isOverlapping = (s1: number, e1: number, s2: number, e2: number): boolean =>
+  s1 < e2 && e1 > s2;
 
 export const getExamTimeRange = (
-  exam: Pick<ExamSession, "startTime" | "duration">
+  exam: Pick<ExamSession, "startTime" | "duration">,
 ): { start: number; end: number } => {
   const start = parseTime(exam.startTime);
   return { start, end: start + exam.duration };
@@ -39,10 +28,7 @@ export const examsOverlap = (a: ExamSession, b: ExamSession): boolean => {
   return isOverlapping(ra.start, ra.end, rb.start, rb.end);
 };
 
-export const getStreamLevel = (
-  classId: string,
-  classes: ClassGroup[]
-): string => {
+export const getStreamLevel = (classId: string, classes: ClassGroup[]): string => {
   const cls = classes.find((c) => c.id === classId);
   if (!cls) return classId;
   if (cls.level) return cls.level;
@@ -75,10 +61,7 @@ export const getDayEndMinutes = (timeSlots?: TimeSlot[]): number => {
   return latest > 0 ? latest : 16 * 60;
 };
 
-export const getPeriodIndex = (
-  timeStr: string,
-  timeSlots: TimeSlot[]
-): number => {
+export const getPeriodIndex = (timeStr: string, timeSlots: TimeSlot[]): number => {
   const timeMins = parseTime(timeStr);
   let bestIdx = 0;
   let minDiff = Infinity;
@@ -97,7 +80,7 @@ export const getPeriodIndex = (
 export const getPeriodIndicesOverlapping = (
   timeSlots: TimeSlot[],
   startMins: number,
-  endMins: number
+  endMins: number,
 ): number[] => {
   const indices: number[] = [];
   timeSlots.forEach((slot, idx) => {
@@ -116,9 +99,7 @@ export const getWeekKey = (dateStr: string): string => {
   const day = d.getDay() || 7;
   d.setDate(d.getDate() + 4 - day);
   const yearStart = new Date(d.getFullYear(), 0, 1);
-  const weekNo = Math.ceil(
-    ((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7
-  );
+  const weekNo = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
   return `${d.getFullYear()}-W${weekNo.toString().padStart(2, "0")}`;
 };
 
@@ -146,10 +127,7 @@ export const getExamSessionColumns = (settings: Settings): ExamSessionColumn[] =
   const sessionsPerDay = Math.max(1, Math.min(4, grid?.sessionsPerDay ?? 2));
 
   const dayStart = parseTime(
-    grid?.session1DefaultTime ||
-      slots[0]?.start ||
-      settings.schoolStartTime ||
-      "09:00"
+    grid?.session1DefaultTime || slots[0]?.start || settings.schoolStartTime || "09:00",
   );
   const dayEnd = getDayEndMinutes(slots);
 
@@ -159,9 +137,7 @@ export const getExamSessionColumns = (settings: Settings): ExamSessionColumn[] =
         index: 0,
         label: "Session 1",
         defaultStartTime:
-          grid?.sessionDefaultTimes?.[0] ||
-          grid?.session1DefaultTime ||
-          formatTime(dayStart),
+          grid?.sessionDefaultTimes?.[0] || grid?.session1DefaultTime || formatTime(dayStart),
         minStartMins: dayStart,
         maxStartMins: dayEnd,
         headerHint: `From ${formatTime(dayStart)}`,
@@ -171,10 +147,7 @@ export const getExamSessionColumns = (settings: Settings): ExamSessionColumn[] =
 
   if (sessionsPerDay === 2 && (grid?.sessionCutoff || grid?.session2DefaultTime)) {
     let sessionCutoff = grid?.sessionCutoff;
-    const s1 =
-      grid?.sessionDefaultTimes?.[0] ||
-      grid?.session1DefaultTime ||
-      formatTime(dayStart);
+    const s1 = grid?.sessionDefaultTimes?.[0] || grid?.session1DefaultTime || formatTime(dayStart);
     let s2 = grid?.sessionDefaultTimes?.[1] || grid?.session2DefaultTime;
 
     if (!sessionCutoff && s1 && s2) {
@@ -187,9 +160,7 @@ export const getExamSessionColumns = (settings: Settings): ExamSessionColumn[] =
       if (firstBlock.length && secondBlock.length) {
         const lastFirstEnd = parseTime(firstBlock[firstBlock.length - 1].end);
         const firstSecondStart = parseTime(secondBlock[0].start);
-        sessionCutoff = formatTime(
-          Math.floor((lastFirstEnd + firstSecondStart) / 2)
-        );
+        sessionCutoff = formatTime(Math.floor((lastFirstEnd + firstSecondStart) / 2));
       }
     }
     sessionCutoff = sessionCutoff || "11:30";
@@ -229,8 +200,7 @@ export const getExamSessionColumns = (settings: Settings): ExamSessionColumn[] =
     columns.push({
       index: i,
       label: `Session ${i + 1}`,
-      defaultStartTime:
-        grid?.sessionDefaultTimes?.[i] || formatTime(minStart),
+      defaultStartTime: grid?.sessionDefaultTimes?.[i] || formatTime(minStart),
       minStartMins: minStart,
       maxStartMins: maxStart,
       headerHint: `${formatTime(minStart)} – ${formatTime(maxStart)}`,
@@ -241,7 +211,7 @@ export const getExamSessionColumns = (settings: Settings): ExamSessionColumn[] =
 
 export const getSessionIndexForStartTime = (
   startTime: string,
-  columns: ExamSessionColumn[]
+  columns: ExamSessionColumn[],
 ): number => {
   const t = parseTime(startTime);
   for (let i = columns.length - 1; i >= 0; i--) {
@@ -253,7 +223,7 @@ export const getSessionIndexForStartTime = (
 export const examFitsInSession = (
   startTime: string,
   duration: number,
-  column: ExamSessionColumn
+  column: ExamSessionColumn,
 ): boolean => {
   const start = parseTime(startTime);
   const end = start + duration;
@@ -280,11 +250,9 @@ export const getExamGridDefaults = (settings: Settings): ExamGridDefaults => {
 export const getClassDayInvigilationTeam = (
   exams: ExamSession[],
   classId: string,
-  date: string
+  date: string,
 ): string[] => {
-  const cellExams = exams.filter(
-    (e) => e.date === date && e.classIds.includes(classId)
-  );
+  const cellExams = exams.filter((e) => e.date === date && e.classIds.includes(classId));
   if (cellExams.length === 0) return [];
 
   const ids = new Set<string>();
@@ -295,7 +263,7 @@ export const getClassDayInvigilationTeam = (
 export const pickExamRoom = (
   classIds: string[],
   classes: ClassGroup[],
-  rooms: Room[]
+  rooms: Room[],
 ): string | undefined => {
   if (classIds.length === 0 || rooms.length === 0) return undefined;
 
@@ -330,17 +298,13 @@ export const pickExamRoom = (
 export const isTeacherBusyInClassSchedule = (
   teacherId: string,
   exam: ExamSession,
-  data: AppData
+  data: AppData,
 ): boolean => {
   const dayIdx = getConstraintDayIndex(exam.date);
   if (dayIdx === null || !data.schedule) return false;
 
   const { start, end } = getExamTimeRange(exam);
-  const periodIndices = getPeriodIndicesOverlapping(
-    data.settings.timeSlots,
-    start,
-    end
-  );
+  const periodIndices = getPeriodIndicesOverlapping(data.settings.timeSlots, start, end);
 
   for (const classSchedule of Object.values(data.schedule)) {
     const daySchedule = classSchedule[dayIdx];
@@ -355,10 +319,8 @@ export const isTeacherBusyInClassSchedule = (
   return false;
 };
 
-export const getInvigilationSplitId = (
-  originalExamId: string,
-  classId: string
-): string => `${originalExamId}__${classId}`;
+export const getInvigilationSplitId = (originalExamId: string, classId: string): string =>
+  `${originalExamId}__${classId}`;
 
 /** Deterministic shuffle for reproducible auto-schedule. */
 export const seededShuffle = <T>(array: T[], seed = 42): T[] => {

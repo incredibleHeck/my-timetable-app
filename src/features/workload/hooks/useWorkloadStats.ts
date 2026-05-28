@@ -11,12 +11,9 @@ export interface ClassWorkloadBreakdown {
 
 export const useWorkloadStats = (data: AppData) => {
   const workloadStats = useMemo(() => {
-    const { settings, teachers, classes, jointClasses, electives, schedule, subjects } =
-      data;
+    const { settings, teachers, classes, jointClasses, electives, schedule, subjects } = data;
 
-    const subjectNameById = new Map(
-      subjects.map((s) => [s.id, s.name]),
-    );
+    const subjectNameById = new Map(subjects.map((s) => [s.id, s.name]));
 
     const maxWeeklyCapacity = settings.maxTeachingPeriodsPerWeek ?? 24;
 
@@ -56,17 +53,14 @@ export const useWorkloadStats = (data: AppData) => {
         classes.forEach((c) => {
           c.curriculum.forEach((curr) => {
             const joint = jointClasses?.find(
-              (jc) =>
-                jc.subjectId === curr.subjectId && jc.classIds.includes(c.id),
+              (jc) => jc.subjectId === curr.subjectId && jc.classIds.includes(c.id),
             );
 
             const effectiveTeacherId = joint?.teacherId || curr.assignedTeacherId;
 
             if (effectiveTeacherId === t.id && !curr.isWorkloadExempt) {
               const elective = electives?.find(
-                (e) =>
-                  e.subjectIds.includes(curr.subjectId) &&
-                  e.classIds.includes(c.id),
+                (e) => e.subjectIds.includes(curr.subjectId) && e.classIds.includes(c.id),
               );
 
               if (joint) {
@@ -76,12 +70,7 @@ export const useWorkloadStats = (data: AppData) => {
                   joint.classIds.forEach((cid) => {
                     const cls = classes.find((x) => x.id === cid);
                     if (cls) {
-                      addToBreakdown(
-                        cls.id,
-                        cls.name,
-                        curr.subjectId,
-                        curr.periodsPerWeek,
-                      );
+                      addToBreakdown(cls.id, cls.name, curr.subjectId, curr.periodsPerWeek);
                     }
                   });
                 }
@@ -92,23 +81,13 @@ export const useWorkloadStats = (data: AppData) => {
                   elective.classIds.forEach((cid) => {
                     const cls = classes.find((x) => x.id === cid);
                     if (cls) {
-                      addToBreakdown(
-                        cls.id,
-                        cls.name,
-                        curr.subjectId,
-                        curr.periodsPerWeek,
-                      );
+                      addToBreakdown(cls.id, cls.name, curr.subjectId, curr.periodsPerWeek);
                     }
                   });
                 }
               } else {
                 assignedPeriods += curr.periodsPerWeek;
-                addToBreakdown(
-                  c.id,
-                  c.name,
-                  curr.subjectId,
-                  curr.periodsPerWeek,
-                );
+                addToBreakdown(c.id, c.name, curr.subjectId, curr.periodsPerWeek);
               }
             }
           });
@@ -150,8 +129,7 @@ export const useWorkloadStats = (data: AppData) => {
           });
         }
 
-        const availableSlots =
-          teachablePeriodIndices.length * 5 - blockedTeachableSlots;
+        const availableSlots = teachablePeriodIndices.length * 5 - blockedTeachableSlots;
 
         const utilizationPct =
           maxWeeklyCapacity > 0

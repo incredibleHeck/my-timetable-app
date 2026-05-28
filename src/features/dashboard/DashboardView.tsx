@@ -35,19 +35,8 @@ interface ViewProps {
   onNavigate?: (view: ViewState) => void;
 }
 
-export const DashboardView: React.FC<ViewProps> = ({
-  data,
-  profileName,
-  onNavigate,
-  onUpdate,
-}) => {
-  const { 
-    profiles, 
-    activeProfile, 
-    createNewProfile, 
-    switchProfile,
-    isSaving 
-  } = useProfile();
+export const DashboardView: React.FC<ViewProps> = ({ data, profileName, onNavigate, onUpdate }) => {
+  const { profiles, activeProfile, createNewProfile, switchProfile, isSaving } = useProfile();
 
   const {
     createModalOpen,
@@ -119,10 +108,10 @@ export const DashboardView: React.FC<ViewProps> = ({
                   </strong>
                 </p>
                 <div className="mt-2">
-                  <SystemStatus 
-                    isSaving={isSaving} 
-                    isGenerating={false} 
-                    hasConflicts={conflicts > 0} 
+                  <SystemStatus
+                    isSaving={isSaving}
+                    isGenerating={false}
+                    hasConflicts={conflicts > 0}
                   />
                 </div>
               </div>
@@ -170,9 +159,11 @@ export const DashboardView: React.FC<ViewProps> = ({
           value={metrics.teacherCount}
           icon={<Users size={20} />}
           color="blue"
-          subtext={metrics.overloadedCount > 0 
-            ? `${metrics.overloadedCount} overloaded` 
-            : `${metrics.teacherCount} active`}
+          subtext={
+            metrics.overloadedCount > 0
+              ? `${metrics.overloadedCount} overloaded`
+              : `${metrics.teacherCount} active`
+          }
           onClick={() => onNavigate && onNavigate("TEACHERS")}
         />
         <MetricCard
@@ -213,115 +204,106 @@ export const DashboardView: React.FC<ViewProps> = ({
         <div className="lg:col-span-2 space-y-8">
           {/* SYSTEM HEALTH / ALERTS PANEL */}
           <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-              <Activity size={20} className="text-slate-400" /> System Health
-            </h3>
-          </div>
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <Activity size={20} className="text-slate-400" /> System Health
+              </h3>
+            </div>
 
-          {issues.length === 0 && conflicts === 0 ? (
-            <Card className="p-8 flex flex-col items-center justify-center text-center border-emerald-100 bg-emerald-50/30">
-              <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-4 shadow-sm">
-                <CheckCircle2 size={32} />
-              </div>
-              <h4 className="text-lg font-bold text-emerald-900">
-                All Systems Nominal
-              </h4>
-              <p className="text-emerald-700/80 max-w-md mt-2 text-sm">
-                Data integrity is perfect. Teachers, classes, and subjects are
-                properly linked. You are ready to generate a schedule.
-              </p>
-              <div className="mt-6">
-                <Button
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white border-none"
-                  onClick={() => onNavigate && onNavigate("GENERATOR")}
-                >
-                  Go to Generator
-                </Button>
-              </div>
-            </Card>
-          ) : (
-            <div className="space-y-3">
-              {conflicts > 0 && (
-                <div className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-center justify-between shadow-sm">
-                  <div className="flex items-center gap-4">
-                    <div className="p-2 bg-red-100 text-red-600 rounded-lg">
-                      <AlertTriangle size={20} />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-red-900">
-                        Schedule Conflicts Detected
-                      </h4>
-                      <p className="text-xs text-red-700">
-                        {conflicts} lessons could not be placed during the last
-                        run.
-                      </p>
-                    </div>
-                  </div>
+            {issues.length === 0 && conflicts === 0 ? (
+              <Card className="p-8 flex flex-col items-center justify-center text-center border-emerald-100 bg-emerald-50/30">
+                <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-4 shadow-sm">
+                  <CheckCircle2 size={32} />
+                </div>
+                <h4 className="text-lg font-bold text-emerald-900">All Systems Nominal</h4>
+                <p className="text-emerald-700/80 max-w-md mt-2 text-sm">
+                  Data integrity is perfect. Teachers, classes, and subjects are properly linked.
+                  You are ready to generate a schedule.
+                </p>
+                <div className="mt-6">
                   <Button
-                    size="sm"
-                    variant="danger"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white border-none"
                     onClick={() => onNavigate && onNavigate("GENERATOR")}
                   >
-                    Resolve
+                    Go to Generator
                   </Button>
                 </div>
-              )}
-
-              {issues.map((issue, idx) => (
-                <div
-                  key={idx}
-                  className={`p-4 border rounded-xl flex items-center justify-between shadow-sm ${
-                    issue.type === "error"
-                      ? "bg-orange-50 border-orange-100"
-                      : "bg-slate-50 border-slate-200"
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`p-2 rounded-lg ${
-                        issue.type === "error"
-                          ? "bg-orange-100 text-orange-600"
-                          : "bg-white text-slate-500 border border-slate-200"
-                      }`}
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {conflicts > 0 && (
+                  <div className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-center justify-between shadow-sm">
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 bg-red-100 text-red-600 rounded-lg">
+                        <AlertTriangle size={20} />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-red-900">Schedule Conflicts Detected</h4>
+                        <p className="text-xs text-red-700">
+                          {conflicts} lessons could not be placed during the last run.
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      onClick={() => onNavigate && onNavigate("GENERATOR")}
                     >
-                      <AlertTriangle size={20} />
-                    </div>
-                    <div>
-                      <h4
-                        className={`font-bold ${
-                          issue.type === "error"
-                            ? "text-orange-900"
-                            : "text-slate-700"
-                        }`}
-                      >
-                        Data Attention Needed
-                      </h4>
-                      <p
-                        className={`text-xs ${
-                          issue.type === "error"
-                            ? "text-orange-700"
-                            : "text-slate-500"
-                        }`}
-                      >
-                        {issue.message}
-                      </p>
-                    </div>
+                      Resolve
+                    </Button>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => onNavigate && onNavigate(issue.view)}
+                )}
+
+                {issues.map((issue, idx) => (
+                  <div
+                    key={idx}
+                    className={`p-4 border rounded-xl flex items-center justify-between shadow-sm ${
+                      issue.type === "error"
+                        ? "bg-orange-50 border-orange-100"
+                        : "bg-slate-50 border-slate-200"
+                    }`}
                   >
-                    {issue.action}
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        
-        <RecentActivity />
+                    <div className="flex items-center gap-4">
+                      <div
+                        className={`p-2 rounded-lg ${
+                          issue.type === "error"
+                            ? "bg-orange-100 text-orange-600"
+                            : "bg-white text-slate-500 border border-slate-200"
+                        }`}
+                      >
+                        <AlertTriangle size={20} />
+                      </div>
+                      <div>
+                        <h4
+                          className={`font-bold ${
+                            issue.type === "error" ? "text-orange-900" : "text-slate-700"
+                          }`}
+                        >
+                          Data Attention Needed
+                        </h4>
+                        <p
+                          className={`text-xs ${
+                            issue.type === "error" ? "text-orange-700" : "text-slate-500"
+                          }`}
+                        >
+                          {issue.message}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => onNavigate && onNavigate(issue.view)}
+                    >
+                      {issue.action}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <RecentActivity />
         </div>
 
         {/* QUICK ACTIONS & LAST RUN */}
@@ -363,13 +345,9 @@ export const DashboardView: React.FC<ViewProps> = ({
           <Card className="p-5 mt-4 bg-slate-900 text-white border-slate-800">
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h4 className="font-bold text-sm text-slate-200">
-                  Last Optimization
-                </h4>
+                <h4 className="font-bold text-sm text-slate-200">Last Optimization</h4>
                 <p className="text-xs text-slate-400 mt-1">
-                  {data.lastGenerated
-                    ? new Date(data.lastGenerated).toLocaleString()
-                    : "Never run"}
+                  {data.lastGenerated ? new Date(data.lastGenerated).toLocaleString() : "Never run"}
                 </p>
               </div>
               {data.lastGenerated && (
@@ -379,10 +357,7 @@ export const DashboardView: React.FC<ViewProps> = ({
               )}
             </div>
             <div className="text-xs text-slate-500">
-              Algorithm:{" "}
-              <span className="text-slate-300">
-                Constructive Heuristic v10 (Worker)
-              </span>
+              Algorithm: <span className="text-slate-300">Constructive Heuristic v10 (Worker)</span>
             </div>
           </Card>
         </div>

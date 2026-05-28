@@ -9,16 +9,14 @@ describe("Debug Repro: Single Swap Same Teacher", () => {
       periodsPerDay: 8,
       dayStructure: [],
       timeSlots: [],
-      maxConsecutivePeriods: 4, 
+      maxConsecutivePeriods: 4,
       fixedOccasions: [],
     },
-    classes: [
-      { id: "c1", name: "Class 1", periodCount: 8, structure: [] } as any,
-    ],
+    classes: [{ id: "c1", name: "Class 1", periodCount: 8, structure: [] } as any],
     teachers: [{ id: "t1", name: "Teacher 1", constraints: [] }] as any,
     subjects: [
-        { id: "s1", name: "Math", isSingleResource: false } as any,
-        { id: "s2", name: "Science", isSingleResource: false } as any,
+      { id: "s1", name: "Math", isSingleResource: false } as any,
+      { id: "s2", name: "Science", isSingleResource: false } as any,
     ],
     rooms: [],
     schedule: {
@@ -51,11 +49,11 @@ describe("Debug Repro: Single Swap Same Teacher", () => {
       state,
       { day: 0, period: 0 }, // Ignore Slot (Source P0)
       undefined, // Room
-      1 // Duration (Single)
+      1, // Duration (Single)
     );
 
     if (!result.valid) {
-        console.log("Validation Failed:", result.message);
+      console.log("Validation Failed:", result.message);
     }
 
     expect(result.valid).toBe(true);

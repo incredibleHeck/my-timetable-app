@@ -46,10 +46,16 @@ Output goes to `dist/` (web) or `src-tauri/target/release/` (desktop).
 ## Testing
 
 ```bash
-npm test              # run all 200 tests once
+npm test              # run all unit tests once
+npm run test:coverage # run tests with coverage report
+npm run test:e2e      # Playwright end-to-end tests (web mode)
+npm run typecheck     # TypeScript check (src + tests)
 npm run lint          # ESLint
 npm run format:check  # Prettier check
+npm run diagnostics:smoke  # Scheduler smoke test (scripts/diagnostics/)
 ```
+
+CI runs lint, format, typecheck, unit tests with coverage, build, and Playwright E2E on every push/PR. Tauri desktop builds run on push to `main` only (see `.github/workflows/ci-tauri.yml`).
 
 ### Manual test checklist
 

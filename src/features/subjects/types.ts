@@ -6,7 +6,7 @@ export interface Subject {
   isSingleResource?: boolean;
   isExaminable?: boolean;
   // Room requirements
-  requiredRoomId?: string | null; 
+  requiredRoomId?: string | null;
   preferredRoomIds?: string[];
   requiredRoomType?: string;
   /** When set, drives core-subject scheduling heuristics instead of name matching */

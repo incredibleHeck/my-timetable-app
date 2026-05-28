@@ -1,4 +1,3 @@
-/* eslint-disable no-restricted-globals */
 import { AppData } from "../../../../types";
 import { prepareAllocationUnits } from "../logic/preparation";
 import { resolveSubjectIsCore } from "../logic/subject-core";
@@ -21,10 +20,7 @@ ctx.onmessage = (e: MessageEvent<AppData>) => {
 
     units.forEach((u) => {
       if (u.isCore === undefined) {
-        u.isCore = resolveSubjectIsCore(
-          subjectMap.get(u.subjectId),
-          u.subjectName,
-        );
+        u.isCore = resolveSubjectIsCore(subjectMap.get(u.subjectId), u.subjectName);
       }
     });
 
@@ -39,32 +35,32 @@ ctx.onmessage = (e: MessageEvent<AppData>) => {
       unplacedGangs,
       perfectRuns,
     } = solveSmartWithRestarts(
-        units,
-        data,
-        (phase, progress, total, currentConflictCount, meta) => {
-          if (Date.now() - startTime >= SOLVER_TARGET_MS) {
-            return false;
-          }
+      units,
+      data,
+      (phase, progress, total, currentConflictCount, meta) => {
+        if (Date.now() - startTime >= SOLVER_TARGET_MS) {
+          return false;
+        }
 
-          ctx.postMessage({
-            type: "progress",
-            payload: {
-              phase,
-              iteration: progress,
-              total,
-              conflicts: currentConflictCount,
-              runIndex: meta?.runIndex ?? 1,
-              bestUnplaced: meta?.bestUnplaced ?? currentConflictCount,
-              perfectRuns: meta?.perfectRuns ?? 0,
-              elapsedMs: meta?.elapsedMs ?? Date.now() - startTime,
-              timeBudgetMs: meta?.timeBudgetMs ?? SOLVER_TARGET_MS,
-              schedule: meta?.scheduleSnapshot,
-            },
-          });
-          return true;
-        },
-        { clockStartMs: startTime },
-      );
+        ctx.postMessage({
+          type: "progress",
+          payload: {
+            phase,
+            iteration: progress,
+            total,
+            conflicts: currentConflictCount,
+            runIndex: meta?.runIndex ?? 1,
+            bestUnplaced: meta?.bestUnplaced ?? currentConflictCount,
+            perfectRuns: meta?.perfectRuns ?? 0,
+            elapsedMs: meta?.elapsedMs ?? Date.now() - startTime,
+            timeBudgetMs: meta?.timeBudgetMs ?? SOLVER_TARGET_MS,
+            schedule: meta?.scheduleSnapshot,
+          },
+        });
+        return true;
+      },
+      { clockStartMs: startTime },
+    );
 
     if (Date.now() - startTime > SOLVER_TIME_LIMIT_MS) {
       throw new Error("Solver exceeded hard time limit");
@@ -97,8 +93,7 @@ ctx.onmessage = (e: MessageEvent<AppData>) => {
     console.error("Critical Worker Failure:", error);
     ctx.postMessage({
       type: "error",
-      payload:
-        error instanceof Error ? error.message : "Internal Scheduler Error",
+      payload: error instanceof Error ? error.message : "Internal Scheduler Error",
     });
   }
 };

@@ -20,5 +20,5 @@
 - [ ] Task: Verify Compilation.
     - Run `tsc --noEmit` to ensure there are no import errors or type mismatches.
 - [ ] Task: Verify Functionality.
-    - Run the smoke test (now in `diagnostics/smoke-test.ts`) to ensure the scheduler logic is intact.
+    - Run the smoke test (now in `scripts/diagnostics/smoke-test.ts`) to ensure the scheduler logic is intact.
 - [ ] Task: Conductor - User Manual Verification 'Stabilization & Verification' (Protocol in workflow.md)

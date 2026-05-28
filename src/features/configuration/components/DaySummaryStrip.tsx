@@ -19,9 +19,7 @@ export const DaySummaryStrip: React.FC<DaySummaryStripProps> = ({ data }) => {
       <span className="text-slate-300">|</span>
       <span>
         <span className="text-slate-500">Day ends</span>{" "}
-        <strong className="text-slate-800">
-          {timeSlots[timeSlots.length - 1]?.end || "N/A"}
-        </strong>
+        <strong className="text-slate-800">{timeSlots[timeSlots.length - 1]?.end || "N/A"}</strong>
       </span>
     </div>
   );

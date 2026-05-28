@@ -1,1 +1,1 @@
-export { WorkloadView } from './WorkloadView';
+export { WorkloadView } from "./WorkloadView";

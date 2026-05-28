@@ -1,10 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { DEFAULT_DATA } from "../src/utils/constants";
 import { AllocationUnit } from "../src/features/generator/scheduler/core/types";
-import {
-  initializeState,
-  applyGangToState,
-} from "../src/features/generator/scheduler/core/state";
+import { initializeState, applyGangToState } from "../src/features/generator/scheduler/core/state";
 import {
   findSwapMove,
   findBestRepairMove,
@@ -168,16 +165,7 @@ describe("Repair swap neighborhood (PR3)", () => {
     const repairQueue: AllocationUnit[] = [];
     const repairSet = new Set<string>();
 
-    executeRepairAction(
-      state,
-      [incoming],
-      swap!,
-      repairQueue,
-      repairSet,
-      gangMap,
-      unitMap,
-      data,
-    );
+    executeRepairAction(state, [incoming], swap!, repairQueue, repairSet, gangMap, unitMap, data);
 
     expect(state.unitPlacements.has("u-incoming")).toBe(true);
     expect(state.unitPlacements.has("u-partner")).toBe(true);

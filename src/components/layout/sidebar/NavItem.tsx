@@ -25,9 +25,7 @@ export const NavItem = ({
   >
     <span
       className={`mr-3 transition-transform ${
-        currentView === id
-          ? "scale-110 text-amber-400"
-          : "group-hover:scale-110"
+        currentView === id ? "scale-110 text-amber-400" : "group-hover:scale-110"
       }`}
     >
       {icon}

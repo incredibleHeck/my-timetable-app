@@ -1,10 +1,10 @@
-import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
-import { ClassEditorModal } from '../src/features/classes/components/ClassEditorModal';
-import { DEFAULT_DATA } from '../src/utils/constants';
+import React from "react";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
+import { ClassEditorModal } from "../src/features/classes/components/ClassEditorModal";
+import { DEFAULT_DATA } from "../src/utils/constants";
 
-describe('ClassEditorModal UI Reorganization', () => {
+describe("ClassEditorModal UI Reorganization", () => {
   const mockOnClose = vi.fn();
   const mockOnSave = vi.fn();
 
@@ -16,9 +16,9 @@ describe('ClassEditorModal UI Reorganization', () => {
     onSave: mockOnSave,
   };
 
-  it('does not show timing inputs in Basics tab', () => {
+  it("does not show timing inputs in Basics tab", () => {
     render(<ClassEditorModal {...defaultProps} />);
-    
+
     // Check Basics tab is active by default
     expect(screen.getByText(/Class Name/i)).toBeDefined();
 
@@ -29,11 +29,11 @@ describe('ClassEditorModal UI Reorganization', () => {
     expect(screen.queryByLabelText(/Lunch \(min\)/i)).toBeNull();
   });
 
-  it('shows timing inputs in Structure tab', () => {
+  it("shows timing inputs in Structure tab", () => {
     render(<ClassEditorModal {...defaultProps} />);
-    
+
     // Switch to Structure tab
-    const structureTabButton = screen.getByRole('button', { name: /Structure/i });
+    const structureTabButton = screen.getByRole("button", { name: /Structure/i });
     fireEvent.click(structureTabButton);
 
     // These SHOULD be in the Structure tab
@@ -43,19 +43,19 @@ describe('ClassEditorModal UI Reorganization', () => {
     expect(screen.getByText(/Lunch \(min\)/i)).toBeDefined();
   });
 
-  it('updates reservations grid when Periods/Day is changed in Structure tab', () => {
+  it("updates reservations grid when Periods/Day is changed in Structure tab", () => {
     render(<ClassEditorModal {...defaultProps} />);
-    
+
     // Switch to Structure tab
-    const structureTabButton = screen.getByRole('button', { name: /Structure/i });
+    const structureTabButton = screen.getByRole("button", { name: /Structure/i });
     fireEvent.click(structureTabButton);
 
     // Change Periods/Day to 10
     const periodsInput = screen.getByDisplayValue(DEFAULT_DATA.settings.periodsPerDay.toString());
-    fireEvent.change(periodsInput, { target: { value: '10' } });
+    fireEvent.change(periodsInput, { target: { value: "10" } });
 
     // Switch back to Basics tab
-    const basicsTabButton = screen.getByRole('button', { name: /Basics/i });
+    const basicsTabButton = screen.getByRole("button", { name: /Basics/i });
     fireEvent.click(basicsTabButton);
 
     // Check for 10 period headers (P1 through P10)
@@ -64,13 +64,13 @@ describe('ClassEditorModal UI Reorganization', () => {
     }
   });
 
-  it('shows Home Classroom as a read-only field in Basics tab', () => {
+  it("shows Home Classroom as a read-only field in Basics tab", () => {
     const dataWithRooms = {
       ...DEFAULT_DATA,
-      rooms: [{ id: 'r1', name: 'Room 101', type: 'Classroom', capacity: 30, isHomeRoom: true }]
+      rooms: [{ id: "r1", name: "Room 101", type: "Classroom", capacity: 30, isHomeRoom: true }],
     };
     render(<ClassEditorModal {...defaultProps} data={dataWithRooms as any} />);
-    
+
     // Should see the label
     expect(screen.getByText(/Home Classroom/i)).toBeDefined();
     // Should see the auto-generated name placeholder or existing name

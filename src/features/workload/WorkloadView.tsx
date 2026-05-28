@@ -48,20 +48,16 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
     <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto p-8">
       <div className="flex justify-between items-center bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
         <div>
-          <h2 className="text-xl font-bold text-slate-800">
-            Capacity Planning
-          </h2>
+          <h2 className="text-xl font-bold text-slate-800">Capacity Planning</h2>
           <p className="text-xs text-slate-500 mt-1">
-            Utilization is based on requested curriculum load vs the school-wide
-            max of {maxWeeklyDefault} periods per week. Hover or click a card
-            for class breakdown.
+            Utilization is based on requested curriculum load vs the school-wide max of{" "}
+            {maxWeeklyDefault} periods per week. Hover or click a card for class breakdown.
           </p>
         </div>
         <div className="flex gap-4 items-center">
           <div className="flex gap-4 text-[10px] font-bold uppercase tracking-wider border-r border-slate-200 pr-4 mr-2">
             <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-emerald-500"></div>{" "}
-              Optimal
+              <div className="w-2 h-2 rounded-full bg-emerald-500"></div> Optimal
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-2 h-2 rounded-full bg-amber-500"></div> High
@@ -70,11 +66,7 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
               <div className="w-2 h-2 rounded-full bg-red-500"></div> Overload
             </div>
           </div>
-          <Button
-            variant="secondary"
-            onClick={handleExportCSV}
-            icon={<Upload size={16} />}
-          >
+          <Button variant="secondary" onClick={handleExportCSV} icon={<Upload size={16} />}>
             Export Report
           </Button>
         </div>
@@ -113,9 +105,7 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
             >
               <Card
                 className={`p-5 flex flex-col gap-3 transition-all hover:shadow-md ${
-                  utilizationPct > 100
-                    ? "ring-2 ring-red-500 ring-offset-2"
-                    : ""
+                  utilizationPct > 100 ? "ring-2 ring-red-500 ring-offset-2" : ""
                 }`}
               >
                 <div className="flex justify-between items-start">
@@ -130,9 +120,7 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
                       {t.name.substring(0, 2).toUpperCase()}
                     </div>
                     <div>
-                      <span className="font-bold text-slate-800 block leading-tight">
-                        {t.name}
-                      </span>
+                      <span className="font-bold text-slate-800 block leading-tight">{t.name}</span>
                       <span className="text-[10px] text-slate-400 font-medium flex items-center gap-1">
                         {blockedSlots > 0 ? (
                           <>

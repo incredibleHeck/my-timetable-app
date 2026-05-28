@@ -3,15 +3,12 @@ import { AppData, ExamSession } from "../../../types";
 import { generateId } from "../../../utils/utils";
 import { validateExamMove, ExamConflict } from "../logic/examValidation";
 import { getStreamLevel } from "../logic/examUtils";
-import { useProfile } from "../../../contexts/ProfileContext";
+import { useHistory } from "../../../contexts/HistoryContext";
 
-export const useExamSchedule = (
-  initialData: AppData,
-  onUpdate: (data: AppData) => void
-) => {
+export const useExamSchedule = (initialData: AppData, onUpdate: (data: AppData) => void) => {
   // 1. STATE & REFS
   const [exams, setExams] = useState<ExamSession[]>(initialData.exams || []);
-  const { pushToHistory } = useProfile();
+  const { pushToHistory } = useHistory();
 
   // Create a Ref for initialData to avoid stale closures in complex DND handlers
   const dataRef = useRef(initialData);
@@ -25,16 +22,16 @@ export const useExamSchedule = (
   // --- HELPERS ---
   const resolveStreamLevel = useCallback(
     (classId: string) => getStreamLevel(classId, dataRef.current.classes),
-    []
+    [],
   );
 
   // --- VALIDATION ---
   const validateExam = useCallback(
     (exam: ExamSession): string[] => {
       const conflicts = validateExamMove(exam, exams, dataRef.current);
-      return conflicts.map(c => c.message);
+      return conflicts.map((c) => c.message);
     },
-    [exams]
+    [exams],
   );
 
   /**
@@ -43,11 +40,11 @@ export const useExamSchedule = (
    */
   const checkMoveConflicts = useCallback(
     (ids: string[], newDate: string, newTime: string, ignoreIds: string[] = []): ExamConflict[] => {
-      const targets = exams.filter(e => ids.includes(e.id));
-      const otherExams = exams.filter(e => !ignoreIds.includes(e.id));
+      const targets = exams.filter((e) => ids.includes(e.id));
+      const otherExams = exams.filter((e) => !ignoreIds.includes(e.id));
       const results: ExamConflict[] = [];
 
-      targets.forEach(t => {
+      targets.forEach((t) => {
         const moved = { ...t, date: newDate, startTime: newTime };
         const conflicts = validateExamMove(moved, otherExams, dataRef.current);
         results.push(...conflicts);
@@ -55,7 +52,7 @@ export const useExamSchedule = (
 
       return results;
     },
-    [exams]
+    [exams],
   );
 
   // --- CRUD OPERATIONS ---
@@ -90,11 +87,11 @@ export const useExamSchedule = (
 
   const upsertExams = (sessions: ExamSession[]) => {
     pushToHistory(dataRef.current);
-    let currentList = [...exams];
+    const currentList = [...exams];
     const allProjectClasses = dataRef.current.classes;
 
     const getFullStreamClassIds = (ids: string[]) => {
-      const targetLevels = new Set(ids.map(id => resolveStreamLevel(id)));
+      const targetLevels = new Set(ids.map((id) => resolveStreamLevel(id)));
       const siblings = allProjectClasses
         .filter((c) => targetLevels.has(resolveStreamLevel(c.id)))
         .map((c) => c.id);
@@ -109,7 +106,7 @@ export const useExamSchedule = (
       if (existingIndex >= 0) {
         const original = currentList[existingIndex];
         const remainingClassIds = original.classIds.filter(
-          (cid) => !syncedIncoming.classIds.includes(cid)
+          (cid) => !syncedIncoming.classIds.includes(cid),
         );
 
         if (remainingClassIds.length > 0) {
@@ -147,8 +144,8 @@ export const useExamSchedule = (
     const group1Ids = Array.isArray(ids1) ? ids1 : [ids1];
     const group2Ids = Array.isArray(ids2) ? ids2 : [ids2];
 
-    const group1 = exams.filter(e => group1Ids.includes(e.id));
-    const group2 = exams.filter(e => group2Ids.includes(e.id));
+    const group1 = exams.filter((e) => group1Ids.includes(e.id));
+    const group2 = exams.filter((e) => group2Ids.includes(e.id));
 
     if (group1.length === 0 || group2.length === 0) return;
 
@@ -161,21 +158,25 @@ export const useExamSchedule = (
     // Identify all exams in the same streams as the selected groups
     // A stream is defined by the same Level and the same Subject
     const getStreamExams = (sourceExams: ExamSession[]) => {
-      const streams = new Set(sourceExams.map(e => {
-        const levels = e.classIds.map(cid => resolveStreamLevel(cid));
-        return JSON.stringify({ levels, subId: e.subjectId });
-      }));
+      const streams = new Set(
+        sourceExams.map((e) => {
+          const levels = e.classIds.map((cid) => resolveStreamLevel(cid));
+          return JSON.stringify({ levels, subId: e.subjectId });
+        }),
+      );
 
-      return exams.filter(e => {
-        const levels = e.classIds.map(cid => resolveStreamLevel(cid));
-        return streams.has(JSON.stringify({ levels, subId: e.subjectId }));
-      }).map(e => e.id);
+      return exams
+        .filter((e) => {
+          const levels = e.classIds.map((cid) => resolveStreamLevel(cid));
+          return streams.has(JSON.stringify({ levels, subId: e.subjectId }));
+        })
+        .map((e) => e.id);
     };
 
     const stream1Ids = getStreamExams(group1);
     const stream2Ids = getStreamExams(group2);
 
-    const newExams = exams.map(e => {
+    const newExams = exams.map((e) => {
       if (stream1Ids.includes(e.id)) {
         return { ...e, subjectId: sub2Id };
       }
@@ -195,9 +196,7 @@ export const useExamSchedule = (
   const moveExamToDate = (ids: string | string[], newDate: string) => {
     pushToHistory(dataRef.current);
     const targetIds = Array.isArray(ids) ? ids : [ids];
-    const newExams = exams.map((e) =>
-      targetIds.includes(e.id) ? { ...e, date: newDate } : e
-    );
+    const newExams = exams.map((e) => (targetIds.includes(e.id) ? { ...e, date: newDate } : e));
     setExams(newExams);
     onUpdate({ ...dataRef.current, exams: newExams });
   };
@@ -207,21 +206,25 @@ export const useExamSchedule = (
    * Maintains multi-stream consistency by moving related exams together.
    */
   const moveExamToSlot = (ids: string[], newDate: string, newTime: string) => {
-    const targetExams = exams.filter(e => ids.includes(e.id));
+    const targetExams = exams.filter((e) => ids.includes(e.id));
     if (targetExams.length === 0) return;
 
     pushToHistory(dataRef.current);
 
     // Identify all related exams in the same streams
-    const streams = new Set(targetExams.map(e => {
-      const levels = e.classIds.map(cid => resolveStreamLevel(cid));
-      return JSON.stringify({ levels, subId: e.subjectId });
-    }));
+    const streams = new Set(
+      targetExams.map((e) => {
+        const levels = e.classIds.map((cid) => resolveStreamLevel(cid));
+        return JSON.stringify({ levels, subId: e.subjectId });
+      }),
+    );
 
-    const streamIds = exams.filter(e => {
-      const levels = e.classIds.map(cid => resolveStreamLevel(cid));
-      return streams.has(JSON.stringify({ levels, subId: e.subjectId }));
-    }).map(e => e.id);
+    const streamIds = exams
+      .filter((e) => {
+        const levels = e.classIds.map((cid) => resolveStreamLevel(cid));
+        return streams.has(JSON.stringify({ levels, subId: e.subjectId }));
+      })
+      .map((e) => e.id);
 
     const newExams = exams.map((e) => {
       if (streamIds.includes(e.id)) {
@@ -230,7 +233,7 @@ export const useExamSchedule = (
       }
       return e;
     });
-    
+
     setExams(newExams);
     onUpdate({ ...dataRef.current, exams: newExams });
   };

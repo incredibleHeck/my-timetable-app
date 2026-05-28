@@ -46,9 +46,7 @@ export const ClassEditorModal: React.FC<ClassEditorModalProps> = (props) => {
               <button
                 onClick={() => setModalSubTab("BASICS")}
                 className={`flex-1 py-1 text-xs font-bold rounded transition-colors ${
-                  modalSubTab === "BASICS"
-                    ? "bg-white shadow text-slate-800"
-                    : "text-slate-500"
+                  modalSubTab === "BASICS" ? "bg-white shadow text-slate-800" : "text-slate-500"
                 }`}
               >
                 Basics
@@ -56,9 +54,7 @@ export const ClassEditorModal: React.FC<ClassEditorModalProps> = (props) => {
               <button
                 onClick={() => setModalSubTab("STRUCTURE")}
                 className={`flex-1 py-1 text-xs font-bold rounded transition-colors ${
-                  modalSubTab === "STRUCTURE"
-                    ? "bg-white shadow text-slate-800"
-                    : "text-slate-500"
+                  modalSubTab === "STRUCTURE" ? "bg-white shadow text-slate-800" : "text-slate-500"
                 }`}
               >
                 Structure
@@ -66,7 +62,7 @@ export const ClassEditorModal: React.FC<ClassEditorModalProps> = (props) => {
             </div>
 
             {modalSubTab === "BASICS" ? (
-              <ClassBasicsSection 
+              <ClassBasicsSection
                 data={props.data}
                 editingClass={editingClass}
                 cName={form.cName}
@@ -78,7 +74,7 @@ export const ClassEditorModal: React.FC<ClassEditorModalProps> = (props) => {
                 setActiveSlot={form.setActiveSlot}
               />
             ) : (
-              <ClassStructureSection 
+              <ClassStructureSection
                 data={props.data}
                 cPeriodCount={form.cPeriodCount}
                 handlePeriodCountChange={form.handlePeriodCountChange}
@@ -94,7 +90,7 @@ export const ClassEditorModal: React.FC<ClassEditorModalProps> = (props) => {
             )}
           </div>
 
-          <ClassCurriculumSection 
+          <ClassCurriculumSection
             data={props.data}
             cCurriculum={form.cCurriculum}
             setCCurriculum={form.setCCurriculum}

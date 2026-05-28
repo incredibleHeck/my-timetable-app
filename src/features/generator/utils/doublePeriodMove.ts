@@ -25,18 +25,10 @@ export function isSlotPartOfMovingLesson(
 ): boolean {
   if (!slot || sourceDuration !== 2) return false;
 
-  const span = getLessonSpanPeriods(
-    sourceHeadPeriod,
-    2,
-    structure,
-    maxPeriods,
-  );
+  const span = getLessonSpanPeriods(sourceHeadPeriod, 2, structure, maxPeriods);
   if (!span.includes(period)) return false;
 
-  return (
-    slot.subjectId === sourceSlot.subjectId &&
-    slot.teacherId === sourceSlot.teacherId
-  );
+  return slot.subjectId === sourceSlot.subjectId && slot.teacherId === sourceSlot.teacherId;
 }
 
 /** Whether a grid cell blocks placing a moving double — ignores the lesson being moved. */

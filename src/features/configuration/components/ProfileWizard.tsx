@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Modal, Button, Input } from '../../../components/ui';
-import { AppData } from '../../../types';
-import { DEFAULT_DATA } from '../../../utils/constants';
+import React, { useState } from "react";
+import { Modal, Button, Input } from "../../../components/ui";
+import { AppData } from "../../../types";
+import { DEFAULT_DATA } from "../../../utils/constants";
 
 interface ProfileWizardProps {
   isOpen: boolean;
@@ -9,12 +9,8 @@ interface ProfileWizardProps {
   onCreate: (name: string, templateData?: AppData) => Promise<void>;
 }
 
-export const ProfileWizard: React.FC<ProfileWizardProps> = ({
-  isOpen,
-  onClose,
-  onCreate,
-}) => {
-  const [name, setName] = useState('');
+export const ProfileWizard: React.FC<ProfileWizardProps> = ({ isOpen, onClose, onCreate }) => {
+  const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleCreate = async () => {
@@ -22,10 +18,10 @@ export const ProfileWizard: React.FC<ProfileWizardProps> = ({
     setIsSubmitting(true);
     try {
       await onCreate(name, DEFAULT_DATA);
-      setName('');
+      setName("");
       onClose();
     } catch (error) {
-      console.error('Failed to create profile:', error);
+      console.error("Failed to create profile:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -57,7 +53,7 @@ export const ProfileWizard: React.FC<ProfileWizardProps> = ({
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g. 2nd Semester 2025"
           autoFocus
-          onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
+          onKeyDown={(e) => e.key === "Enter" && handleCreate()}
           disabled={isSubmitting}
         />
       </div>

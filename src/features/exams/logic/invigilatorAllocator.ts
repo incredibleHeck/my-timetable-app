@@ -37,7 +37,7 @@ type DaySlotRange = {
 
 const buildDaySlots = (
   classExams: ExamSession[],
-  timeSlots: AppData["settings"]["timeSlots"]
+  timeSlots: AppData["settings"]["timeSlots"],
 ): DaySlotRange[] =>
   classExams.map((e) => {
     const { start, end } = getExamTimeRange(e);
@@ -51,25 +51,21 @@ const buildDaySlots = (
 const isBlockedByConstraints = (
   teacher: AppData["teachers"][0],
   dayIdx: number | null,
-  daySlots: DaySlotRange[]
+  daySlots: DaySlotRange[],
 ): boolean => {
   if (dayIdx === null) return false;
   return daySlots.some((slot) =>
-    slot.periodIndices.some(
-      (pIdx) => teacher.constraints?.[dayIdx]?.[pIdx] === true
-    )
+    slot.periodIndices.some((pIdx) => teacher.constraints?.[dayIdx]?.[pIdx] === true),
   );
 };
 
 const slotsOverlap = (a: DaySlotRange[], b: DaySlotRange[]): boolean =>
-  a.some((sa) =>
-    b.some((sb) => isOverlapping(sa.start, sa.end, sb.start, sb.end))
-  );
+  a.some((sa) => b.some((sb) => isOverlapping(sa.start, sa.end, sb.start, sb.end)));
 
 const markTeacherBusy = (
   busyTeachers: Record<string, { start: number; end: number }[]>,
   teacherId: string,
-  slots: DaySlotRange[]
+  slots: DaySlotRange[],
 ) => {
   if (!busyTeachers[teacherId]) busyTeachers[teacherId] = [];
   slots.forEach((s) => busyTeachers[teacherId].push({ start: s.start, end: s.end }));
@@ -78,14 +74,12 @@ const markTeacherBusy = (
 const isTeacherBusyInSlots = (
   teacherId: string,
   requiredSlots: DaySlotRange[],
-  busyTeachers: Record<string, { start: number; end: number }[]>
+  busyTeachers: Record<string, { start: number; end: number }[]>,
 ): boolean => {
   const busy = busyTeachers[teacherId];
   if (!busy?.length) return false;
   return busy.some((busySlot) =>
-    requiredSlots.some((req) =>
-      isOverlapping(busySlot.start, busySlot.end, req.start, req.end)
-    )
+    requiredSlots.some((req) => isOverlapping(busySlot.start, busySlot.end, req.start, req.end)),
   );
 };
 
@@ -107,7 +101,7 @@ const pickTeachersForClass = (
     timeSlots: AppData["settings"]["timeSlots"];
     targetCount: number;
     existingTeam: string[];
-  }
+  },
 ): string[] => {
   const selectedIds = [...ctx.existingTeam];
 
@@ -119,18 +113,14 @@ const pickTeachersForClass = (
       if (isBlockedByConstraints(t, ctx.dayIdx, ctx.daySlots)) return false;
       if (isTeacherBusyInSlots(t.id, ctx.daySlots, ctx.busyTeachers)) return false;
 
-      const busyWithOtherClass = Object.entries(ctx.classTeams).some(
-        ([otherClassId, teamIds]) => {
-          if (otherClassId === ctx.classId || !teamIds.includes(t.id)) {
-            return false;
-          }
-          const otherClassExams = ctx.unlockedExams.filter((e) =>
-            e.classIds.includes(otherClassId)
-          );
-          const otherSlots = buildDaySlots(otherClassExams, ctx.timeSlots);
-          return slotsOverlap(ctx.daySlots, otherSlots);
+      const busyWithOtherClass = Object.entries(ctx.classTeams).some(([otherClassId, teamIds]) => {
+        if (otherClassId === ctx.classId || !teamIds.includes(t.id)) {
+          return false;
         }
-      );
+        const otherClassExams = ctx.unlockedExams.filter((e) => e.classIds.includes(otherClassId));
+        const otherSlots = buildDaySlots(otherClassExams, ctx.timeSlots);
+        return slotsOverlap(ctx.daySlots, otherSlots);
+      });
 
       return !busyWithOtherClass;
     });
@@ -155,10 +145,7 @@ const pickTeachersForClass = (
  * The team covers Session 1 and Session 2 together.
  * During exam periods normal teaching is suspended — class timetable is not checked.
  */
-export const allocateInvigilators = (
-  data: AppData,
-  config: AllocationConfig
-): AllocationResult => {
+export const allocateInvigilators = (data: AppData, config: AllocationConfig): AllocationResult => {
   const { teachers, settings, exams, classes } = data;
   const resultExams: ExamSession[] = [];
   const warnings: string[] = [];
@@ -179,8 +166,7 @@ export const allocateInvigilators = (
     return weeklyStreamsByWeek[weekKey][teacherId];
   };
 
-  const resolveLevel = (classId: string) =>
-    getStreamLevel(classId, classes);
+  const resolveLevel = (classId: string) => getStreamLevel(classId, classes);
 
   exams
     .filter((e) => e.locked)
@@ -215,21 +201,16 @@ export const allocateInvigilators = (
       });
     });
 
-    const classesOnDate = Array.from(
-      new Set(unlockedExams.flatMap((e) => e.classIds))
-    );
+    const classesOnDate = Array.from(new Set(unlockedExams.flatMap((e) => e.classIds)));
     const classTeams: Record<string, string[]> = {};
     const shuffledClasses = shuffleArray(classesOnDate);
     const dayIdx = getConstraintDayIndex(date);
 
-    const formatClass = (classId: string) =>
-      classes.find((c) => c.id === classId)?.name || classId;
+    const formatClass = (classId: string) => classes.find((c) => c.id === classId)?.name || classId;
 
     shuffledClasses.forEach((classId) => {
       const classLevel = resolveLevel(classId);
-      const classExams = unlockedExams.filter((e) =>
-        e.classIds.includes(classId)
-      );
+      const classExams = unlockedExams.filter((e) => e.classIds.includes(classId));
       if (classExams.length === 0) return;
 
       const daySlots = buildDaySlots(classExams, settings.timeSlots);
@@ -269,13 +250,11 @@ export const allocateInvigilators = (
 
       if (finalTeam.length < minTeam) {
         warnings.push(
-          `Under-staffed: ${formatClass(classId)} on ${date} needs at least ${minTeam} invigilators but only ${finalTeam.length} assigned.`
+          `Under-staffed: ${formatClass(classId)} on ${date} needs at least ${minTeam} invigilators but only ${finalTeam.length} assigned.`,
         );
       }
       if (finalTeam.length === 0) {
-        warnings.push(
-          `No invigilators assigned: ${formatClass(classId)} on ${date}.`
-        );
+        warnings.push(`No invigilators assigned: ${formatClass(classId)} on ${date}.`);
       }
     });
 
@@ -284,7 +263,7 @@ export const allocateInvigilators = (
         const team = classTeams[cid] || [];
         if (team.length === 0) {
           warnings.push(
-            `No invigilators for ${formatClass(cid)} — ${originalExam.startTime} on ${date}.`
+            `No invigilators for ${formatClass(cid)} — ${originalExam.startTime} on ${date}.`,
           );
         }
         resultExams.push({

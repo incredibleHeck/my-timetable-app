@@ -1,11 +1,4 @@
-import {
-  AppData,
-  Conflict,
-  Teacher,
-  Subject,
-  ClassGroup,
-  Room,
-} from "../../../../types";
+import { AppData, Conflict, Teacher, Subject, ClassGroup, Room } from "../../../../types";
 import { AllocationUnit, SchedulerState } from "../core/types";
 import { initializeState } from "../core/state";
 import { calculatePriority, MrvCache } from "./heuristics";
@@ -20,11 +13,7 @@ import {
 } from "./repair-controller";
 import { executeRepairAction } from "./repair-executor";
 import { findBestRepairMove } from "./search";
-import {
-  runConstructionQueue,
-  PlacementRecord,
-  ConstructionMaps,
-} from "./construction";
+import { runConstructionQueue, PlacementRecord, ConstructionMaps } from "./construction";
 import {
   PRIORITY_CRITICAL,
   MAX_REPAIR_STEPS,
@@ -119,7 +108,10 @@ function perturbWeights(
   return perturbed;
 }
 
-function withPerturbedWeights(data: AppData, overrides: ScoringWeightOverrides | undefined): AppData {
+function withPerturbedWeights(
+  data: AppData,
+  overrides: ScoringWeightOverrides | undefined,
+): AppData {
   if (!overrides) return data;
   return {
     ...data,
@@ -135,15 +127,9 @@ function runSingleSolve(
   runIndex: number,
   shouldAbort?: () => boolean,
 ): SolverResult {
-  const teacherMap = new Map<string, Teacher>(
-    data.teachers.map((t) => [t.id, t]),
-  );
-  const subjectMap = new Map<string, Subject>(
-    data.subjects.map((s) => [s.id, s]),
-  );
-  const classMap = new Map<string, ClassGroup>(
-    data.classes.map((c) => [c.id, c]),
-  );
+  const teacherMap = new Map<string, Teacher>(data.teachers.map((t) => [t.id, t]));
+  const subjectMap = new Map<string, Subject>(data.subjects.map((s) => [s.id, s]));
+  const classMap = new Map<string, ClassGroup>(data.classes.map((c) => [c.id, c]));
   const roomMap = new Map<string, Room>(data.rooms.map((r) => [r.id, r]));
   const unitMap = new Map<string, AllocationUnit>();
 
@@ -159,7 +145,7 @@ function runSingleSolve(
     gangMap.get(gangId)!.push(u);
   }
 
-  let unplacedGangLeaders = units.filter((u) => {
+  const unplacedGangLeaders = units.filter((u) => {
     const gangId = getGangId(u);
     return gangMap.get(gangId)![0].id === u.id;
   });
@@ -185,37 +171,22 @@ function runSingleSolve(
   let gangsPlaced = 0;
   const unplacedDuringConstruction: AllocationUnit[] = [];
 
-  const mrvCache = new MrvCache(
-    data,
-    gangMap,
-    teacherMap,
-    subjectMap,
-    classMap,
-    roomMap,
-  );
+  const mrvCache = new MrvCache(data, gangMap, teacherMap, subjectMap, classMap, roomMap);
 
-  const reportConstructionProgress = (
-    placed: number,
-    total: number,
-    unplacedCount: number,
-  ) => {
+  const reportConstructionProgress = (placed: number, total: number, unplacedCount: number) => {
     if (shouldAbort?.()) return false;
     return onProgress?.("CONSTRUCTION", placed, total, unplacedCount) ?? true;
   };
 
-  let rank1Queue = unplacedGangLeaders.filter(
-    (u) => u.priority >= PRIORITY_CRITICAL,
-  );
-  let remainingAfterRank1 = unplacedGangLeaders.filter(
-    (u) => u.priority < PRIORITY_CRITICAL,
-  );
+  let rank1Queue = unplacedGangLeaders.filter((u) => u.priority >= PRIORITY_CRITICAL);
+  let remainingAfterRank1 = unplacedGangLeaders.filter((u) => u.priority < PRIORITY_CRITICAL);
 
   if (!MRV_CRITICAL_FIRST) {
     rank1Queue = [...unplacedGangLeaders];
     remainingAfterRank1 = [];
   }
 
-  let rank1Result = runConstructionQueue(
+  const rank1Result = runConstructionQueue(
     rank1Queue,
     state,
     constructionMaps,
@@ -233,9 +204,9 @@ function runSingleSolve(
   gangsPlaced = rank1Result.gangsPlaced;
   backtrackAttempts = rank1Result.backtrackAttempts;
 
-  const levels = Array.from(
-    new Set(remainingAfterRank1.map((u) => u.rankLevel)),
-  ).sort((a, b) => b - a);
+  const levels = Array.from(new Set(remainingAfterRank1.map((u) => u.rankLevel))).sort(
+    (a, b) => b - a,
+  );
 
   for (const level of levels) {
     const levelQueue = remainingAfterRank1.filter((u) => u.rankLevel === level);
@@ -261,9 +232,7 @@ function runSingleSolve(
   let repairSteps = 0;
   const tabu = new TabuManager({ tenure: TABU_TENURE_DEFAULT });
 
-  const repairQueue = [...unplacedDuringConstruction].sort(
-    (a, b) => b.rankLevel - a.rankLevel,
-  );
+  const repairQueue = [...unplacedDuringConstruction].sort((a, b) => b.rankLevel - a.rankLevel);
   const repairSet = new Set(repairQueue.map((u) => getGangId(u)));
   const repairController = new RepairController(repairQueue.length);
 
@@ -278,9 +247,7 @@ function runSingleSolve(
 
     if (onProgress && repairSteps % 10 === 0) {
       const unplacedNow = countUnplacedGangs(repairQueue, repairController);
-      if (
-        !onProgress("REPAIR", repairSteps, MAX_REPAIR_STEPS, unplacedNow)
-      ) {
+      if (!onProgress("REPAIR", repairSteps, MAX_REPAIR_STEPS, unplacedNow)) {
         break;
       }
     }
@@ -295,9 +262,7 @@ function runSingleSolve(
     tabu.recordGangAttempt(gangId);
 
     if (repairController.shouldSkipGang(gangId)) {
-      repairController.recordProgress(
-        countUnplacedGangs(repairQueue, repairController),
-      );
+      repairController.recordProgress(countUnplacedGangs(repairQueue, repairController));
       continue;
     }
 
@@ -340,25 +305,14 @@ function runSingleSolve(
       }
     }
 
-    repairController.recordProgress(
-      countUnplacedGangs(repairQueue, repairController),
-    );
+    repairController.recordProgress(countUnplacedGangs(repairQueue, repairController));
 
     if (repairController.shouldDiversify()) {
       tabu.recordStagnation();
-      const shaken = diversifyRepairState(
-        state,
-        data,
-        gangMap,
-        unitMap,
-        repairQueue,
-        repairSet,
-      );
+      const shaken = diversifyRepairState(state, data, gangMap, unitMap, repairQueue, repairSet);
       if (shaken > 0) {
         repairController.resetStagnation();
-        repairController.recordProgress(
-          countUnplacedGangs(repairQueue, repairController),
-        );
+        repairController.recordProgress(countUnplacedGangs(repairQueue, repairController));
       }
     }
   }
@@ -404,11 +358,7 @@ function runSingleSolve(
     iterations: steps + repairSteps,
     runIndex,
     totalRuns: 1,
-    unplacedGangs: countUnplacedGangLeaders(
-      unplacedGangLeaders,
-      gangMap,
-      state,
-    ),
+    unplacedGangs: countUnplacedGangLeaders(unplacedGangLeaders, gangMap, state),
     perfectRuns: 0,
   };
 }
@@ -434,8 +384,7 @@ export const solveSmart = (
   const calibrate = options.calibrate === true && minRuns > 1;
   const calibrationSeed = options.seed ?? Date.now();
   const timeBudget = options.timeBudgetMs;
-  const clockStartMs =
-    options.clockStartMs ?? (timeBudget !== undefined ? Date.now() : 0);
+  const clockStartMs = options.clockStartMs ?? (timeBudget !== undefined ? Date.now() : 0);
 
   const isTimeBudgetExceeded = (): boolean =>
     timeBudget !== undefined && Date.now() - clockStartMs >= timeBudget;
@@ -454,11 +403,7 @@ export const solveSmart = (
   const shouldContinueRuns = (): boolean => {
     if (isTimeBudgetExceeded()) return false;
     // Count-only mode: stop early once every unit is placed.
-    if (
-      timeBudget === undefined &&
-      bestResult &&
-      bestResult.unplacedGangs === 0
-    ) {
+    if (timeBudget === undefined && bestResult && bestResult.unplacedGangs === 0) {
       return false;
     }
     if (run < minRuns) return true;
@@ -466,31 +411,21 @@ export const solveSmart = (
   };
 
   while (shouldContinueRuns()) {
-    const runData = calibrate && run > 0
-      ? withPerturbedWeights(
-          data,
-          perturbWeights(
-            data.settings.scoringWeightOverrides,
-            run,
-            calibrationSeed,
-          ),
-        )
-      : data;
+    const runData =
+      calibrate && run > 0
+        ? withPerturbedWeights(
+            data,
+            perturbWeights(data.settings.scoringWeightOverrides, run, calibrationSeed),
+          )
+        : data;
 
     const currentRun = run;
     let runCancelled = false;
-    const wrappedProgress: SolverProgressCallback = (
-      phase,
-      progress,
-      total,
-      conflicts,
-    ) => {
+    const wrappedProgress: SolverProgressCallback = (phase, progress, total, conflicts) => {
       bestUnplacedGangsSeen = Math.min(bestUnplacedGangsSeen, conflicts);
       const elapsedMs = clockStartMs ? Date.now() - clockStartMs : 0;
       const bestUnplaced =
-        bestUnplacedGangsSeen === Number.POSITIVE_INFINITY
-          ? conflicts
-          : bestUnplacedGangsSeen;
+        bestUnplacedGangsSeen === Number.POSITIVE_INFINITY ? conflicts : bestUnplacedGangsSeen;
       const continueSolving =
         onProgress?.(phase, progress, total, conflicts, {
           runIndex: currentRun + 1,
@@ -505,14 +440,7 @@ export const solveSmart = (
       return continueSolving;
     };
 
-    const result = runSingleSolve(
-      units,
-      runData,
-      wrappedProgress,
-      options,
-      run,
-      shouldAbort,
-    );
+    const result = runSingleSolve(units, runData, wrappedProgress, options, run, shouldAbort);
     bestUnplacedGangsSeen = Math.min(bestUnplacedGangsSeen, result.unplacedGangs);
     if (isPerfectGeneratedSchedule(data, result.schedule)) {
       perfectRunsFound++;

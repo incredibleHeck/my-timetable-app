@@ -129,5 +129,3 @@ export const DEFAULT_DATA: AppData = {
   lastGenerated: null,
   recentActivity: [],
 };
-
-

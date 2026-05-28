@@ -16,8 +16,7 @@ export const checkTeacherLoad = (
   const { data, teacherId, targetDay, maxPeriods } = ctx;
   const teacher = data.teachers.find((t) => t.id === teacherId);
 
-  const maxDailyLoad =
-    teacher?.maxPeriodsPerDay ?? (data.settings.maxTeacherPeriodsPerDay || 6);
+  const maxDailyLoad = teacher?.maxPeriodsPerDay ?? (data.settings.maxTeacherPeriodsPerDay || 6);
   const maxConsecutive = data.settings.maxConsecutivePeriods || 4;
 
   let currentDailyLoad = 0;
@@ -121,13 +120,10 @@ export const checkSubjectLimit = (
 
   // 2. TOTAL CURRICULUM ALLOCATION (The "Hard Wall")
   const cls = data.classes.find((c) => c.id === classId);
-  const curriculumItem = cls?.curriculum?.find(
-    (curr) => curr.subjectId === subjectId,
-  );
+  const curriculumItem = cls?.curriculum?.find((curr) => curr.subjectId === subjectId);
 
   if (curriculumItem) {
-    const totalAllowed =
-      (curriculumItem.singles || 0) + (curriculumItem.doubles || 0) * 2;
+    const totalAllowed = (curriculumItem.singles || 0) + (curriculumItem.doubles || 0) * 2;
 
     // 1. Start with the proposed slots count (The new placement)
     let totalScheduled = proposedSlots.size;
@@ -135,9 +131,7 @@ export const checkSubjectLimit = (
     const daysPerWeek = getDaysPerWeek(data.settings);
 
     for (let d = 0; d < daysPerWeek; d++) {
-      const daySched = state
-        ? state?.schedule[classId]?.[d]
-        : data.schedule[classId]?.[d];
+      const daySched = state ? state?.schedule[classId]?.[d] : data.schedule[classId]?.[d];
       if (!daySched) continue;
 
       Object.keys(daySched).forEach((pStr) => {
@@ -156,9 +150,7 @@ export const checkSubjectLimit = (
         if (slot.subjectId === subjectId) {
           const nextSlot = daySched[p + 1];
           const isDouble =
-            nextSlot &&
-            (nextSlot as any).isFixed &&
-            nextSlot.subjectId === subjectId;
+            nextSlot && (nextSlot as any).isFixed && nextSlot.subjectId === subjectId;
 
           totalScheduled += isDouble ? 2 : 1;
         }
@@ -300,8 +292,7 @@ export const checkTeacherContinuity = (
         // We only flag if the teacher is busy with ANOTHER class.
         // If the teacher is FREE (null), we ignore the gap.
         if (state) {
-          const teacherOccupant =
-            state?.teacherOccupancy[teacherId]?.[targetDay]?.[p];
+          const teacherOccupant = state?.teacherOccupancy[teacherId]?.[targetDay]?.[p];
           if (
             teacherOccupant &&
             teacherOccupant !== "BLOCK" &&
@@ -319,11 +310,7 @@ export const checkTeacherContinuity = (
         } else {
           for (const otherCId of Object.keys(data.schedule)) {
             const slot = data.schedule[otherCId]?.[targetDay]?.[p];
-            if (
-              slot &&
-              slot.teacherId === teacherId &&
-              !ignoredSlots.has(`${targetDay}-${p}`)
-            ) {
+            if (slot && slot.teacherId === teacherId && !ignoredSlots.has(`${targetDay}-${p}`)) {
               const cls = data.classes.find((c) => c.id === classId);
               return {
                 valid: false,

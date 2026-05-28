@@ -113,8 +113,8 @@ export const WorkloadTeacherDetail: React.FC<WorkloadTeacherDetailProps> = ({
         >
           <p className="text-xs font-bold text-slate-800 mb-1">{teacherName}</p>
           <p className="text-[11px] text-slate-500 mb-3">
-            <strong>{assignedPeriods}</strong> requested /{" "}
-            <strong>{maxWeeklyCapacity}</strong> weekly max
+            <strong>{assignedPeriods}</strong> requested / <strong>{maxWeeklyCapacity}</strong>{" "}
+            weekly max
             {targetLoad != null && targetLoad > 0 && (
               <>
                 {" "}
@@ -146,9 +146,7 @@ export const WorkloadTeacherDetail: React.FC<WorkloadTeacherDetailProps> = ({
                   <span className="font-medium text-slate-800 whitespace-nowrap">
                     {row.className}
                   </span>
-                  <span className="text-slate-500 truncate">
-                    {row.subjectName}
-                  </span>
+                  <span className="text-slate-500 truncate">{row.subjectName}</span>
                   <span className="font-bold text-slate-800 whitespace-nowrap text-right">
                     {row.periods} {row.periods === 1 ? "period" : "periods"}
                   </span>
@@ -156,9 +154,7 @@ export const WorkloadTeacherDetail: React.FC<WorkloadTeacherDetailProps> = ({
               ))}
             </ul>
           ) : (
-            <p className="text-[11px] text-slate-400 italic">
-              No class assignments in curriculum.
-            </p>
+            <p className="text-[11px] text-slate-400 italic">No class assignments in curriculum.</p>
           )}
 
           <p className="text-[9px] text-slate-400 mt-2">

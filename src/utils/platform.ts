@@ -2,14 +2,18 @@
  * Platform and environment detection utilities.
  */
 
+interface TauriWindow extends Window {
+  __TAURI__?: unknown;
+  __TAURI_INTERNALS__?: unknown;
+}
+
 /**
  * Checks if the application is currently running within a Tauri environment.
  */
 export const isTauriEnv = (): boolean => {
-  return (
-    typeof window !== 'undefined' &&
-    (!!(window as any).__TAURI__ || !!(window as any).__TAURI_INTERNALS__)
-  );
+  if (typeof window === "undefined") return false;
+  const w = window as TauriWindow;
+  return Boolean(w.__TAURI__ || w.__TAURI_INTERNALS__);
 };
 
 /**
@@ -24,7 +28,7 @@ export const isWebEnv = (): boolean => {
  */
 export const getTauriPath = async () => {
   if (isTauriEnv()) {
-    return await import('@tauri-apps/api/path');
+    return await import("@tauri-apps/api/path");
   }
   return null;
 };

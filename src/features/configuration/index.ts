@@ -1,1 +1,1 @@
-export { GlobalConfigView } from './GlobalConfigView';
+export { GlobalConfigView } from "./GlobalConfigView";

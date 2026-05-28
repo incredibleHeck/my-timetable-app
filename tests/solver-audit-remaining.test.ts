@@ -70,8 +70,8 @@ describe("Remaining solver audit fixes", () => {
     }));
 
     const { state } = solveSmart(units, data);
-    const dayCounts = Object.values(state.schedule["c1"] ?? {}).map((day) =>
-      Object.values(day ?? {}).filter((slot) => slot?.subjectId === "s-math").length,
+    const dayCounts = Object.values(state.schedule["c1"] ?? {}).map(
+      (day) => Object.values(day ?? {}).filter((slot) => slot?.subjectId === "s-math").length,
     );
 
     expect(Math.max(...dayCounts)).toBeLessThanOrEqual(2);

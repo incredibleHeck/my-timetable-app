@@ -3,11 +3,7 @@ import { AllocationUnit, SchedulerState } from "../core/types";
 import { applyGangToState, removeGangFromState } from "../core/state";
 import { findMostConstrainedGangIdx, MrvCache } from "./heuristics";
 import { findValidMoves } from "./search";
-import {
-  PRIORITY_CRITICAL,
-  MAX_BACKTRACK_DEPTH,
-  MAX_BACKTRACK_ATTEMPTS,
-} from "../constants";
+import { PRIORITY_CRITICAL, MAX_BACKTRACK_DEPTH, MAX_BACKTRACK_ATTEMPTS } from "../constants";
 import { getGangId } from "./repair-controller";
 
 export type ConstructionMove = {
@@ -135,11 +131,7 @@ export function tryConstructionBacktrack(
 
   // Fall back to chronological if no conflict-directed targets found.
   if (targetIndices.length === 0) {
-    for (
-      let i = stack.length - 1;
-      i >= 0 && targetIndices.length < MAX_BACKTRACK_DEPTH;
-      i--
-    ) {
+    for (let i = stack.length - 1; i >= 0 && targetIndices.length < MAX_BACKTRACK_DEPTH; i--) {
       if (stack[i].canBacktrack) {
         targetIndices.push(i);
       }
@@ -173,7 +165,7 @@ export function tryConstructionBacktrack(
 function pickBestMove(
   moves: Array<{ d: number; p: number; p2: number; score: number; rooms: Record<string, string> }>,
   avoidSlots: Set<string>,
-): typeof moves[0] | null {
+): (typeof moves)[0] | null {
   if (moves.length === 0) return null;
 
   moves.sort((a, b) => b.score - a.score);
@@ -198,11 +190,7 @@ export function runConstructionQueue(
   steps: number,
   gangsPlaced: number,
   unplaced: AllocationUnit[],
-  onProgress?: (
-    gangsPlaced: number,
-    totalGangs: number,
-    unplacedCount: number,
-  ) => boolean,
+  onProgress?: (gangsPlaced: number, totalGangs: number, unplacedCount: number) => boolean,
   totalGangs?: number,
   mrvCache?: MrvCache,
   shouldAbort?: () => boolean,

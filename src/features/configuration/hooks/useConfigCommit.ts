@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { AppData, ActivityType } from "../../../types";
-import { useProfile } from "../../../contexts/ProfileContext";
+import { useHistory } from "../../../contexts/HistoryContext";
 import { generateId } from "../../../utils/utils";
 
 export type ConfigCommitFn = (message: string, nextData: AppData) => void;
@@ -9,7 +9,7 @@ export function useConfigCommit(
   data: AppData,
   onUpdate: (newData: AppData) => void,
 ): ConfigCommitFn {
-  const { pushToHistory } = useProfile();
+  const { pushToHistory } = useHistory();
 
   return useCallback(
     (message: string, nextData: AppData) => {

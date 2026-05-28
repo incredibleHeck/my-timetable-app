@@ -26,9 +26,7 @@ export const printAllSchedules = (data: AppData, mode: "CLASS" | "TEACHER") => {
   // --- 2. PREPARATION: Sort Entities ---
   const entities =
     mode === "CLASS"
-      ? [...classes].sort((a, b) =>
-          a.name.localeCompare(b.name, undefined, { numeric: true })
-        )
+      ? [...classes].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
       : [...teachers].sort((a, b) => a.name.localeCompare(b.name));
 
   // --- 3. BUILD HTML ---
@@ -115,37 +113,37 @@ export const printAllSchedules = (data: AppData, mode: "CLASS" | "TEACHER") => {
     // Determine Structure for this entity
     const currentClass = mode === "CLASS" ? (entity as ClassGroup) : null;
     const currentStructure = currentClass?.structure?.length
-        ? currentClass.structure
-        : settings.dayStructure;
-    
-    const classSchedule = currentClass 
-        ? calculateClassSchedule(currentClass, settings, currentStructure)
-        : [];
-    
+      ? currentClass.structure
+      : settings.dayStructure;
+
+    const classSchedule = currentClass
+      ? calculateClassSchedule(currentClass, settings, currentStructure)
+      : [];
+
     const maxPeriods = currentClass
-        ? (currentStructure.length || currentClass.periodCount || settings.periodsPerDay)
-        : settings.periodsPerDay;
+      ? currentStructure.length || currentClass.periodCount || settings.periodsPerDay
+      : settings.periodsPerDay;
 
     const periods = Array.from({ length: maxPeriods }, (_, i) => i);
 
     // Helper for sequential numbering
     const getPeriodLabel = (pIdx: number) => {
-        const item = currentStructure?.[pIdx];
-        const type = typeof item === "string" ? item : item?.type;
-        const effectiveType = type || "CLASS"; 
+      const item = currentStructure?.[pIdx];
+      const type = typeof item === "string" ? item : item?.type;
+      const effectiveType = type || "CLASS";
 
-        if (effectiveType !== "CLASS") {
-            const label = typeof item === "string" ? item : item?.label || item?.type;
-            return label?.toUpperCase() || "BREAK";
-        }
+      if (effectiveType !== "CLASS") {
+        const label = typeof item === "string" ? item : item?.label || item?.type;
+        return label?.toUpperCase() || "BREAK";
+      }
 
-        let classCount = 0;
-        for (let i = 0; i <= pIdx; i++) {
-            const pItem = currentStructure?.[i];
-            const pType = typeof pItem === "string" ? pItem : pItem?.type;
-            if ((pType || "CLASS") === "CLASS") classCount++;
-        }
-        return `P${classCount}`;
+      let classCount = 0;
+      for (let i = 0; i <= pIdx; i++) {
+        const pItem = currentStructure?.[i];
+        const pType = typeof pItem === "string" ? pItem : pItem?.type;
+        if ((pType || "CLASS") === "CLASS") classCount++;
+      }
+      return `P${classCount}`;
     };
 
     htmlContent += `
@@ -163,17 +161,19 @@ export const printAllSchedules = (data: AppData, mode: "CLASS" | "TEACHER") => {
           <thead>
             <tr>
               <th style="width: 45px;">DAY</th>
-              ${periods.map((p) => {
+              ${periods
+                .map((p) => {
                   let timeSlot = settings.timeSlots?.[p];
                   if (mode === "CLASS" && classSchedule[p]) {
-                      timeSlot = classSchedule[p];
+                    timeSlot = classSchedule[p];
                   }
-                  
-                  const timeLabel = timeSlot 
+
+                  const timeLabel = timeSlot
                     ? `<div style="font-weight:normal; font-size:8px;">${getFormattedTimeRange(timeSlot)}</div>`
                     : "";
                   return `<th>${getPeriodLabel(p)}${timeLabel}</th>`;
-              }).join("")}
+                })
+                .join("")}
             </tr>
           </thead>
           <tbody>
@@ -199,8 +199,8 @@ export const printAllSchedules = (data: AppData, mode: "CLASS" | "TEACHER") => {
 
         const fixedLabel = getOccasionLabel(fixedOccasion);
         if (fixedLabel) {
-            const label = fixedLabel;
-            htmlContent += `
+          const label = fixedLabel;
+          htmlContent += `
                 <td style="background-color: #1e293b; color: #fbbf24; font-weight: bold; font-size: 10px; border: 1px solid #0f172a;">
                     <div class="lesson-cell">
                         <div class="subj-name" style="color: #fbbf24;">${label}</div>
@@ -208,14 +208,14 @@ export const printAllSchedules = (data: AppData, mode: "CLASS" | "TEACHER") => {
                     </div>
                 </td>
             `;
-            continue;
+          continue;
         }
 
         // 2. Check Teacher Blocked (for Teacher mode)
         if (mode === "TEACHER") {
-            const teacher = teachers.find((t: Teacher) => t.id === entity.id);
-            if (teacher?.constraints?.[dIdx]?.[pIdx]) {
-                htmlContent += `
+          const teacher = teachers.find((t: Teacher) => t.id === entity.id);
+          if (teacher?.constraints?.[dIdx]?.[pIdx]) {
+            htmlContent += `
                     <td style="background-color: #1e293b; color: #fbbf24; font-weight: bold; font-size: 10px; border: 1px solid #0f172a;">
                         <div class="lesson-cell">
                             <div class="subj-name" style="color: #fbbf24;">BLOCKED</div>
@@ -223,67 +223,76 @@ export const printAllSchedules = (data: AppData, mode: "CLASS" | "TEACHER") => {
                         </div>
                     </td>
                 `;
-                continue;
-            }
+            continue;
+          }
         }
 
         // Check for double periods to skip "fixed" tails
         let slot = null;
         let classId = mode === "CLASS" ? entity.id : "";
-        
+
         if (mode === "CLASS") {
-            slot = schedule[entity.id]?.[dIdx]?.[pIdx];
+          slot = schedule[entity.id]?.[dIdx]?.[pIdx];
         } else {
-            for (const c of classes) {
-                const s = schedule[c.id]?.[dIdx]?.[pIdx];
-                if (s && s.teacherId === entity.id) {
-                    slot = s; classId = c.id; break;
-                }
+          for (const c of classes) {
+            const s = schedule[c.id]?.[dIdx]?.[pIdx];
+            if (s && s.teacherId === entity.id) {
+              slot = s;
+              classId = c.id;
+              break;
             }
+          }
         }
 
         if (slot?.isFixed) {
-            // Check if this is a tail of a double from previous period
-            const prevP = pIdx > 0 ? (mode === "CLASS" ? schedule[entity.id]?.[dIdx]?.[pIdx-1] : null) : null;
-            // Note: Simplification for teacher mode tail check might be needed if complex
-            if (prevP && prevP.subjectId === slot.subjectId) continue; 
+          // Check if this is a tail of a double from previous period
+          const prevP =
+            pIdx > 0 ? (mode === "CLASS" ? schedule[entity.id]?.[dIdx]?.[pIdx - 1] : null) : null;
+          // Note: Simplification for teacher mode tail check might be needed if complex
+          if (prevP && prevP.subjectId === slot.subjectId) continue;
         }
 
         const duration = slot ? getDuration(data, classId || entity.id, dIdx, pIdx) : 1;
         const colspan = duration > 1 ? `colspan="${duration}"` : "";
-        
+
         let content = "—";
         let style = "";
 
         if (slot) {
-            const subject = subjectMap.get(slot.subjectId);
-            const subName = subject?.name || "Subject";
-            const subColor = subject?.color || "#cbd5e1";
-            const detailName = mode === "CLASS" 
-                ? (teacherMap.get(slot.teacherId)?.name || "Staff")
-                : (classMap.get(classId)?.name || "Class");
-            
-            const subLower = subName.toLowerCase();
-            const isSpecial = slot.locked || subLower.includes("worship") || subLower.includes("assembly") || subLower.includes("club") || subLower.includes("meeting");
+          const subject = subjectMap.get(slot.subjectId);
+          const subName = subject?.name || "Subject";
+          const subColor = subject?.color || "#cbd5e1";
+          const detailName =
+            mode === "CLASS"
+              ? teacherMap.get(slot.teacherId)?.name || "Staff"
+              : classMap.get(classId)?.name || "Class";
 
-            if (isSpecial) {
-                style = `background-color: #0f172a; color: #fbbf24; border: 1px solid #0f172a;`;
-                content = `
+          const subLower = subName.toLowerCase();
+          const isSpecial =
+            slot.locked ||
+            subLower.includes("worship") ||
+            subLower.includes("assembly") ||
+            subLower.includes("club") ||
+            subLower.includes("meeting");
+
+          if (isSpecial) {
+            style = `background-color: #0f172a; color: #fbbf24; border: 1px solid #0f172a;`;
+            content = `
                     <div class="lesson-cell">
                         <div class="subj-name" style="color: #fbbf24;">${subName}</div>
                         <div class="detail-name" style="color: #94a3b8;">${detailName}</div>
                     </div>
                 `;
-            } else {
-                style = `background-color: ${subColor}15; border-left: 4px solid ${subColor};`;
-                content = `
+          } else {
+            style = `background-color: ${subColor}15; border-left: 4px solid ${subColor};`;
+            content = `
                     <div class="lesson-cell">
                         <div class="subj-name">${subName}</div>
                         <div class="detail-name">${detailName}</div>
                     </div>
                 `;
-            }
-            if (duration > 1) pIdx += (duration - 1); // Skip next period cell
+          }
+          if (duration > 1) pIdx += duration - 1; // Skip next period cell
         }
 
         htmlContent += `<td ${colspan} style="${style}">${content}</td>`;

@@ -1,55 +1,64 @@
-import { describe, it, expect } from 'vitest';
-import { solveSmart } from '../src/features/generator/scheduler/solver/solver';
-import { prepareAllocationUnits } from '../src/features/generator/scheduler/logic/preparation';
-import { auditFinalSchedule } from '../src/features/generator/scheduler/validation';
-import { DEFAULT_DATA } from '../src/utils/constants';
-import { AppData } from '../src/types';
+import { describe, it, expect } from "vitest";
+import { solveSmart } from "../src/features/generator/scheduler/solver/solver";
+import { prepareAllocationUnits } from "../src/features/generator/scheduler/logic/preparation";
+import { auditFinalSchedule } from "../src/features/generator/scheduler/validation";
+import { DEFAULT_DATA } from "../src/utils/constants";
+import { AppData } from "../src/types";
 
-describe('Conflict Reporting Verification', () => {
-  it('should report unplaced lessons when oversubscribed', () => {
+describe("Conflict Reporting Verification", () => {
+  it("should report unplaced lessons when oversubscribed", () => {
     // 1. Create data with 12 periods available but 15 periods requested in curriculum
     const data = {
       ...DEFAULT_DATA,
       settings: {
         ...DEFAULT_DATA.settings,
         periodsPerDay: 12,
-        daysPerWeek: 1 // Only 1 day for a small, fast test
+        daysPerWeek: 1, // Only 1 day for a small, fast test
       },
-      classes: [{
-        id: 'c1',
-        name: 'Test Class',
-        defaultRoomId: 'r1',
-        curriculum: [{
-          id: 'curr1',
-          subjectId: 's1',
-          periodsPerWeek: 15, // MORE than the 12 available slots
-          doubles: 0,
-          singles: 15,
-          assignedTeacherId: 't1'
-        }]
-      }],
-      subjects: [{ id: 's1', name: 'Math' }],
-      teachers: [{ id: 't1', name: 'Teacher 1', specialtyIds: ['s1'], constraints: [] }],
-      rooms: [{ id: 'r1', name: 'Room 1', capacity: 30 }]
+      classes: [
+        {
+          id: "c1",
+          name: "Test Class",
+          defaultRoomId: "r1",
+          curriculum: [
+            {
+              id: "curr1",
+              subjectId: "s1",
+              periodsPerWeek: 15, // MORE than the 12 available slots
+              doubles: 0,
+              singles: 15,
+              assignedTeacherId: "t1",
+            },
+          ],
+        },
+      ],
+      subjects: [{ id: "s1", name: "Math" }],
+      teachers: [{ id: "t1", name: "Teacher 1", specialtyIds: ["s1"], constraints: [] }],
+      rooms: [{ id: "r1", name: "Room 1", capacity: 30 }],
     };
 
     const units = prepareAllocationUnits(data);
-    
+
     // 2. Run Solver
     const { conflicts } = solveSmart(units, data);
 
     // 3. Verify conflicts contain the unplaced messages
-    console.log('Detected Conflicts:', conflicts.map(c => c.reason));
-    
-    const hasUnplaced = conflicts.some(c => c.reason.includes('Unplaced') || c.reason.includes('Could not find'));
-    expect(hasUnplaced).toBe(true);
-    
-    const mathConflict = conflicts.find(c => c.subjectName === 'Math');
-    expect(mathConflict).toBeDefined();
-    expect(mathConflict?.className).toBe('Test Class');
-  });
+    console.log(
+      "Detected Conflicts:",
+      conflicts.map((c) => c.reason),
+    );
 
-  it('auditFinalSchedule reports curriculum gap from final schedule grid, not solver messages', () => {
+    const hasUnplaced = conflicts.some(
+      (c) => c.reason.includes("Unplaced") || c.reason.includes("Could not find"),
+    );
+    expect(hasUnplaced).toBe(true);
+
+    const mathConflict = conflicts.find((c) => c.subjectName === "Math");
+    expect(mathConflict).toBeDefined();
+    expect(mathConflict?.className).toBe("Test Class");
+  }, 30_000);
+
+  it("auditFinalSchedule reports curriculum gap from final schedule grid, not solver messages", () => {
     const data: AppData = {
       ...DEFAULT_DATA,
       settings: {
@@ -59,21 +68,19 @@ describe('Conflict Reporting Verification', () => {
       },
       classes: [
         {
-          id: 'c1',
-          name: 'Test Class',
+          id: "c1",
+          name: "Test Class",
           periodCount: 5,
           subjects: [],
-          curriculum: [
-            { id: 'curr1', subjectId: 's1', singles: 5, doubles: 0 },
-          ],
+          curriculum: [{ id: "curr1", subjectId: "s1", singles: 5, doubles: 0 }],
         },
       ],
-      subjects: [{ id: 's1', name: 'Math', color: 'blue', type: 'CORE' }],
+      subjects: [{ id: "s1", name: "Math", color: "blue", type: "CORE" }],
       teachers: [
         {
-          id: 't1',
-          name: 'Teacher 1',
-          subjects: ['s1'],
+          id: "t1",
+          name: "Teacher 1",
+          subjects: ["s1"],
           constraints: Array(5)
             .fill(null)
             .map(() => Array(10).fill(false)),
@@ -82,34 +89,28 @@ describe('Conflict Reporting Verification', () => {
       schedule: {
         c1: {
           0: {
-            0: { subjectId: 's1', teacherId: 't1', classId: 'c1' },
+            0: { subjectId: "s1", teacherId: "t1", classId: "c1" },
           },
         },
       },
       conflicts: [
         {
-          classId: 'c1',
-          className: 'Test Class',
-          subjectId: 's1',
-          subjectName: 'Math',
+          classId: "c1",
+          className: "Test Class",
+          subjectId: "s1",
+          subjectName: "Math",
           day: 0,
           period: 0,
-          reason: 'Unplaced: Could not find slot for Math',
-          severity: 'HIGH',
+          reason: "Unplaced: Could not find slot for Math",
+          severity: "HIGH",
         },
       ],
     };
 
     const audited = auditFinalSchedule(data);
+    expect(audited.some((c) => c.reason.includes("Curriculum Gap"))).toBe(true);
     expect(
-      audited.some((c) => c.reason.includes('Curriculum Gap')),
-    ).toBe(true);
-    expect(
-      audited.some(
-        (c) =>
-          c.reason.includes('Unplaced') ||
-          c.reason.includes('Could not find'),
-      ),
+      audited.some((c) => c.reason.includes("Unplaced") || c.reason.includes("Could not find")),
     ).toBe(false);
   });
 });

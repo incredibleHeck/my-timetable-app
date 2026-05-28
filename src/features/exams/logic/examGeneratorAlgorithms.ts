@@ -47,10 +47,7 @@ const shuffle = <T>(array: T[]): T[] => {
   return arr;
 };
 
-export const generateExams = (
-  data: AppData,
-  config: GeneratorConfig
-): GenerateExamsResult => {
+export const generateExams = (data: AppData, config: GeneratorConfig): GenerateExamsResult => {
   const empty: GenerateExamsResult = { sessions: [], unscheduled: [] };
   if (!config.subjects || config.subjects.length === 0) return empty;
 
@@ -62,8 +59,7 @@ export const generateExams = (
     ...data.settings,
     examGrid: {
       ...data.settings.examGrid,
-      sessionsPerDay:
-        config.sessionsPerDay ?? data.settings.examGrid?.sessionsPerDay ?? 2,
+      sessionsPerDay: config.sessionsPerDay ?? data.settings.examGrid?.sessionsPerDay ?? 2,
     },
   };
   const sessionColumns = getExamSessionColumns(settingsForColumns);
@@ -76,10 +72,7 @@ export const generateExams = (
 
   if (targetClasses.length === 0) return empty;
 
-  const classSchedules: Record<
-    string,
-    { start: number; end: number; date: string }[]
-  > = {};
+  const classSchedules: Record<string, { start: number; end: number; date: string }[]> = {};
   targetClasses.forEach((c) => (classSchedules[c.id] = []));
 
   const maxPapers = Math.max(0, ...config.subjects.map((c) => c.papers));
@@ -93,9 +86,7 @@ export const generateExams = (
     if (config.mode === "UNIFORM") {
       currentSubjects.forEach((sub) => {
         const involvedClassIds = targetClasses
-          .filter((c) =>
-            c.curriculum.some((curr) => curr.subjectId === sub.id)
-          )
+          .filter((c) => c.curriculum.some((curr) => curr.subjectId === sub.id))
           .map((c) => c.id);
 
         if (involvedClassIds.length === 0) return;
@@ -113,7 +104,7 @@ export const generateExams = (
           GLOBAL_MAX_DAYS,
           dayEndLimit,
           unscheduled,
-          sessionColumns
+          sessionColumns,
         );
       });
     } else {
@@ -124,7 +115,7 @@ export const generateExams = (
 
       currentSubjects.forEach((sub) => {
         const involvedClasses = targetClasses.filter((c) =>
-          c.curriculum.some((curr) => curr.subjectId === sub.id)
+          c.curriculum.some((curr) => curr.subjectId === sub.id),
         );
 
         if (config.syncStreams) {
@@ -161,7 +152,7 @@ export const generateExams = (
           GLOBAL_MAX_DAYS,
           dayEndLimit,
           unscheduled,
-          sessionColumns
+          sessionColumns,
         );
       });
     }
@@ -174,13 +165,10 @@ const countClassExamsInSessionOnDate = (
   classId: string,
   dateStr: string,
   column: ExamSessionColumn,
-  ledger: Record<string, { start: number; end: number; date: string }[]>
+  ledger: Record<string, { start: number; end: number; date: string }[]>,
 ): number =>
   ledger[classId].filter(
-    (b) =>
-      b.date === dateStr &&
-      b.start >= column.minStartMins &&
-      b.start < column.maxStartMins
+    (b) => b.date === dateStr && b.start >= column.minStartMins && b.start < column.maxStartMins,
   ).length;
 
 const attemptSchedule = (
@@ -196,12 +184,9 @@ const attemptSchedule = (
   maxDays: number,
   dayEndLimit: number,
   unscheduled: UnscheduledUnit[],
-  sessionColumns: ExamSessionColumn[]
+  sessionColumns: ExamSessionColumn[],
 ) => {
-  const maxPerSession = Math.max(
-    1,
-    Math.ceil(config.maxPerDay / sessionColumns.length)
-  );
+  const maxPerSession = Math.max(1, Math.ceil(config.maxPerDay / sessionColumns.length));
   groups.forEach((groupClassIds) => {
     let dayOffset = 0;
     let scheduled = false;
@@ -232,8 +217,7 @@ const attemptSchedule = (
             const booked = ledger[cid].filter((b) => b.date === dateStr);
             return !booked.some(
               (b) =>
-                attemptTime < b.end + config.gapMinutes &&
-                attemptEnd + config.gapMinutes > b.start
+                attemptTime < b.end + config.gapMinutes && attemptEnd + config.gapMinutes > b.start,
             );
           });
 
@@ -243,16 +227,14 @@ const attemptSchedule = (
           });
 
           const underSessionLimit = groupClassIds.every(
-            (cid) =>
-              countClassExamsInSessionOnDate(cid, dateStr, column, ledger) <
-              maxPerSession
+            (cid) => countClassExamsInSessionOnDate(cid, dateStr, column, ledger) < maxPerSession,
           );
 
           const subjectClash = sessions.some(
             (s) =>
               s.subjectId === subject.id &&
               s.date === dateStr &&
-              s.classIds.some((c) => groupClassIds.includes(c))
+              s.classIds.some((c) => groupClassIds.includes(c)),
           );
 
           if (

@@ -8,7 +8,7 @@ import { PeriodConfig, PeriodType } from "../../../../types";
  */
 export const getType = (
   structure: (PeriodConfig | PeriodType)[] | undefined,
-  p: number
+  p: number,
 ): PeriodType => {
   const item = structure?.[p];
 

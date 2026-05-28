@@ -1,27 +1,29 @@
-import { describe, it, expect } from 'vitest';
-import { checkSlotValidity } from '../src/features/generator/scheduler/validation';
-import { initializeState } from '../src/features/generator/scheduler/core/state';
-import { AppData, Teacher, Class, Subject } from '../src/types';
-import { DEFAULT_DATA } from '../src/utils/constants';
+import { describe, it, expect } from "vitest";
+import { checkSlotValidity } from "../src/features/generator/scheduler/validation";
+import { initializeState } from "../src/features/generator/scheduler/core/state";
+import { AppData, Teacher, Class, Subject } from "../src/types";
+import { DEFAULT_DATA } from "../src/utils/constants";
 
-describe('Configurable Constraints', () => {
+describe("Configurable Constraints", () => {
   const mockTeacher: Teacher = {
-    id: 't1',
-    name: 'John Doe',
-    specialtyIds: ['s1'],
-    constraints: Array(5).fill(null).map(() => Array(8).fill(false)),
+    id: "t1",
+    name: "John Doe",
+    specialtyIds: ["s1"],
+    constraints: Array(5)
+      .fill(null)
+      .map(() => Array(8).fill(false)),
   };
 
   const mockClass: Class = {
-    id: 'c1',
-    name: '10A',
+    id: "c1",
+    name: "10A",
     curriculum: [],
   };
 
   const mockSubject: Subject = {
-    id: 's1',
-    name: 'Math',
-    color: '#ff0000',
+    id: "s1",
+    name: "Math",
+    color: "#ff0000",
   };
 
   const baseData: AppData = {
@@ -29,7 +31,9 @@ describe('Configurable Constraints', () => {
     settings: {
       ...DEFAULT_DATA.settings,
       periodsPerDay: 8,
-      dayStructure: Array(8).fill(null).map(() => ({ type: 'CLASS', label: 'C' })),
+      dayStructure: Array(8)
+        .fill(null)
+        .map(() => ({ type: "CLASS", label: "C" })),
       maxSubjectPeriodsPerDay: 2,
       maxTeacherPeriodsPerDay: 6,
     },
@@ -38,7 +42,7 @@ describe('Configurable Constraints', () => {
     subjects: [mockSubject],
   };
 
-  it('should respect configurable maxSubjectPeriodsPerDay', () => {
+  it("should respect configurable maxSubjectPeriodsPerDay", () => {
     const data: AppData = {
       ...baseData,
       settings: {
@@ -46,12 +50,12 @@ describe('Configurable Constraints', () => {
         maxSubjectPeriodsPerDay: 1, // Stricter limit
       },
       schedule: {
-        'c1': {
+        c1: {
           0: {
-            0: { subjectId: 's1', teacherId: 't1', classId: 'c1' },
-          }
-        }
-      }
+            0: { subjectId: "s1", teacherId: "t1", classId: "c1" },
+          },
+        },
+      },
     };
 
     const state = initializeState(data);
@@ -59,18 +63,18 @@ describe('Configurable Constraints', () => {
       data,
       0, // day
       1, // period
-      't1',
-      'c1',
-      's1',
-      state
+      "t1",
+      "c1",
+      "s1",
+      state,
     );
 
     expect(result.valid).toBe(false);
-    expect(result.message).toContain('Max 1 periods');
+    expect(result.message).toContain("Max 1 periods");
   });
 
-  it('should respect configurable maxTeacherPeriodsPerDay', () => {
-    const otherClass: Class = { id: 'other', name: 'Other', curriculum: [] };
+  it("should respect configurable maxTeacherPeriodsPerDay", () => {
+    const otherClass: Class = { id: "other", name: "Other", curriculum: [] };
     const data: AppData = {
       ...baseData,
       settings: {
@@ -79,25 +83,17 @@ describe('Configurable Constraints', () => {
       },
       classes: [...baseData.classes, otherClass],
       schedule: {
-        'other': {
+        other: {
           0: {
-            0: { subjectId: 's2', teacherId: 't1', classId: 'other' },
-            1: { subjectId: 's2', teacherId: 't1', classId: 'other' },
-          }
-        }
-      }
+            0: { subjectId: "s2", teacherId: "t1", classId: "other" },
+            1: { subjectId: "s2", teacherId: "t1", classId: "other" },
+          },
+        },
+      },
     };
 
     const state = initializeState(data);
-    const result = checkSlotValidity(
-      data,
-      0,
-      2,
-      't1',
-      'c1',
-      's1',
-      state
-    );
+    const result = checkSlotValidity(data, 0, 2, "t1", "c1", "s1", state);
 
     expect(result.valid).toBe(false);
     expect(result.message).toContain("Exceeds daily limit");

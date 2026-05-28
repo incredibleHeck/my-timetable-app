@@ -1,4 +1,13 @@
-import { AppData, Conflict, ClassGroup, Teacher, Room, ScheduleSlot, PeriodConfig, PeriodType } from "../../../../types";
+import {
+  AppData,
+  Conflict,
+  ClassGroup,
+  Teacher,
+  Room,
+  ScheduleSlot,
+  PeriodConfig,
+  PeriodType,
+} from "../../../../types";
 import { SchedulerState } from "../core/types";
 import { getNextClassPeriod } from "../utils/utils";
 import { getType } from "./utils";
@@ -20,11 +29,7 @@ const SEVERITY_RANK: Record<string, number> = {
   LOW: 1,
 };
 
-const TEACHER_OVERLAP_PATTERNS = [
-  "teacher busy",
-  "teacher is busy",
-  "double booking: teacher",
-];
+const TEACHER_OVERLAP_PATTERNS = ["teacher busy", "teacher is busy", "double booking: teacher"];
 
 const ROOM_OVERLAP_PATTERNS = [
   "room occupied",
@@ -39,10 +44,7 @@ function normalizeReason(reason: string): string {
 
 function isTeacherOverlap(reason: string, c: Conflict): boolean {
   const r = normalizeReason(reason);
-  return (
-    !!c.teacherId &&
-    TEACHER_OVERLAP_PATTERNS.some((p) => r.includes(p))
-  );
+  return !!c.teacherId && TEACHER_OVERLAP_PATTERNS.some((p) => r.includes(p));
 }
 
 function isRoomOverlap(reason: string, c: Conflict): boolean {
@@ -177,7 +179,10 @@ function readDaySchedule(
   classSchedule: Record<number, Record<number, ScheduleSlot>>,
   day: number,
 ): Record<number, ScheduleSlot> | undefined {
-  return classSchedule[day] ?? (classSchedule as Record<string, Record<number, ScheduleSlot>>)[String(day)];
+  return (
+    classSchedule[day] ??
+    (classSchedule as Record<string, Record<number, ScheduleSlot>>)[String(day)]
+  );
 }
 
 function readSlot(
@@ -289,10 +294,7 @@ function countScheduledFromState(
   return 0;
 }
 
-export function detectCurriculumGaps(
-  data: AppData,
-  state?: SchedulerState,
-): CurriculumGap[] {
+export function detectCurriculumGaps(data: AppData, state?: SchedulerState): CurriculumGap[] {
   const gaps: CurriculumGap[] = [];
 
   for (const cls of data.classes) {
@@ -303,17 +305,13 @@ export function detectCurriculumGaps(
       if (expected <= 0) continue;
 
       const fromGrid = countScheduledForSubject(data, cls.id, item.subjectId);
-      const fromState = state
-        ? countScheduledFromState(state, cls.id, item.subjectId)
-        : fromGrid;
+      const fromState = state ? countScheduledFromState(state, cls.id, item.subjectId) : fromGrid;
       const scheduled = Math.max(fromGrid, fromState);
 
       if (scheduled >= expected) continue;
 
       const missing = expected - scheduled;
-      const subject = data.subjects.find(
-        (s) => normalizeId(s.id) === normalizeId(item.subjectId),
-      );
+      const subject = data.subjects.find((s) => normalizeId(s.id) === normalizeId(item.subjectId));
 
       console.log(
         `[CurriculumGap] Class: ${cls.name}, Subject: ${subject?.name || item.subjectId}, Required: ${expected}, Actually Counted on Grid: ${scheduled}`,
@@ -389,9 +387,7 @@ function isJointTeacherSession(
 
   return (
     data.jointClasses?.some(
-      (jc) =>
-        jc.subjectId === subjectId &&
-        classIds.every((cid) => jc.classIds.includes(cid)),
+      (jc) => jc.subjectId === subjectId && classIds.every((cid) => jc.classIds.includes(cid)),
     ) ?? false
   );
 }
@@ -481,25 +477,13 @@ export function collectResourceDoubleBookings(data: AppData): Conflict[] {
         if (!slot.teacherId || !isValidTeacher(data, slot.teacherId)) continue;
         if (getType(structure, period) !== "CLASS") continue;
 
-        const duration = inferSlotDuration(
-          daySchedule,
-          period,
-          slot,
-          structure,
-          periodLimit,
-        );
+        const duration = inferSlotDuration(daySchedule, period, slot, structure, periodLimit);
 
         recordOccupancy(teacherOccupancy, slot.teacherId, day, period, classId);
         if (duration === 2) {
           const p2 = getNextClassPeriod(period, structure, periodLimit);
           if (p2 !== null) {
-            recordOccupancy(
-              teacherOccupancy,
-              slot.teacherId,
-              day,
-              p2,
-              classId,
-            );
+            recordOccupancy(teacherOccupancy, slot.teacherId, day, p2, classId);
           }
         }
 
@@ -507,26 +491,14 @@ export function collectResourceDoubleBookings(data: AppData): Conflict[] {
         // Matches initializeState / checkSlotValidity (explicit roomId only).
         const subject = data.subjects.find((s) => s.id === slot.subjectId);
         const effectiveRoomId = slot.roomId || subject?.requiredRoomId;
-        const room = effectiveRoomId
-          ? data.rooms.find((r) => r.id === effectiveRoomId)
-          : undefined;
+        const room = effectiveRoomId ? data.rooms.find((r) => r.id === effectiveRoomId) : undefined;
 
-        if (
-          effectiveRoomId &&
-          isValidRoom(data, effectiveRoomId) &&
-          !room?.isHomeRoom
-        ) {
+        if (effectiveRoomId && isValidRoom(data, effectiveRoomId) && !room?.isHomeRoom) {
           recordOccupancy(roomOccupancy, effectiveRoomId, day, period, classId);
           if (duration === 2) {
             const p2 = getNextClassPeriod(period, structure, periodLimit);
             if (p2 !== null) {
-              recordOccupancy(
-                roomOccupancy,
-                effectiveRoomId,
-                day,
-                p2,
-                classId,
-              );
+              recordOccupancy(roomOccupancy, effectiveRoomId, day, p2, classId);
             }
           }
         }
@@ -548,13 +520,9 @@ export function collectResourceDoubleBookings(data: AppData): Conflict[] {
         classes.forEach((classId) => {
           const cls = data.classes.find((c: ClassGroup) => c.id === classId);
           const classSchedule = resolveClassSchedule(schedule, classId);
-          const daySchedule = classSchedule
-            ? readDaySchedule(classSchedule, day)
-            : undefined;
+          const daySchedule = classSchedule ? readDaySchedule(classSchedule, day) : undefined;
           const slot = daySchedule ? readSlot(daySchedule, period) : undefined;
-          const subject = slot
-            ? data.subjects.find((s) => s.id === slot.subjectId)
-            : undefined;
+          const subject = slot ? data.subjects.find((s) => s.id === slot.subjectId) : undefined;
 
           conflicts.push({
             classId,
@@ -587,13 +555,9 @@ export function collectResourceDoubleBookings(data: AppData): Conflict[] {
         classes.forEach((classId) => {
           const cls = data.classes.find((c: ClassGroup) => c.id === classId);
           const classSchedule = resolveClassSchedule(schedule, classId);
-          const daySchedule = classSchedule
-            ? readDaySchedule(classSchedule, day)
-            : undefined;
+          const daySchedule = classSchedule ? readDaySchedule(classSchedule, day) : undefined;
           const slot = daySchedule ? readSlot(daySchedule, period) : undefined;
-          const subject = slot
-            ? data.subjects.find((s) => s.id === slot.subjectId)
-            : undefined;
+          const subject = slot ? data.subjects.find((s) => s.id === slot.subjectId) : undefined;
 
           conflicts.push({
             classId,

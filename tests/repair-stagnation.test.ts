@@ -12,10 +12,7 @@ import {
   PRIORITY_CRITICAL,
 } from "../src/features/generator/scheduler/constants";
 import { AllocationUnit } from "../src/features/generator/scheduler/core/types";
-import {
-  initializeState,
-  applyGangToState,
-} from "../src/features/generator/scheduler/core/state";
+import { initializeState, applyGangToState } from "../src/features/generator/scheduler/core/state";
 import { runMinConflictsRepair } from "../src/features/generator/scheduler/solver/repair";
 
 function makeLeader(id: string, priority: number): AllocationUnit {
@@ -70,9 +67,7 @@ describe("RepairController", () => {
       controller.recordFailedAttempt("u1", queue[0]);
     }
 
-    expect(countUnplacedGangs(queue, controller)).toBe(
-      queue.length + controller.abandonedCount,
-    );
+    expect(countUnplacedGangs(queue, controller)).toBe(queue.length + controller.abandonedCount);
   });
 });
 
@@ -141,14 +136,7 @@ describe("diversifyRepairState", () => {
     const repairQueue: AllocationUnit[] = [];
     const repairSet = new Set<string>();
 
-    const removed = diversifyRepairState(
-      state,
-      data,
-      gangMap,
-      unitMap,
-      repairQueue,
-      repairSet,
-    );
+    const removed = diversifyRepairState(state, data, gangMap, unitMap, repairQueue, repairSet);
 
     expect(removed).toBe(1);
     expect(repairQueue).toHaveLength(1);
@@ -207,9 +195,7 @@ describe("runMinConflictsRepair stagnation", () => {
       constraints: [[true]],
     });
 
-    const gangMap = new Map<string, AllocationUnit[]>([
-      [getGangId(stuck), [stuck]],
-    ]);
+    const gangMap = new Map<string, AllocationUnit[]>([[getGangId(stuck), [stuck]]]);
     const unitMap = new Map<string, AllocationUnit>([[stuck.id, stuck]]);
     const teacherMap = new Map(data.teachers.map((t) => [t.id, t]));
     const subjectMap = new Map(data.subjects.map((s) => [s.id, s]));

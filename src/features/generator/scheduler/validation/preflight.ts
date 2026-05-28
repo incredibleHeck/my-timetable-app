@@ -47,9 +47,7 @@ function countRequiredPeriodsForClass(
   classId: string,
   units: ReturnType<typeof prepareAllocationUnits>,
 ): number {
-  return units
-    .filter((u) => u.classIds.includes(classId))
-    .reduce((sum, u) => sum + u.duration, 0);
+  return units.filter((u) => u.classIds.includes(classId)).reduce((sum, u) => sum + u.duration, 0);
 }
 
 /** Available weekly slots for a teacher (days × periods minus blocked constraints). */
@@ -59,8 +57,7 @@ function countTeacherWeeklyCapacity(data: AppData, teacherId: string): number {
 
   const days = getDaysPerWeek(data.settings);
   const globalPeriods = data.settings.periodsPerDay;
-  const maxDaily =
-    teacher.maxPeriodsPerDay ?? data.settings.maxTeacherPeriodsPerDay ?? 6;
+  const maxDaily = teacher.maxPeriodsPerDay ?? data.settings.maxTeacherPeriodsPerDay ?? 6;
 
   let available = 0;
   for (let d = 0; d < days; d++) {

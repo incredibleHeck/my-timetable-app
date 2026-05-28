@@ -7,14 +7,14 @@ export type ValidationResult = {
   severity?: "HIGH" | "MEDIUM" | "LOW";
   /** When true, violation is a quality warning (post-generate audit), not blocking. */
   qualityWarning?: boolean;
-  /** 
+  /**
    * Penalty points for this violation.
    * Hard constraints = 1000+ pts
    * Soft constraints (Gaps, Variety) = 10-50 pts
    */
-  penaltyPoints: number; 
+  penaltyPoints: number;
   /** For Min-Conflicts: How many units are blocking this slot? */
-  conflictCount: number; 
+  conflictCount: number;
 };
 
 export interface ValidationContext {

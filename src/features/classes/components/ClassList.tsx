@@ -38,9 +38,7 @@ export const ClassList: React.FC<ClassListProps> = ({
             <div className="p-5">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="text-lg font-bold text-slate-800">
-                    {c.name}
-                  </h3>
+                  <h3 className="text-lg font-bold text-slate-800">{c.name}</h3>
                   <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
                     <Clock size={12} /> {c.duration} mins
                   </div>
@@ -53,21 +51,20 @@ export const ClassList: React.FC<ClassListProps> = ({
               <div className="space-y-2 mb-4">
                 <div className="flex justify-between text-xs">
                   <span className="text-slate-500">Home Room</span>
-                  <span className="font-bold text-amber-600 truncate max-w-[100px]" title={data.rooms.find(r => r.id === c.defaultRoomId)?.name || "Unassigned"}>
-                    {data.rooms.find(r => r.id === c.defaultRoomId)?.name || "Unassigned"}
+                  <span
+                    className="font-bold text-amber-600 truncate max-w-[100px]"
+                    title={data.rooms.find((r) => r.id === c.defaultRoomId)?.name || "Unassigned"}
+                  >
+                    {data.rooms.find((r) => r.id === c.defaultRoomId)?.name || "Unassigned"}
                   </span>
                 </div>
                 <div className="flex justify-between text-xs">
                   <span className="text-slate-500">Periods/Day</span>
-                  <span className="font-bold text-slate-700">
-                    {c.periodCount}
-                  </span>
+                  <span className="font-bold text-slate-700">{c.periodCount}</span>
                 </div>
                 <div className="flex justify-between text-xs">
                   <span className="text-slate-500">Subjects</span>
-                  <span className="font-bold text-slate-700">
-                    {c.curriculum.length}
-                  </span>
+                  <span className="font-bold text-slate-700">{c.curriculum.length}</span>
                 </div>
                 <div className="flex justify-between text-xs">
                   <span className="text-slate-500">Weekly Load</span>
@@ -75,22 +72,14 @@ export const ClassList: React.FC<ClassListProps> = ({
                     <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full ${
-                          isOverloaded
-                            ? "bg-red-500"
-                            : isFull
-                            ? "bg-amber-500"
-                            : "bg-emerald-500"
+                          isOverloaded ? "bg-red-500" : isFull ? "bg-amber-500" : "bg-emerald-500"
                         }`}
                         style={{ width: `${Math.min(loadPercent, 100)}%` }}
                       />
                     </div>
                     <span
                       className={`font-bold ${
-                        isOverloaded
-                          ? "text-red-600"
-                          : isFull
-                          ? "text-amber-600"
-                          : "text-slate-700"
+                        isOverloaded ? "text-red-600" : isFull ? "text-amber-600" : "text-slate-700"
                       }`}
                     >
                       {assigned}/{capacity}
@@ -131,8 +120,7 @@ export const ClassList: React.FC<ClassListProps> = ({
         onClick={onAdd}
         className="min-h-[200px] rounded-xl border-2 border-dashed border-slate-300 hover:border-amber-400 hover:bg-amber-50 transition-all flex flex-col items-center justify-center p-6 text-slate-400 hover:text-amber-600"
       >
-        <Plus size={32} className="mb-2" />{" "}
-        <span className="font-bold">Add Class</span>
+        <Plus size={32} className="mb-2" /> <span className="font-bold">Add Class</span>
       </button>
     </div>
   );

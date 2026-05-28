@@ -41,11 +41,11 @@ import { InvigilatorExclusionModal } from "./components/InvigilatorExclusionModa
 
 // Logic
 import { allocateInvigilators } from "./logic/invigilatorAllocator";
-import { 
-  exportExamsToExcel, 
+import {
+  exportExamsToExcel,
   exportExamsToPDF,
   exportInvigilatorsToExcel,
-  exportInvigilatorsToPDF
+  exportInvigilatorsToPDF,
 } from "../../services/export/exams";
 
 interface ViewProps {
@@ -54,11 +54,7 @@ interface ViewProps {
   onNavigate?: (view: any) => void;
 }
 
-export const ExamsView: React.FC<ViewProps> = ({
-  data,
-  onUpdate,
-  onNavigate,
-}) => {
+export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) => {
   const { showToast } = useToast();
   const {
     activeRosterId,
@@ -68,7 +64,7 @@ export const ExamsView: React.FC<ViewProps> = ({
     handleUpdateActiveRoster,
     createNewRoster,
     deleteRoster,
-    renameRoster
+    renameRoster,
   } = useExamRosters(data, onUpdate);
 
   // --- LOGIC HOOK ---
@@ -107,9 +103,7 @@ export const ExamsView: React.FC<ViewProps> = ({
   const handleRegenerateExams = (newSessions: ExamSession[]) => {
     if (
       exams.length > 0 &&
-      !confirm(
-        "Auto-schedule will replace all exams in this timetable. Continue?"
-      )
+      !confirm("Auto-schedule will replace all exams in this timetable. Continue?")
     ) {
       return;
     }
@@ -122,7 +116,7 @@ export const ExamsView: React.FC<ViewProps> = ({
   // 4. Sorting & Memoization
   const sortedClasses = useMemo(() => {
     return [...data.classes].sort((a, b) =>
-      a.name.localeCompare(b.name, undefined, { numeric: true })
+      a.name.localeCompare(b.name, undefined, { numeric: true }),
     );
   }, [data.classes]);
 
@@ -140,12 +134,8 @@ export const ExamsView: React.FC<ViewProps> = ({
       const q = searchQuery.toLowerCase();
 
       // Pre-calculate lookups for performance inside the loop
-      const subjectsMap = new Map(
-        data.subjects.map((s) => [s.id, s.name.toLowerCase()])
-      );
-      const teachersMap = new Map(
-        data.teachers.map((t) => [t.id, t.name.toLowerCase()])
-      );
+      const subjectsMap = new Map(data.subjects.map((s) => [s.id, s.name.toLowerCase()]));
+      const teachersMap = new Map(data.teachers.map((t) => [t.id, t.name.toLowerCase()]));
 
       list = list.filter((e) => {
         const subjectName = subjectsMap.get(e.subjectId) || "";
@@ -157,11 +147,7 @@ export const ExamsView: React.FC<ViewProps> = ({
           return tName && tName.includes(q);
         });
 
-        return (
-          subjectName.includes(q) ||
-          paperLabel.includes(q) ||
-          hasMatchingTeacher
-        );
+        return subjectName.includes(q) || paperLabel.includes(q) || hasMatchingTeacher;
       });
     }
 
@@ -198,18 +184,14 @@ export const ExamsView: React.FC<ViewProps> = ({
       subjectId: data.subjects[0]?.id || "",
       duration: 120,
       paperNumber: 1,
-      status: "DRAFT"
+      status: "DRAFT",
     };
     setEditingExam(skeleton);
     setManualModalOpen(true);
   };
 
   const handleClearAll = () => {
-    if (
-      confirm(
-        "Delete ALL exams in this timetable? You can undo with Ctrl+Z."
-      )
-    ) {
+    if (confirm("Delete ALL exams in this timetable? You can undo with Ctrl+Z.")) {
       clearAllExams();
     }
   };
@@ -226,27 +208,24 @@ export const ExamsView: React.FC<ViewProps> = ({
     if (minInv > maxInv) {
       showToast(
         "Minimum invigilators cannot exceed maximum. Adjust the range and try again.",
-        "error"
+        "error",
       );
       return;
     }
 
     try {
-      const { exams: updatedExams, warnings } = allocateInvigilators(
-        activeData,
-        {
-          minInvigilators: minInv,
-          maxInvigilators: maxInv,
-          excludedTeacherIds: excludedIds,
-        }
-      );
+      const { exams: updatedExams, warnings } = allocateInvigilators(activeData, {
+        minInvigilators: minInv,
+        maxInvigilators: maxInv,
+        excludedTeacherIds: excludedIds,
+      });
 
       handleUpdateActiveRoster({ ...activeData, exams: updatedExams });
       setExclusionModalOpen(false);
 
       showToast(
         `Staff assigned: ${minInv}${minInv !== maxInv ? `–${maxInv}` : ""} invigilator(s) per stream per exam day (all sessions).`,
-        "success"
+        "success",
       );
 
       warnings.slice(0, 3).forEach((w) => showToast(w, "error"));
@@ -294,12 +273,15 @@ export const ExamsView: React.FC<ViewProps> = ({
 
           <div className="flex flex-col mr-4">
             <div className="flex items-center group/title relative">
-              <input 
+              <input
                 value={activeRoster.name}
                 onChange={(e) => renameRoster(e.target.value)}
                 className="text-xl font-bold text-slate-800 bg-transparent border-none p-0 focus:ring-0 w-auto hover:bg-slate-50 rounded px-1 transition-colors"
               />
-              <Pencil size={12} className="text-slate-300 ml-1 opacity-0 group-hover/title:opacity-100 transition-opacity pointer-events-none" />
+              <Pencil
+                size={12}
+                className="text-slate-300 ml-1 opacity-0 group-hover/title:opacity-100 transition-opacity pointer-events-none"
+              />
             </div>
             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">
               Exam Management History
@@ -383,9 +365,7 @@ export const ExamsView: React.FC<ViewProps> = ({
               <input
                 type="number"
                 value={minInv}
-                onChange={(e) =>
-                  setMinInv(Math.max(1, Math.min(8, parseInt(e.target.value) || 1)))
-                }
+                onChange={(e) => setMinInv(Math.max(1, Math.min(8, parseInt(e.target.value) || 1)))}
                 className="w-10 h-7 text-center text-xs font-bold rounded border border-slate-200"
                 min={1}
                 max={8}
@@ -396,12 +376,7 @@ export const ExamsView: React.FC<ViewProps> = ({
                 type="number"
                 value={maxInv}
                 onChange={(e) =>
-                  setMaxInv(
-                    Math.max(
-                      minInv,
-                      Math.min(8, parseInt(e.target.value) || minInv)
-                    )
-                  )
+                  setMaxInv(Math.max(minInv, Math.min(8, parseInt(e.target.value) || minInv)))
                 }
                 className="w-10 h-7 text-center text-xs font-bold rounded border border-slate-200"
                 min={minInv}
@@ -420,11 +395,7 @@ export const ExamsView: React.FC<ViewProps> = ({
             </Button>
           </div>
 
-          <Button
-            onClick={() => setAutoModalOpen(true)}
-            size="md"
-            icon={<Wand2 size={16} />}
-          >
+          <Button onClick={() => setAutoModalOpen(true)} size="md" icon={<Wand2 size={16} />}>
             Auto Schedule
           </Button>
           <Button
@@ -432,11 +403,7 @@ export const ExamsView: React.FC<ViewProps> = ({
             icon={<FileSpreadsheet size={16} />}
             title="Export to Excel"
           />
-          <Button 
-            onClick={handlePrint} 
-            icon={<Printer size={16} />} 
-            title="Print PDF"
-          />
+          <Button onClick={handlePrint} icon={<Printer size={16} />} title="Print PDF" />
         </div>
       </div>
 
@@ -451,7 +418,7 @@ export const ExamsView: React.FC<ViewProps> = ({
                 Timetables
               </span>
             </div>
-            <button 
+            <button
               onClick={createNewRoster}
               className="p-1 bg-white text-amber-600 rounded border border-slate-200 hover:bg-amber-50 transition-all shadow-sm"
               title="New Timetable"
@@ -460,27 +427,32 @@ export const ExamsView: React.FC<ViewProps> = ({
             </button>
           </div>
           <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
-            {data.examRosters?.map(r => (
-              <div 
+            {data.examRosters?.map((r) => (
+              <div
                 key={r.id}
                 onClick={() => setActiveRosterId(r.id)}
                 className={`group relative p-3 rounded-xl border transition-all cursor-pointer ${
-                  activeRosterId === r.id 
-                    ? "bg-white border-amber-200 shadow-md ring-1 ring-amber-100" 
+                  activeRosterId === r.id
+                    ? "bg-white border-amber-200 shadow-md ring-1 ring-amber-100"
                     : "bg-transparent border-transparent hover:bg-white hover:border-slate-200"
                 }`}
               >
                 <div className="flex flex-col gap-0.5 pr-6">
-                  <span className={`text-[11px] font-black truncate ${activeRosterId === r.id ? "text-amber-700" : "text-slate-600"}`}>
+                  <span
+                    className={`text-[11px] font-black truncate ${activeRosterId === r.id ? "text-amber-700" : "text-slate-600"}`}
+                  >
                     {r.name}
                   </span>
                   <span className="text-[9px] font-bold text-slate-400">
                     {r.exams.length} Sessions
                   </span>
                 </div>
-                
-                <button 
-                  onClick={(e) => { e.stopPropagation(); deleteRoster(r.id); }}
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteRoster(r.id);
+                  }}
                   className="absolute top-3 right-2 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
                 >
                   <Trash2 size={12} />
@@ -509,16 +481,16 @@ export const ExamsView: React.FC<ViewProps> = ({
                   : "bg-white border-transparent text-slate-500 hover:bg-slate-50 hover:border-slate-100"
               }`}
             >
-              <div className={`w-1.5 h-1.5 rounded-full ${activeId === "ALL" ? "bg-amber-500" : "bg-slate-300"}`} />
+              <div
+                className={`w-1.5 h-1.5 rounded-full ${activeId === "ALL" ? "bg-amber-500" : "bg-slate-300"}`}
+              />
               Show All Classes
             </button>
             <div className="h-px bg-slate-100 my-2 mx-2" />
             {sortedClasses.map((cls) => (
               <button
                 key={cls.id}
-                onClick={() =>
-                  setActiveId(cls.id === activeId ? "ALL" : cls.id)
-                }
+                onClick={() => setActiveId(cls.id === activeId ? "ALL" : cls.id)}
                 className={`w-full text-left px-3 py-2 rounded-lg text-[11px] font-bold transition-all flex items-center gap-2 border ${
                   activeId === cls.id
                     ? "bg-slate-900 border-slate-900 text-white shadow-lg shadow-slate-200"
@@ -551,9 +523,7 @@ export const ExamsView: React.FC<ViewProps> = ({
                 checkMoveConflicts={checkMoveConflicts}
                 onSwap={swapExams}
                 onMoveToSlot={moveExamToSlot}
-                onToggleLock={(exam) =>
-                  updateExam({ ...exam, locked: !exam.locked })
-                }
+                onToggleLock={(exam) => updateExam({ ...exam, locked: !exam.locked })}
                 isEditMode={isEditMode}
               />
             </div>
@@ -577,9 +547,7 @@ export const ExamsView: React.FC<ViewProps> = ({
                   allExams={exams}
                   onEdit={() => handleEditClick(exam)}
                   onDelete={() => deleteExam(exam.id)}
-                  onToggleLock={() =>
-                    updateExam({ ...exam, locked: !exam.locked })
-                  }
+                  onToggleLock={() => updateExam({ ...exam, locked: !exam.locked })}
                 />
               ))}
             </div>
@@ -592,9 +560,7 @@ export const ExamsView: React.FC<ViewProps> = ({
                 <FileText size={64} className="text-slate-200" />
               </div>
               <p className="font-bold text-xl text-slate-600">No exams found</p>
-              <p className="text-sm">
-                Modify your filters or add a new exam to get started.
-              </p>
+              <p className="text-sm">Modify your filters or add a new exam to get started.</p>
             </div>
           )}
         </div>

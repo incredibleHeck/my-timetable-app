@@ -39,8 +39,8 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
 
     // Find curriculum counts from the first class (assumed identical for partners)
     const repClass = classMap.get(jc.classIds[0]);
-    const curr = repClass?.curriculum.find(c => c.subjectId === jc.subjectId);
-    
+    const curr = repClass?.curriculum.find((c) => c.subjectId === jc.subjectId);
+
     if (!curr) return;
 
     const createJoint = (suffix: string, duration: number) => {
@@ -55,15 +55,17 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
         subjectName: subject?.name || "Unknown",
         duration,
         classIds: jc.classIds,
-        classNames: jc.classIds.map(id => classMap.get(id)?.name || ""),
+        classNames: jc.classIds.map((id) => classMap.get(id)?.name || ""),
         teacherIds: jc.teacherId ? [jc.teacherId] : [],
-        teacherNames: [jc.teacherId ? teacherMap.get(jc.teacherId)?.name || "Unknown" : "Unassigned"],
+        teacherNames: [
+          jc.teacherId ? teacherMap.get(jc.teacherId)?.name || "Unknown" : "Unassigned",
+        ],
         priority: 0,
         rankLevel, // RANK 2 metadata
         defaultRoomId,
         requiredRoomType,
         jointClassId: jc.id,
-        isCore: isCoreSubject(subject)
+        isCore: isCoreSubject(subject),
       };
       u.priority = calculatePriority(u, data, teacherMap, subjectMap);
       units.push(u);
@@ -73,7 +75,7 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
     for (let i = 0; i < (curr.singles || 0); i++) createJoint(`S-${i}`, 1);
 
     // Mark as processed
-    jc.classIds.forEach(cid => processedCurriculumItems.add(`${cid}-${jc.subjectId}`));
+    jc.classIds.forEach((cid) => processedCurriculumItems.add(`${cid}-${jc.subjectId}`));
   });
 
   // 4. PROCESS STANDARD CLASSES & ELECTIVE BLOCKS
@@ -84,7 +86,7 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
 
       const subject = subjectMap.get(curr.subjectId);
       const requiredRoomType = resolveRoomRequirement(subject);
-      
+
       const createUnit = (suffix: string, duration: number) => {
         // RANK 2: STRUCTURAL HIERARCHY
         const rankLevel = parseGradeLevel(cls.level || cls.name);
@@ -97,13 +99,17 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
           classIds: [cls.id],
           classNames: [cls.name],
           teacherIds: curr.assignedTeacherId ? [curr.assignedTeacherId] : [],
-          teacherNames: [curr.assignedTeacherId ? teacherMap.get(curr.assignedTeacherId)?.name || "Unknown" : "Unassigned"],
+          teacherNames: [
+            curr.assignedTeacherId
+              ? teacherMap.get(curr.assignedTeacherId)?.name || "Unknown"
+              : "Unassigned",
+          ],
           priority: 0,
           rankLevel, // RANK 2 metadata
           defaultRoomId: cls.defaultRoomId || cls.classroomId,
           requiredRoomType,
           electiveBlockId: (curr as any).electiveBlockId,
-          isCore: isCoreSubject(subject)
+          isCore: isCoreSubject(subject),
         };
         u.priority = calculatePriority(u, data, teacherMap, subjectMap);
         units.push(u);
@@ -111,33 +117,37 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
 
       for (let i = 0; i < (curr.doubles || 0); i++) createUnit(`D-${i}`, 2);
       for (let i = 0; i < (curr.singles || 0); i++) createUnit(`S-${i}`, 1);
-      
+
       processedCurriculumItems.add(compositeKey);
     });
   });
 
   // 5. FINAL CURRICULUM AUDIT
-  const totalRequiredPeriods = classes.reduce((acc, c) => 
-    acc + c.curriculum.reduce((sum, curr) => sum + (curr.singles || 0) + (curr.doubles || 0) * 2, 0), 0
+  const totalRequiredPeriods = classes.reduce(
+    (acc, c) =>
+      acc +
+      c.curriculum.reduce((sum, curr) => sum + (curr.singles || 0) + (curr.doubles || 0) * 2, 0),
+    0,
   );
-  
+
   // Note: For Joint units, we must count them for EACH class they serve.
-  const totalGeneratedPeriods = units.reduce((acc, u) => acc + (u.duration * u.classIds.length), 0);
+  const totalGeneratedPeriods = units.reduce((acc, u) => acc + u.duration * u.classIds.length, 0);
 
   if (totalRequiredPeriods !== totalGeneratedPeriods) {
-    console.warn(`Curriculum Mismatch: Required ${totalRequiredPeriods}, Generated ${totalGeneratedPeriods}`);
+    console.warn(
+      `Curriculum Mismatch: Required ${totalRequiredPeriods}, Generated ${totalGeneratedPeriods}`,
+    );
   }
 
   // 6. RANK 2 SORTING: Higher grades first, then by MRV Priority
-  return units
-    .sort((a, b) => {
-        // Higher rankLevel means higher grade (e.g. 12 > 11)
-        if (b.rankLevel !== a.rankLevel) {
-            return b.rankLevel - a.rankLevel;
-        }
-        // Tie-breaker: MRV priority within the same grade
-        return b.priority - a.priority;
-    });
+  return units.sort((a, b) => {
+    // Higher rankLevel means higher grade (e.g. 12 > 11)
+    if (b.rankLevel !== a.rankLevel) {
+      return b.rankLevel - a.rankLevel;
+    }
+    // Tie-breaker: MRV priority within the same grade
+    return b.priority - a.priority;
+  });
 };
 
 /**
@@ -145,14 +155,14 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
  * Extracts a numeric value from Grade/Year strings.
  */
 function parseGradeLevel(levelStr: string): number {
-    const n = levelStr.toLowerCase();
-    // Match "Year 12", "Grade 12", "12A" -> 12
-    const match = n.match(/(\d+)/);
-    if (match) return parseInt(match[1]);
-    
-    // Fallback for names
-    if (n.includes("grad")) return 13; // Graduation?
-    if (n.includes("kinder")) return 0;
-    
-    return 0;
+  const n = levelStr.toLowerCase();
+  // Match "Year 12", "Grade 12", "12A" -> 12
+  const match = n.match(/(\d+)/);
+  if (match) return parseInt(match[1]);
+
+  // Fallback for names
+  if (n.includes("grad")) return 13; // Graduation?
+  if (n.includes("kinder")) return 0;
+
+  return 0;
 }

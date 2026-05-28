@@ -4,10 +4,7 @@ import { Teacher } from "../types";
 import { generateId } from "../../../utils/utils";
 import { useProfile } from "../../../contexts/ProfileContext";
 
-export const useTeacherManagement = (
-  data: AppData,
-  onUpdate: (d: AppData) => void
-) => {
+export const useTeacherManagement = (data: AppData, onUpdate: (d: AppData) => void) => {
   const { addActivity } = useProfile();
   const [activeTab, setActiveTab] = useState<"LIST" | "FACULTIES">("LIST");
 
@@ -27,9 +24,7 @@ export const useTeacherManagement = (
   const filteredTeachers = useMemo(() => {
     return data.teachers
       .filter((t) => {
-        const matchesName = t.name
-          .toLowerCase()
-          .includes(nameFilter.toLowerCase());
+        const matchesName = t.name.toLowerCase().includes(nameFilter.toLowerCase());
         if (!subjectFilter) return matchesName;
         const matchesSubject = t.specialtyIds.some((sid) => {
           const subj = data.subjects.find((s) => s.id === sid);
@@ -54,7 +49,7 @@ export const useTeacherManagement = (
     const newTeachers = editingTeacher
       ? data.teachers.map((t) => (t.id === editingTeacher.id ? newT : t))
       : [...data.teachers, newT];
-    
+
     const nextData = { ...data, teachers: newTeachers };
     const msg = editingTeacher ? `Updated Teacher: ${newT.name}` : `Added Teacher: ${newT.name}`;
     addActivity("ACADEMIC", msg, nextData);
@@ -79,7 +74,7 @@ export const useTeacherManagement = (
   const confirmDelete = () => {
     if (!teacherToDelete) return;
     const id = teacherToDelete.id;
-    
+
     // Remove teacher and strip assignments from classes
     const nextData = {
       ...data,
@@ -87,15 +82,13 @@ export const useTeacherManagement = (
       classes: data.classes.map((c) => ({
         ...c,
         curriculum: c.curriculum.map((i) =>
-          i.assignedTeacherId === id
-            ? { ...i, assignedTeacherId: undefined }
-            : i
+          i.assignedTeacherId === id ? { ...i, assignedTeacherId: undefined } : i,
         ),
       })),
     };
 
     addActivity("ACADEMIC", `Deleted Teacher: ${teacherToDelete.name}`, nextData);
-    
+
     setDeleteModalOpen(false);
     setTeacherToDelete(null);
   };
@@ -103,9 +96,7 @@ export const useTeacherManagement = (
   const quickAddTeacherToFaculty = (subjectId: string, name: string) => {
     if (!name.trim()) return;
 
-    const existingTeacher = data.teachers.find(
-      (t) => t.name.toLowerCase() === name.toLowerCase()
-    );
+    const existingTeacher = data.teachers.find((t) => t.name.toLowerCase() === name.toLowerCase());
 
     let newTeachers = [...data.teachers];
     let msg = "";
@@ -113,30 +104,33 @@ export const useTeacherManagement = (
     if (existingTeacher) {
       if (!existingTeacher.specialtyIds.includes(subjectId)) {
         newTeachers = data.teachers.map((t) =>
-          t.id === existingTeacher.id
-            ? { ...t, specialtyIds: [...t.specialtyIds, subjectId] }
-            : t
+          t.id === existingTeacher.id ? { ...t, specialtyIds: [...t.specialtyIds, subjectId] } : t,
         );
-        const subj = data.subjects.find(s => s.id === subjectId);
+        const subj = data.subjects.find((s) => s.id === subjectId);
         msg = `Added ${existingTeacher.name} to ${subj?.name} faculty`;
       }
     } else {
       // Create new teacher
-      const maxP = Math.max(data.settings.periodsPerDay, ...data.classes.map(c => c.periodCount || 0));
+      const maxP = Math.max(
+        data.settings.periodsPerDay,
+        ...data.classes.map((c) => c.periodCount || 0),
+      );
       const newT: Teacher = {
         id: generateId(),
         name: name.trim(),
         specialtyIds: [subjectId],
-        constraints: Array(5).fill(null).map(() => Array(maxP).fill(false)),
+        constraints: Array(5)
+          .fill(null)
+          .map(() => Array(maxP).fill(false)),
       };
       newTeachers.push(newT);
-      const subj = data.subjects.find(s => s.id === subjectId);
+      const subj = data.subjects.find((s) => s.id === subjectId);
       msg = `Added Teacher: ${newT.name} (${subj?.name})`;
     }
 
     if (msg) {
-        const nextData = { ...data, teachers: newTeachers };
-        addActivity("ACADEMIC", msg, nextData);
+      const nextData = { ...data, teachers: newTeachers };
+      addActivity("ACADEMIC", msg, nextData);
     }
   };
 

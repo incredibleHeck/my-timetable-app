@@ -22,9 +22,7 @@ export const NumberStepper: React.FC<NumberStepperProps> = ({
   return (
     <div className="space-y-2">
       <h4 className="font-bold text-slate-700 text-sm">{label}</h4>
-      {helpText && (
-        <p className="text-xs text-slate-500 mb-3 leading-relaxed">{helpText}</p>
-      )}
+      {helpText && <p className="text-xs text-slate-500 mb-3 leading-relaxed">{helpText}</p>}
       <div className="flex items-center gap-3">
         <button
           type="button"

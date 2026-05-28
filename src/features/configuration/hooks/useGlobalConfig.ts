@@ -47,10 +47,7 @@ export const useGlobalConfig = (data: AppData) => {
     [],
   );
 
-  const handleDurationChange = (
-    field: keyof Settings,
-    value: string | number,
-  ): AppData => {
+  const handleDurationChange = (field: keyof Settings, value: string | number): AppData => {
     const newSettings = { ...data.settings, [field]: value };
 
     const newTimes = recalculateTimeline(
@@ -108,8 +105,7 @@ export const useGlobalConfig = (data: AppData) => {
     let newStructure = [...data.settings.dayStructure];
     const newFixed = data.settings.fixedOccasions.map((row) => {
       const safeRow = row || [];
-      if (val > safeRow.length)
-        return [...safeRow, ...Array(val - safeRow.length).fill(null)];
+      if (val > safeRow.length) return [...safeRow, ...Array(val - safeRow.length).fill(null)];
       return safeRow.slice(0, val);
     });
 
@@ -129,9 +125,7 @@ export const useGlobalConfig = (data: AppData) => {
     );
 
     const trimSchedule =
-      val < data.settings.periodsPerDay
-        ? trimScheduleToPeriods(data.schedule, val)
-        : data.schedule;
+      val < data.settings.periodsPerDay ? trimScheduleToPeriods(data.schedule, val) : data.schedule;
 
     return {
       ...data,
@@ -146,22 +140,14 @@ export const useGlobalConfig = (data: AppData) => {
     };
   };
 
-  const handleIdentityUpdate = (
-    field: "schoolName" | "academicYear",
-    val: string,
-  ): AppData => ({
+  const handleIdentityUpdate = (field: "schoolName" | "academicYear", val: string): AppData => ({
     ...data,
     settings: { ...data.settings, [field]: val },
   });
 
-  const updateTimeSlot = (
-    idx: number,
-    field: "start" | "end",
-    value: string,
-  ): AppData => {
+  const updateTimeSlot = (idx: number, field: "start" | "end", value: string): AppData => {
     const newTimes = [...data.settings.timeSlots];
-    while (newTimes.length <= idx)
-      newTimes.push({ start: "00:00", end: "00:00" });
+    while (newTimes.length <= idx) newTimes.push({ start: "00:00", end: "00:00" });
     newTimes[idx] = { ...newTimes[idx], [field]: value };
     return { ...data, settings: { ...data.settings, timeSlots: newTimes } };
   };
@@ -200,9 +186,7 @@ export const useGlobalConfig = (data: AppData) => {
     settings: { ...data.settings, maxTeachingPeriodsPerWeek: val },
   });
 
-  const updateExamGrid = (
-    patch: Partial<NonNullable<Settings["examGrid"]>>,
-  ): AppData => ({
+  const updateExamGrid = (patch: Partial<NonNullable<Settings["examGrid"]>>): AppData => ({
     ...data,
     settings: {
       ...data.settings,

@@ -6,11 +6,7 @@
  * - Randomized jitter prevents deterministic cycling
  * - Shortens on success, lengthens on stagnation
  */
-import {
-  TABU_TENURE_DEFAULT,
-  TABU_TENURE_MIN,
-  TABU_TENURE_MAX,
-} from "../constants";
+import { TABU_TENURE_DEFAULT, TABU_TENURE_MIN, TABU_TENURE_MAX } from "../constants";
 
 export type TabuOptions = {
   tenure?: number;

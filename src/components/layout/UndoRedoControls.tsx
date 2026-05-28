@@ -1,9 +1,9 @@
 import React, { useEffect } from "react";
 import { Undo2, Redo2 } from "lucide-react";
-import { useProfile } from "../../contexts/ProfileContext";
+import { useHistory } from "../../contexts/HistoryContext";
 
 export const UndoRedoControls: React.FC = () => {
-  const { undo, redo, canUndo, canRedo } = useProfile();
+  const { undo, redo, canUndo, canRedo } = useHistory();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

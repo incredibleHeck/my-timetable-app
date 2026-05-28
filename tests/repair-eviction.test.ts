@@ -58,11 +58,7 @@ function buildRepairTestData(singlePeriod = false): AppData {
   };
 }
 
-function makeUnit(
-  id: string,
-  subjectId: string,
-  subjectName: string,
-): AllocationUnit {
+function makeUnit(id: string, subjectId: string, subjectName: string): AllocationUnit {
   return {
     id,
     subjectId,

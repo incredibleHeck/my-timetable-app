@@ -18,19 +18,13 @@ export const ClassCurriculumSection: React.FC<ClassCurriculumSectionProps> = ({
   return (
     <div className="flex-1 flex flex-col min-h-0">
       <div className="flex justify-between items-center mb-2 shrink-0">
-        <label className="text-xs font-bold text-slate-500 uppercase">
-          Curriculum
-        </label>
+        <label className="text-xs font-bold text-slate-500 uppercase">Curriculum</label>
       </div>
       <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-2">
         {cCurriculum.map((item) => {
-          const subject = data.subjects.find(
-            (s) => s.id === item.subjectId
-          );
+          const subject = data.subjects.find((s) => s.id === item.subjectId);
           if (!subject) return null;
-          const eligibleTeachers = data.teachers.filter((t) =>
-            t.specialtyIds.includes(subject.id)
-          );
+          const eligibleTeachers = data.teachers.filter((t) => t.specialtyIds.includes(subject.id));
 
           const updateItem = (f: keyof CurriculumItem, v: any) => {
             setCCurriculum((prev) =>
@@ -43,11 +37,11 @@ export const ClassCurriculumSection: React.FC<ClassCurriculumSectionProps> = ({
                         f === "doubles"
                           ? v * 2 + p.singles
                           : f === "singles"
-                          ? p.doubles * 2 + v
-                          : p.periodsPerWeek,
+                            ? p.doubles * 2 + v
+                            : p.periodsPerWeek,
                     }
-                  : p
-              )
+                  : p,
+              ),
             );
           };
 
@@ -68,21 +62,15 @@ export const ClassCurriculumSection: React.FC<ClassCurriculumSectionProps> = ({
                     className="w-2 h-2 rounded-full mr-2"
                     style={{ backgroundColor: subject.color }}
                   ></div>
-                  <div className="font-bold text-sm text-slate-800">
-                    {subject.name}
-                  </div>
+                  <div className="font-bold text-sm text-slate-800">{subject.name}</div>
                 </div>
-                <div className="text-xs font-bold text-slate-400">
-                  Total: {item.periodsPerWeek}
-                </div>
+                <div className="text-xs font-bold text-slate-400">Total: {item.periodsPerWeek}</div>
               </div>
 
               <div className="flex items-center gap-3">
                 <div className="flex items-center bg-slate-100 rounded border border-slate-200">
                   <button
-                    onClick={() =>
-                      updateItem("doubles", Math.max(0, item.doubles - 1))
-                    }
+                    onClick={() => updateItem("doubles", Math.max(0, item.doubles - 1))}
                     className="px-2 py-1 hover:bg-slate-200 text-slate-600 font-bold"
                   >
                     <Minus size={12} />
@@ -91,9 +79,7 @@ export const ClassCurriculumSection: React.FC<ClassCurriculumSectionProps> = ({
                     {item.doubles}
                   </span>
                   <button
-                    onClick={() =>
-                      updateItem("doubles", item.doubles + 1)
-                    }
+                    onClick={() => updateItem("doubles", item.doubles + 1)}
                     className="px-2 py-1 hover:bg-slate-200 text-slate-600 font-bold"
                   >
                     <Plus size={12} />
@@ -104,9 +90,7 @@ export const ClassCurriculumSection: React.FC<ClassCurriculumSectionProps> = ({
                 </div>
                 <div className="flex items-center bg-slate-100 rounded border border-slate-200">
                   <button
-                    onClick={() =>
-                      updateItem("singles", Math.max(0, item.singles - 1))
-                    }
+                    onClick={() => updateItem("singles", Math.max(0, item.singles - 1))}
                     className="px-2 py-1 hover:bg-slate-200 text-slate-600 font-bold"
                   >
                     <Minus size={12} />
@@ -115,9 +99,7 @@ export const ClassCurriculumSection: React.FC<ClassCurriculumSectionProps> = ({
                     {item.singles}
                   </span>
                   <button
-                    onClick={() =>
-                      updateItem("singles", item.singles + 1)
-                    }
+                    onClick={() => updateItem("singles", item.singles + 1)}
                     className="px-2 py-1 hover:bg-slate-200 text-slate-600 font-bold"
                   >
                     <Plus size={12} />
@@ -132,12 +114,7 @@ export const ClassCurriculumSection: React.FC<ClassCurriculumSectionProps> = ({
                 <div className="mt-2 pt-2 border-t border-slate-100 flex items-center gap-2">
                   <Select
                     value={item.assignedTeacherId || ""}
-                    onChange={(e) =>
-                      updateItem(
-                        "assignedTeacherId",
-                        e.target.value || null
-                      )
-                    }
+                    onChange={(e) => updateItem("assignedTeacherId", e.target.value || null)}
                     options={[
                       { value: "", label: "Unassigned" },
                       ...eligibleTeachers.map((t) => ({
@@ -151,8 +128,8 @@ export const ClassCurriculumSection: React.FC<ClassCurriculumSectionProps> = ({
                     onClick={() => updateItem("isWorkloadExempt", !isExempt)}
                     title={isExempt ? "Include in Workload" : "Exempt from Workload"}
                     className={`p-1.5 rounded border transition-colors ${
-                      isExempt 
-                        ? "bg-amber-100 border-amber-300 text-amber-700" 
+                      isExempt
+                        ? "bg-amber-100 border-amber-300 text-amber-700"
                         : "bg-slate-50 border-slate-200 text-slate-400 hover:text-slate-600"
                     }`}
                   >

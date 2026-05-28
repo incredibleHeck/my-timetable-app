@@ -1,4 +1,4 @@
-import { AppData } from './index';
+import { AppData } from "./index";
 
 export interface ProfileMetadata {
   description?: string;
@@ -23,20 +23,4 @@ export interface Profile {
   meta: ProfileMetadata;
 }
 
-export const validateProfile = (data: any): data is Profile => {
-  if (typeof data !== 'object' || data === null) return false;
-  
-  const p = data as Partial<Profile>;
-  
-  if (typeof p.id !== 'string' || !p.id) return false;
-  if (typeof p.name !== 'string' || !p.name) return false;
-  if (typeof p.created !== 'number') return false;
-  if (typeof p.lastModified !== 'number') return false;
-  
-  if (typeof p.data !== 'object' || p.data === null) return false;
-  // We don't deeply validate AppData here for performance, assuming basic structure
-  
-  if (typeof p.meta !== 'object' || p.meta === null) return false;
-  
-  return true;
-};
+export { validateProfile, parseProfile, profileSchema } from "../schemas/profile";

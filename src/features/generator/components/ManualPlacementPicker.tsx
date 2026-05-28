@@ -44,9 +44,8 @@ export const ManualPlacementPicker: React.FC<Props> = ({
         </div>
       ) : pendingOptions.length === 0 ? (
         <div className="rounded-lg border border-amber-100 bg-amber-50 px-4 py-3 text-xs text-amber-800 font-medium">
-          {allPendingCount} unplaced lesson{allPendingCount === 1 ? "" : "s"} remain,
-          but none can be placed in this slot (teacher, room, or double-period rules).
-          Try another empty period.
+          {allPendingCount} unplaced lesson{allPendingCount === 1 ? "" : "s"} remain, but none can
+          be placed in this slot (teacher, room, or double-period rules). Try another empty period.
         </div>
       ) : (
         <ul className="space-y-2">

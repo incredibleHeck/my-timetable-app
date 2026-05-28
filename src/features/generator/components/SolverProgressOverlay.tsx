@@ -68,10 +68,7 @@ function phaseMeta(phase: string) {
   };
 }
 
-export const SolverProgressOverlay: React.FC<Props> = ({
-  progress,
-  elapsedMs,
-}) => {
+export const SolverProgressOverlay: React.FC<Props> = ({ progress, elapsedMs }) => {
   const budgetMs = progress?.timeBudgetMs ?? SOLVER_TARGET_MS;
   const timePct = Math.min(100, (elapsedMs / budgetMs) * 100);
 
@@ -80,9 +77,7 @@ export const SolverProgressOverlay: React.FC<Props> = ({
   const PhaseIcon = meta.icon;
 
   const phasePct =
-    progress && progress.total > 0
-      ? Math.min(100, (progress.iteration / progress.total) * 100)
-      : 0;
+    progress && progress.total > 0 ? Math.min(100, (progress.iteration / progress.total) * 100) : 0;
 
   const iteration = progress?.iteration ?? 0;
   const total = progress?.total ?? 0;
@@ -145,9 +140,7 @@ export const SolverProgressOverlay: React.FC<Props> = ({
           {progress && total > 0 && (
             <div className="mb-5">
               <div className="flex justify-between text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
-                <span>
-                  {phase === "REPAIR" ? "Repair moves" : "Lessons placed"}
-                </span>
+                <span>{phase === "REPAIR" ? "Repair moves" : "Lessons placed"}</span>
                 <span>
                   {iteration.toLocaleString()} / {total.toLocaleString()}
                 </span>
@@ -176,9 +169,7 @@ export const SolverProgressOverlay: React.FC<Props> = ({
                 <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-800/70">
                   Perfect timetables
                 </div>
-                <div className="text-xs text-slate-500">
-                  Runs with zero audit conflicts
-                </div>
+                <div className="text-xs text-slate-500">Runs with zero audit conflicts</div>
               </div>
             </div>
             <div
@@ -194,30 +185,14 @@ export const SolverProgressOverlay: React.FC<Props> = ({
             <StatTile
               icon={<AlertCircle size={14} />}
               label="Unplaced now"
-              value={
-                conflicts !== undefined ? conflicts.toLocaleString() : "—"
-              }
-              tone={
-                conflicts === undefined
-                  ? "slate"
-                  : conflicts > 0
-                    ? "amber"
-                    : "emerald"
-              }
+              value={conflicts !== undefined ? conflicts.toLocaleString() : "—"}
+              tone={conflicts === undefined ? "slate" : conflicts > 0 ? "amber" : "emerald"}
             />
             <StatTile
               icon={<Target size={14} />}
               label="Best unplaced"
-              value={
-                bestUnplaced !== undefined ? bestUnplaced.toLocaleString() : "—"
-              }
-              tone={
-                bestUnplaced === undefined
-                  ? "slate"
-                  : bestUnplaced === 0
-                    ? "emerald"
-                    : "amber"
-              }
+              value={bestUnplaced !== undefined ? bestUnplaced.toLocaleString() : "—"}
+              tone={bestUnplaced === undefined ? "slate" : bestUnplaced === 0 ? "emerald" : "amber"}
             />
             <StatTile
               icon={<RotateCcw size={14} />}
@@ -260,9 +235,7 @@ function StatTile({
   };
 
   return (
-    <div
-      className={`rounded-xl border px-3 py-2.5 ${tones[tone]} transition-colors duration-300`}
-    >
+    <div className={`rounded-xl border px-3 py-2.5 ${tones[tone]} transition-colors duration-300`}>
       <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide opacity-70 mb-1">
         {icon}
         {label}

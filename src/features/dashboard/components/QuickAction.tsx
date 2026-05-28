@@ -8,12 +8,7 @@ interface QuickActionProps {
   onClick?: () => void;
 }
 
-export const QuickAction: React.FC<QuickActionProps> = ({
-  icon,
-  label,
-  desc,
-  onClick,
-}) => (
+export const QuickAction: React.FC<QuickActionProps> = ({ icon, label, desc, onClick }) => (
   <button
     onClick={onClick}
     className="flex items-center gap-4 p-4 bg-white border border-slate-200 rounded-xl hover:border-amber-400 hover:shadow-md transition-all text-left group w-full"

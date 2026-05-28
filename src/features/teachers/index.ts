@@ -1,2 +1,2 @@
-export { TeachersView } from './TeachersView';
-export * from './types';
+export { TeachersView } from "./TeachersView";
+export * from "./types";

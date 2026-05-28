@@ -36,9 +36,7 @@ export const SlotEditModal: React.FC<SlotEditModalProps> = ({
             <Button variant="secondary" onClick={() => setEditingSlot(null)}>
               Cancel
             </Button>
-            <Button onClick={() => saveSlot(editingSlot?.label || "Reserved")}>
-              Save Event
-            </Button>
+            <Button onClick={() => saveSlot(editingSlot?.label || "Reserved")}>Save Event</Button>
           </div>
         </div>
       }
@@ -52,9 +50,7 @@ export const SlotEditModal: React.FC<SlotEditModalProps> = ({
           autoFocus
         />
         <div>
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-            Presets
-          </p>
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Presets</p>
           <div className="flex flex-wrap gap-2">
             {OCCASION_PRESETS.map((preset) => (
               <button

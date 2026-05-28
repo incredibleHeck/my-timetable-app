@@ -26,12 +26,7 @@ export const DroppableCell: React.FC<DroppableCellProps> = ({
   });
 
   return (
-    <div
-      ref={setNodeRef}
-      className={`${className} ${
-        isOver ? "ring-2 ring-blue-400 z-10" : ""
-      }`}
-    >
+    <div ref={setNodeRef} className={`${className} ${isOver ? "ring-2 ring-blue-400 z-10" : ""}`}>
       {children}
     </div>
   );

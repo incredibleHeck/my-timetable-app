@@ -10,10 +10,7 @@ import {
   Users,
   Lock,
 } from "lucide-react";
-import {
-  getExamGridDefaults,
-  getSessionIndexForStartTime,
-} from "../logic/examUtils";
+import { getExamGridDefaults, getSessionIndexForStartTime } from "../logic/examUtils";
 import {
   DndContext,
   DragOverlay,
@@ -114,11 +111,7 @@ const DraggableExamCard = ({
               }}
               className={`
                 relative flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all p-4 cursor-pointer group/card
-                ${
-                  conflicts.length > 0
-                    ? "ring-2 ring-red-500 bg-red-50/10"
-                    : ""
-                }
+                ${conflicts.length > 0 ? "ring-2 ring-red-500 bg-red-50/10" : ""}
               `}
             >
               <div
@@ -145,9 +138,7 @@ const DraggableExamCard = ({
                             {exam.status}
                           </span>
                         )}
-                        {exam.locked && (
-                          <Lock size={10} className="text-amber-600" />
-                        )}
+                        {exam.locked && <Lock size={10} className="text-amber-600" />}
                       </div>
                     </div>
                     {onToggleLock && (
@@ -180,9 +171,7 @@ const DraggableExamCard = ({
                   </div>
                   <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 p-1 rounded-lg bg-slate-50/50 border border-transparent group-hover/card:border-slate-100 group-hover/card:bg-white transition-all">
                     <Users size={11} className="text-slate-400" />
-                    <span className="truncate">
-                      {invigilatorNames || "NO STAFF ASSIGNED"}
-                    </span>
+                    <span className="truncate">{invigilatorNames || "NO STAFF ASSIGNED"}</span>
                   </div>
                 </div>
               </div>
@@ -238,7 +227,7 @@ const DroppableGridCell = ({
   children,
   isEditMode,
   onClick,
-  activeConflicts = []
+  activeConflicts = [],
 }: {
   date: string;
   startTime: string;
@@ -253,8 +242,8 @@ const DroppableGridCell = ({
     disabled: !isEditMode,
   });
 
-  const hasCritical = activeConflicts.some(c => c.severity === 'CRITICAL');
-  const hasWarning = activeConflicts.some(c => c.severity === 'WARNING');
+  const hasCritical = activeConflicts.some((c) => c.severity === "CRITICAL");
+  const hasWarning = activeConflicts.some((c) => c.severity === "WARNING");
 
   return (
     <td
@@ -263,8 +252,8 @@ const DroppableGridCell = ({
       className={`p-3 border-r border-slate-100 align-top min-h-[150px] transition-all duration-200
         ${
           isOver && isEditMode
-            ? hasCritical 
-              ? "bg-red-50 ring-inset ring-2 ring-red-300" 
+            ? hasCritical
+              ? "bg-red-50 ring-inset ring-2 ring-red-300"
               : hasWarning
                 ? "bg-amber-50 ring-inset ring-2 ring-amber-300"
                 : "bg-emerald-50 ring-inset ring-2 ring-emerald-300"
@@ -276,14 +265,17 @@ const DroppableGridCell = ({
       <div className="h-full w-full relative min-h-[100px]">
         {isOver && activeConflicts.length > 0 && (
           <div className="absolute -top-1 -left-1 z-50 bg-white border border-slate-200 shadow-xl rounded-lg p-2 min-w-[200px] pointer-events-none animate-in fade-in zoom-in duration-200">
-             <div className="flex flex-col gap-1.5">
-                {activeConflicts.map((c, i) => (
-                  <div key={i} className={`flex items-start gap-1.5 text-[10px] font-bold ${c.severity === 'CRITICAL' ? 'text-red-600' : 'text-amber-600'}`}>
-                    <AlertTriangle size={12} className="shrink-0" />
-                    <span>{c.message}</span>
-                  </div>
-                ))}
-             </div>
+            <div className="flex flex-col gap-1.5">
+              {activeConflicts.map((c, i) => (
+                <div
+                  key={i}
+                  className={`flex items-start gap-1.5 text-[10px] font-bold ${c.severity === "CRITICAL" ? "text-red-600" : "text-amber-600"}`}
+                >
+                  <AlertTriangle size={12} className="shrink-0" />
+                  <span>{c.message}</span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
         {children}
@@ -299,7 +291,12 @@ interface Props {
   onEdit: (exam: ExamSession) => void;
   onAddCell?: (date: string, time: string) => void;
   checkConflicts: (exam: ExamSession) => string[];
-  checkMoveConflicts: (ids: string[], date: string, time: string, ignoreIds?: string[]) => ExamConflict[];
+  checkMoveConflicts: (
+    ids: string[],
+    date: string,
+    time: string,
+    ignoreIds?: string[],
+  ) => ExamConflict[];
   onSwap: (ids1: string | string[], ids2: string | string[]) => void;
   onMoveToSlot: (ids: string[], date: string, startTime: string) => void;
   onToggleLock?: (exam: ExamSession) => void;
@@ -321,7 +318,7 @@ export const ExamGrid: React.FC<Props> = ({
 }) => {
   const { columns: sessionColumns } = useMemo(
     () => getExamGridDefaults(data.settings),
-    [data.settings]
+    [data.settings],
   );
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [currentConflicts, setCurrentConflicts] = useState<ExamConflict[]>([]);
@@ -332,7 +329,7 @@ export const ExamGrid: React.FC<Props> = ({
       activationConstraint: {
         distance: 8,
       },
-    })
+    }),
   );
 
   const uniqueDates = useMemo(() => {
@@ -346,36 +343,39 @@ export const ExamGrid: React.FC<Props> = ({
   const handleDragOver = (event: DragOverEvent) => {
     const { over, active } = event;
     if (!over || !active.data.current) {
-        setOverCell(null);
-        setCurrentConflicts([]);
-        return;
+      setOverCell(null);
+      setCurrentConflicts([]);
+      return;
     }
 
     const overData = over.data.current;
     const activeData = active.data.current;
     if (!overData || !activeData) {
-        setOverCell(null);
-        setCurrentConflicts([]);
-        return;
+      setOverCell(null);
+      setCurrentConflicts([]);
+      return;
     }
 
     const activeIds = activeData.allExams.map((e: any) => e.id);
 
-    if (overData.type === 'CELL_TARGET') {
-        setOverCell({ date: overData.date, time: overData.startTime });
-        const conflicts = checkMoveConflicts(activeIds, overData.date, overData.startTime, activeIds);
+    if (overData.type === "CELL_TARGET") {
+      setOverCell({ date: overData.date, time: overData.startTime });
+      const conflicts = checkMoveConflicts(activeIds, overData.date, overData.startTime, activeIds);
+      setCurrentConflicts(conflicts);
+    } else if (overData.type === "EXAM_TARGET") {
+      const targetExam = overData.exam;
+      if (targetExam) {
+        setOverCell({ date: targetExam.date, time: targetExam.startTime });
+        const overIds = overData.allExams.map((e: any) => e.id);
+        const conflicts = checkMoveConflicts(activeIds, targetExam.date, targetExam.startTime, [
+          ...activeIds,
+          ...overIds,
+        ]);
         setCurrentConflicts(conflicts);
-    } else if (overData.type === 'EXAM_TARGET') {
-        const targetExam = overData.exam;
-        if (targetExam) {
-            setOverCell({ date: targetExam.date, time: targetExam.startTime });
-            const overIds = overData.allExams.map((e: any) => e.id);
-            const conflicts = checkMoveConflicts(activeIds, targetExam.date, targetExam.startTime, [...activeIds, ...overIds]);
-            setCurrentConflicts(conflicts);
-        }
+      }
     } else {
-        setOverCell(null);
-        setCurrentConflicts([]);
+      setOverCell(null);
+      setCurrentConflicts([]);
     }
   };
 
@@ -415,7 +415,7 @@ export const ExamGrid: React.FC<Props> = ({
           o.subjectId === s.subjectId &&
           o.paperNumber === s.paperNumber &&
           o.startTime === s.startTime &&
-          !processedIds.has(o.id)
+          !processedIds.has(o.id),
       );
       if (siblings.length > 0) {
         stacks.push(siblings);
@@ -462,10 +462,7 @@ export const ExamGrid: React.FC<Props> = ({
               const examsOnDate = exams.filter((e) => e.date === date);
 
               return (
-                <tr
-                  key={date}
-                  className="group border-b border-slate-100 min-h-[220px]"
-                >
+                <tr key={date} className="group border-b border-slate-100 min-h-[220px]">
                   <td className="p-4 border-r border-slate-200 text-center w-[140px] sticky left-0 z-30 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] bg-slate-50">
                     <div className="flex flex-col items-center gap-0.5">
                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
@@ -488,11 +485,7 @@ export const ExamGrid: React.FC<Props> = ({
 
                   {sessionColumns.map((col) => {
                     const cellExams = examsOnDate.filter(
-                      (e) =>
-                        getSessionIndexForStartTime(
-                          e.startTime,
-                          sessionColumns
-                        ) === col.index
+                      (e) => getSessionIndexForStartTime(e.startTime, sessionColumns) === col.index,
                     );
                     const dropTime = col.defaultStartTime;
 
@@ -502,9 +495,7 @@ export const ExamGrid: React.FC<Props> = ({
                         date={date}
                         startTime={dropTime}
                         isEditMode={isEditMode}
-                        onClick={() =>
-                          !cellExams.length && onAddCell?.(date, dropTime)
-                        }
+                        onClick={() => !cellExams.length && onAddCell?.(date, dropTime)}
                         activeConflicts={
                           overCell?.date === date && overCell?.time === dropTime
                             ? currentConflicts
@@ -543,12 +534,8 @@ export const ExamGrid: React.FC<Props> = ({
                 <CalendarDays size={20} />
               </div>
               <div className="flex flex-col">
-                <div className="font-black text-slate-800 text-sm uppercase">
-                  Rescheduling...
-                </div>
-                <div className="text-[10px] text-slate-500 font-bold">
-                  Release to drop
-                </div>
+                <div className="font-black text-slate-800 text-sm uppercase">Rescheduling...</div>
+                <div className="text-[10px] text-slate-500 font-bold">Release to drop</div>
               </div>
             </div>
           </div>

@@ -1,9 +1,6 @@
 import type ExcelJS from "exceljs";
 import { AppData, ExamSession } from "../../types";
-import {
-  getStreamLevel,
-  getClassDayInvigilationTeam,
-} from "../../features/exams/logic/examUtils";
+import { getStreamLevel, getClassDayInvigilationTeam } from "../../features/exams/logic/examUtils";
 import { FileService } from "../fileSystem";
 import { loadExcelJS } from "./excelLoader";
 
@@ -46,16 +43,14 @@ export const exportExamsToExcel = async (data: AppData) => {
   });
 
   const sortedLevels = Object.keys(levelGroups).sort((a, b) =>
-    a.localeCompare(b, undefined, { numeric: true })
+    a.localeCompare(b, undefined, { numeric: true }),
   );
 
   // 1. GENERATE SHEETS PER LEVEL
   sortedLevels.forEach((level) => {
     const group = levelGroups[level];
     // Find all exams belonging to ANY class in this level
-    const allLevelExams = exams.filter((e) =>
-      e.classIds.some((cid) => group.ids.includes(cid))
-    );
+    const allLevelExams = exams.filter((e) => e.classIds.some((cid) => group.ids.includes(cid)));
 
     if (allLevelExams.length === 0) return;
 
@@ -105,8 +100,7 @@ export const exportExamsToExcel = async (data: AppData) => {
     schoolRow.height = 35;
     sheet.mergeCells(1, 1, 1, 3);
     const schoolCell = schoolRow.getCell(1);
-    schoolCell.value =
-      settings.schoolName?.toUpperCase() || "SCHOOL EXAM TIMETABLE";
+    schoolCell.value = settings.schoolName?.toUpperCase() || "SCHOOL EXAM TIMETABLE";
     schoolCell.font = { bold: true, size: 20, color: { argb: "FF0F172A" } };
     schoolCell.alignment = { horizontal: "center", vertical: "middle" };
 
@@ -165,9 +159,7 @@ export const exportExamsToExcel = async (data: AppData) => {
     let currentRowIdx = 6;
 
     uniqueDates.forEach((date) => {
-      const examsOnDate = dateGroups[date].sort((a, b) =>
-        a.startTime.localeCompare(b.startTime)
-      );
+      const examsOnDate = dateGroups[date].sort((a, b) => a.startTime.localeCompare(b.startTime));
 
       const subjectGroups: Record<string, ExamSession[]> = {};
       examsOnDate.forEach((e) => {
@@ -175,19 +167,11 @@ export const exportExamsToExcel = async (data: AppData) => {
         subjectGroups[e.subjectId].push(e);
       });
 
-      const sortedSubjectGroups = Object.values(subjectGroups).sort(
-        (ga, gb) => {
-          const ma = ga.reduce(
-            (min, e) => (e.startTime < min ? e.startTime : min),
-            "23:59"
-          );
-          const mb = gb.reduce(
-            (min, e) => (e.startTime < min ? e.startTime : min),
-            "23:59"
-          );
-          return ma.localeCompare(mb);
-        }
-      );
+      const sortedSubjectGroups = Object.values(subjectGroups).sort((ga, gb) => {
+        const ma = ga.reduce((min, e) => (e.startTime < min ? e.startTime : min), "23:59");
+        const mb = gb.reduce((min, e) => (e.startTime < min ? e.startTime : min), "23:59");
+        return ma.localeCompare(mb);
+      });
 
       const s1Exams = sortedSubjectGroups[0] || [];
       const s2Exams = sortedSubjectGroups[1] || [];
@@ -199,12 +183,8 @@ export const exportExamsToExcel = async (data: AppData) => {
         return group
           .map((e) => {
             const sub = subjects.find((s) => s.id === e.subjectId);
-            const paper = showPaper
-              ? ` (${e.paperLabel || `P${e.paperNumber}`})`
-              : "";
-            return `${sub?.name || "???"}${paper}\n${
-              e.startTime
-            } (${formatDuration(e.duration)})`;
+            const paper = showPaper ? ` (${e.paperLabel || `P${e.paperNumber}`})` : "";
+            return `${sub?.name || "???"}${paper}\n${e.startTime} (${formatDuration(e.duration)})`;
           })
           .join("\n---\n");
       };
@@ -277,8 +257,7 @@ export const exportExamsToExcel = async (data: AppData) => {
     // Add Footer
     const footerRow = sheet.getRow(currentRowIdx + 1);
     sheet.mergeCells(currentRowIdx + 1, 1, currentRowIdx + 1, 3);
-    footerRow.getCell(1).value =
-      "PLEASE BE AT THE EXAM VENUE 30 MINUTES BEFORE START TIME";
+    footerRow.getCell(1).value = "PLEASE BE AT THE EXAM VENUE 30 MINUTES BEFORE START TIME";
     footerRow.getCell(1).font = {
       bold: true,
       size: 10,
@@ -304,7 +283,7 @@ export const exportExamsToPDF = (data: AppData) => {
   });
 
   const sortedLevels = Object.keys(levelGroups).sort((a, b) =>
-    a.localeCompare(b, undefined, { numeric: true })
+    a.localeCompare(b, undefined, { numeric: true }),
   );
 
   const subjectMap = new Map(subjects.map((s) => [s.id, s]));
@@ -336,9 +315,7 @@ export const exportExamsToPDF = (data: AppData) => {
 
   sortedLevels.forEach((level, idx) => {
     const group = levelGroups[level];
-    const allLevelExams = exams.filter((e) =>
-      e.classIds.some((cid) => group.ids.includes(cid))
-    );
+    const allLevelExams = exams.filter((e) => e.classIds.some((cid) => group.ids.includes(cid)));
 
     if (allLevelExams.length === 0) return;
 
@@ -379,9 +356,7 @@ export const exportExamsToPDF = (data: AppData) => {
     `;
 
     uniqueDates.forEach((date) => {
-      const examsOnDate = dateGroups[date].sort((a, b) =>
-        a.startTime.localeCompare(b.startTime)
-      );
+      const examsOnDate = dateGroups[date].sort((a, b) => a.startTime.localeCompare(b.startTime));
 
       const subjectGroups: Record<string, ExamSession[]> = {};
       examsOnDate.forEach((e) => {
@@ -389,19 +364,11 @@ export const exportExamsToPDF = (data: AppData) => {
         subjectGroups[e.subjectId].push(e);
       });
 
-      const sortedSubjectGroups = Object.values(subjectGroups).sort(
-        (ga, gb) => {
-          const ma = ga.reduce(
-            (min, e) => (e.startTime < min ? e.startTime : min),
-            "23:59"
-          );
-          const mb = gb.reduce(
-            (min, e) => (e.startTime < min ? e.startTime : min),
-            "23:59"
-          );
-          return ma.localeCompare(mb);
-        }
-      );
+      const sortedSubjectGroups = Object.values(subjectGroups).sort((ga, gb) => {
+        const ma = ga.reduce((min, e) => (e.startTime < min ? e.startTime : min), "23:59");
+        const mb = gb.reduce((min, e) => (e.startTime < min ? e.startTime : min), "23:59");
+        return ma.localeCompare(mb);
+      });
 
       const s1Exams = sortedSubjectGroups[0] || [];
       const s2Exams = sortedSubjectGroups[1] || [];
@@ -414,9 +381,7 @@ export const exportExamsToPDF = (data: AppData) => {
         return group
           .map((e) => {
             const sub = subjectMap.get(e.subjectId);
-            const paperLabel = showPaper
-              ? `<div>${e.paperLabel || `P${e.paperNumber}`}</div>`
-              : "";
+            const paperLabel = showPaper ? `<div>${e.paperLabel || `P${e.paperNumber}`}</div>` : "";
             return `
             <div class="exam-box" style="background-color: ${
               sub?.color || "#f1f5f9"
@@ -474,10 +439,7 @@ export const exportExamsToPDF = (data: AppData) => {
 
 // --- INVIGILATOR ROSTER EXPORTS (STAFF VERSION) ---
 
-export const exportInvigilatorsToExcel = async (
-  data: AppData,
-  currentExams?: ExamSession[]
-) => {
+export const exportInvigilatorsToExcel = async (data: AppData, currentExams?: ExamSession[]) => {
   const { teachers, classes } = data;
   const exams = currentExams || data.exams; // Use state exams if provided
   const ExcelJS = await loadExcelJS();
@@ -505,7 +467,7 @@ export const exportInvigilatorsToExcel = async (
 
   const uniqueDates = Array.from(new Set(exams.map((e) => e.date))).sort();
   const sortedClasses = [...classes].sort((a, b) =>
-    a.name.localeCompare(b.name, undefined, { numeric: true })
+    a.name.localeCompare(b.name, undefined, { numeric: true }),
   );
 
   // --- HEADERS ---
@@ -552,9 +514,9 @@ export const exportInvigilatorsToExcel = async (
       width: 30,
     });
   });
-  
+
   // Set keys and widths without triggering automatic header row writing
-  worksheet.columns = columns.map(c => ({ key: c.key, width: c.width }));
+  worksheet.columns = columns.map((c) => ({ key: c.key, width: c.width }));
 
   // WRITE HEADERS EXPLICITLY TO ROW 5
   const headerRow = worksheet.getRow(5);
@@ -606,15 +568,12 @@ export const exportInvigilatorsToExcel = async (
   await FileService.saveExport(new Blob([buffer]), "Invigilation_Master_Roster_A3.xlsx", "xlsx");
 };
 
-export const exportInvigilatorsToPDF = (
-  data: AppData,
-  currentExams?: ExamSession[]
-) => {
+export const exportInvigilatorsToPDF = (data: AppData, currentExams?: ExamSession[]) => {
   const { teachers, classes, settings } = data;
   const exams = currentExams || data.exams;
   const uniqueDates = Array.from(new Set(exams.map((e) => e.date))).sort();
   const sortedClasses = [...classes].sort((a, b) =>
-    a.name.localeCompare(b.name, undefined, { numeric: true })
+    a.name.localeCompare(b.name, undefined, { numeric: true }),
   );
 
   let html = `
@@ -641,12 +600,16 @@ export const exportInvigilatorsToPDF = (
         <thead>
           <tr>
             <th class="class-col">Class / Date</th>
-            ${uniqueDates.map(d => `
+            ${uniqueDates
+              .map(
+                (d) => `
               <th>
-                <div style="font-size: 10px; color: #94a3b8; margin-bottom: 2px;">${new Date(d).toLocaleDateString("en-GB", { weekday: 'short' }).toUpperCase()}</div>
-                <div style="font-size: 14px;">${new Date(d).toLocaleDateString("en-GB", { day: 'numeric', month: 'short' })}</div>
+                <div style="font-size: 10px; color: #94a3b8; margin-bottom: 2px;">${new Date(d).toLocaleDateString("en-GB", { weekday: "short" }).toUpperCase()}</div>
+                <div style="font-size: 14px;">${new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</div>
               </th>
-            `).join("")}
+            `,
+              )
+              .join("")}
           </tr>
         </thead>
         <tbody>

@@ -31,7 +31,7 @@ export const InvigilatorExclusionModal: React.FC<Props> = ({
 
   const toggleTeacher = (id: string) => {
     setExcludedIds((prev) =>
-      prev.includes(id) ? prev.filter((tid) => tid !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((tid) => tid !== id) : [...prev, id],
     );
   };
 
@@ -53,9 +53,7 @@ export const InvigilatorExclusionModal: React.FC<Props> = ({
           <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={() => onConfirm(excludedIds)}>
-            Confirm & Assign
-          </Button>
+          <Button onClick={() => onConfirm(excludedIds)}>Confirm & Assign</Button>
         </div>
       }
     >
@@ -63,23 +61,18 @@ export const InvigilatorExclusionModal: React.FC<Props> = ({
         <div className="bg-amber-50 border border-amber-100 p-3 rounded-lg flex items-start gap-3">
           <Users className="text-amber-600 shrink-0" size={18} />
           <div>
-            <p className="text-xs font-bold text-amber-800">
-              Exclude Staff Members
-            </p>
+            <p className="text-xs font-bold text-amber-800">Exclude Staff Members</p>
             <p className="text-[10px] text-amber-700 mt-0.5">
-              Uncheck teachers who should NOT be assigned. During exams, teaching
-              stops — all other staff can invigilate. Use the min–max range on
-              the toolbar for how many invigilators each stream gets per day.
+              Uncheck teachers who should NOT be assigned. During exams, teaching stops — all other
+              staff can invigilate. Use the min–max range on the toolbar for how many invigilators
+              each stream gets per day.
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-              size={14}
-            />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
             <input
               placeholder="Search teachers..."
               className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-amber-500 focus:border-amber-500 outline-none"
@@ -109,9 +102,7 @@ export const InvigilatorExclusionModal: React.FC<Props> = ({
                   <div className="flex items-center gap-3">
                     <div
                       className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
-                        isExcluded
-                          ? "bg-slate-200 text-slate-400"
-                          : "bg-amber-100 text-amber-700"
+                        isExcluded ? "bg-slate-200 text-slate-400" : "bg-amber-100 text-amber-700"
                       }`}
                     >
                       {t.name.charAt(0)}

@@ -6,45 +6,46 @@ import { AppData } from "../src/types";
 vi.mock("../src/features/generator/scheduler/solver/solver", () => ({
   solveSmart: vi.fn(() => ({
     schedule: {
-      "c1": {
+      c1: {
         0: {
-          0: { subjectId: "s1", teacherId: "t1", classId: "c1" }
-        }
+          0: { subjectId: "s1", teacherId: "t1", classId: "c1" },
+        },
       },
-      "c2": {
+      c2: {
         0: {
-          0: { subjectId: "s2", teacherId: "t1", classId: "c2" } // Same teacher t1 at P0
-        }
-      }
+          0: { subjectId: "s2", teacherId: "t1", classId: "c2" }, // Same teacher t1 at P0
+        },
+      },
     },
     conflicts: [], // No unplaced lessons
     state: {
-       // Mock minimal state structure expected by runConflictAudit if it uses it
-       classOccupancy: {},
-       teacherOccupancy: {},
-       roomOccupancy: {},
-       singleResourceUsage: {},
-       teacherDailyLoad: {},
-       classDailySubjects: {},
-       classSubjectDuration: {},
-       unitPlacements: new Map(),
-       classTimeRanges: new Map(),
-       lessonNavigation: new Map(),
-       schedule: { // State also has schedule usually
-            "c1": {
-                0: {
-                0: { subjectId: "s1", teacherId: "t1", classId: "c1" }
-                }
-            },
-            "c2": {
-                0: {
-                0: { subjectId: "s2", teacherId: "t1", classId: "c2" }
-                }
-            }
-       }
+      // Mock minimal state structure expected by runConflictAudit if it uses it
+      classOccupancy: {},
+      teacherOccupancy: {},
+      roomOccupancy: {},
+      singleResourceUsage: {},
+      teacherDailyLoad: {},
+      classDailySubjects: {},
+      classSubjectDuration: {},
+      unitPlacements: new Map(),
+      classTimeRanges: new Map(),
+      lessonNavigation: new Map(),
+      schedule: {
+        // State also has schedule usually
+        c1: {
+          0: {
+            0: { subjectId: "s1", teacherId: "t1", classId: "c1" },
+          },
+        },
+        c2: {
+          0: {
+            0: { subjectId: "s2", teacherId: "t1", classId: "c2" },
+          },
+        },
+      },
     },
-    iterations: 1
-  }))
+    iterations: 1,
+  })),
 }));
 
 // Mock audit to return empty legacy stuff
@@ -52,13 +53,13 @@ vi.mock("../src/features/generator/scheduler/validation/audit", () => ({
   runConflictAudit: vi.fn(() => ({
     conflicts: [],
     curriculumGaps: [],
-    statistics: {}
-  }))
+    statistics: {},
+  })),
 }));
 
 // Mock preparation to avoid processing units
 vi.mock("../src/features/generator/scheduler/logic/preparation", () => ({
-  prepareAllocationUnits: vi.fn(() => [])
+  prepareAllocationUnits: vi.fn(() => []),
 }));
 
 describe("generateSchedule Integration", () => {
@@ -74,7 +75,7 @@ describe("generateSchedule Integration", () => {
     settings: mockSettings,
     subjects: [
       { id: "s1", name: "Math", color: "blue", type: "CORE" },
-      { id: "s2", name: "Science", color: "green", type: "CORE" }
+      { id: "s2", name: "Science", color: "green", type: "CORE" },
     ],
     teachers: [
       {
@@ -88,8 +89,8 @@ describe("generateSchedule Integration", () => {
     ],
     rooms: [],
     classes: [
-        { id: "c1", name: "Class 1A", periodCount: 5, subjects: [], curriculum: [] },
-        { id: "c2", name: "Class 1B", periodCount: 5, subjects: [], curriculum: [] }
+      { id: "c1", name: "Class 1A", periodCount: 5, subjects: [], curriculum: [] },
+      { id: "c2", name: "Class 1B", periodCount: 5, subjects: [], curriculum: [] },
     ],
     jointClasses: [],
     electives: [],
@@ -99,7 +100,7 @@ describe("generateSchedule Integration", () => {
     schedule: {},
     conflicts: [],
     lastGenerated: null,
-    recentActivity: []
+    recentActivity: [],
   };
 
   it("should integrate generateFinalReport and detect conflicts in the generated schedule", () => {

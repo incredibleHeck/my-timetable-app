@@ -43,7 +43,10 @@ export const ClassBasicsSection: React.FC<ClassBasicsSectionProps> = ({
         <label className="block text-xs font-bold text-slate-500 uppercase">Home Classroom</label>
         <div className="w-full rounded-md border border-slate-200 bg-slate-50 text-sm p-2 text-slate-600 font-medium flex items-center gap-2 italic">
           <School size={14} className="text-amber-500" />
-          {editingClass ? (data.rooms.find(r => r.id === editingClass.defaultRoomId)?.name || `${cName} Classroom`) : `${cName || "New Class"} Classroom`}
+          {editingClass
+            ? data.rooms.find((r) => r.id === editingClass.defaultRoomId)?.name ||
+              `${cName} Classroom`
+            : `${cName || "New Class"} Classroom`}
         </div>
         <p className="text-[10px] text-slate-400 italic">
           The Home Room is automatically generated and managed by the system.
@@ -70,10 +73,7 @@ export const ClassBasicsSection: React.FC<ClassBasicsSectionProps> = ({
               Day
             </div>
             {Array.from({ length: cPeriodCount }).map((_, i) => (
-              <div
-                key={i}
-                className="text-center text-[9px] font-bold text-slate-400"
-              >
+              <div key={i} className="text-center text-[9px] font-bold text-slate-400">
                 P{i + 1}
               </div>
             ))}
@@ -84,46 +84,40 @@ export const ClassBasicsSection: React.FC<ClassBasicsSectionProps> = ({
                 <div className="text-right text-[10px] font-bold text-slate-600 pr-2 uppercase self-center">
                   {d.substring(0, 3)}
                 </div>
-                {Array.from({ length: cPeriodCount }).map(
-                  (_, pIdx) => {
-                    // Check Global First
-                    const globalLabel = getOccasionLabel(
-                      data.settings.fixedOccasions[dIdx]?.[pIdx]
-                    );
+                {Array.from({ length: cPeriodCount }).map((_, pIdx) => {
+                  // Check Global First
+                  const globalLabel = getOccasionLabel(data.settings.fixedOccasions[dIdx]?.[pIdx]);
 
-                    // Check Local
-                    const localLabel = cFixedSessions[dIdx]?.[pIdx];
-                    const displayLabel = localLabel || globalLabel;
-                    const isGlobal = !!globalLabel;
+                  // Check Local
+                  const localLabel = cFixedSessions[dIdx]?.[pIdx];
+                  const displayLabel = localLabel || globalLabel;
+                  const isGlobal = !!globalLabel;
 
-                    return (
-                      <button
-                        key={pIdx}
-                        onClick={() => {
-                          if (isGlobal) return;
-                          setSlotLabel(localLabel || "");
-                          setActiveSlot({ d: dIdx, p: pIdx });
-                        }}
-                        disabled={isGlobal}
-                        title={displayLabel || "Available"}
-                        className={`
+                  return (
+                    <button
+                      key={pIdx}
+                      onClick={() => {
+                        if (isGlobal) return;
+                        setSlotLabel(localLabel || "");
+                        setActiveSlot({ d: dIdx, p: pIdx });
+                      }}
+                      disabled={isGlobal}
+                      title={displayLabel || "Available"}
+                      className={`
                                               h-6 rounded border text-[8px] font-bold truncate px-0.5 transition-all
                                               ${
                                                 isGlobal
                                                   ? "bg-slate-200 text-slate-500 border-slate-300 cursor-not-allowed"
                                                   : localLabel
-                                                  ? "bg-amber-100 text-amber-700 border-amber-300"
-                                                  : "bg-white border-slate-200 hover:border-amber-400"
+                                                    ? "bg-amber-100 text-amber-700 border-amber-300"
+                                                    : "bg-white border-slate-200 hover:border-amber-400"
                                               }
                                           `}
-                      >
-                        {displayLabel
-                          ? displayLabel.substring(0, 4)
-                          : "+"}
-                      </button>
-                    );
-                  }
-                )}
+                    >
+                      {displayLabel ? displayLabel.substring(0, 4) : "+"}
+                    </button>
+                  );
+                })}
               </React.Fragment>
             ))}
           </div>

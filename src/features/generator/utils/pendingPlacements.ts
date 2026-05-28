@@ -33,12 +33,7 @@ function inferSlotDuration(
   if (p2 === null) return 1;
   const next = daySchedule[p2];
   const head = daySchedule[period];
-  if (
-    next &&
-    next.isFixed &&
-    head?.subjectId &&
-    next.subjectId === head.subjectId
-  ) {
+  if (next && next.isFixed && head?.subjectId && next.subjectId === head.subjectId) {
     return 2;
   }
   return 1;
@@ -86,7 +81,7 @@ function countScheduledSinglesAndDoubles(
       const duration = inferSlotDuration(
         daySchedule,
         period,
-        structure,
+        structure as import("../../../types").PeriodConfig[],
         periodLimit,
       );
       if (duration === 2) {
@@ -117,9 +112,7 @@ function resolveTeacher(
   }
 
   const joint = data.jointClasses?.find(
-    (jc) =>
-      normalizeId(jc.subjectId) === normalizeId(subjectId) &&
-      jc.classIds.includes(classId),
+    (jc) => normalizeId(jc.subjectId) === normalizeId(subjectId) && jc.classIds.includes(classId),
   );
   if (joint?.teacherId) {
     const teacher = data.teachers.find((t) => t.id === joint.teacherId);
@@ -131,22 +124,13 @@ function resolveTeacher(
   return null;
 }
 
-function resolveRoomId(
-  data: AppData,
-  _classId: string,
-  subjectId: string,
-): string | undefined {
-  const subject = data.subjects.find(
-    (s) => normalizeId(s.id) === normalizeId(subjectId),
-  );
-  return subject?.requiredRoomId;
+function resolveRoomId(data: AppData, _classId: string, subjectId: string): string | undefined {
+  const subject = data.subjects.find((s) => normalizeId(s.id) === normalizeId(subjectId));
+  return subject?.requiredRoomId ?? undefined;
 }
 
 /** Lessons still missing from the grid for one class (curriculum minus placed). */
-export function getPendingPlacementsForClass(
-  data: AppData,
-  classId: string,
-): PendingPlacement[] {
+export function getPendingPlacementsForClass(data: AppData, classId: string): PendingPlacement[] {
   const cls = data.classes.find((c) => c.id === classId);
   if (!cls) return [];
 
@@ -154,9 +138,7 @@ export function getPendingPlacementsForClass(
   let counter = 0;
 
   for (const item of cls.curriculum) {
-    const subject = data.subjects.find(
-      (s) => normalizeId(s.id) === normalizeId(item.subjectId),
-    );
+    const subject = data.subjects.find((s) => normalizeId(s.id) === normalizeId(item.subjectId));
     const teacher = resolveTeacher(data, classId, item.subjectId);
     if (!teacher) continue;
 
@@ -171,15 +153,10 @@ export function getPendingPlacementsForClass(
       roomId,
     };
 
-    const hasSinglesDoubles =
-      (item.singles || 0) + (item.doubles || 0) > 0;
+    const hasSinglesDoubles = (item.singles || 0) + (item.doubles || 0) > 0;
 
     if (hasSinglesDoubles) {
-      const placed = countScheduledSinglesAndDoubles(
-        data,
-        classId,
-        item.subjectId,
-      );
+      const placed = countScheduledSinglesAndDoubles(data, classId, item.subjectId);
       const pendingSingles = Math.max(0, (item.singles || 0) - placed.singles);
       const pendingDoubles = Math.max(0, (item.doubles || 0) - placed.doubles);
 

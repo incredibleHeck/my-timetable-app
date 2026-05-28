@@ -6,10 +6,7 @@ interface Props {
   hasPending: boolean;
 }
 
-export const EmptySlotPlacementButton: React.FC<Props> = ({
-  onClick,
-  hasPending,
-}) => {
+export const EmptySlotPlacementButton: React.FC<Props> = ({ onClick, hasPending }) => {
   return (
     <button
       type="button"
@@ -22,11 +19,7 @@ export const EmptySlotPlacementButton: React.FC<Props> = ({
           ? "border-amber-300 bg-amber-50/40 hover:border-amber-400 hover:bg-amber-50"
           : "border-slate-200 bg-slate-50/30 hover:border-slate-300 hover:bg-slate-50"
       }`}
-      title={
-        hasPending
-          ? "Assign an unplaced lesson here"
-          : "No unplaced lessons for this class"
-      }
+      title={hasPending ? "Assign an unplaced lesson here" : "No unplaced lessons for this class"}
     >
       <div
         className={`p-1.5 rounded-full transition-colors ${

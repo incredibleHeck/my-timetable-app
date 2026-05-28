@@ -93,9 +93,7 @@ describe("manual placement audit", () => {
     };
 
     const conflicts = collectResourceDoubleBookings(buildData(schedule));
-    const roomConflicts = conflicts.filter((c) =>
-      c.reason.toLowerCase().includes("room"),
-    );
+    const roomConflicts = conflicts.filter((c) => c.reason.toLowerCase().includes("room"));
 
     expect(roomConflicts).toHaveLength(0);
   });
@@ -121,9 +119,9 @@ describe("manual placement audit", () => {
       mode: "generated",
     });
 
-    expect(
-      conflicts.filter((c) => c.reason.toLowerCase().includes("double booking")),
-    ).toHaveLength(0);
+    expect(conflicts.filter((c) => c.reason.toLowerCase().includes("double booking"))).toHaveLength(
+      0,
+    );
   });
 
   it("still flags real specialist room double bookings", () => {
@@ -151,8 +149,6 @@ describe("manual placement audit", () => {
     };
 
     const conflicts = collectResourceDoubleBookings(buildData(schedule));
-    expect(conflicts.some((c) => c.reason.includes("Double Booking: Room"))).toBe(
-      true,
-    );
+    expect(conflicts.some((c) => c.reason.includes("Double Booking: Room"))).toBe(true);
   });
 });

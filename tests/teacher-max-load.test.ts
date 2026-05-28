@@ -13,19 +13,17 @@ describe("Repro: Max Daily Load Hardcoded Limit", () => {
       fixedOccasions: [],
       maxTeacherPeriodsPerDay: 8, // ADDED: Allow full load for this test
     },
-    classes: [
-      { id: "c1", name: "Class 1", periodCount: 8, structure: [] } as any,
-    ],
+    classes: [{ id: "c1", name: "Class 1", periodCount: 8, structure: [] } as any],
     teachers: [{ id: "t1", name: "Teacher 1", constraints: [] }] as any,
     subjects: [
-        { id: "s1", name: "S1" },
-        { id: "s2", name: "S2" },
-        { id: "s3", name: "S3" },
-        { id: "s4", name: "S4" },
-        { id: "s5", name: "S5" },
-        { id: "s6", name: "S6" },
-        { id: "s7", name: "S7" },
-        { id: "s8", name: "S8" },
+      { id: "s1", name: "S1" },
+      { id: "s2", name: "S2" },
+      { id: "s3", name: "S3" },
+      { id: "s4", name: "S4" },
+      { id: "s5", name: "S5" },
+      { id: "s6", name: "S6" },
+      { id: "s7", name: "S7" },
+      { id: "s8", name: "S8" },
     ] as any,
     rooms: [],
     schedule: {
@@ -65,14 +63,14 @@ describe("Repro: Max Daily Load Hardcoded Limit", () => {
       state,
       { day: 0, period: 0 }, // Ignore Slot (Source P0)
       undefined, // Room
-      1 // Duration
+      1, // Duration
     );
 
     if (!result.valid) {
-        console.log("Validation Failed:", result.message);
+      console.log("Validation Failed:", result.message);
     }
 
     // We expect this to PASS now
-    expect(result.valid).toBe(true); 
+    expect(result.valid).toBe(true);
   });
 });

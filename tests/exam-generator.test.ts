@@ -1,52 +1,64 @@
-import { describe, it, expect } from 'vitest';
-import { generateExams } from '../src/features/exams/logic/examGeneratorAlgorithms';
-import { DEFAULT_DATA } from '../src/utils/constants';
+import { describe, it, expect } from "vitest";
+import { generateExams } from "../src/features/exams/logic/examGeneratorAlgorithms";
+import { DEFAULT_DATA } from "../src/utils/constants";
 
-describe('generateExams', () => {
+describe("generateExams", () => {
   const baseData = {
     ...DEFAULT_DATA,
     settings: {
       ...DEFAULT_DATA.settings,
       timeSlots: [
-        { start: '08:00', end: '09:00' },
-        { start: '09:00', end: '10:00' },
-        { start: '10:00', end: '11:00' },
-        { start: '11:00', end: '12:00' },
-        { start: '13:00', end: '14:00' },
-        { start: '14:00', end: '15:00' },
+        { start: "08:00", end: "09:00" },
+        { start: "09:00", end: "10:00" },
+        { start: "10:00", end: "11:00" },
+        { start: "11:00", end: "12:00" },
+        { start: "13:00", end: "14:00" },
+        { start: "14:00", end: "15:00" },
       ],
     },
     subjects: [
-      { id: 'math', name: 'Mathematics', color: '#000', type: 'CORE' as const, isExaminable: true, examPaperCount: 2 },
-      { id: 'eng', name: 'English', color: '#111', type: 'CORE' as const, isExaminable: true, examPaperCount: 1 },
+      {
+        id: "math",
+        name: "Mathematics",
+        color: "#000",
+        type: "CORE" as const,
+        isExaminable: true,
+        examPaperCount: 2,
+      },
+      {
+        id: "eng",
+        name: "English",
+        color: "#111",
+        type: "CORE" as const,
+        isExaminable: true,
+        examPaperCount: 1,
+      },
     ],
-    rooms: [
-      { id: 'r1', name: 'Hall', capacity: 40, type: 'HALL' },
-    ],
+    rooms: [{ id: "r1", name: "Hall", capacity: 40, type: "HALL" }],
     classes: [
       {
-        id: 'c1',
-        name: '10A',
-        level: '10',
-        defaultRoomId: 'r1',
+        id: "c1",
+        name: "10A",
+        level: "10",
+        defaultRoomId: "r1",
         studentCount: 30,
         curriculum: [
-          { id: 'cur1', subjectId: 'math', periodsPerWeek: 5, singles: 5, doubles: 0 },
-          { id: 'cur2', subjectId: 'eng', periodsPerWeek: 4, singles: 4, doubles: 0 },
+          { id: "cur1", subjectId: "math", periodsPerWeek: 5, singles: 5, doubles: 0 },
+          { id: "cur2", subjectId: "eng", periodsPerWeek: 4, singles: 4, doubles: 0 },
         ],
       },
     ],
   };
 
-  it('schedules exams for curriculum subjects', () => {
+  it("schedules exams for curriculum subjects", () => {
     const { sessions, unscheduled } = generateExams(baseData, {
       subjects: [
-        { id: 'math', papers: 2, duration: 120 },
-        { id: 'eng', papers: 1, duration: 90 },
+        { id: "math", papers: 2, duration: 120 },
+        { id: "eng", papers: 1, duration: 90 },
       ],
-      mode: 'UNIFORM',
-      startDate: '2026-06-01',
-      startTime: '09:00',
+      mode: "UNIFORM",
+      startDate: "2026-06-01",
+      startTime: "09:00",
       maxPerDay: 2,
       gapMinutes: 30,
       syncStreams: true,
@@ -54,34 +66,34 @@ describe('generateExams', () => {
 
     expect(sessions.length).toBeGreaterThan(0);
     expect(unscheduled.length).toBe(0);
-    expect(sessions.some((s) => s.subjectId === 'math')).toBe(true);
+    expect(sessions.some((s) => s.subjectId === "math")).toBe(true);
   });
 
-  it('does not schedule on weekends', () => {
+  it("does not schedule on weekends", () => {
     const { sessions } = generateExams(baseData, {
-      subjects: [{ id: 'math', papers: 1, duration: 60 }],
-      mode: 'UNIFORM',
-      startDate: '2026-06-06',
-      startTime: '09:00',
+      subjects: [{ id: "math", papers: 1, duration: 60 }],
+      mode: "UNIFORM",
+      startDate: "2026-06-06",
+      startTime: "09:00",
       maxPerDay: 1,
       gapMinutes: 0,
       syncStreams: false,
     });
 
     sessions.forEach((s) => {
-      const day = new Date(s.date + 'T12:00:00').getDay();
+      const day = new Date(s.date + "T12:00:00").getDay();
       expect(day).not.toBe(0);
       expect(day).not.toBe(6);
     });
   });
 
-  it('reports unscheduled units when calendar is too constrained', () => {
+  it("reports unscheduled units when calendar is too constrained", () => {
     const { sessions, unscheduled } = generateExams(baseData, {
-      subjects: [{ id: 'math', papers: 1, duration: 480 }],
-      selectedClassIds: ['c1'],
-      mode: 'UNIFORM',
-      startDate: '2026-06-01',
-      startTime: '09:00',
+      subjects: [{ id: "math", papers: 1, duration: 480 }],
+      selectedClassIds: ["c1"],
+      mode: "UNIFORM",
+      startDate: "2026-06-01",
+      startTime: "09:00",
       maxPerDay: 1,
       gapMinutes: 0,
       syncStreams: false,
@@ -89,29 +101,29 @@ describe('generateExams', () => {
 
     expect(sessions.length).toBe(0);
     expect(unscheduled.length).toBeGreaterThan(0);
-    expect(unscheduled[0].subjectId).toBe('math');
+    expect(unscheduled[0].subjectId).toBe("math");
   });
 
-  it('assigns roomId from class default room', () => {
+  it("assigns roomId from class default room", () => {
     const { sessions } = generateExams(baseData, {
-      subjects: [{ id: 'math', papers: 1, duration: 60 }],
-      mode: 'UNIFORM',
-      startDate: '2026-06-02',
-      startTime: '09:00',
+      subjects: [{ id: "math", papers: 1, duration: 60 }],
+      mode: "UNIFORM",
+      startDate: "2026-06-02",
+      startTime: "09:00",
       maxPerDay: 1,
       gapMinutes: 0,
       syncStreams: false,
     });
-    expect(sessions[0]?.roomId).toBe('r1');
+    expect(sessions[0]?.roomId).toBe("r1");
   });
 
-  it('produces identical output when deterministic', () => {
+  it("produces identical output when deterministic", () => {
     const config = {
-      subjects: [{ id: 'math', papers: 1, duration: 60 }],
-      selectedClassIds: ['c1'],
-      mode: 'RANDOM' as const,
-      startDate: '2026-06-02',
-      startTime: '09:00',
+      subjects: [{ id: "math", papers: 1, duration: 60 }],
+      selectedClassIds: ["c1"],
+      mode: "RANDOM" as const,
+      startDate: "2026-06-02",
+      startTime: "09:00",
       maxPerDay: 1,
       gapMinutes: 0,
       syncStreams: false,
@@ -120,40 +132,40 @@ describe('generateExams', () => {
     const a = generateExams(baseData, config);
     const b = generateExams(baseData, config);
     expect(a.sessions.map((s) => `${s.date}-${s.startTime}`)).toEqual(
-      b.sessions.map((s) => `${s.date}-${s.startTime}`)
+      b.sessions.map((s) => `${s.date}-${s.startTime}`),
     );
   });
 
-  it('places exams in Session 1 and Session 2 columns when two sessions configured', () => {
+  it("places exams in Session 1 and Session 2 columns when two sessions configured", () => {
     const twoSessionData = {
       ...baseData,
       settings: {
         ...baseData.settings,
         examGrid: {
           sessionsPerDay: 2,
-          session1DefaultTime: '09:00',
-          session2DefaultTime: '14:00',
-          sessionCutoff: '12:00',
+          session1DefaultTime: "09:00",
+          session2DefaultTime: "14:00",
+          sessionCutoff: "12:00",
         },
       },
     };
 
     const { sessions } = generateExams(twoSessionData, {
       subjects: [
-        { id: 'math', papers: 1, duration: 60 },
-        { id: 'eng', papers: 1, duration: 60 },
+        { id: "math", papers: 1, duration: 60 },
+        { id: "eng", papers: 1, duration: 60 },
       ],
-      mode: 'UNIFORM',
-      startDate: '2026-06-02',
-      startTime: '09:00',
+      mode: "UNIFORM",
+      startDate: "2026-06-02",
+      startTime: "09:00",
       maxPerDay: 2,
       gapMinutes: 30,
       syncStreams: false,
       sessionsPerDay: 2,
     });
 
-    const session1 = sessions.filter((s) => s.startTime < '12:00');
-    const session2 = sessions.filter((s) => s.startTime >= '12:00');
+    const session1 = sessions.filter((s) => s.startTime < "12:00");
+    const session2 = sessions.filter((s) => s.startTime >= "12:00");
     expect(session1.length).toBeGreaterThan(0);
     expect(session2.length).toBeGreaterThan(0);
   });

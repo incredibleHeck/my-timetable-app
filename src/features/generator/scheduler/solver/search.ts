@@ -30,66 +30,81 @@ const evaluator = new EvaluationEngine();
 // --- 1. CONSTRUCTION PHASE (Valid Moves) ---
 
 export function findValidMoves(
-  state: SchedulerState, 
-  data: AppData, 
+  state: SchedulerState,
+  data: AppData,
   gangUnits: AllocationUnit[],
   teacherMap: Map<string, Teacher>,
   subjectMap: Map<string, Subject>,
   classMap: Map<string, ClassGroup>,
-  roomMap: Map<string, Room>
+  roomMap: Map<string, Room>,
 ) {
-    const globalPeriods = data.settings.periodsPerDay;
-    const maxPossiblePeriods = 15; // Support up to 15 periods as per UI limits
-    const days = getDaysPerWeek(data.settings);
-    const moves = [];
-    
-    const primaryUnit = gangUnits[0];
+  const globalPeriods = data.settings.periodsPerDay;
+  const maxPossiblePeriods = 15; // Support up to 15 periods as per UI limits
+  const days = getDaysPerWeek(data.settings);
+  const moves = [];
 
-    for (let d = 0; d < days; d++) {
-        for (let p = 0; p < maxPossiblePeriods; p++) {
-            let gangValid = true;
-            const currentRooms: Record<string, string> = {};
-            let sharedP2 = -1;
+  const primaryUnit = gangUnits[0];
 
-            for (const u of gangUnits) {
-                const cls = classMap.get(u.classIds[0]);
-                const struct = cls?.structure || data.settings.dayStructure;
-                
-                // RANK 0: Structural Hierarchy (Must be CLASS slot for this specific class)
-                const classLimit = cls?.periodCount ?? globalPeriods;
-                if (p >= classLimit || getPeriodType(struct, p) !== "CLASS") {
-                    gangValid = false; break;
-                }
+  for (let d = 0; d < days; d++) {
+    for (let p = 0; p < maxPossiblePeriods; p++) {
+      let gangValid = true;
+      const currentRooms: Record<string, string> = {};
+      let sharedP2 = -1;
 
-                let p2: number | null = -1;
-                if (u.duration === 2) {
-                    const next = getNextClassPeriod(p, struct, classLimit);
-                    if (next === null) { gangValid = false; break; }
-                    p2 = next;
-                }
-                sharedP2 = p2;
+      for (const u of gangUnits) {
+        const cls = classMap.get(u.classIds[0]);
+        const struct = cls?.structure || data.settings.dayStructure;
 
-                // RANK 1: Evaluation
-                const evalResult = evaluator.evaluate(state, data, { d, p, p2 }, u, teacherMap, subjectMap, classMap, roomMap);
-                if (!evalResult.isLegal) {
-                    gangValid = false; break;
-                }
-                
-                // 3. Room Assignment
-                const rId = determineRoom(d, p, p2, u, state, data, subjectMap, classMap, roomMap);
-                if (!rId) {
-                    gangValid = false; break;
-                }
-                currentRooms[u.id] = rId;
-            }
-
-            if (gangValid) {
-                const score = calculateScore(state, data, d, p, primaryUnit, teacherMap, subjectMap);
-                moves.push({ d, p, p2: sharedP2, score, rooms: currentRooms });
-            }
+        // RANK 0: Structural Hierarchy (Must be CLASS slot for this specific class)
+        const classLimit = cls?.periodCount ?? globalPeriods;
+        if (p >= classLimit || getPeriodType(struct, p) !== "CLASS") {
+          gangValid = false;
+          break;
         }
+
+        let p2: number | null = -1;
+        if (u.duration === 2) {
+          const next = getNextClassPeriod(p, struct, classLimit);
+          if (next === null) {
+            gangValid = false;
+            break;
+          }
+          p2 = next;
+        }
+        sharedP2 = p2;
+
+        // RANK 1: Evaluation
+        const evalResult = evaluator.evaluate(
+          state,
+          data,
+          { d, p, p2 },
+          u,
+          teacherMap,
+          subjectMap,
+          classMap,
+          roomMap,
+        );
+        if (!evalResult.isLegal) {
+          gangValid = false;
+          break;
+        }
+
+        // 3. Room Assignment
+        const rId = determineRoom(d, p, p2, u, state, data, subjectMap, classMap, roomMap);
+        if (!rId) {
+          gangValid = false;
+          break;
+        }
+        currentRooms[u.id] = rId;
+      }
+
+      if (gangValid) {
+        const score = calculateScore(state, data, d, p, primaryUnit, teacherMap, subjectMap);
+        moves.push({ d, p, p2: sharedP2, score, rooms: currentRooms });
+      }
     }
-    return moves;
+  }
+  return moves;
 }
 
 // --- 2. REPAIR PHASE (Min-Conflicts) ---
@@ -179,24 +194,15 @@ export function evaluateGangAtSlot(
 
   if (!possible) return FAILED_SLOT_MOVE;
 
-  if (
-    tabu?.shouldPenalizeTabu(
-      primaryUnit.id,
-      d,
-      p,
-      iteration,
-      totalPenalty,
-      bestKnownCost,
-    )
-  ) {
+  if (tabu?.shouldPenalizeTabu(primaryUnit.id, d, p, iteration, totalPenalty, bestKnownCost)) {
     totalPenalty += PENALTY_TABU_MOVE;
   }
 
   const score = calculateScore(state, data, d, p, primaryUnit, teacherMap, subjectMap);
   const evictions = new Set<string>();
   gang.forEach((gUnit) => {
-    findUnitsInSlot(state, gUnit, d, p, sharedP2, subjectMap, classMap, roomMap).forEach(
-      (v) => evictions.add(v),
+    findUnitsInSlot(state, gUnit, d, p, sharedP2, subjectMap, classMap, roomMap).forEach((v) =>
+      evictions.add(v),
     );
   });
 
@@ -281,7 +287,11 @@ export function findMinConflictMove(
   const maxPossiblePeriods = 15;
   const days = getDaysPerWeek(data.settings);
 
-  let bestMove = { ...FAILED_SLOT_MOVE, evictions: new Set<string>(), rooms: {} as Record<string, string> };
+  let bestMove = {
+    ...FAILED_SLOT_MOVE,
+    evictions: new Set<string>(),
+    rooms: {} as Record<string, string>,
+  };
 
   for (let d = 0; d < days; d++) {
     for (let p = 0; p < maxPossiblePeriods; p++) {
@@ -704,4 +714,9 @@ export function findBestRepairMove(
   return candidates[0];
 }
 
-export { findUnitsInSlot, collectEvictions, countPotentialConflicts, findUnitFromConflict } from "./slot-conflicts";
+export {
+  findUnitsInSlot,
+  collectEvictions,
+  countPotentialConflicts,
+  findUnitFromConflict,
+} from "./slot-conflicts";

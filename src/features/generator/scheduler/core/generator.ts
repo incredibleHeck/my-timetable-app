@@ -9,7 +9,7 @@ import { auditFinalSchedule } from "../validation";
  * Coordinates the full pipeline from data preparation to solving and final auditing.
  */
 export const generateSchedule = (
-  data: AppData
+  data: AppData,
 ): {
   schedule: ScheduleResult;
   conflicts: ReturnType<typeof auditFinalSchedule>;

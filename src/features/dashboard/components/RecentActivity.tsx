@@ -7,24 +7,32 @@ import { formatRelativeTime } from "../../../utils/utils";
 
 export const RecentActivity: React.FC = () => {
   const { activeProfile } = useProfile();
-  
+
   const activities = activeProfile?.data.recentActivity || [];
 
   const getIcon = (type: ActivityType) => {
     switch (type) {
-      case "SCHEDULING": return <Zap size={14} />;
-      case "ACADEMIC": return <BookOpen size={14} />;
-      case "SYSTEM": return <Settings size={14} />;
-      default: return <History size={14} />;
+      case "SCHEDULING":
+        return <Zap size={14} />;
+      case "ACADEMIC":
+        return <BookOpen size={14} />;
+      case "SYSTEM":
+        return <Settings size={14} />;
+      default:
+        return <History size={14} />;
     }
   };
 
   const getColor = (type: ActivityType) => {
     switch (type) {
-      case "SCHEDULING": return "text-amber-500 bg-amber-50";
-      case "ACADEMIC": return "text-blue-500 bg-blue-50";
-      case "SYSTEM": return "text-slate-500 bg-slate-50";
-      default: return "text-slate-500 bg-slate-50";
+      case "SCHEDULING":
+        return "text-amber-500 bg-amber-50";
+      case "ACADEMIC":
+        return "text-blue-500 bg-blue-50";
+      case "SYSTEM":
+        return "text-slate-500 bg-slate-50";
+      default:
+        return "text-slate-500 bg-slate-50";
     }
   };
 
@@ -41,7 +49,9 @@ export const RecentActivity: React.FC = () => {
         {activities.length > 0 ? (
           activities.map((activity) => (
             <div key={activity.id} className="flex gap-4 group">
-              <div className={`mt-1 p-2 rounded-full h-fit transition-transform group-hover:scale-110 ${getColor(activity.type)}`}>
+              <div
+                className={`mt-1 p-2 rounded-full h-fit transition-transform group-hover:scale-110 ${getColor(activity.type)}`}
+              >
                 {getIcon(activity.type)}
               </div>
               <div className="flex-1 border-b border-slate-50 pb-3 group-last:border-none group-last:pb-0">
@@ -57,13 +67,13 @@ export const RecentActivity: React.FC = () => {
         ) : (
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <div className="p-3 bg-slate-50 text-slate-300 rounded-full mb-3">
-                <AlertCircle size={24} />
+              <AlertCircle size={24} />
             </div>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                No recent activity
+              No recent activity
             </p>
             <p className="text-[10px] text-slate-400 mt-1 max-w-[180px]">
-                Your scheduling actions and data changes will appear here.
+              Your scheduling actions and data changes will appear here.
             </p>
           </div>
         )}

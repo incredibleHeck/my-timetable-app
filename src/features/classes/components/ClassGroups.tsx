@@ -10,12 +10,10 @@ interface ClassGroupsProps {
   onUpdate: (newData: AppData) => void;
 }
 
-export const ClassGroups: React.FC<ClassGroupsProps> = ({
-  data,
-  onUpdate,
-}) => {
-  const { handleSaveGroup, handleRemoveGroup, handleSaveBlock, handleRemoveBlock } = useClassActions(data, onUpdate);
-  
+export const ClassGroups: React.FC<ClassGroupsProps> = ({ data, onUpdate }) => {
+  const { handleSaveGroup, handleRemoveGroup, handleSaveBlock, handleRemoveBlock } =
+    useClassActions(data, onUpdate);
+
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
 
@@ -25,9 +23,8 @@ export const ClassGroups: React.FC<ClassGroupsProps> = ({
       <div className="space-y-4 animate-in slide-in-from-right-4">
         <div className="flex justify-between items-center bg-blue-50 p-4 rounded-xl border border-blue-100">
           <div className="text-sm text-blue-800">
-            <span className="font-bold">Horizontal Linking:</span> Schedule{" "}
-            <b>Multiple Classes</b> to have the <b>Same Subject</b> at the{" "}
-            <b>Same Time</b>.
+            <span className="font-bold">Horizontal Linking:</span> Schedule <b>Multiple Classes</b>{" "}
+            to have the <b>Same Subject</b> at the <b>Same Time</b>.
           </div>
           <Button onClick={() => setIsGroupModalOpen(true)} size="sm">
             New Group
@@ -68,9 +65,8 @@ export const ClassGroups: React.FC<ClassGroupsProps> = ({
       <div className="space-y-4 animate-in slide-in-from-right-4">
         <div className="flex justify-between items-center bg-purple-50 p-4 rounded-xl border border-purple-100">
           <div className="text-sm text-purple-800">
-            <span className="font-bold">Vertical Blocking:</span> Schedule{" "}
-            <b>Multiple Subjects</b> for <b>One Class</b> at the{" "}
-            <b>Same Time</b> (Options/Electives).
+            <span className="font-bold">Vertical Blocking:</span> Schedule <b>Multiple Subjects</b>{" "}
+            for <b>One Class</b> at the <b>Same Time</b> (Options/Electives).
           </div>
           <Button onClick={() => setIsBlockModalOpen(true)} size="sm">
             New Block
@@ -105,10 +101,7 @@ export const ClassGroups: React.FC<ClassGroupsProps> = ({
                 {elec.subjectIds.map((sid) => {
                   const subj = data.subjects.find((s) => s.id === sid);
                   return (
-                    <div
-                      key={sid}
-                      className="flex items-center gap-2 text-xs"
-                    >
+                    <div key={sid} className="flex items-center gap-2 text-xs">
                       <div
                         className="w-2 h-2 rounded-full"
                         style={{ backgroundColor: subj?.color }}

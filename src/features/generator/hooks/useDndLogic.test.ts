@@ -4,11 +4,10 @@ import { useDndLogic } from "./useDndLogic";
 import { AppData, ClassGroup, Subject, Teacher, ScheduleSlot } from "../../../types";
 import { DragEndEvent } from "@dnd-kit/core";
 
-// Mock ProfileContext
-vi.mock("../../../contexts/ProfileContext", () => ({
-  useProfile: () => ({
+// Mock HistoryContext
+vi.mock("../../../contexts/HistoryContext", () => ({
+  useHistory: () => ({
     pushToHistory: vi.fn(),
-    addActivity: vi.fn(),
   }),
 }));
 
@@ -35,20 +34,20 @@ const createMockData = (): AppData => ({
     c1: {
       0: {
         // Day 0 - Fill all 5 slots
-        0: { subjectId: "sub1", teacherId: "t1", duration: 1, isFixed: false, roomId: "r1" }, 
-        1: { subjectId: "sub2", teacherId: "t1", duration: 1, isFixed: false, roomId: "r1" }, 
-        2: { subjectId: "sub3", teacherId: "t1", duration: 1, isFixed: false, roomId: "r1" }, 
-        3: { subjectId: "sub3", teacherId: "t1", duration: 1, isFixed: true, roomId: "r1" },  
-        4: { subjectId: "sub4", teacherId: "t1", duration: 1, isFixed: false, roomId: "r1" }, 
+        0: { subjectId: "sub1", teacherId: "t1", duration: 1, isFixed: false, roomId: "r1" },
+        1: { subjectId: "sub2", teacherId: "t1", duration: 1, isFixed: false, roomId: "r1" },
+        2: { subjectId: "sub3", teacherId: "t1", duration: 1, isFixed: false, roomId: "r1" },
+        3: { subjectId: "sub3", teacherId: "t1", duration: 1, isFixed: true, roomId: "r1" },
+        4: { subjectId: "sub4", teacherId: "t1", duration: 1, isFixed: false, roomId: "r1" },
       },
       1: {
         // Day 1
-        0: { subjectId: "sub3", teacherId: "t1", duration: 1, isFixed: false, roomId: "r1" }, 
-        1: { subjectId: "sub3", teacherId: "t1", duration: 1, isFixed: true, roomId: "r1" },  
+        0: { subjectId: "sub3", teacherId: "t1", duration: 1, isFixed: false, roomId: "r1" },
+        1: { subjectId: "sub3", teacherId: "t1", duration: 1, isFixed: true, roomId: "r1" },
         2: { subjectId: "sub1", teacherId: "t1", duration: 1, isFixed: false, roomId: "r1" },
         3: { subjectId: "sub2", teacherId: "t1", duration: 1, isFixed: false, roomId: "r1" },
         4: { subjectId: "sub4", teacherId: "t1", duration: 1, isFixed: false, roomId: "r1" },
-      }
+      },
     },
   },
   conflicts: [],
@@ -58,49 +57,49 @@ const createMockData = (): AppData => ({
 });
 
 const createDragEvent = (
-  source: { d: number, p: number, slot: ScheduleSlot, cId: string },
-  target: { d: number, p: number } | null
+  source: { d: number; p: number; slot: ScheduleSlot; cId: string },
+  target: { d: number; p: number } | null,
 ): DragEndEvent => {
-    return {
-        active: {
-            id: "active",
-            data: {
-                current: {
-                    day: source.d,
-                    period: source.p,
-                    slot: source.slot,
-                    classGroup: { id: source.cId }
-                }
-            },
-            rect: { current: { translated: null } }
+  return {
+    active: {
+      id: "active",
+      data: {
+        current: {
+          day: source.d,
+          period: source.p,
+          slot: source.slot,
+          classGroup: { id: source.cId },
         },
-        over: target ? {
-            id: "over",
-            data: {
-                current: {
-                    day: target.d,
-                    period: target.p
-                }
+      },
+      rect: { current: { translated: null } },
+    },
+    over: target
+      ? {
+          id: "over",
+          data: {
+            current: {
+              day: target.d,
+              period: target.p,
             },
-            rect: { width: 0, height: 0, top: 0, left: 0, right: 0, bottom: 0 },
-            disabled: false,
-        } : null,
-        delta: { x: 0, y: 0 },
-    } as unknown as DragEndEvent;
-}
+          },
+          rect: { width: 0, height: 0, top: 0, left: 0, right: 0, bottom: 0 },
+          disabled: false,
+        }
+      : null,
+    delta: { x: 0, y: 0 },
+  } as unknown as DragEndEvent;
+};
 
 describe("useDndLogic", () => {
   it("should swap Single with Single", () => {
     const data = createMockData();
     const onUpdate = vi.fn();
-    const { result } = renderHook(() =>
-      useDndLogic(data, "c1", "CLASS", onUpdate)
-    );
+    const { result } = renderHook(() => useDndLogic(data, "c1", "CLASS", onUpdate));
 
     const sSlot = data.schedule.c1[0][0]; // Single
     const event = createDragEvent(
-        { d: 0, p: 0, slot: sSlot, cId: "c1" },
-        { d: 0, p: 4 } // Single
+      { d: 0, p: 0, slot: sSlot, cId: "c1" },
+      { d: 0, p: 4 }, // Single
     );
 
     act(() => {
@@ -113,14 +112,12 @@ describe("useDndLogic", () => {
   it("should NOT swap Single with Double (Constraint)", () => {
     const data = createMockData();
     const onUpdate = vi.fn();
-    const { result } = renderHook(() =>
-      useDndLogic(data, "c1", "CLASS", onUpdate)
-    );
+    const { result } = renderHook(() => useDndLogic(data, "c1", "CLASS", onUpdate));
 
     const sSlot = data.schedule.c1[0][0]; // Single
     const event = createDragEvent(
-        { d: 0, p: 0, slot: sSlot, cId: "c1" },
-        { d: 0, p: 2 } // Double Start
+      { d: 0, p: 0, slot: sSlot, cId: "c1" },
+      { d: 0, p: 2 }, // Double Start
     );
 
     act(() => {
@@ -134,14 +131,12 @@ describe("useDndLogic", () => {
   it("should swap Double with Double", () => {
     const data = createMockData();
     const onUpdate = vi.fn();
-    const { result } = renderHook(() =>
-      useDndLogic(data, "c1", "CLASS", onUpdate)
-    );
+    const { result } = renderHook(() => useDndLogic(data, "c1", "CLASS", onUpdate));
 
     const dSlot = data.schedule.c1[0][2]; // Double
     const event = createDragEvent(
-        { d: 0, p: 2, slot: dSlot, cId: "c1" },
-        { d: 1, p: 0 } // Double
+      { d: 0, p: 2, slot: dSlot, cId: "c1" },
+      { d: 1, p: 0 }, // Double
     );
 
     act(() => {
@@ -158,14 +153,12 @@ describe("useDndLogic", () => {
     data.schedule.c1[2][1] = { subjectId: "x", teacherId: "x", duration: 1, isFixed: false };
 
     const onUpdate = vi.fn();
-    const { result } = renderHook(() =>
-      useDndLogic(data, "c1", "CLASS", onUpdate)
-    );
+    const { result } = renderHook(() => useDndLogic(data, "c1", "CLASS", onUpdate));
 
     const dSlot = data.schedule.c1[0][2]; // Double
     const event = createDragEvent(
-        { d: 0, p: 2, slot: dSlot, cId: "c1" },
-        { d: 2, p: 0 } // Empty, but P1 occupied
+      { d: 0, p: 2, slot: dSlot, cId: "c1" },
+      { d: 2, p: 0 }, // Empty, but P1 occupied
     );
 
     act(() => {
@@ -178,14 +171,12 @@ describe("useDndLogic", () => {
   it("should move Double to Empty (if P2 free)", () => {
     const data = createMockData();
     const onUpdate = vi.fn();
-    const { result } = renderHook(() =>
-      useDndLogic(data, "c1", "CLASS", onUpdate)
-    );
+    const { result } = renderHook(() => useDndLogic(data, "c1", "CLASS", onUpdate));
 
     const dSlot = data.schedule.c1[0][2]; // Double
     const event = createDragEvent(
-        { d: 0, p: 2, slot: dSlot, cId: "c1" },
-        { d: 2, p: 0 } // Empty, P1 also Empty
+      { d: 0, p: 2, slot: dSlot, cId: "c1" },
+      { d: 2, p: 0 }, // Empty, P1 also Empty
     );
 
     act(() => {

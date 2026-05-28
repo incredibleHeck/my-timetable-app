@@ -159,10 +159,9 @@ describe("detectCurriculumGaps", () => {
   it("logs diagnostic output when a gap is detected", () => {
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
-    const data = buildData(
-      {},
-      [{ id: "cur1", subjectId: "s1", singles: 2, doubles: 0, periodsPerWeek: 2 }],
-    );
+    const data = buildData({}, [
+      { id: "cur1", subjectId: "s1", singles: 2, doubles: 0, periodsPerWeek: 2 },
+    ]);
 
     const gaps = detectCurriculumGaps(data);
     expect(gaps).toHaveLength(1);
@@ -215,8 +214,8 @@ describe("detectCurriculumGaps", () => {
     const conflicts = auditFinalSchedule(data, { mode: "generated" });
 
     expect(state.classSubjectDuration.c1?.s1).toBe(3);
-    expect(
-      conflicts.filter((c) => c.reason.toLowerCase().includes("curriculum gap")),
-    ).toHaveLength(0);
+    expect(conflicts.filter((c) => c.reason.toLowerCase().includes("curriculum gap"))).toHaveLength(
+      0,
+    );
   });
 });

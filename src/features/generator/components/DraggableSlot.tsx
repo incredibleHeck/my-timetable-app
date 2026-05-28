@@ -17,23 +17,12 @@ interface Props {
 
 // Wrapped in memo for performance (prevents unnecessary re-renders in large grids)
 export const DraggableSlot: React.FC<Props> = memo(
-  ({
-    slot,
-    day,
-    period,
-    subject,
-    teacher,
-    classGroup,
-    mode,
-    disabled,
-    timeRange,
-  }) => {
-    const { attributes, listeners, setNodeRef, transform, isDragging } =
-      useDraggable({
-        id: `slot-${day}-${period}`,
-        data: { slot, day, period, classGroup, teacher }, // Pass all context data
-        disabled: disabled || slot.isFixed,
-      });
+  ({ slot, day, period, subject, teacher, classGroup, mode, disabled, timeRange }) => {
+    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+      id: `slot-${day}-${period}`,
+      data: { slot, day, period, classGroup, teacher }, // Pass all context data
+      disabled: disabled || slot.isFixed,
+    });
 
     const style = transform
       ? {
@@ -105,7 +94,7 @@ export const DraggableSlot: React.FC<Props> = memo(
         )}
       </div>
     );
-  }
+  },
 );
 
 DraggableSlot.displayName = "DraggableSlot";

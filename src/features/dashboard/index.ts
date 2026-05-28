@@ -1,1 +1,1 @@
-export { DashboardView } from './DashboardView';
+export { DashboardView } from "./DashboardView";

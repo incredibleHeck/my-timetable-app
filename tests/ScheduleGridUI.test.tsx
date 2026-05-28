@@ -13,14 +13,20 @@ vi.mock("@dnd-kit/core", () => ({
   TouchSensor: vi.fn(),
   DragOverlay: ({ children }: any) => <div>{children}</div>,
   useDroppable: () => ({ isOver: false, setNodeRef: vi.fn() }),
-  useDraggable: () => ({ attributes: {}, listeners: {}, setNodeRef: vi.fn(), transform: null, isDragging: false }),
+  useDraggable: () => ({
+    attributes: {},
+    listeners: {},
+    setNodeRef: vi.fn(),
+    transform: null,
+    isDragging: false,
+  }),
 }));
 
 vi.mock("../src/contexts/ProfileContext", () => ({
   useProfile: () => ({
     activeProfile: null,
-    getClassSchedule: vi.fn().mockReturnValue([])
-  })
+    getClassSchedule: vi.fn().mockReturnValue([]),
+  }),
 }));
 
 describe("ScheduleGrid UI Labels", () => {
@@ -39,11 +45,9 @@ describe("ScheduleGrid UI Labels", () => {
       defaultLunchDuration: 45,
       timeSlots: [],
       maxConsecutivePeriods: 5,
-      fixedOccasions: [[], [], [], [], []]
+      fixedOccasions: [[], [], [], [], []],
     },
-    classes: [
-      { id: "class-1", name: "Class 1", curriculum: [] }
-    ],
+    classes: [{ id: "class-1", name: "Class 1", curriculum: [] }],
     teachers: [],
     subjects: [],
     schedule: {},
@@ -53,13 +57,13 @@ describe("ScheduleGrid UI Labels", () => {
 
   it("should render period labels with calculated times", () => {
     render(
-      <ScheduleGrid 
+      <ScheduleGrid
         data={mockData as AppData}
         activeId="class-1"
         mode="CLASS"
         onUpdate={() => {}}
         editMode={false}
-      />
+      />,
     );
 
     // P1: 08:00 - 08:40
@@ -84,30 +88,30 @@ describe("ScheduleGrid UI Labels", () => {
       ...mockData,
       classes: [
         { id: "class-1", name: "Class 1", curriculum: [] },
-        { id: "class-2", name: "Class 2", duration: 50, curriculum: [] }
-      ]
+        { id: "class-2", name: "Class 2", duration: 50, curriculum: [] },
+      ],
     };
 
     const { rerender } = render(
-      <ScheduleGrid 
+      <ScheduleGrid
         data={dataWithOverrides as AppData}
         activeId="class-1"
         mode="CLASS"
         onUpdate={() => {}}
         editMode={false}
-      />
+      />,
     );
 
     expect(screen.getByText(/\(08:00 - 08:40\)/)).toBeInTheDocument();
 
     rerender(
-      <ScheduleGrid 
+      <ScheduleGrid
         data={dataWithOverrides as AppData}
         activeId="class-2"
         mode="CLASS"
         onUpdate={() => {}}
         editMode={false}
-      />
+      />,
     );
 
     expect(screen.getByText(/\(08:00 - 08:50\)/)).toBeInTheDocument();

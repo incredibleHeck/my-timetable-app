@@ -273,7 +273,11 @@ export function checkImmutableConstraints(
   }
 
   if (isGlobalSlotBlocked(data.settings.fixedOccasions?.[d]?.[p])) return false;
-  if (unit.duration === 2 && p2 !== -1 && isGlobalSlotBlocked(data.settings.fixedOccasions?.[d]?.[p2])) {
+  if (
+    unit.duration === 2 &&
+    p2 !== -1 &&
+    isGlobalSlotBlocked(data.settings.fixedOccasions?.[d]?.[p2])
+  ) {
     return false;
   }
 

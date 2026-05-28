@@ -55,9 +55,7 @@ export const ExamManualModal: React.FC<Props> = ({
       setExamInvigilatorIds(editingExam.invigilatorIds || []);
       setExamRoomId(editingExam.roomId || "");
       setPaperNumber(editingExam.paperNumber?.toString() || "1");
-      setPaperLabel(
-        editingExam.paperLabel || `Paper ${editingExam.paperNumber || 1}`
-      );
+      setPaperLabel(editingExam.paperLabel || `Paper ${editingExam.paperNumber || 1}`);
       setExamLocked(!!editingExam.locked);
       setExamStatus(editingExam.status || "DRAFT");
 
@@ -69,7 +67,7 @@ export const ExamManualModal: React.FC<Props> = ({
           e.date === editingExam.date &&
           e.id !== editingExam.id &&
           e.paperNumber === 2 &&
-          e.classIds.some((cid) => editingExam.classIds.includes(cid))
+          e.classIds.some((cid) => editingExam.classIds.includes(cid)),
       );
 
       if (potentialPaper2) {
@@ -101,14 +99,11 @@ export const ExamManualModal: React.FC<Props> = ({
     }
   }, [editingExam, isOpen, data.subjects, data.exams, activeId]);
 
-  const validateSessions = (
-    sessions: ExamSession[],
-    excludeIds: string[]
-  ): boolean => {
+  const validateSessions = (sessions: ExamSession[], excludeIds: string[]): boolean => {
     const others = (data.exams || []).filter((e) => !excludeIds.includes(e.id));
     for (const session of sessions) {
       const critical = validateExamMove(session, others, data).filter(
-        (c) => c.severity === "CRITICAL"
+        (c) => c.severity === "CRITICAL",
       );
       if (critical.length > 0) {
         showToast(critical[0].message, "error");
@@ -122,15 +117,13 @@ export const ExamManualModal: React.FC<Props> = ({
 
   const handleClassToggle = (clsId: string) => {
     setExamClassIds((prev) =>
-      prev.includes(clsId)
-        ? prev.filter((id) => id !== clsId)
-        : [...prev, clsId]
+      prev.includes(clsId) ? prev.filter((id) => id !== clsId) : [...prev, clsId],
     );
   };
 
   const handleInvigilatorToggle = (tId: string) => {
     setExamInvigilatorIds((prev) =>
-      prev.includes(tId) ? prev.filter((id) => id !== tId) : [...prev, tId]
+      prev.includes(tId) ? prev.filter((id) => id !== tId) : [...prev, tId],
     );
   };
 
@@ -176,7 +169,7 @@ export const ExamManualModal: React.FC<Props> = ({
             e.subjectId === paper1.subjectId &&
             e.date === paper1.date &&
             e.paperNumber === 2 &&
-            e.classIds.some((cid) => paper1.classIds.includes(cid))
+            e.classIds.some((cid) => paper1.classIds.includes(cid)),
         );
       }
 
@@ -206,15 +199,13 @@ export const ExamManualModal: React.FC<Props> = ({
   // Sorted Lists for UI
   const sortedTeachers = useMemo(
     () => [...data.teachers].sort((a, b) => a.name.localeCompare(b.name)),
-    [data.teachers]
+    [data.teachers],
   );
 
   const sortedClasses = useMemo(
     () =>
-      [...data.classes].sort((a, b) =>
-        a.name.localeCompare(b.name, undefined, { numeric: true })
-      ),
-    [data.classes]
+      [...data.classes].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true })),
+    [data.classes],
   );
 
   return (
@@ -227,9 +218,7 @@ export const ExamManualModal: React.FC<Props> = ({
           <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>
-            {editingExam ? "Save Changes" : "Create Exam"}
-          </Button>
+          <Button onClick={handleSave}>{editingExam ? "Save Changes" : "Create Exam"}</Button>
         </div>
       }
     >
@@ -293,9 +282,7 @@ export const ExamManualModal: React.FC<Props> = ({
           <div className="grid grid-cols-2 gap-4">
             {/* Paper 1 Config */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-400">
-                Paper 1 Start
-              </label>
+              <label className="text-xs font-bold text-slate-400">Paper 1 Start</label>
               <div className="flex items-center gap-2">
                 <Clock size={16} className="text-slate-400" />
                 <input
@@ -310,9 +297,7 @@ export const ExamManualModal: React.FC<Props> = ({
             {/* Paper 2 Config (Conditional) */}
             {hasTwoPapers && (
               <div className="space-y-2 animate-in fade-in">
-                <label className="text-xs font-bold text-slate-400">
-                  Paper 2 Start
-                </label>
+                <label className="text-xs font-bold text-slate-400">Paper 2 Start</label>
                 <div className="flex items-center gap-2">
                   <Clock size={16} className="text-amber-500" />
                   <input
@@ -353,9 +338,7 @@ export const ExamManualModal: React.FC<Props> = ({
                 />
                 <div
                   className={`w-2 h-2 rounded-full ${
-                    examClassIds.includes(cls.id)
-                      ? "bg-amber-500"
-                      : "bg-slate-300"
+                    examClassIds.includes(cls.id) ? "bg-amber-500" : "bg-slate-300"
                   }`}
                 />
                 {cls.name}
@@ -363,9 +346,7 @@ export const ExamManualModal: React.FC<Props> = ({
             ))}
           </div>
           {examClassIds.length === 0 && (
-            <p className="text-[10px] text-red-500 mt-1 font-bold">
-              * Required
-            </p>
+            <p className="text-[10px] text-red-500 mt-1 font-bold">* Required</p>
           )}
         </div>
 

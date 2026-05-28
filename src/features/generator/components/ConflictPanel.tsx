@@ -160,9 +160,7 @@ function ConflictCard({
             {isCollision ? getCollisionLabel(conflict) : "Curriculum shortfall"}
           </p>
         </div>
-        {unitBadge && (
-          <Badge tone={isCollision ? "red" : "amber"}>{unitBadge}</Badge>
-        )}
+        {unitBadge && <Badge tone={isCollision ? "red" : "amber"}>{unitBadge}</Badge>}
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -194,16 +192,12 @@ function ConflictCard({
 
       {isSelected && (
         <div
-          className={`mt-3 pt-3 border-t ${
-            isCollision ? "border-red-100" : "border-amber-100"
-          }`}
+          className={`mt-3 pt-3 border-t ${isCollision ? "border-red-100" : "border-amber-100"}`}
         >
           <div className="flex items-start gap-2">
             <Lightbulb
               size={14}
-              className={`shrink-0 mt-0.5 ${
-                isCollision ? "text-red-500" : "text-amber-500"
-              }`}
+              className={`shrink-0 mt-0.5 ${isCollision ? "text-red-500" : "text-amber-500"}`}
             />
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-1">
@@ -254,20 +248,12 @@ function ResolutionSection({
 
   return (
     <section className="flex flex-col border border-slate-200 bg-white rounded-xl shadow-lg overflow-hidden">
-      <header
-        className={`p-3 border-b flex justify-between items-center ${headerBg}`}
-      >
-        <h3
-          className={`font-bold flex items-center gap-2 text-sm ${headerText}`}
-        >
+      <header className={`p-3 border-b flex justify-between items-center ${headerBg}`}>
+        <h3 className={`font-bold flex items-center gap-2 text-sm ${headerText}`}>
           {icon}
           {title}
         </h3>
-        <span
-          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${badgeBg}`}
-        >
-          {count}
-        </span>
+        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${badgeBg}`}>{count}</span>
       </header>
       <div className="overflow-y-auto p-3 space-y-2 custom-scrollbar max-h-[280px]">
         {items.length === 0 ? (
@@ -278,9 +264,7 @@ function ResolutionSection({
               key={conflictKey(c)}
               conflict={c}
               variant={variant}
-              isSelected={
-                !!selectedConflict && conflictsMatch(c, selectedConflict)
-              }
+              isSelected={!!selectedConflict && conflictsMatch(c, selectedConflict)}
               onSelect={onConflictSelect}
             />
           ))
@@ -297,17 +281,11 @@ function ValidTimetableEmptyState() {
         <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center">
           <CheckCircle2 size={32} className="text-emerald-600" />
         </div>
-        <Sparkles
-          size={18}
-          className="absolute -top-1 -right-1 text-amber-400"
-        />
+        <Sparkles size={18} className="absolute -top-1 -right-1 text-amber-400" />
       </div>
-      <h3 className="text-lg font-bold text-emerald-900 mb-2">
-        Timetable Valid
-      </h3>
+      <h3 className="text-lg font-bold text-emerald-900 mb-2">Timetable Valid</h3>
       <p className="text-sm text-emerald-700/90 leading-relaxed max-w-[260px]">
-        No hard collisions or curriculum gaps detected. Your final timetable is
-        100% schedulable.
+        No hard collisions or curriculum gaps detected. Your final timetable is 100% schedulable.
       </p>
     </div>
   );
@@ -361,8 +339,7 @@ export const ConflictPanel: React.FC<Props> = ({
           Resolution Center
         </h2>
         <p className="text-[11px] text-slate-500 mt-0.5">
-          {blockingCount} issue{blockingCount === 1 ? "" : "s"} in final
-          timetable
+          {blockingCount} issue{blockingCount === 1 ? "" : "s"} in final timetable
         </p>
       </div>
 
@@ -407,10 +384,4 @@ export const ConflictPanel: React.FC<Props> = ({
   );
 };
 
-export {
-  conflictKey,
-  conflictsMatch,
-  isCurriculumGap,
-  isHardCollision,
-  getResolutionHint,
-};
+export { conflictKey, conflictsMatch, isCurriculumGap, isHardCollision, getResolutionHint };

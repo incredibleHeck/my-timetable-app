@@ -15,9 +15,9 @@ describe("SidebarSection", () => {
       <>
         <SidebarSection label="Section 1" isFirst />
         <SidebarSection label="Section 2" />
-      </>
+      </>,
     );
-    
+
     const sections = container.querySelectorAll("div");
     expect(sections[0].className).not.toContain("mt-");
     expect(sections[1].className).toContain("mt-");

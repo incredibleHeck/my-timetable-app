@@ -6,9 +6,7 @@ import { ConfigCommitFn } from "../hooks/useConfigCommit";
 interface ExamDefaultsSectionProps {
   data: AppData;
   commit: ConfigCommitFn;
-  updateExamGrid: (
-    patch: Partial<NonNullable<AppData["settings"]["examGrid"]>>,
-  ) => AppData;
+  updateExamGrid: (patch: Partial<NonNullable<AppData["settings"]["examGrid"]>>) => AppData;
 }
 
 export const ExamDefaultsSection: React.FC<ExamDefaultsSectionProps> = ({

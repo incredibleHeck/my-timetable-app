@@ -1,22 +1,6 @@
 import React from "react";
-import {
-  Calendar,
-  Clock,
-  Users,
-  Trash2,
-  Edit2,
-  Lock,
-  FileText,
-  AlertTriangle,
-} from "lucide-react";
-import {
-  ExamSession,
-  Subject,
-  Teacher,
-  ClassGroup,
-  Room,
-  AppData,
-} from "../../../types";
+import { Calendar, Clock, Users, Trash2, Edit2, Lock, FileText, AlertTriangle } from "lucide-react";
+import { ExamSession, Subject, Teacher, ClassGroup, Room, AppData } from "../../../types";
 import { Card } from "../../../components/ui";
 import { validateExamMove, ExamConflict } from "../logic/examValidation";
 
@@ -66,8 +50,8 @@ export const ExamCard: React.FC<Props> = ({
         hasCritical
           ? "border-l-red-500 bg-red-50/10"
           : hasWarning
-          ? "border-l-amber-500 bg-amber-50/10"
-          : "border-l-transparent"
+            ? "border-l-amber-500 bg-amber-50/10"
+            : "border-l-transparent"
       }`}
     >
       {/* Subject Color Strip (if no critical conflict) */}
@@ -110,11 +94,7 @@ export const ExamCard: React.FC<Props> = ({
                   ? "bg-amber-50 text-amber-600 hover:bg-amber-100"
                   : "hover:bg-slate-100 text-slate-400 hover:text-slate-600"
               }`}
-              title={
-                isLocked
-                  ? "Unlock invigilator assignments"
-                  : "Lock invigilator assignments"
-              }
+              title={isLocked ? "Unlock invigilator assignments" : "Lock invigilator assignments"}
             >
               <Lock size={14} />
             </button>
@@ -141,17 +121,14 @@ export const ExamCard: React.FC<Props> = ({
         {/* Date */}
         <div className="flex items-center gap-2 text-slate-600">
           <Calendar size={14} className="text-slate-400" />
-          <span className="font-medium">
-            {new Date(exam.date).toLocaleDateString()}
-          </span>
+          <span className="font-medium">{new Date(exam.date).toLocaleDateString()}</span>
         </div>
 
         {/* Time & Duration */}
         <div className="flex items-center gap-2 text-slate-600">
           <Clock size={14} className="text-slate-400" />
           <span className="font-medium">
-            {exam.startTime}{" "}
-            <span className="text-slate-400">({exam.duration}m)</span>
+            {exam.startTime} <span className="text-slate-400">({exam.duration}m)</span>
           </span>
         </div>
 
@@ -159,17 +136,11 @@ export const ExamCard: React.FC<Props> = ({
         <div className="flex items-start gap-2 col-span-2">
           <Users
             size={14}
-            className={
-              invigilatorNames
-                ? "text-slate-400 mt-0.5"
-                : "text-amber-400 mt-0.5"
-            }
+            className={invigilatorNames ? "text-slate-400 mt-0.5" : "text-amber-400 mt-0.5"}
           />
           <span
             className={`text-[11px] leading-tight ${
-              !invigilatorNames
-                ? "text-amber-600 italic"
-                : "text-slate-600 font-medium"
+              !invigilatorNames ? "text-amber-600 italic" : "text-slate-600 font-medium"
             }`}
           >
             {invigilatorNames || "Unassigned Invigilators"}
@@ -180,10 +151,7 @@ export const ExamCard: React.FC<Props> = ({
         {classNames && (
           <div className="col-span-2 mt-1 pt-2 border-t border-slate-100 flex items-start gap-2">
             <FileText size={14} className="text-slate-300 mt-0.5 shrink-0" />
-            <span
-              className="text-slate-400 leading-tight line-clamp-1"
-              title={classNames}
-            >
+            <span className="text-slate-400 leading-tight line-clamp-1" title={classNames}>
               {classNames}
             </span>
           </div>

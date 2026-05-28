@@ -1,9 +1,6 @@
 import { ClassGroup } from "../../../../types";
 
-export function getSubjectWeeklyPeriods(
-  cls: ClassGroup | undefined,
-  subjectId: string,
-): number {
+export function getSubjectWeeklyPeriods(cls: ClassGroup | undefined, subjectId: string): number {
   if (!cls) return 0;
   const entry = cls.curriculum.find((c) => c.subjectId === subjectId);
   if (!entry) return 0;
@@ -24,8 +21,5 @@ export function getMaxSubjectPeriodsPerDayForClass(
   subjectId: string,
   daysPerWeek: number,
 ): number {
-  return getMaxSubjectPeriodsPerDaySpread(
-    getSubjectWeeklyPeriods(cls, subjectId),
-    daysPerWeek,
-  );
+  return getMaxSubjectPeriodsPerDaySpread(getSubjectWeeklyPeriods(cls, subjectId), daysPerWeek);
 }

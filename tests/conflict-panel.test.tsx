@@ -15,8 +15,7 @@ describe("ConflictPanel", () => {
     day: 0,
     period: 0,
     duration: 1,
-    reason:
-      "Double Booking: Teacher John Doe is assigned to multiple classes (c1, c2)",
+    reason: "Double Booking: Teacher John Doe is assigned to multiple classes (c1, c2)",
     severity: "HIGH",
     kind: "blocking",
   };
@@ -31,16 +30,13 @@ describe("ConflictPanel", () => {
     day: 0,
     period: 0,
     missingPeriods: 2,
-    reason:
-      "Curriculum Gap: 2 period(s) of Science not scheduled (3/5)",
+    reason: "Curriculum Gap: 2 period(s) of Science not scheduled (3/5)",
     severity: "HIGH",
     kind: "blocking",
   };
 
   it("renders two resolution buckets with structured cards", () => {
-    render(
-      <ConflictPanel conflicts={[hardCollision, unplacedLesson]} />,
-    );
+    render(<ConflictPanel conflicts={[hardCollision, unplacedLesson]} />);
 
     expect(screen.getByText("Hard Collisions")).toBeInTheDocument();
     expect(screen.getByText("Unplaced Lessons")).toBeInTheDocument();
@@ -56,12 +52,8 @@ describe("ConflictPanel", () => {
   it("does not render raw reason strings on cards", () => {
     render(<ConflictPanel conflicts={[hardCollision, unplacedLesson]} />);
 
-    expect(
-      screen.queryByText(hardCollision.reason),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByText(unplacedLesson.reason),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(hardCollision.reason)).not.toBeInTheDocument();
+    expect(screen.queryByText(unplacedLesson.reason)).not.toBeInTheDocument();
     expect(screen.getByText("Teacher overlap")).toBeInTheDocument();
     expect(screen.getByText("Curriculum shortfall")).toBeInTheDocument();
   });
@@ -76,19 +68,12 @@ describe("ConflictPanel", () => {
     render(<ConflictPanel conflicts={[]} />);
 
     expect(screen.getByText("Timetable Valid")).toBeInTheDocument();
-    expect(
-      screen.getByText(/100% schedulable/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/100% schedulable/i)).toBeInTheDocument();
   });
 
   it("expands selected card with fix guidance and calls onConflictSelect", () => {
     const onSelect = vi.fn();
-    render(
-      <ConflictPanel
-        conflicts={[hardCollision]}
-        onConflictSelect={onSelect}
-      />,
-    );
+    render(<ConflictPanel conflicts={[hardCollision]} onConflictSelect={onSelect} />);
 
     fireEvent.click(screen.getByText("Math"));
     expect(onSelect).toHaveBeenCalledWith(hardCollision);
@@ -102,22 +87,13 @@ describe("ConflictPanel", () => {
     );
 
     expect(screen.getByText("How to fix")).toBeInTheDocument();
-    expect(
-      screen.getByText(/Drag one of the conflicting lessons/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Drag one of the conflicting lessons/i)).toBeInTheDocument();
   });
 
   it("shows curriculum fix guidance for unplaced lessons when selected", () => {
-    render(
-      <ConflictPanel
-        conflicts={[unplacedLesson]}
-        selectedConflict={unplacedLesson}
-      />,
-    );
+    render(<ConflictPanel conflicts={[unplacedLesson]} selectedConflict={unplacedLesson} />);
 
     expect(screen.getByText("How to fix")).toBeInTheDocument();
-    expect(
-      screen.getByText(/Assign 2 more periods to Class 2B/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Assign 2 more periods to Class 2B/i)).toBeInTheDocument();
   });
 });

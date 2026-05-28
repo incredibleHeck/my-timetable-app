@@ -14,12 +14,12 @@ export interface ExamConflict {
 export function validateExamMove(
   exam: ExamSession,
   allExams: ExamSession[],
-  data: AppData
+  data: AppData,
 ): ExamConflict[] {
   const conflicts: ExamConflict[] = [];
 
   const overlappingExams = allExams.filter(
-    (other) => other.id !== exam.id && examsOverlap(exam, other)
+    (other) => other.id !== exam.id && examsOverlap(exam, other),
   );
 
   // STUDENT: shared class with overlapping time
@@ -41,9 +41,7 @@ export function validateExamMove(
   if (exam.roomId) {
     const room = data.rooms.find((r) => r.id === exam.roomId);
 
-    const roomClash = overlappingExams.find(
-      (other) => other.roomId === exam.roomId
-    );
+    const roomClash = overlappingExams.find((other) => other.roomId === exam.roomId);
     if (roomClash) {
       conflicts.push({
         type: "ROOM",
@@ -73,9 +71,7 @@ export function validateExamMove(
   // STAFF CONFLICTS
   if (exam.invigilatorIds && exam.invigilatorIds.length > 0) {
     const staffClash = overlappingExams.find((other) =>
-      (other.invigilatorIds || []).some((id) =>
-        exam.invigilatorIds?.includes(id)
-      )
+      (other.invigilatorIds || []).some((id) => exam.invigilatorIds?.includes(id)),
     );
 
     if (staffClash) {
@@ -91,7 +87,6 @@ export function validateExamMove(
         affectedIds: [staffClash.id],
       });
     }
-
   }
 
   return conflicts;

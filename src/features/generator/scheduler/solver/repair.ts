@@ -99,14 +99,7 @@ export function runMinConflictsRepair(
     controller.recordProgress(countUnplacedGangs(repairQueue, controller));
 
     if (controller.shouldDiversify()) {
-      const shaken = diversifyRepairState(
-        state,
-        data,
-        gangMap,
-        unitMap,
-        repairQueue,
-        repairSet,
-      );
+      const shaken = diversifyRepairState(state, data, gangMap, unitMap, repairQueue, repairSet);
       if (shaken > 0) {
         controller.resetStagnation();
         controller.recordProgress(countUnplacedGangs(repairQueue, controller));

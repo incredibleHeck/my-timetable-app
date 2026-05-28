@@ -12,7 +12,7 @@ import { detectCurriculumGaps } from "./final-conflicts";
 
 export const runConflictAudit = (
   data: AppData,
-  state: SchedulerState
+  state: SchedulerState,
 ): {
   conflicts: Conflict[];
   curriculumGaps: ReturnType<typeof detectCurriculumGaps>;

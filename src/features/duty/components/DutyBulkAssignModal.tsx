@@ -13,12 +13,7 @@ interface Props {
   onSave: (assignments: DutyAssignment[]) => void;
 }
 
-export const DutyBulkAssignModal: React.FC<Props> = ({
-  isOpen,
-  onClose,
-  data,
-  onSave,
-}) => {
+export const DutyBulkAssignModal: React.FC<Props> = ({ isOpen, onClose, data, onSave }) => {
   const { showToast } = useToast();
   const [selectedLocationId, setSelectedLocationId] = useState(data.dutyLocations?.[0]?.id || "");
   const [startDay, setStartDay] = useState(0);
@@ -38,18 +33,20 @@ export const DutyBulkAssignModal: React.FC<Props> = ({
   }, [data.teachers]);
 
   const sortedClasses = useMemo(() => {
-    return [...data.classes].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+    return [...data.classes].sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { numeric: true }),
+    );
   }, [data.classes]);
 
   const handlePeriodToggle = (idx: number) => {
-    setSelectedPeriods(prev => 
-      prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]
+    setSelectedPeriods((prev) =>
+      prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx],
     );
   };
 
   const handleTeacherToggle = (id: string) => {
-    setSelectedTeacherIds(prev => 
-      prev.includes(id) ? prev.filter(tid => tid !== id) : [...prev, id]
+    setSelectedTeacherIds((prev) =>
+      prev.includes(id) ? prev.filter((tid) => tid !== id) : [...prev, id],
     );
   };
 
@@ -78,7 +75,7 @@ export const DutyBulkAssignModal: React.FC<Props> = ({
             teacherId: tId,
             classId: selectedClassId || undefined,
             day: d,
-            period: p
+            period: p,
           });
         }
       }
@@ -95,8 +92,12 @@ export const DutyBulkAssignModal: React.FC<Props> = ({
       title="Bulk Duty Assignment"
       footer={
         <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleApply} icon={<Plus size={16} />}>Assign Range</Button>
+          <Button variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleApply} icon={<Plus size={16} />}>
+            Assign Range
+          </Button>
         </div>
       }
     >
@@ -107,13 +108,16 @@ export const DutyBulkAssignModal: React.FC<Props> = ({
             label="Duty Location"
             value={selectedLocationId}
             onChange={(e) => setSelectedLocationId(e.target.value)}
-            options={data.dutyLocations.map(l => ({ value: l.id, label: l.name }))}
+            options={data.dutyLocations.map((l) => ({ value: l.id, label: l.name }))}
           />
           <Select
             label="Associate with Class (Optional)"
             value={selectedClassId}
             onChange={(e) => setSelectedClassId(e.target.value)}
-            options={[{ value: "", label: "General Duty" }, ...sortedClasses.map(c => ({ value: c.id, label: c.name }))]}
+            options={[
+              { value: "", label: "General Duty" },
+              ...sortedClasses.map((c) => ({ value: c.id, label: c.name })),
+            ]}
           />
         </div>
 
@@ -186,7 +190,9 @@ export const DutyBulkAssignModal: React.FC<Props> = ({
                   checked={selectedTeacherIds.includes(t.id)}
                   onChange={() => handleTeacherToggle(t.id)}
                 />
-                <div className={`w-1.5 h-1.5 rounded-full ${selectedTeacherIds.includes(t.id) ? "bg-amber-500" : "bg-slate-300"}`} />
+                <div
+                  className={`w-1.5 h-1.5 rounded-full ${selectedTeacherIds.includes(t.id) ? "bg-amber-500" : "bg-slate-300"}`}
+                />
                 <span className="truncate">{t.name}</span>
               </label>
             ))}

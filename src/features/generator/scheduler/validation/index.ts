@@ -11,17 +11,14 @@ import {
 import { ValidationContext, ValidationResult } from "./types";
 import { SchedulerState } from "../core/types";
 import { getNextClassPeriod, getPrevClassPeriod } from "../utils/utils";
-import {
-  checkGlobalAndClassBlocks,
-  checkResourceAndAvailability,
-} from "./basic-rules";
+import { checkGlobalAndClassBlocks, checkResourceAndAvailability } from "./basic-rules";
 import { checkOverlaps } from "./overlap-checks";
-import { 
-  checkTeacherLoad, 
-  checkSubjectLimit, 
+import {
+  checkTeacherLoad,
+  checkSubjectLimit,
   checkGapDetection,
   checkTeacherContinuity,
-  checkSubjectContinuity
+  checkSubjectContinuity,
 } from "./load-checks";
 
 /**
@@ -41,15 +38,15 @@ export const checkSlotValidity = (
   roomId?: string,
   duration: number = 1,
   ignoreTargetSlot?: { day: number; period: number; duration: number },
-  isAuto: boolean = false
+  isAuto: boolean = false,
 ): ValidationResult => {
   const { settings, classes, rooms } = data;
 
   // --- RANK 0 & 1.1: CONTEXT SETUP ---
   const cls = classes.find((c) => c.id === classId);
   const structure = cls?.structure || settings.dayStructure;
-  
-  // PRIORITIZE Class Structure: If a class says it only has 12 periods, 
+
+  // PRIORITIZE Class Structure: If a class says it only has 12 periods,
   // the 13th period is functionally non-existent for them.
   const maxPeriods = cls?.periodCount ?? settings.periodsPerDay;
 
@@ -59,7 +56,7 @@ export const checkSlotValidity = (
 
   const populateIgnored = (setting: { day: number; period: number; duration?: number }) => {
     let startP = setting.period;
-    let dur = setting.duration ?? duration;
+    const dur = setting.duration ?? duration;
     const d = setting.day;
 
     // If we are looking at the 'tail' of a double, move to the 'head'
@@ -68,10 +65,7 @@ export const checkSlotValidity = (
       const prev = getPrevClassPeriod(startP, structure);
       if (prev !== null) {
         const prevEntry = scheduleSource[classId]?.[d]?.[prev];
-        const sameUnit =
-          prevEntry?.unitId &&
-          entry.unitId &&
-          prevEntry.unitId === entry.unitId;
+        const sameUnit = prevEntry?.unitId && entry.unitId && prevEntry.unitId === entry.unitId;
         const sameLesson =
           prevEntry &&
           !prevEntry.isFixed &&
@@ -83,8 +77,9 @@ export const checkSlotValidity = (
       }
     }
 
-    let consumed = 0, offset = 0;
-    while (consumed < dur && (startP + offset) < maxPeriods) {
+    let consumed = 0,
+      offset = 0;
+    while (consumed < dur && startP + offset < maxPeriods) {
       if (getType(structure, startP + offset) === "CLASS") {
         ignoredSlots.add(`${d}-${startP + offset}`);
         consumed++;
@@ -96,10 +91,8 @@ export const checkSlotValidity = (
   if (ignoreSlot) populateIgnored(ignoreSlot);
   if (ignoreTargetSlot) populateIgnored(ignoreTargetSlot);
 
-  const hasRealTeacher =
-    !!teacherId && data.teachers.some((t) => t.id === teacherId);
-  const hasRealSubject =
-    !!subjectId && data.subjects.some((s) => s.id === subjectId);
+  const hasRealTeacher = !!teacherId && data.teachers.some((t) => t.id === teacherId);
+  const hasRealSubject = !!subjectId && data.subjects.some((s) => s.id === subjectId);
 
   // --- 3. CONTEXT INITIALIZATION ---
   const ctx: ValidationContext = {
@@ -125,12 +118,15 @@ export const checkSlotValidity = (
 
   while (periodsConsumed < duration) {
     const p = targetPeriod + currentOffset;
-    
+
     // Boundary check
     if (p >= maxPeriods) {
-      return { 
-        valid: false, message: "Exceeds daily period limit", 
-        severity: "HIGH", penaltyPoints: 2000, conflictCount: 1 
+      return {
+        valid: false,
+        message: "Exceeds daily period limit",
+        severity: "HIGH",
+        penaltyPoints: 2000,
+        conflictCount: 1,
       };
     }
 
@@ -139,16 +135,19 @@ export const checkSlotValidity = (
     if (getType(structure, p) !== "CLASS") {
       // If the lesson STARTS on a break, it's invalid.
       if (periodsConsumed === 0) {
-        return { 
-          valid: false, message: "Non-instructional slot (Break/Lunch/Hidden)", 
-          severity: "HIGH", penaltyPoints: 100000, conflictCount: 1 
+        return {
+          valid: false,
+          message: "Non-instructional slot (Break/Lunch/Hidden)",
+          severity: "HIGH",
+          penaltyPoints: 100000,
+          conflictCount: 1,
         };
       }
       // Otherwise, we skip this slot and look for the next class slot
       currentOffset++;
       continue;
     }
-    
+
     proposedSlots.add(p);
 
     // A. Global & Class Blocks (Worship, Assembly, off-site sessions)
@@ -160,7 +159,12 @@ export const checkSlotValidity = (
       const resourceError = checkResourceAndAvailability(ctx, p, state);
       if (resourceError) {
         if (resourceError.message && resourceError.message.includes("Teacher Busy")) {
-          return { ...resourceError, message: "Teacher is busy", penaltyPoints: 5000, conflictCount: 1 };
+          return {
+            ...resourceError,
+            message: "Teacher is busy",
+            penaltyPoints: 5000,
+            conflictCount: 1,
+          };
         }
         return { ...resourceError, penaltyPoints: 5000, conflictCount: 1 };
       }
@@ -173,9 +177,12 @@ export const checkSlotValidity = (
     if (roomId) {
       const room = rooms.find((r) => r.id === roomId);
       if (room && cls && (cls.studentCount || 0) > room.capacity) {
-        return { 
-          valid: false, message: `Room capacity exceeded (${cls.studentCount}/${room.capacity})`, 
-          severity: "MEDIUM", penaltyPoints: 2000, conflictCount: 1 
+        return {
+          valid: false,
+          message: `Room capacity exceeded (${cls.studentCount}/${room.capacity})`,
+          severity: "MEDIUM",
+          penaltyPoints: 2000,
+          conflictCount: 1,
         };
       }
     }
@@ -210,11 +217,15 @@ export const checkSlotValidity = (
   }
 
   // --- 6. PATTERN & CURRICULUM CHECKS (SOFT/MEDIUM CONSTRAINTS) ---
-  
+
   // RANK 1.3: Teacher Load (Daily Limits & Consecutive Max)
   const loadError = checkTeacherLoad(ctx, proposedSlots, ignoredSlots, state);
   if (loadError) {
-    return { ...loadError, penaltyPoints: loadError.penaltyPoints ?? 800, conflictCount: loadError.conflictCount ?? 0 };
+    return {
+      ...loadError,
+      penaltyPoints: loadError.penaltyPoints ?? 800,
+      conflictCount: loadError.conflictCount ?? 0,
+    };
   }
 
   // RANK 1.5: Class Gaps (The Sandwich Rule)
@@ -232,11 +243,16 @@ export const checkSlotValidity = (
   }
 
   // --- 6. JOINT CLASS INTEGRITY ---
-  const isJoint = data.jointClasses?.some(jc => jc.subjectId === subjectId && jc.classIds.includes(classId));
+  const isJoint = data.jointClasses?.some(
+    (jc) => jc.subjectId === subjectId && jc.classIds.includes(classId),
+  );
   if (isJoint && !isAuto) {
-    return { 
-      valid: false, message: "Joint classes must be moved via the Generator", 
-      severity: "HIGH", penaltyPoints: 1000, conflictCount: 1 
+    return {
+      valid: false,
+      message: "Joint classes must be moved via the Generator",
+      severity: "HIGH",
+      penaltyPoints: 1000,
+      conflictCount: 1,
     };
   }
 
@@ -286,17 +302,15 @@ export const validateFullSchedule = (data: AppData, state: SchedulerState): Conf
         let duration = 1;
         const nextP = getNextClassPeriod(period, structure, classLimit);
         if (nextP !== null) {
-            const nextSlot = daySchedule[nextP];
-            if (
-              nextSlot &&
-              nextSlot.isFixed &&
-              nextSlot.subjectId === slot.subjectId &&
-              (!nextSlot.unitId ||
-                !slot.unitId ||
-                nextSlot.unitId === slot.unitId)
-            ) {
-                duration = 2;
-            }
+          const nextSlot = daySchedule[nextP];
+          if (
+            nextSlot &&
+            nextSlot.isFixed &&
+            nextSlot.subjectId === slot.subjectId &&
+            (!nextSlot.unitId || !slot.unitId || nextSlot.unitId === slot.unitId)
+          ) {
+            duration = 2;
+          }
         }
 
         // Shared/specialist rooms only — not implicit homerooms
@@ -304,8 +318,18 @@ export const validateFullSchedule = (data: AppData, state: SchedulerState): Conf
         const effectiveRoomId = slot.roomId || subject?.requiredRoomId;
 
         const result = checkSlotValidity(
-          data, day, period, slot.teacherId, classId, slot.subjectId,
-          state, { day, period, duration }, effectiveRoomId, duration, undefined, false
+          data,
+          day,
+          period,
+          slot.teacherId,
+          classId,
+          slot.subjectId,
+          state,
+          { day, period, duration },
+          effectiveRoomId ?? undefined,
+          duration,
+          undefined,
+          false,
         );
 
         if (!result.valid) {
@@ -313,11 +337,7 @@ export const validateFullSchedule = (data: AppData, state: SchedulerState): Conf
             "Non-instructional slot (Break/Lunch/Hidden)",
             "Invalid Period Type",
           ];
-          if (
-            auditSkipMessages.some((m) =>
-              (result.message || "").includes(m),
-            )
-          ) {
+          if (auditSkipMessages.some((m) => (result.message || "").includes(m))) {
             continue;
           }
 
@@ -329,7 +349,7 @@ export const validateFullSchedule = (data: AppData, state: SchedulerState): Conf
             subjectName: subject?.name || "Unknown",
             teacherId: slot.teacherId,
             teacherName: teacher?.name || "Unknown",
-            roomId: effectiveRoomId,
+            roomId: effectiveRoomId ?? undefined,
             duration,
             day,
             period,
@@ -390,13 +410,9 @@ export function auditFinalSchedule(
 }
 
 /** True when the committed grid has no generated-mode audit conflicts. */
-export function isPerfectGeneratedSchedule(
-  data: AppData,
-  schedule: AppData["schedule"],
-): boolean {
+export function isPerfectGeneratedSchedule(data: AppData, schedule: AppData["schedule"]): boolean {
   return (
-    auditFinalSchedule({ ...data, schedule, conflicts: [] }, { mode: "generated" })
-      .length === 0
+    auditFinalSchedule({ ...data, schedule, conflicts: [] }, { mode: "generated" }).length === 0
   );
 }
 

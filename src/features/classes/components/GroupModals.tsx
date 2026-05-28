@@ -78,8 +78,7 @@ export const ClassGroupModal: React.FC<JointClassModalProps> = ({
                 type="checkbox"
                 checked={classIds.includes(c.id)}
                 onChange={() => {
-                  if (classIds.includes(c.id))
-                    setClassIds(classIds.filter((x) => x !== c.id));
+                  if (classIds.includes(c.id)) setClassIds(classIds.filter((x) => x !== c.id));
                   else setClassIds([...classIds, c.id]);
                 }}
               />
@@ -137,10 +136,8 @@ export const ElectiveBlockModal: React.FC<ElectiveBlockModalProps> = ({
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g. Arts Options"
         />
-        
-        <label className="block text-xs font-bold text-slate-500 uppercase">
-          Select Classes
-        </label>
+
+        <label className="block text-xs font-bold text-slate-500 uppercase">Select Classes</label>
         <div className="border p-2 rounded max-h-40 overflow-y-auto grid grid-cols-2 gap-2">
           {classes.map((c) => (
             <label key={c.id} className="flex items-center gap-2">
@@ -148,8 +145,7 @@ export const ElectiveBlockModal: React.FC<ElectiveBlockModalProps> = ({
                 type="checkbox"
                 checked={classIds.includes(c.id)}
                 onChange={() => {
-                  if (classIds.includes(c.id))
-                    setClassIds(classIds.filter((x) => x !== c.id));
+                  if (classIds.includes(c.id)) setClassIds(classIds.filter((x) => x !== c.id));
                   else setClassIds([...classIds, c.id]);
                 }}
               />

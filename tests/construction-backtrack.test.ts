@@ -1,10 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { DEFAULT_DATA } from "../src/utils/constants";
 import { AllocationUnit } from "../src/features/generator/scheduler/core/types";
-import {
-  initializeState,
-  applyGangToState,
-} from "../src/features/generator/scheduler/core/state";
+import { initializeState, applyGangToState } from "../src/features/generator/scheduler/core/state";
 import {
   tryConstructionBacktrack,
   runConstructionQueue,
@@ -131,14 +128,7 @@ describe("Construction backtracking (PR4)", () => {
     ];
 
     const queue: AllocationUnit[] = [];
-    const result = tryConstructionBacktrack(
-      state,
-      queue,
-      incoming,
-      stack,
-      maps,
-      0,
-    );
+    const result = tryConstructionBacktrack(state, queue, incoming, stack, maps, 0);
 
     expect(result.requeued).toBe(true);
     expect(result.backtrackAttempts).toBe(1);
@@ -175,18 +165,16 @@ describe("Construction backtracking (PR4)", () => {
     };
 
     const stack: PlacementRecord[] = [
-      makeRecord(critical, [critical], { d: 0, p: 0, p2: -1, rooms: { "u-critical": "r1" } }, false),
+      makeRecord(
+        critical,
+        [critical],
+        { d: 0, p: 0, p2: -1, rooms: { "u-critical": "r1" } },
+        false,
+      ),
     ];
 
     const queue: AllocationUnit[] = [];
-    const result = tryConstructionBacktrack(
-      state,
-      queue,
-      incoming,
-      stack,
-      maps,
-      0,
-    );
+    const result = tryConstructionBacktrack(state, queue, incoming, stack, maps, 0);
 
     expect(result.requeued).toBe(false);
     expect(stack).toHaveLength(1);
@@ -225,16 +213,7 @@ describe("Construction backtracking (PR4)", () => {
     ];
     const queue = [english];
 
-    const result = runConstructionQueue(
-      queue,
-      state,
-      maps,
-      stack,
-      0,
-      0,
-      0,
-      [],
-    );
+    const result = runConstructionQueue(queue, state, maps, stack, 0, 0, 0, []);
 
     expect(result.unplaced).toHaveLength(0);
     expect(result.gangsPlaced).toBe(2);
@@ -372,14 +351,7 @@ describe("Construction backtracking (PR4)", () => {
         makeRecord(blocker, [blocker], { d: 0, p: 0, p2: -1, rooms: { "u-blocker": "r1" } }, true),
       );
 
-      const result = tryConstructionBacktrack(
-        state,
-        queue,
-        incoming,
-        stack,
-        maps,
-        attempts,
-      );
+      const result = tryConstructionBacktrack(state, queue, incoming, stack, maps, attempts);
       attempts = result.backtrackAttempts;
 
       if (!result.requeued) break;

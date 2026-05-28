@@ -1,7 +1,12 @@
 import { AllocationUnit, SchedulerState } from "../core/types";
 import { AppData, Subject, Teacher } from "../../../../types";
 import { getPrevClassPeriod, getDaysPerWeek } from "../utils/utils";
-import { SCORING_WEIGHTS, ScoringWeightKey, ROOM_PENALTY_DISPLACEMENT, ROOM_PENALTY_WANDERING } from "../constants";
+import {
+  SCORING_WEIGHTS,
+  ScoringWeightKey,
+  ROOM_PENALTY_DISPLACEMENT,
+  ROOM_PENALTY_WANDERING,
+} from "../constants";
 
 type ScoringWeights = Record<ScoringWeightKey, number>;
 
@@ -15,28 +20,28 @@ function resolveWeights(data: AppData): ScoringWeights {
  * If Monday already has 3 core subjects, we prefer placing the 4th on Tuesday.
  */
 export function calculateWeeklyBalance(
-    state: SchedulerState,
-    classId: string,
-    d: number,
-    isCore?: boolean,
-    weights: ScoringWeights = SCORING_WEIGHTS,
+  state: SchedulerState,
+  classId: string,
+  d: number,
+  isCore?: boolean,
+  weights: ScoringWeights = SCORING_WEIGHTS,
 ): number {
-    if (!isCore) return 0;
+  if (!isCore) return 0;
 
-    let dayCoreCount = 0;
-    const daySched = state.schedule[classId]?.[d];
-    if (daySched) {
-        Object.values(daySched).forEach(slot => {
-            if (slot.isCore) dayCoreCount++;
-        });
-    }
+  let dayCoreCount = 0;
+  const daySched = state.schedule[classId]?.[d];
+  if (daySched) {
+    Object.values(daySched).forEach((slot) => {
+      if (slot.isCore) dayCoreCount++;
+    });
+  }
 
-    // Heuristic: If day already has > 3 core periods, penalize slightly to nudge towards other days.
-    if (dayCoreCount >= 3) {
-        return weights.WEEKLY_UNBALANCE * (dayCoreCount - 2); 
-    }
+  // Heuristic: If day already has > 3 core periods, penalize slightly to nudge towards other days.
+  if (dayCoreCount >= 3) {
+    return weights.WEEKLY_UNBALANCE * (dayCoreCount - 2);
+  }
 
-    return 0;
+  return 0;
 }
 
 /**
@@ -44,16 +49,16 @@ export function calculateWeeklyBalance(
  * Ensures teachers don't have too many lessons on one day if they could be spread out.
  */
 export function calculateTeacherLoadBalance(
-    state: SchedulerState,
-    teacherId: string,
-    d: number,
-    weights: ScoringWeights = SCORING_WEIGHTS,
+  state: SchedulerState,
+  teacherId: string,
+  d: number,
+  weights: ScoringWeights = SCORING_WEIGHTS,
 ): number {
-    const dailyLoad = state.teacherDailyLoad[teacherId]?.[d] || 0;
-    if (dailyLoad >= 2) {
-        return weights.TEACHER_LOAD_EXPONENT * Math.pow(2, dailyLoad - 2);
-    }
-    return 0;
+  const dailyLoad = state.teacherDailyLoad[teacherId]?.[d] || 0;
+  if (dailyLoad >= 2) {
+    return weights.TEACHER_LOAD_EXPONENT * Math.pow(2, dailyLoad - 2);
+  }
+  return 0;
 }
 
 /** Penalize uneven teacher load across the week (variance of daily period counts). */
@@ -66,14 +71,12 @@ export function calculateTeacherWeeklyVariance(
 ): number {
   const loads: number[] = [];
   for (let d = 0; d < daysPerWeek; d++) {
-    const load =
-      (state.teacherDailyLoad[teacherId]?.[d] || 0) + (d === targetDay ? 1 : 0);
+    const load = (state.teacherDailyLoad[teacherId]?.[d] || 0) + (d === targetDay ? 1 : 0);
     loads.push(load);
   }
 
   const mean = loads.reduce((sum, value) => sum + value, 0) / loads.length;
-  const variance =
-    loads.reduce((sum, value) => sum + (value - mean) ** 2, 0) / loads.length;
+  const variance = loads.reduce((sum, value) => sum + (value - mean) ** 2, 0) / loads.length;
 
   if (variance <= 1) return 0;
   return weights.TEACHER_WEEKLY_VARIANCE * variance;
@@ -88,7 +91,7 @@ export function calculateRoomPenalty(
   unit: AllocationUnit,
   d: number,
   p: number,
-  targetRoomId: string
+  targetRoomId: string,
 ): number {
   let penalty = 0;
 
@@ -117,15 +120,13 @@ const calculateScarcityPenalty = (
   weights: ScoringWeights,
 ): number => {
   let penalty = 0;
-  
+
   for (const tid of teacherIds) {
-    const teacher = teacherMap.get(tid); 
+    const teacher = teacherMap.get(tid);
     if (!teacher) continue;
 
-    const maxLoad =
-      teacher.maxPeriodsPerDay ??
-      (data.settings.maxTeacherPeriodsPerDay || 6);
-    const currentLoad = state.teacherDailyLoad[tid]?.[d] || 0; 
+    const maxLoad = teacher.maxPeriodsPerDay ?? (data.settings.maxTeacherPeriodsPerDay || 6);
+    const currentLoad = state.teacherDailyLoad[tid]?.[d] || 0;
 
     if (currentLoad >= maxLoad - 1) {
       penalty += weights.SCARCITY_PENALTY;
@@ -155,20 +156,20 @@ export const calculateTeacherGapPenalty = (
     if (!dailyGrid) continue;
 
     const prevInstructionalP = getPrevClassPeriod(p, structure);
-    
+
     // Gap Detection
     if (prevInstructionalP !== null && !dailyGrid[prevInstructionalP]) {
-       const sourceP = getPrevClassPeriod(prevInstructionalP, structure);
-       if (sourceP !== null) {
-         const prevUnitId = dailyGrid[sourceP];
-         if (prevUnitId && prevUnitId !== "BLOCK") {
-           // Heuristic: Only penalize if the gap fragments the same class group
-           const cid = currentClassIds[0]; 
-           if (cid && state.classOccupancy[cid]?.[d]?.[sourceP] === prevUnitId) {
-             penalty += weights.TEACHER_GAP;
-           }
-         }
-       }
+      const sourceP = getPrevClassPeriod(prevInstructionalP, structure);
+      if (sourceP !== null) {
+        const prevUnitId = dailyGrid[sourceP];
+        if (prevUnitId && prevUnitId !== "BLOCK") {
+          // Heuristic: Only penalize if the gap fragments the same class group
+          const cid = currentClassIds[0];
+          if (cid && state.classOccupancy[cid]?.[d]?.[sourceP] === prevUnitId) {
+            penalty += weights.TEACHER_GAP;
+          }
+        }
+      }
     }
 
     // Clustering Penalty (Discourage long consecutive blocks)
@@ -176,8 +177,8 @@ export const calculateTeacherGapPenalty = (
       let runBefore = 0;
       let i = prevInstructionalP;
       while (i >= 0 && dailyGrid[i]) {
-          runBefore++;
-          i = getPrevClassPeriod(i, structure) ?? -1;
+        runBefore++;
+        i = getPrevClassPeriod(i, structure) ?? -1;
       }
       // Exponential penalty: 2, 4, 8, 16, 32...
       penalty += weights.TEACHER_CONSECUTIVE * Math.pow(2, runBefore - 1);
@@ -197,46 +198,46 @@ export const calculatePedagogicalScore = (
   unit: AllocationUnit,
   weights: ScoringWeights = SCORING_WEIGHTS,
 ): number => {
-    let score = 0;
-    const classId = unit.classIds[0];
-    if (!classId) return 0;
+  let score = 0;
+  const classId = unit.classIds[0];
+  if (!classId) return 0;
 
-    // --- RANK 4: HCD PRIME LOADING ---
-    if (unit.isCore) {
-        const totalPeriods = data.settings.periodsPerDay;
-        if (p < totalPeriods / 2) {
-            score += weights.HCD_PRIME_BIAS;
+  // --- RANK 4: HCD PRIME LOADING ---
+  if (unit.isCore) {
+    const totalPeriods = data.settings.periodsPerDay;
+    if (p < totalPeriods / 2) {
+      score += weights.HCD_PRIME_BIAS;
+    }
+  }
+
+  // A. Friday Afternoon (O(1))
+  if (d === 4 && unit.isCore) {
+    const totalPeriods = data.settings.periodsPerDay;
+    if (p > totalPeriods / 2) score += weights.FRIDAY_AFTERNOON;
+  }
+
+  // B. Variety / Stacking (O(1))
+  if (unit.isCore) {
+    let heavyStreak = 0;
+    const daySched = state.schedule[classId]?.[d];
+    if (daySched) {
+      const s1 = daySched[p - 1];
+      if (s1 && s1.isCore) {
+        heavyStreak++;
+        const s2 = daySched[p - 2];
+        if (s2 && s2.isCore) {
+          heavyStreak++;
         }
+      }
     }
 
-    // A. Friday Afternoon (O(1))
-    if (d === 4 && unit.isCore) {
-       const totalPeriods = data.settings.periodsPerDay;
-       if (p > totalPeriods / 2) score += weights.FRIDAY_AFTERNOON;
+    if (heavyStreak >= 2) {
+      score += weights.VARIETY_PENALTY;
     }
+  }
 
-    // B. Variety / Stacking (O(1))
-    if (unit.isCore) {
-        let heavyStreak = 0;
-        const daySched = state.schedule[classId]?.[d];
-        if (daySched) {
-            const s1 = daySched[p - 1];
-            if (s1 && s1.isCore) {
-                heavyStreak++;
-                const s2 = daySched[p - 2];
-                if (s2 && s2.isCore) {
-                    heavyStreak++;
-                }
-            }
-        }
-        
-        if (heavyStreak >= 2) {
-            score += weights.VARIETY_PENALTY;
-        }
-    }
-    
-    return score;
-}
+  return score;
+};
 
 /**
  * MAIN SCORING FUNCTION
@@ -248,7 +249,7 @@ export const calculateScore = (
   p: number,
   unit: AllocationUnit,
   teacherMap: Map<string, Teacher>,
-  subjectMap: Map<string, Subject>
+  subjectMap: Map<string, Subject>,
 ): number => {
   let score = 0;
   const weights = resolveWeights(data);
@@ -258,32 +259,32 @@ export const calculateScore = (
 
   score += calculateScarcityPenalty(state, d, unit.teacherIds, data, teacherMap, weights);
   score += calculateTeacherGapPenalty(state, d, p, unit.teacherIds, unit.classIds, weights);
-  
+
   // Local Teacher Continuity Check
   if (p > 0) {
-      const prevUnitId = state.teacherOccupancy[unit.teacherIds[0]]?.[d]?.[p-1];
-      if (prevUnitId && prevUnitId !== "BLOCK" && prevUnitId !== unit.id) {
-          // If previous period was a DIFFERENT unit, check if it was for a DIFFERENT class
-          // (Simplified continuity logic for scoring)
-          const prevUnit = state.unitPlacements.has(prevUnitId);
-          if (prevUnit) {
-              // We could add WEIGHTS.TEACHER_CONTINUITY here if we had full unit data, 
-              // but for now we rely on the Gap check which is more critical.
-          }
+    const prevUnitId = state.teacherOccupancy[unit.teacherIds[0]]?.[d]?.[p - 1];
+    if (prevUnitId && prevUnitId !== "BLOCK" && prevUnitId !== unit.id) {
+      // If previous period was a DIFFERENT unit, check if it was for a DIFFERENT class
+      // (Simplified continuity logic for scoring)
+      const prevUnit = state.unitPlacements.has(prevUnitId);
+      if (prevUnit) {
+        // We could add WEIGHTS.TEACHER_CONTINUITY here if we had full unit data,
+        // but for now we rely on the Gap check which is more critical.
       }
+    }
   }
 
   // 3. CLASS GAP DETECTION (Student Wellbeing)
   // Logic: If p-2 is occupied by this class, and p-1 is empty, placing at p is a Gap.
   if (classId && p > 1) {
-      const structure = state.settings?.dayStructure || [];
-      const prevP = getPrevClassPeriod(p, structure);
-      if (prevP !== null && !state.classOccupancy[classId]?.[d]?.[prevP]) {
-          const sourceP = getPrevClassPeriod(prevP, structure);
-          if (sourceP !== null && state.classOccupancy[classId]?.[d]?.[sourceP]) {
-              score += weights.CLASS_GAP; 
-          }
+    const structure = state.settings?.dayStructure || [];
+    const prevP = getPrevClassPeriod(p, structure);
+    if (prevP !== null && !state.classOccupancy[classId]?.[d]?.[prevP]) {
+      const sourceP = getPrevClassPeriod(prevP, structure);
+      if (sourceP !== null && state.classOccupancy[classId]?.[d]?.[sourceP]) {
+        score += weights.CLASS_GAP;
       }
+    }
   }
 
   // 4. STUDENT FATIGUE (Subject Repetition & Continuity)
@@ -291,27 +292,27 @@ export const calculateScore = (
     // A. Immediate Repetition (Avoid stacking same subject)
     const prevSlot = p > 0 ? state.schedule[classId]?.[d]?.[p - 1] : null;
     if (prevSlot && prevSlot.subjectId === unit.subjectId) {
-        score += weights.SUBJECT_DISTRIBUTION;
+      score += weights.SUBJECT_DISTRIBUTION;
     }
 
     // --- RANK 5: THE CONNECTORS (Anti-Sandwich Rule) ---
     // Holistic Continuity: Prefer adjacency if subject already exists today.
     if (state.classDailySubjects[classId]?.[d]?.has(unit.subjectId)) {
-        const daySched = state.schedule[classId]?.[d];
-        if (daySched) {
-            let isAdjacent = false;
-            const p2 = (unit.duration === 2) ? p + 1 : p; 
+      const daySched = state.schedule[classId]?.[d];
+      if (daySched) {
+        let isAdjacent = false;
+        const p2 = unit.duration === 2 ? p + 1 : p;
 
-            // Check if we are touching any existing block of this subject
-            if (p > 0 && daySched[p-1]?.subjectId === unit.subjectId) isAdjacent = true;
-            if (daySched[p2+1]?.subjectId === unit.subjectId) isAdjacent = true;
+        // Check if we are touching any existing block of this subject
+        if (p > 0 && daySched[p - 1]?.subjectId === unit.subjectId) isAdjacent = true;
+        if (daySched[p2 + 1]?.subjectId === unit.subjectId) isAdjacent = true;
 
-            if (isAdjacent) {
-                score += weights.SUBJECT_ADJACENCY_REWARD;
-            } else {
-                score += weights.SUBJECT_SPLIT_PENALTY;
-            }
+        if (isAdjacent) {
+          score += weights.SUBJECT_ADJACENCY_REWARD;
+        } else {
+          score += weights.SUBJECT_SPLIT_PENALTY;
         }
+      }
     }
   }
 
@@ -320,16 +321,16 @@ export const calculateScore = (
   if (classId) {
     score += calculateWeeklyBalance(state, classId, d, unit.isCore, weights);
   }
-  
-  unit.teacherIds.forEach(tid => {
+
+  unit.teacherIds.forEach((tid) => {
     score += calculateTeacherLoadBalance(state, tid, d, weights);
     score += calculateTeacherWeeklyVariance(state, tid, d, daysPerWeek, weights);
   });
 
   score += (maxPeriods - p) * (weights.MORNING_BIAS / maxPeriods);
-  
+
   if (unit.preferredRoomIds?.length && unit.defaultRoomId) {
-     score += weights.ROOM_EFFICIENCY;
+    score += weights.ROOM_EFFICIENCY;
   }
 
   return score;

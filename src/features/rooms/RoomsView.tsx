@@ -1,13 +1,5 @@
 import React, { useState, useMemo } from "react";
-import {
-  Plus,
-  Trash2,
-  Edit2,
-  AlertTriangle,
-  Building2,
-  Users,
-  Box,
-} from "lucide-react";
+import { Plus, Trash2, Edit2, AlertTriangle, Building2, Users, Box } from "lucide-react";
 import { AppData } from "../../types";
 import { Room } from "./types";
 import { Button, Modal, Input, Select } from "../../components/ui";
@@ -120,9 +112,7 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-xl font-bold text-slate-800">Room Management</h2>
-          <p className="text-xs text-slate-500">
-            Define physical spaces and their capacities.
-          </p>
+          <p className="text-xs text-slate-500">Define physical spaces and their capacities.</p>
         </div>
         <Button onClick={() => openModal()} icon={<Plus size={16} />}>
           Add Room
@@ -199,9 +189,7 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
           <div className="w-14 h-14 rounded-full bg-slate-200 group-hover:bg-amber-100 text-slate-400 group-hover:text-amber-500 flex items-center justify-center mb-3 transition-colors shadow-inner">
             <Plus size={28} />
           </div>
-          <span className="font-bold text-slate-500 group-hover:text-amber-600">
-            Add Room
-          </span>
+          <span className="font-bold text-slate-500 group-hover:text-amber-600">Add Room</span>
         </button>
       </div>
 
@@ -213,8 +201,8 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
           <div className="flex justify-end gap-2 w-full">
             <Button variant="secondary" onClick={() => setModalOpen(false)}>
               Cancel
-            </Button>2
-            <Button onClick={saveRoom}>Save Room</Button>
+            </Button>
+            2<Button onClick={saveRoom}>Save Room</Button>
           </div>
         }
         maxWidth="max-w-md"
@@ -251,10 +239,7 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
         title="Delete Room?"
         footer={
           <div className="flex justify-end gap-2 w-full">
-            <Button
-              variant="secondary"
-              onClick={() => setDeleteModalOpen(false)}
-            >
+            <Button variant="secondary" onClick={() => setDeleteModalOpen(false)}>
               Keep It
             </Button>
             <Button variant="danger" onClick={confirmDelete}>
@@ -268,9 +253,7 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
             <AlertTriangle size={24} />
           </div>
           <div>
-            <p className="font-bold text-slate-800 text-lg">
-              Delete "{roomToDelete?.name}"?
-            </p>
+            <p className="font-bold text-slate-800 text-lg">Delete "{roomToDelete?.name}"?</p>
             <p className="text-sm text-slate-500 mt-2">
               This will remove the room from your facility list.
             </p>

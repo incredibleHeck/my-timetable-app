@@ -20,10 +20,7 @@ export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
   const [activeTab, setActiveTab] = useState<TabType>("LIST");
 
   // Logic Hook
-  const { handleSaveClass, handleDuplicate, confirmDelete } = useClassActions(
-    data,
-    onUpdate,
-  );
+  const { handleSaveClass, handleDuplicate, confirmDelete } = useClassActions(data, onUpdate);
 
   // Modal States
   const [editorState, setEditorState] = useState<{
@@ -43,8 +40,7 @@ export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
   });
 
   // Handlers
-  const openEditor = (cls: ClassGroup | null = null) =>
-    setEditorState({ isOpen: true, cls });
+  const openEditor = (cls: ClassGroup | null = null) => setEditorState({ isOpen: true, cls });
   const closeEditor = () => setEditorState({ isOpen: false, cls: null });
 
   const openDelete = (cls: ClassGroup) => setDeleteState({ isOpen: true, cls });
@@ -100,13 +96,9 @@ export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
         />
       )}
 
-      {activeTab === "GROUPS" && (
-        <ClassGroups data={data} onUpdate={onUpdate} />
-      )}
+      {activeTab === "GROUPS" && <ClassGroups data={data} onUpdate={onUpdate} />}
 
-      {activeTab === "ASSIGNMENTS" && (
-        <ClassAssignmentsPanel data={data} onUpdate={onUpdate} />
-      )}
+      {activeTab === "ASSIGNMENTS" && <ClassAssignmentsPanel data={data} onUpdate={onUpdate} />}
 
       {/* MODALS */}
       <ClassEditorModal
@@ -165,12 +157,10 @@ const DeleteClassModal: React.FC<{
             <AlertTriangle size={24} />
           </div>
           <div>
-            <p className="font-bold text-slate-800 text-lg">
-              Delete "{classGroup.name}"?
-            </p>
+            <p className="font-bold text-slate-800 text-lg">Delete "{classGroup.name}"?</p>
             <p className="text-sm text-slate-500 mt-2">
-              This will remove the class, its curriculum assignments, and its
-              associated system-managed Home Room.
+              This will remove the class, its curriculum assignments, and its associated
+              system-managed Home Room.
             </p>
           </div>
         </div>

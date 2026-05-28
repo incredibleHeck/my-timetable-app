@@ -1,2 +1,2 @@
-export { SubjectsView } from './SubjectsView';
-export * from './types';
+export { SubjectsView } from "./SubjectsView";
+export * from "./types";

@@ -74,7 +74,8 @@ export const ProfileModals: React.FC<ProfileModalsProps> = ({
       >
         <div className="space-y-4">
           <p className="text-sm text-slate-500">
-            Select a saved profile to load. Unsaved changes in your current session will be lost if auto-save is off.
+            Select a saved profile to load. Unsaved changes in your current session will be lost if
+            auto-save is off.
           </p>
           {savedProfiles.length === 0 ? (
             <div className="p-8 text-center text-slate-400 italic bg-slate-50 rounded-lg border border-slate-200 border-dashed">

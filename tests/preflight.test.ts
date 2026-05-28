@@ -16,9 +16,7 @@ describe("runPreflightCheck", () => {
         {
           id: "c1",
           name: "10A",
-          curriculum: [
-            { subjectId: "s1", singles: 25, doubles: 0, assignedTeacherId: "t1" },
-          ],
+          curriculum: [{ subjectId: "s1", singles: 25, doubles: 0, assignedTeacherId: "t1" }],
         },
       ],
       teachers: [
@@ -52,9 +50,7 @@ describe("runPreflightCheck", () => {
         {
           id: "c1",
           name: "10A",
-          curriculum: [
-            { subjectId: "s1", singles: 4, doubles: 0, assignedTeacherId: "t1" },
-          ],
+          curriculum: [{ subjectId: "s1", singles: 4, doubles: 0, assignedTeacherId: "t1" }],
         },
       ],
       teachers: [

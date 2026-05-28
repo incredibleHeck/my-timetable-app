@@ -52,7 +52,7 @@ export const DutyGeneratorModal: React.FC<Props> = ({
 
   const toggleTeacher = (id: string) => {
     setExcludedIds((prev) =>
-      prev.includes(id) ? prev.filter((tid) => tid !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((tid) => tid !== id) : [...prev, id],
     );
   };
 
@@ -63,14 +63,18 @@ export const DutyGeneratorModal: React.FC<Props> = ({
       title="Configure Roster Generation"
       footer={
         <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button 
-            onClick={() => onGenerate({
-              numWeeks: weeks,
-              minTeachers,
-              maxTeachers,
-              excludedTeacherIds: excludedIds
-            })}
+          <Button variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            onClick={() =>
+              onGenerate({
+                numWeeks: weeks,
+                minTeachers,
+                maxTeachers,
+                excludedTeacherIds: excludedIds,
+              })
+            }
             icon={<Wand2 size={16} />}
           >
             Generate Roster
@@ -115,7 +119,9 @@ export const DutyGeneratorModal: React.FC<Props> = ({
               <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                 <Users size={14} /> Staff Availability
               </h4>
-              <p className="text-[10px] text-slate-500 mt-1">Select teachers to EXCLUDE from this rotation.</p>
+              <p className="text-[10px] text-slate-500 mt-1">
+                Select teachers to EXCLUDE from this rotation.
+              </p>
             </div>
             <div className="text-[10px] font-bold text-slate-400">
               {excludedIds.length} Excluded
@@ -146,12 +152,16 @@ export const DutyGeneratorModal: React.FC<Props> = ({
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${isExcluded ? "bg-slate-200 text-slate-400" : "bg-amber-100 text-amber-700"}`}>
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${isExcluded ? "bg-slate-200 text-slate-400" : "bg-amber-100 text-amber-700"}`}
+                    >
                       {t.name.charAt(0)}
                     </div>
                     <div>
                       <p className="text-sm font-bold text-slate-700">{t.name}</p>
-                      <p className="text-[10px] text-slate-400">{isExcluded ? "Excluded" : "Available"}</p>
+                      <p className="text-[10px] text-slate-400">
+                        {isExcluded ? "Excluded" : "Available"}
+                      </p>
                     </div>
                   </div>
                   {isExcluded ? (

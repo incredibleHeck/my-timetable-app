@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Plus,
   Trash2,
@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { AppData } from "../../types";
 import { Teacher } from "./types";
-import { Button, Modal, Badge } from "../../components/ui";
+import { Button, Modal, Badge, Input } from "../../components/ui";
 import { TeacherEditorModal } from "./components/TeacherEditorModal";
 import { useTeacherManagement } from "./hooks/useTeacherManagement";
 
@@ -48,11 +48,20 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
     quickAddTeacherToFaculty,
   } = useTeacherManagement(data, onUpdate);
 
+  const [quickAddSubjectId, setQuickAddSubjectId] = useState<string | null>(null);
+  const [quickAddName, setQuickAddName] = useState("");
+
   const handleQuickAdd = (subjectId: string) => {
-    const name = window.prompt("Enter Teacher Name to add to this Faculty:");
-    if (name) {
-      quickAddTeacherToFaculty(subjectId, name);
+    setQuickAddSubjectId(subjectId);
+    setQuickAddName("");
+  };
+
+  const confirmQuickAdd = () => {
+    if (quickAddSubjectId && quickAddName.trim()) {
+      quickAddTeacherToFaculty(quickAddSubjectId, quickAddName.trim());
     }
+    setQuickAddSubjectId(null);
+    setQuickAddName("");
   };
 
   return (
@@ -60,9 +69,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-800">
-            Faculty Management
-          </h2>
+          <h2 className="text-xl font-bold text-slate-800">Faculty Management</h2>
           <p className="text-xs text-slate-500">
             Manage teachers, availability, and view departmental groupings.
           </p>
@@ -153,10 +160,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                       .substring(0, 2)}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3
-                      className="font-bold text-slate-800 truncate text-base"
-                      title={t.name}
-                    >
+                    <h3 className="font-bold text-slate-800 truncate text-base" title={t.name}>
                       {t.name}
                     </h3>
                     <div className="flex flex-wrap gap-1 mt-2">
@@ -182,24 +186,20 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                         </Badge>
                       )}
                       {t.specialtyIds.length === 0 && (
-                        <span className="text-[10px] text-slate-400 italic">
-                          No specialties
-                        </span>
+                        <span className="text-[10px] text-slate-400 italic">No specialties</span>
                       )}
                     </div>
                   </div>
                 </div>
                 <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
                   <div className="text-xs text-slate-400 font-medium">
-                    {t.constraints &&
-                    t.constraints.flat().filter(Boolean).length > 0 ? (
+                    {t.constraints && t.constraints.flat().filter(Boolean).length > 0 ? (
                       <span className="flex items-center text-amber-600">
                         <Ban size={12} className="mr-1" /> Restrictions Active
                       </span>
                     ) : (
                       <span className="flex items-center text-emerald-600">
-                        <CheckSquare size={12} className="mr-1" /> Fully
-                        Available
+                        <CheckSquare size={12} className="mr-1" /> Fully Available
                       </span>
                     )}
                   </div>
@@ -259,8 +259,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
         <div className="animate-in slide-in-from-right-4">
           <div className="mb-6 bg-blue-50 border border-blue-100 p-4 rounded-xl text-blue-800 text-sm">
             <span className="font-bold block mb-1">Faculty Overview</span>
-            Teachers are automatically grouped here based on the subjects they
-            are set to teach.
+            Teachers are automatically grouped here based on the subjects they are set to teach.
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {sortedSubjects.map((subject) => {
@@ -277,49 +276,47 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                     style={{ borderTop: `4px solid ${subject.color}` }}
                   >
                     <div className="sm:text-center">
-                        <h3 className="font-bold text-slate-800 text-sm">
-                        {subject.name}
-                        </h3>
-                        <p className="text-[9px] text-slate-500 uppercase tracking-wide">
-                            {facultyMembers.length} Staff
-                        </p>
+                      <h3 className="font-bold text-slate-800 text-sm">{subject.name}</h3>
+                      <p className="text-[9px] text-slate-500 uppercase tracking-wide">
+                        {facultyMembers.length} Staff
+                      </p>
                     </div>
                     <button
-                        onClick={() => handleQuickAdd(subject.id)}
-                        className="p-1 rounded-full hover:bg-white text-slate-400 hover:text-amber-600 transition-colors mt-2 hidden sm:block"
-                        title="Quick Add Teacher"
+                      onClick={() => handleQuickAdd(subject.id)}
+                      className="p-1 rounded-full hover:bg-white text-slate-400 hover:text-amber-600 transition-colors mt-2 hidden sm:block"
+                      title="Quick Add Teacher"
                     >
-                        <Plus size={16} />
+                      <Plus size={16} />
                     </button>
                   </div>
                   <div className="p-3 flex flex-wrap gap-2 items-center flex-1">
                     {facultyMembers.length > 0 ? (
-                        facultyMembers.map((t) => (
-                          <div
-                            key={t.id}
-                            role="button"
-                            tabIndex={0}
-                            onClick={() => openModal(t)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" || e.key === " ") {
-                                e.preventDefault();
-                                openModal(t);
-                              }
-                            }}
-                            className="flex items-center gap-2 p-1.5 bg-white rounded-lg border border-slate-100 hover:border-amber-200 transition-all shadow-sm group cursor-pointer"
-                          >
-                            <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">
-                              {t.name
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")
-                                .substring(0, 2)}
-                            </div>
-                            <span className="text-xs font-medium text-slate-700 whitespace-nowrap">
-                              {t.name}
-                            </span>
+                      facultyMembers.map((t) => (
+                        <div
+                          key={t.id}
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => openModal(t)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              openModal(t);
+                            }
+                          }}
+                          className="flex items-center gap-2 p-1.5 bg-white rounded-lg border border-slate-100 hover:border-amber-200 transition-all shadow-sm group cursor-pointer"
+                        >
+                          <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">
+                            {t.name
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")
+                              .substring(0, 2)}
                           </div>
-                        ))
+                          <span className="text-xs font-medium text-slate-700 whitespace-nowrap">
+                            {t.name}
+                          </span>
+                        </div>
+                      ))
                     ) : (
                       <div className="w-full py-2 text-center text-[10px] text-slate-400 italic">
                         No teachers assigned.
@@ -347,10 +344,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
         title="Confirm Deletion"
         footer={
           <div className="flex justify-end gap-2 w-full">
-            <Button
-              variant="secondary"
-              onClick={() => setDeleteModalOpen(false)}
-            >
+            <Button variant="secondary" onClick={() => setDeleteModalOpen(false)}>
               Cancel
             </Button>
             <Button variant="danger" onClick={confirmDelete}>
@@ -364,14 +358,36 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
             <AlertTriangle size={24} />
           </div>
           <div>
-            <p className="font-bold text-slate-800 text-lg">
-              Delete "{teacherToDelete?.name}"?
-            </p>
+            <p className="font-bold text-slate-800 text-lg">Delete "{teacherToDelete?.name}"?</p>
             <p className="text-sm text-slate-500 mt-2">
               Are you sure? This removes them from all classes.
             </p>
           </div>
         </div>
+      </Modal>
+
+      <Modal
+        isOpen={quickAddSubjectId !== null}
+        onClose={() => setQuickAddSubjectId(null)}
+        title="Add teacher to faculty"
+        footer={
+          <div className="flex justify-end gap-2 w-full">
+            <Button variant="secondary" onClick={() => setQuickAddSubjectId(null)}>
+              Cancel
+            </Button>
+            <Button onClick={confirmQuickAdd} disabled={!quickAddName.trim()}>
+              Add Teacher
+            </Button>
+          </div>
+        }
+      >
+        <Input
+          label="Teacher name"
+          value={quickAddName}
+          onChange={(e) => setQuickAddName(e.target.value)}
+          placeholder="Enter teacher name"
+          autoFocus
+        />
       </Modal>
     </div>
   );

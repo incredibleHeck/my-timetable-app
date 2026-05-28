@@ -1,13 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import {
-  Sun,
-  Moon,
-  Calendar,
-  XSquare,
-  Ban,
-  Coffee,
-  Utensils,
-} from "lucide-react";
+import { Sun, Moon, Calendar, XSquare, Ban, Coffee, Utensils } from "lucide-react";
 import { AppData } from "../../../types";
 import { Teacher } from "../types";
 import { Button, Modal, Input } from "../../../components/ui";
@@ -38,17 +30,13 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
   const globalMaxDaily = data.settings.maxTeacherPeriodsPerDay ?? 6;
 
   const maxClassPeriods = useMemo(
-    () =>
-      Math.max(
-        data.settings.periodsPerDay,
-        ...data.classes.map((c) => c.periodCount || 0)
-      ),
-    [data.settings.periodsPerDay, data.classes]
+    () => Math.max(data.settings.periodsPerDay, ...data.classes.map((c) => c.periodCount || 0)),
+    [data.settings.periodsPerDay, data.classes],
   );
 
   const sortedSubjects = useMemo(
     () => [...data.subjects].sort((a, b) => a.name.localeCompare(b.name)),
-    [data.subjects]
+    [data.subjects],
   );
 
   useEffect(() => {
@@ -103,9 +91,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
     setTConstraints(n);
   };
 
-  const applyTemplate = (
-    type: "MORNINGS" | "AFTERNOONS" | "FRIDAYS" | "CLEAR"
-  ) => {
+  const applyTemplate = (type: "MORNINGS" | "AFTERNOONS" | "FRIDAYS" | "CLEAR") => {
     const n = tConstraints.map((row) => [...row]);
     const pCount = maxClassPeriods;
     const midPoint = Math.floor(pCount / 2);
@@ -114,7 +100,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
       setTConstraints(
         Array(5)
           .fill(null)
-          .map(() => Array(pCount).fill(false))
+          .map(() => Array(pCount).fill(false)),
       );
       return;
     }
@@ -189,9 +175,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
                 key={s.id}
                 onClick={() =>
                   setTSpecialties((p) =>
-                    p.includes(s.id)
-                      ? p.filter((x) => x !== s.id)
-                      : [...p, s.id]
+                    p.includes(s.id) ? p.filter((x) => x !== s.id) : [...p, s.id],
                   )
                 }
                 className={`px-3 py-1.5 rounded-md text-xs font-bold border transition-all ${
@@ -210,10 +194,9 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
             )}
           </div>
           <p className="text-[10px] text-slate-400 mt-2">
-            Selecting subjects here adds this teacher to the corresponding
-            Faculty. Max Periods Per Day overrides the global daily scheduler
-            limit ({globalMaxDaily}). Workload % uses Configuration → Max
-            Teaching Periods / Week.
+            Selecting subjects here adds this teacher to the corresponding Faculty. Max Periods Per
+            Day overrides the global daily scheduler limit ({globalMaxDaily}). Workload % uses
+            Configuration → Max Teaching Periods / Week.
           </p>
         </div>
 
@@ -263,8 +246,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
               {Array.from({ length: maxClassPeriods }).map((_, i) => {
                 const config = data.settings.dayStructure[i];
                 const label = config?.label || `${i + 1}`;
-                const isBreak =
-                  config?.type === "BREAK" || config?.type === "LUNCH";
+                const isBreak = config?.type === "BREAK" || config?.type === "LUNCH";
                 const icon =
                   config?.type === "LUNCH" ? (
                     <Utensils size={8} />
@@ -276,9 +258,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
                   <div
                     key={i}
                     className={`text-center text-[9px] font-bold rounded py-1 flex flex-col items-center justify-center h-8 leading-tight ${
-                      isBreak
-                        ? "bg-orange-100 text-orange-700"
-                        : "bg-slate-200 text-slate-600"
+                      isBreak ? "bg-orange-100 text-orange-700" : "bg-slate-200 text-slate-600"
                     }`}
                   >
                     {icon}
@@ -299,8 +279,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
                   {Array.from({ length: maxClassPeriods }).map((_, pIdx) => {
                     const isBlocked = tConstraints[dIdx]?.[pIdx];
                     const globalType = data.settings.dayStructure[pIdx]?.type;
-                    const isGlobalBreak =
-                      globalType === "BREAK" || globalType === "LUNCH";
+                    const isGlobalBreak = globalType === "BREAK" || globalType === "LUNCH";
 
                     return (
                       <button
@@ -311,27 +290,22 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
                                   isBlocked
                                     ? "bg-red-500 border-red-600 shadow-inner"
                                     : isGlobalBreak
-                                    ? "bg-amber-50 border-dashed border-amber-300"
-                                    : "bg-white border-slate-200 hover:border-amber-400 hover:shadow-sm"
+                                      ? "bg-amber-50 border-dashed border-amber-300"
+                                      : "bg-white border-slate-200 hover:border-amber-400 hover:shadow-sm"
                                 }`}
                         title={
                           isBlocked
                             ? "Blocked"
                             : isGlobalBreak
-                            ? "Available (Teaching during Break)"
-                            : "Available"
+                              ? "Available (Teaching during Break)"
+                              : "Available"
                         }
                       >
                         {isBlocked && (
-                          <Ban
-                            size={16}
-                            className="text-white animate-in zoom-in duration-200"
-                          />
+                          <Ban size={16} className="text-white animate-in zoom-in duration-200" />
                         )}
                         {!isBlocked && isGlobalBreak && (
-                          <span className="text-amber-400/50 uppercase tracking-tighter">
-                            Open
-                          </span>
+                          <span className="text-amber-400/50 uppercase tracking-tighter">Open</span>
                         )}
                       </button>
                     );
@@ -342,16 +316,14 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
           </div>
           <div className="flex gap-4 mt-2 justify-end">
             <div className="flex items-center gap-1 text-[10px] text-slate-500">
-              <div className="w-3 h-3 bg-white border border-slate-200 rounded"></div>{" "}
-              Available
+              <div className="w-3 h-3 bg-white border border-slate-200 rounded"></div> Available
             </div>
             <div className="flex items-center gap-1 text-[10px] text-slate-500">
               <div className="w-3 h-3 bg-amber-50 border border-dashed border-amber-300 rounded"></div>{" "}
               Teaching during Break
             </div>
             <div className="flex items-center gap-1 text-[10px] text-slate-500">
-              <div className="w-3 h-3 bg-red-500 border border-red-600 rounded"></div>{" "}
-              Blocked
+              <div className="w-3 h-3 bg-red-500 border border-red-600 rounded"></div> Blocked
             </div>
           </div>
         </div>

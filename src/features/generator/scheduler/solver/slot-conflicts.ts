@@ -35,8 +35,7 @@ export function countPotentialConflicts(
 
     const currentLoad = state.teacherDailyLoad[tid]?.[d] || 0;
     const teacher = teacherMap.get(tid);
-    const max =
-      teacher?.maxPeriodsPerDay ?? (data.settings.maxTeacherPeriodsPerDay || 6);
+    const max = teacher?.maxPeriodsPerDay ?? (data.settings.maxTeacherPeriodsPerDay || 6);
     if (currentLoad + unit.duration > max) count += 2;
   }
 
@@ -71,13 +70,9 @@ export function findUnitsInSlot(
 ): Set<string> {
   const victimIds = new Set<string>();
 
-  unit.teacherIds.forEach((tid) =>
-    collectEvictions(state, d, p, p2, tid, "TEACHER", victimIds),
-  );
+  unit.teacherIds.forEach((tid) => collectEvictions(state, d, p, p2, tid, "TEACHER", victimIds));
 
-  unit.classIds.forEach((cid) =>
-    collectEvictions(state, d, p, p2, cid, "CLASS", victimIds),
-  );
+  unit.classIds.forEach((cid) => collectEvictions(state, d, p, p2, cid, "CLASS", victimIds));
 
   const roomIds =
     subjectMap && classMap && roomMap
@@ -174,10 +169,7 @@ export function findUnitFromConflict(
   unitMap: Map<string, AllocationUnit>,
 ): AllocationUnit | undefined {
   for (const unit of unitMap.values()) {
-    if (
-      unit.subjectId === conflict.subjectId &&
-      unit.classIds.includes(conflict.classId)
-    ) {
+    if (unit.subjectId === conflict.subjectId && unit.classIds.includes(conflict.classId)) {
       return unit;
     }
   }
