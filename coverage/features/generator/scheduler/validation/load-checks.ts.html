@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">92.54% </span>
+                <span class="strong">92.5% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>149/161</span>
+                <span class='fraction'>148/160</span>
             </div>
         
             
@@ -497,20 +497,7 @@
 <a name='L432'></a><a href='#L432'>432</a>
 <a name='L433'></a><a href='#L433'>433</a>
 <a name='L434'></a><a href='#L434'>434</a>
-<a name='L435'></a><a href='#L435'>435</a>
-<a name='L436'></a><a href='#L436'>436</a>
-<a name='L437'></a><a href='#L437'>437</a>
-<a name='L438'></a><a href='#L438'>438</a>
-<a name='L439'></a><a href='#L439'>439</a>
-<a name='L440'></a><a href='#L440'>440</a>
-<a name='L441'></a><a href='#L441'>441</a>
-<a name='L442'></a><a href='#L442'>442</a>
-<a name='L443'></a><a href='#L443'>443</a>
-<a name='L444'></a><a href='#L444'>444</a>
-<a name='L445'></a><a href='#L445'>445</a>
-<a name='L446'></a><a href='#L446'>446</a>
-<a name='L447'></a><a href='#L447'>447</a>
-<a name='L448'></a><a href='#L448'>448</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L435'></a><a href='#L435'>435</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -527,7 +514,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">59x</span>
 <span class="cline-any cline-yes">59x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">59x</span>
 <span class="cline-any cline-yes">59x</span>
@@ -634,12 +620,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">65x</span>
 <span class="cline-any cline-yes">65x</span>
-<span class="cline-any cline-yes">16x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">70x</span>
 <span class="cline-any cline-yes">16x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">16x</span>
@@ -648,8 +631,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">16x</span>
 <span class="cline-any cline-yes">76x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">76x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">21x</span>
@@ -669,8 +650,6 @@
 <span class="cline-any cline-yes">52x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">52x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">52x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -812,7 +791,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -832,10 +810,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -975,8 +949,7 @@ export const checkTeacherLoad = (
   const { data, teacherId, targetDay, maxPeriods } = ctx;
   const teacher = data.teachers.find((t) =&gt; t.id === teacherId);
 &nbsp;
-  const maxDailyLoad =
-    teacher?.maxPeriodsPerDay ?? (data.settings.maxTeacherPeriodsPerDay || 6);
+  const maxDailyLoad = teacher?.maxPeriodsPerDay ?? (data.settings.maxTeacherPeriodsPerDay || 6);
   const maxConsecutive = data.settings.maxConsecutivePeriods || 4;
 &nbsp;
   let currentDailyLoad = 0;
@@ -1080,13 +1053,10 @@ export const checkSubjectLimit = (
 &nbsp;
   // 2. TOTAL CURRICULUM ALLOCATION (The "Hard Wall")
   const cls = data.classes.find((c) =&gt; c.id === classId);
-  const curriculumItem = cls?.curriculum?.find(
-    (curr) =&gt; curr.subjectId === subjectId,
-  );
+  const curriculumItem = cls?.curriculum?.find((curr) =&gt; curr.subjectId === subjectId);
 &nbsp;
   if (curriculumItem) {
-    const totalAllowed =
-      (curriculumItem.singles || <span class="branch-1 cbranch-no" title="branch not covered" >0) + (c</span>urriculumItem.doubles || 0) * 2;
+    const totalAllowed = (curriculumItem.singles || <span class="branch-1 cbranch-no" title="branch not covered" >0) + (c</span>urriculumItem.doubles || 0) * 2;
 &nbsp;
     // 1. Start with the proposed slots count (The new placement)
     let totalScheduled = proposedSlots.size;
@@ -1094,9 +1064,7 @@ export const checkSubjectLimit = (
     const daysPerWeek = getDaysPerWeek(data.settings);
 &nbsp;
     for (let d = 0; d &lt; daysPerWeek; d++) {
-      const daySched = state
-        ? state?.schedule[classId]?.[d]
-        : <span class="branch-1 cbranch-no" title="branch not covered" >data.schedule[classId]?.[d];</span>
+      const daySched = state ? state?.schedule[classId]?.[d] : <span class="branch-1 cbranch-no" title="branch not covered" >data.schedule[classId]?.[d];</span>
       if (!daySched) continue;
 &nbsp;
       Object.keys(daySched).forEach((pStr) =&gt; {
@@ -1115,9 +1083,7 @@ export const checkSubjectLimit = (
         <span class="missing-if-branch" title="else path not taken" >E</span>if (slot.subjectId === subjectId) {
           const nextSlot = daySched[p + 1];
           const isDouble =
-            nextSlot &amp;&amp;
-            (nextSlot as any).isFixed &amp;&amp;
-<span class="branch-2 cbranch-no" title="branch not covered" >            nextSlot.subjectId === subjectId;</span>
+            nextSlot &amp;&amp; (nextSlot as any).isFixed &amp;&amp; <span class="branch-2 cbranch-no" title="branch not covered" >nextSlot.subjectId === subjectId;</span>
 &nbsp;
           totalScheduled += isDouble ? <span class="branch-0 cbranch-no" title="branch not covered" >2 : 1</span>;
         }
@@ -1259,8 +1225,7 @@ export const checkTeacherContinuity = (
         // We only flag if the teacher is busy with ANOTHER class.
         // If the teacher is FREE (null), we ignore the gap.
         if (state) {
-          const teacherOccupant =
-            state?.teacherOccupancy[teacherId]?.[targetDay]?.[p];
+          const teacherOccupant = state?.teacherOccupancy[teacherId]?.[targetDay]?.[p];
           <span class="missing-if-branch" title="if path not taken" >I</span>if (
             teacherOccupant &amp;&amp;
 <span class="branch-1 cbranch-no" title="branch not covered" >            teacherOccupant !== "BLOCK" &amp;&amp;</span>
@@ -1278,11 +1243,7 @@ export const checkTeacherContinuity = (
         } else <span class="missing-if-branch" title="else path not taken" >E</span>{
 <span class="cstat-no" title="statement not covered" >          for (const otherCId of Object.keys(data.schedule)) {</span>
             const slot = <span class="cstat-no" title="statement not covered" >data.schedule[otherCId]?.[targetDay]?.[p];</span>
-<span class="cstat-no" title="statement not covered" >            if (</span>
-              slot &amp;&amp;
-              slot.teacherId === teacherId &amp;&amp;
-              !ignoredSlots.has(`${targetDay}-${p}`)
-            ) {
+<span class="cstat-no" title="statement not covered" >            if (slot &amp;&amp; slot.teacherId === teacherId &amp;&amp; !ignoredSlots.has(`${targetDay}-${p}`)) {</span>
               const cls = <span class="cstat-no" title="statement not covered" >data.classes.find(<span class="fstat-no" title="function not covered" >(c</span>) =&gt; <span class="cstat-no" title="statement not covered" >c.id === classId)</span>;</span>
 <span class="cstat-no" title="statement not covered" >              return {</span>
                 valid: false,
@@ -1411,7 +1372,7 @@ export const checkSubjectContinuity = (
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-28T04:08:05.121Z
+                at 2026-05-28T05:56:49.107Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

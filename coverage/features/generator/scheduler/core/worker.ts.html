@@ -162,13 +162,7 @@
 <a name='L97'></a><a href='#L97'>97</a>
 <a name='L98'></a><a href='#L98'>98</a>
 <a name='L99'></a><a href='#L99'>99</a>
-<a name='L100'></a><a href='#L100'>100</a>
-<a name='L101'></a><a href='#L101'>101</a>
-<a name='L102'></a><a href='#L102'>102</a>
-<a name='L103'></a><a href='#L103'>103</a>
-<a name='L104'></a><a href='#L104'>104</a>
-<a name='L105'></a><a href='#L105'>105</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L100'></a><a href='#L100'>100</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -191,9 +185,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -270,9 +261,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/* eslint-disable no-restricted-globals */
-import { AppData } from "../../../../types";
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { AppData } from "../../../../types";
 import { prepareAllocationUnits } from "../logic/preparation";
 import { resolveSubjectIsCore } from "../logic/subject-core";
 import { solveSmartWithRestarts } from "../solver/solver";
@@ -294,10 +283,7 @@ const ctx: Worker = <span class="cstat-no" title="statement not covered" >self a
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    units.forEach(<span class="fstat-no" title="function not covered" >(u</span>) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >      if (u.isCore === undefined) {</span>
-<span class="cstat-no" title="statement not covered" >        u.isCore = resolveSubjectIsCore(</span>
-          subjectMap.get(u.subjectId),
-          u.subjectName,
-        );
+<span class="cstat-no" title="statement not covered" >        u.isCore = resolveSubjectIsCore(subjectMap.get(u.subjectId), u.subjectName);</span>
       }
     });
 &nbsp;
@@ -312,32 +298,32 @@ const ctx: Worker = <span class="cstat-no" title="statement not covered" >self a
       unplacedGangs,
       perfectRuns,
 <span class="cstat-no" title="statement not covered" >    } = solveSmartWithRestarts(</span>
-        units,
-        data,
-<span class="fstat-no" title="function not covered" >        (p</span>hase, progress, total, currentConflictCount, meta) =&gt; {
-<span class="cstat-no" title="statement not covered" >          if (Date.now() - startTime &gt;= SOLVER_TARGET_MS) {</span>
-<span class="cstat-no" title="statement not covered" >            return false;</span>
-          }
+      units,
+      data,
+<span class="fstat-no" title="function not covered" >      (p</span>hase, progress, total, currentConflictCount, meta) =&gt; {
+<span class="cstat-no" title="statement not covered" >        if (Date.now() - startTime &gt;= SOLVER_TARGET_MS) {</span>
+<span class="cstat-no" title="statement not covered" >          return false;</span>
+        }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >          ctx.postMessage({</span>
-            type: "progress",
-            payload: {
-              phase,
-              iteration: progress,
-              total,
-              conflicts: currentConflictCount,
-              runIndex: meta?.runIndex ?? 1,
-              bestUnplaced: meta?.bestUnplaced ?? currentConflictCount,
-              perfectRuns: meta?.perfectRuns ?? 0,
-              elapsedMs: meta?.elapsedMs ?? Date.now() - startTime,
-              timeBudgetMs: meta?.timeBudgetMs ?? SOLVER_TARGET_MS,
-              schedule: meta?.scheduleSnapshot,
-            },
-          });
-<span class="cstat-no" title="statement not covered" >          return true;</span>
-        },
-        { clockStartMs: startTime },
-      );
+<span class="cstat-no" title="statement not covered" >        ctx.postMessage({</span>
+          type: "progress",
+          payload: {
+            phase,
+            iteration: progress,
+            total,
+            conflicts: currentConflictCount,
+            runIndex: meta?.runIndex ?? 1,
+            bestUnplaced: meta?.bestUnplaced ?? currentConflictCount,
+            perfectRuns: meta?.perfectRuns ?? 0,
+            elapsedMs: meta?.elapsedMs ?? Date.now() - startTime,
+            timeBudgetMs: meta?.timeBudgetMs ?? SOLVER_TARGET_MS,
+            schedule: meta?.scheduleSnapshot,
+          },
+        });
+<span class="cstat-no" title="statement not covered" >        return true;</span>
+      },
+      { clockStartMs: startTime },
+    );
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    if (Date.now() - startTime &gt; SOLVER_TIME_LIMIT_MS) {</span>
 <span class="cstat-no" title="statement not covered" >      throw new Error("Solver exceeded hard time limit");</span>
@@ -370,8 +356,7 @@ const ctx: Worker = <span class="cstat-no" title="statement not covered" >self a
 <span class="cstat-no" title="statement not covered" >    console.error("Critical Worker Failure:", error);</span>
 <span class="cstat-no" title="statement not covered" >    ctx.postMessage({</span>
       type: "error",
-      payload:
-        error instanceof Error ? error.message : "Internal Scheduler Error",
+      payload: error instanceof Error ? error.message : "Internal Scheduler Error",
     });
   }
 };
@@ -382,7 +367,7 @@ const ctx: Worker = <span class="cstat-no" title="statement not covered" >self a
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-28T04:08:05.121Z
+                at 2026-05-28T05:56:49.107Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

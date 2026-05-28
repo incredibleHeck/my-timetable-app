@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/104</span>
+                <span class='fraction'>0/106</span>
             </div>
         
             
@@ -383,7 +383,16 @@
 <a name='L318'></a><a href='#L318'>318</a>
 <a name='L319'></a><a href='#L319'>319</a>
 <a name='L320'></a><a href='#L320'>320</a>
-<a name='L321'></a><a href='#L321'>321</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L321'></a><a href='#L321'>321</a>
+<a name='L322'></a><a href='#L322'>322</a>
+<a name='L323'></a><a href='#L323'>323</a>
+<a name='L324'></a><a href='#L324'>324</a>
+<a name='L325'></a><a href='#L325'>325</a>
+<a name='L326'></a><a href='#L326'>326</a>
+<a name='L327'></a><a href='#L327'>327</a>
+<a name='L328'></a><a href='#L328'>328</a>
+<a name='L329'></a><a href='#L329'>329</a>
+<a name='L330'></a><a href='#L330'>330</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -411,9 +420,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -534,6 +541,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -564,6 +572,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -619,6 +628,8 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -629,6 +640,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -644,12 +656,18 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -731,9 +749,7 @@ export const printAllSchedules = <span class="cstat-no" title="statement not cov
   // --- 2. PREPARATION: Sort Entities ---
   const entities =
 <span class="cstat-no" title="statement not covered" >    mode === "CLASS"</span>
-      ? [...classes].sort(<span class="fstat-no" title="function not covered" >(a</span>, b) =&gt;
-<span class="cstat-no" title="statement not covered" >          a.name.localeCompare(b.name, undefined, { numeric: true })</span>
-        )
+      ? [...classes].sort(<span class="fstat-no" title="function not covered" >(a</span>, b) =&gt; <span class="cstat-no" title="statement not covered" >a.name.localeCompare(b.name, undefined, { numeric: true }))</span>
       : [...teachers].sort(<span class="fstat-no" title="function not covered" >(a</span>, b) =&gt; <span class="cstat-no" title="statement not covered" >a.name.localeCompare(b.name))</span>;
 &nbsp;
   // --- 3. BUILD HTML ---
@@ -820,37 +836,37 @@ export const printAllSchedules = <span class="cstat-no" title="statement not cov
     // Determine Structure for this entity
     const currentClass = <span class="cstat-no" title="statement not covered" >mode === "CLASS" ? (entity as ClassGroup) : null;</span>
     const currentStructure = <span class="cstat-no" title="statement not covered" >currentClass?.structure?.length</span>
-        ? currentClass.structure
-        : settings.dayStructure;
-    
-    const classSchedule = <span class="cstat-no" title="statement not covered" >currentClass </span>
-        ? calculateClassSchedule(currentClass, settings, currentStructure)
-        : [];
-    
+      ? currentClass.structure
+      : settings.dayStructure;
+&nbsp;
+    const classSchedule = <span class="cstat-no" title="statement not covered" >currentClass</span>
+      ? calculateClassSchedule(currentClass, settings, currentStructure)
+      : [];
+&nbsp;
     const maxPeriods = <span class="cstat-no" title="statement not covered" >currentClass</span>
-        ? (currentStructure.length || currentClass.periodCount || settings.periodsPerDay)
-        : settings.periodsPerDay;
+      ? currentStructure.length || currentClass.periodCount || settings.periodsPerDay
+      : settings.periodsPerDay;
 &nbsp;
     const periods = <span class="cstat-no" title="statement not covered" >Array.from({ length: maxPeriods }, <span class="fstat-no" title="function not covered" >(_</span>, i) =&gt; <span class="cstat-no" title="statement not covered" >i)</span>;</span>
 &nbsp;
     // Helper for sequential numbering
     const getPeriodLabel = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(p</span>Idx: number) =&gt; {</span>
-        const item = <span class="cstat-no" title="statement not covered" >currentStructure?.[pIdx];</span>
-        const type = <span class="cstat-no" title="statement not covered" >typeof item === "string" ? item : item?.type;</span>
-        const effectiveType = <span class="cstat-no" title="statement not covered" >type || "CLASS"; </span>
+      const item = <span class="cstat-no" title="statement not covered" >currentStructure?.[pIdx];</span>
+      const type = <span class="cstat-no" title="statement not covered" >typeof item === "string" ? item : item?.type;</span>
+      const effectiveType = <span class="cstat-no" title="statement not covered" >type || "CLASS";</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >        if (effectiveType !== "CLASS") {</span>
-            const label = <span class="cstat-no" title="statement not covered" >typeof item === "string" ? item : item?.label || item?.type;</span>
-<span class="cstat-no" title="statement not covered" >            return label?.toUpperCase() || "BREAK";</span>
-        }
+<span class="cstat-no" title="statement not covered" >      if (effectiveType !== "CLASS") {</span>
+        const label = <span class="cstat-no" title="statement not covered" >typeof item === "string" ? item : item?.label || item?.type;</span>
+<span class="cstat-no" title="statement not covered" >        return label?.toUpperCase() || "BREAK";</span>
+      }
 &nbsp;
-        let classCount = <span class="cstat-no" title="statement not covered" >0;</span>
-<span class="cstat-no" title="statement not covered" >        for (let i = <span class="cstat-no" title="statement not covered" >0; i</span> &lt;= pIdx; i++) {</span>
-            const pItem = <span class="cstat-no" title="statement not covered" >currentStructure?.[i];</span>
-            const pType = <span class="cstat-no" title="statement not covered" >typeof pItem === "string" ? pItem : pItem?.type;</span>
-<span class="cstat-no" title="statement not covered" >            if ((pType || "CLASS") === "CLASS") <span class="cstat-no" title="statement not covered" >classCount++;</span></span>
-        }
-<span class="cstat-no" title="statement not covered" >        return `P${classCount}`;</span>
+      let classCount = <span class="cstat-no" title="statement not covered" >0;</span>
+<span class="cstat-no" title="statement not covered" >      for (let i = <span class="cstat-no" title="statement not covered" >0; i</span> &lt;= pIdx; i++) {</span>
+        const pItem = <span class="cstat-no" title="statement not covered" >currentStructure?.[i];</span>
+        const pType = <span class="cstat-no" title="statement not covered" >typeof pItem === "string" ? pItem : pItem?.type;</span>
+<span class="cstat-no" title="statement not covered" >        if ((pType || "CLASS") === "CLASS") <span class="cstat-no" title="statement not covered" >classCount++;</span></span>
+      }
+<span class="cstat-no" title="statement not covered" >      return `P${classCount}`;</span>
     };
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    htmlContent += `</span>
@@ -868,17 +884,19 @@ export const printAllSchedules = <span class="cstat-no" title="statement not cov
           &lt;thead&gt;
             &lt;tr&gt;
               &lt;th style="width: 45px;"&gt;DAY&lt;/th&gt;
-              ${periods.map(<span class="fstat-no" title="function not covered" >(p</span>) =&gt; {
+              ${periods
+                .map(<span class="fstat-no" title="function not covered" >(p</span>) =&gt; {
                   let timeSlot = <span class="cstat-no" title="statement not covered" >settings.timeSlots?.[p];</span>
 <span class="cstat-no" title="statement not covered" >                  if (mode === "CLASS" &amp;&amp; classSchedule[p]) {</span>
-<span class="cstat-no" title="statement not covered" >                      timeSlot = classSchedule[p];</span>
+<span class="cstat-no" title="statement not covered" >                    timeSlot = classSchedule[p];</span>
                   }
-                  
-                  const timeLabel = <span class="cstat-no" title="statement not covered" >timeSlot </span>
+&nbsp;
+                  const timeLabel = <span class="cstat-no" title="statement not covered" >timeSlot</span>
                     ? `&lt;div style="font-weight:normal; font-size:8px;"&gt;${getFormattedTimeRange(timeSlot)}&lt;/div&gt;`
                     : "";
 <span class="cstat-no" title="statement not covered" >                  return `&lt;th&gt;${getPeriodLabel(p)}${timeLabel}&lt;/th&gt;`;</span>
-              }).join("")}
+                })
+                .join("")}
             &lt;/tr&gt;
           &lt;/thead&gt;
           &lt;tbody&gt;
@@ -904,8 +922,8 @@ export const printAllSchedules = <span class="cstat-no" title="statement not cov
 &nbsp;
         const <span class="cstat-no" title="statement not covered" >fixedLabel = getOccasionLabel(fixedOccasion);</span>
 <span class="cstat-no" title="statement not covered" >        if (fixedLabel) {</span>
-            const label = <span class="cstat-no" title="statement not covered" >fixedLabel;</span>
-<span class="cstat-no" title="statement not covered" >            htmlContent += `</span>
+          const label = <span class="cstat-no" title="statement not covered" >fixedLabel;</span>
+<span class="cstat-no" title="statement not covered" >          htmlContent += `</span>
                 &lt;td style="background-color: #1e293b; color: #fbbf24; font-weight: bold; font-size: 10px; border: 1px solid #0f172a;"&gt;
                     &lt;div class="lesson-cell"&gt;
                         &lt;div class="subj-name" style="color: #fbbf24;"&gt;${label}&lt;/div&gt;
@@ -913,14 +931,14 @@ export const printAllSchedules = <span class="cstat-no" title="statement not cov
                     &lt;/div&gt;
                 &lt;/td&gt;
             `;
-<span class="cstat-no" title="statement not covered" >            continue;</span>
+<span class="cstat-no" title="statement not covered" >          continue;</span>
         }
 &nbsp;
         // 2. Check Teacher Blocked (for Teacher mode)
 <span class="cstat-no" title="statement not covered" >        if (mode === "TEACHER") {</span>
-            const teacher = <span class="cstat-no" title="statement not covered" >teachers.find(<span class="fstat-no" title="function not covered" >(t</span>: Teacher) =&gt; <span class="cstat-no" title="statement not covered" >t.id === entity.id)</span>;</span>
-<span class="cstat-no" title="statement not covered" >            if (teacher?.constraints?.[dIdx]?.[pIdx]) {</span>
-<span class="cstat-no" title="statement not covered" >                htmlContent += `</span>
+          const teacher = <span class="cstat-no" title="statement not covered" >teachers.find(<span class="fstat-no" title="function not covered" >(t</span>: Teacher) =&gt; <span class="cstat-no" title="statement not covered" >t.id === entity.id)</span>;</span>
+<span class="cstat-no" title="statement not covered" >          if (teacher?.constraints?.[dIdx]?.[pIdx]) {</span>
+<span class="cstat-no" title="statement not covered" >            htmlContent += `</span>
                     &lt;td style="background-color: #1e293b; color: #fbbf24; font-weight: bold; font-size: 10px; border: 1px solid #0f172a;"&gt;
                         &lt;div class="lesson-cell"&gt;
                             &lt;div class="subj-name" style="color: #fbbf24;"&gt;BLOCKED&lt;/div&gt;
@@ -928,67 +946,76 @@ export const printAllSchedules = <span class="cstat-no" title="statement not cov
                         &lt;/div&gt;
                     &lt;/td&gt;
                 `;
-<span class="cstat-no" title="statement not covered" >                continue;</span>
-            }
+<span class="cstat-no" title="statement not covered" >            continue;</span>
+          }
         }
 &nbsp;
         // Check for double periods to skip "fixed" tails
         let slot = <span class="cstat-no" title="statement not covered" >null;</span>
         let classId = <span class="cstat-no" title="statement not covered" >mode === "CLASS" ? entity.id : "";</span>
-        
+&nbsp;
 <span class="cstat-no" title="statement not covered" >        if (mode === "CLASS") {</span>
-<span class="cstat-no" title="statement not covered" >            slot = schedule[entity.id]?.[dIdx]?.[pIdx];</span>
+<span class="cstat-no" title="statement not covered" >          slot = schedule[entity.id]?.[dIdx]?.[pIdx];</span>
         } else {
-<span class="cstat-no" title="statement not covered" >            for (const c of classes) {</span>
-                const s = <span class="cstat-no" title="statement not covered" >schedule[c.id]?.[dIdx]?.[pIdx];</span>
-<span class="cstat-no" title="statement not covered" >                if (s &amp;&amp; s.teacherId === entity.id) {</span>
-<span class="cstat-no" title="statement not covered" >                    slot = s; <span class="cstat-no" title="statement not covered" >c</span>lassId = c.id; <span class="cstat-no" title="statement not covered" >b</span>reak;</span>
-                }
+<span class="cstat-no" title="statement not covered" >          for (const c of classes) {</span>
+            const s = <span class="cstat-no" title="statement not covered" >schedule[c.id]?.[dIdx]?.[pIdx];</span>
+<span class="cstat-no" title="statement not covered" >            if (s &amp;&amp; s.teacherId === entity.id) {</span>
+<span class="cstat-no" title="statement not covered" >              slot = s;</span>
+<span class="cstat-no" title="statement not covered" >              classId = c.id;</span>
+<span class="cstat-no" title="statement not covered" >              break;</span>
             }
+          }
         }
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        if (slot?.isFixed) {</span>
-            // Check if this is a tail of a double from previous period
-            const prevP = <span class="cstat-no" title="statement not covered" >pIdx &gt; 0 ? (mode === "CLASS" ? schedule[entity.id]?.[dIdx]?.[pIdx-1] : null) : null;</span>
-            // Note: Simplification for teacher mode tail check might be needed if complex
-<span class="cstat-no" title="statement not covered" >            if (prevP &amp;&amp; prevP.subjectId === slot.subjectId) <span class="cstat-no" title="statement not covered" >continue; </span></span>
+          // Check if this is a tail of a double from previous period
+          const prevP =
+<span class="cstat-no" title="statement not covered" >            pIdx &gt; 0 ? (mode === "CLASS" ? schedule[entity.id]?.[dIdx]?.[pIdx - 1] : null) : null;</span>
+          // Note: Simplification for teacher mode tail check might be needed if complex
+<span class="cstat-no" title="statement not covered" >          if (prevP &amp;&amp; prevP.subjectId === slot.subjectId) <span class="cstat-no" title="statement not covered" >continue;</span></span>
         }
 &nbsp;
         const duration = <span class="cstat-no" title="statement not covered" >slot ? getDuration(data, classId || entity.id, dIdx, pIdx) : 1;</span>
         const colspan = <span class="cstat-no" title="statement not covered" >duration &gt; 1 ? `colspan="${duration}"` : "";</span>
-        
+&nbsp;
         let content = <span class="cstat-no" title="statement not covered" >"—";</span>
         let style = <span class="cstat-no" title="statement not covered" >"";</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        if (slot) {</span>
-            const subject = <span class="cstat-no" title="statement not covered" >subjectMap.get(slot.subjectId);</span>
-            const subName = <span class="cstat-no" title="statement not covered" >subject?.name || "Subject";</span>
-            const subColor = <span class="cstat-no" title="statement not covered" >subject?.color || "#cbd5e1";</span>
-            const detailName = <span class="cstat-no" title="statement not covered" >mode === "CLASS" </span>
-                ? (teacherMap.get(slot.teacherId)?.name || "Staff")
-                : (classMap.get(classId)?.name || "Class");
-            
-            const subLower = <span class="cstat-no" title="statement not covered" >subName.toLowerCase();</span>
-            const isSpecial = <span class="cstat-no" title="statement not covered" >slot.locked || subLower.includes("worship") || subLower.includes("assembly") || subLower.includes("club") || subLower.includes("meeting");</span>
+          const subject = <span class="cstat-no" title="statement not covered" >subjectMap.get(slot.subjectId);</span>
+          const subName = <span class="cstat-no" title="statement not covered" >subject?.name || "Subject";</span>
+          const subColor = <span class="cstat-no" title="statement not covered" >subject?.color || "#cbd5e1";</span>
+          const detailName =
+<span class="cstat-no" title="statement not covered" >            mode === "CLASS"</span>
+              ? teacherMap.get(slot.teacherId)?.name || "Staff"
+              : classMap.get(classId)?.name || "Class";
 &nbsp;
-<span class="cstat-no" title="statement not covered" >            if (isSpecial) {</span>
-<span class="cstat-no" title="statement not covered" >                style = `background-color: #0f172a; color: #fbbf24; border: 1px solid #0f172a;`;</span>
-<span class="cstat-no" title="statement not covered" >                content = `</span>
+          const subLower = <span class="cstat-no" title="statement not covered" >subName.toLowerCase();</span>
+          const isSpecial =
+<span class="cstat-no" title="statement not covered" >            slot.locked ||</span>
+            subLower.includes("worship") ||
+            subLower.includes("assembly") ||
+            subLower.includes("club") ||
+            subLower.includes("meeting");
+&nbsp;
+<span class="cstat-no" title="statement not covered" >          if (isSpecial) {</span>
+<span class="cstat-no" title="statement not covered" >            style = `background-color: #0f172a; color: #fbbf24; border: 1px solid #0f172a;`;</span>
+<span class="cstat-no" title="statement not covered" >            content = `</span>
                     &lt;div class="lesson-cell"&gt;
                         &lt;div class="subj-name" style="color: #fbbf24;"&gt;${subName}&lt;/div&gt;
                         &lt;div class="detail-name" style="color: #94a3b8;"&gt;${detailName}&lt;/div&gt;
                     &lt;/div&gt;
                 `;
-            } else {
-<span class="cstat-no" title="statement not covered" >                style = `background-color: ${subColor}15; border-left: 4px solid ${subColor};`;</span>
-<span class="cstat-no" title="statement not covered" >                content = `</span>
+          } else {
+<span class="cstat-no" title="statement not covered" >            style = `background-color: ${subColor}15; border-left: 4px solid ${subColor};`;</span>
+<span class="cstat-no" title="statement not covered" >            content = `</span>
                     &lt;div class="lesson-cell"&gt;
                         &lt;div class="subj-name"&gt;${subName}&lt;/div&gt;
                         &lt;div class="detail-name"&gt;${detailName}&lt;/div&gt;
                     &lt;/div&gt;
                 `;
-            }
-<span class="cstat-no" title="statement not covered" >            if (duration &gt; 1) <span class="cstat-no" title="statement not covered" >pIdx += (duration - 1); // Skip next period cell</span></span>
+          }
+<span class="cstat-no" title="statement not covered" >          if (duration &gt; 1) <span class="cstat-no" title="statement not covered" >pIdx += duration - 1; // Skip next period cell</span></span>
         }
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        htmlContent += `&lt;td ${colspan} style="${style}"&gt;${content}&lt;/td&gt;`;</span>
@@ -1030,7 +1057,7 @@ export const printAllSchedules = <span class="cstat-no" title="statement not cov
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-28T04:08:05.121Z
+                at 2026-05-28T05:56:49.107Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

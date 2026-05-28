@@ -9,6 +9,7 @@ vi.mock("@tauri-apps/plugin-fs", () => ({
   writeFile: vi.fn(),
   remove: vi.fn(),
   mkdir: vi.fn(),
+  rename: vi.fn(),
   BaseDirectory: { AppData: 1 },
 }));
 
@@ -21,8 +22,8 @@ vi.mock("@tauri-apps/plugin-dialog", () => ({
   open: vi.fn(),
 }));
 
-import { writeTextFile, readTextFile, remove } from "@tauri-apps/plugin-fs";
-import { save, open } from "@tauri-apps/plugin-dialog";
+import { writeTextFile, readTextFile, remove, rename } from "@tauri-apps/plugin-fs";
+import { save } from "@tauri-apps/plugin-dialog";
 
 describe("NativeAdapter", () => {
   beforeEach(() => {
@@ -31,9 +32,10 @@ describe("NativeAdapter", () => {
   });
 
   describe("writeFile", () => {
-    it("should write text to a file", async () => {
+    it("should write text to a temp file then rename it", async () => {
       await NativeAdapter.writeFile("test.txt", "content");
-      expect(writeTextFile).toHaveBeenCalledWith("test.txt", "content");
+      expect(writeTextFile).toHaveBeenCalledWith("test.txt.tmp", "content");
+      expect(rename).toHaveBeenCalledWith("test.txt.tmp", "test.txt");
     });
   });
 

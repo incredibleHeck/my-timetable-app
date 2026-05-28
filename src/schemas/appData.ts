@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { AppData, FixedOccasion } from "../types";
+import { AppData, FixedOccasion, Subject, Teacher, Room, ClassGroup, JointClass, ElectiveBlock } from "../types";
 
 const passthroughRecord = z.record(z.string(), z.unknown());
 
@@ -20,15 +20,102 @@ const settingsSchema = z
   })
   .passthrough();
 
+const subjectSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    color: z.string(),
+    isSingleResource: z.boolean().optional(),
+    isExaminable: z.boolean().optional(),
+    requiredRoomId: z.string().nullable().optional(),
+    preferredRoomIds: z.array(z.string()).optional(),
+    requiredRoomType: z.string().optional(),
+    isCore: z.boolean().optional(),
+    examPaperCount: z.number().optional(),
+    examPaperDurations: z.array(z.number()).optional(),
+  })
+  .passthrough();
+
+const teacherSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    specialtyIds: z.array(z.string()),
+    constraints: z.array(z.array(z.boolean())),
+    targetLoad: z.number().optional(),
+    maxPeriodsPerDay: z.number().optional(),
+  })
+  .passthrough();
+
+const roomSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    capacity: z.number(),
+    type: z.string(),
+    isHomeRoom: z.boolean().optional(),
+  })
+  .passthrough();
+
+const curriculumItemSchema = z
+  .object({
+    id: z.string(),
+    subjectId: z.string(),
+    periodsPerWeek: z.number(),
+    singles: z.number(),
+    doubles: z.number(),
+    assignedTeacherId: z.string().optional(),
+    isWorkloadExempt: z.boolean().optional(),
+  })
+  .passthrough();
+
+const classGroupSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    level: z.string().optional(),
+    classroomId: z.string().optional(),
+    defaultRoomId: z.string(),
+    studentCount: z.number().optional(),
+    curriculum: z.array(curriculumItemSchema),
+    periodCount: z.number().optional(),
+    structure: z.array(z.union([z.string(), periodConfigSchema])).optional(),
+    duration: z.number().optional(),
+    breakDuration: z.number().optional(),
+    lunchDuration: z.number().optional(),
+    fixedSessions: z.array(z.array(z.unknown())).optional(),
+  })
+  .passthrough();
+
+const jointClassSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    subjectId: z.string(),
+    classIds: z.array(z.string()),
+    teacherId: z.string().optional(),
+  })
+  .passthrough();
+
+const electiveBlockSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    classIds: z.array(z.string()),
+    subjectIds: z.array(z.string()),
+    allowedPeriods: z.array(z.object({ day: z.number(), period: z.number() })).optional(),
+  })
+  .passthrough();
+
 const appDataInputSchema = z
   .object({
     settings: settingsSchema,
-    subjects: z.array(passthroughRecord).optional(),
-    teachers: z.array(passthroughRecord).optional(),
-    rooms: z.array(passthroughRecord).optional(),
-    classes: z.array(passthroughRecord).optional(),
-    jointClasses: z.array(passthroughRecord).optional(),
-    electives: z.array(passthroughRecord).optional(),
+    subjects: z.array(subjectSchema).optional(),
+    teachers: z.array(teacherSchema).optional(),
+    rooms: z.array(roomSchema).optional(),
+    classes: z.array(classGroupSchema).optional(),
+    jointClasses: z.array(jointClassSchema).optional(),
+    electives: z.array(electiveBlockSchema).optional(),
     exams: z.array(passthroughRecord).optional(),
     examRosters: z.array(passthroughRecord).optional(),
     dutyLocations: z.array(passthroughRecord).optional(),
@@ -90,42 +177,24 @@ export const normalizeAppData = (raw: RawAppDataInput): AppData => {
 
   return {
     settings,
-    subjects: Array.isArray(raw.subjects) ? (raw.subjects as unknown as AppData["subjects"]) : [],
-    teachers: Array.isArray(raw.teachers) ? (raw.teachers as unknown as AppData["teachers"]) : [],
-    rooms: Array.isArray(raw.rooms) ? (raw.rooms as unknown as AppData["rooms"]) : [],
-    classes: classes as AppData["classes"],
-    jointClasses: Array.isArray(raw.jointClasses)
-      ? (raw.jointClasses as unknown as AppData["jointClasses"])
-      : [],
-    electives: Array.isArray(raw.electives)
-      ? (raw.electives as unknown as AppData["electives"])
-      : [],
-    examRosters: Array.isArray(raw.examRosters)
-      ? (raw.examRosters as unknown as AppData["examRosters"])
-      : [],
+    subjects: (raw.subjects ?? []) as Subject[],
+    teachers: (raw.teachers ?? []) as Teacher[],
+    rooms: (raw.rooms ?? []) as Room[],
+    classes: classes as ClassGroup[],
+    jointClasses: (raw.jointClasses ?? []) as JointClass[],
+    electives: (raw.electives ?? []) as ElectiveBlock[],
+    examRosters: (raw.examRosters ?? []) as unknown as AppData["examRosters"],
     exams:
       Array.isArray(raw.examRosters) && raw.examRosters.length > 0
         ? []
-        : Array.isArray(raw.exams)
-          ? (raw.exams as unknown as AppData["exams"])
-          : [],
-    dutyLocations: Array.isArray(raw.dutyLocations)
-      ? (raw.dutyLocations as unknown as AppData["dutyLocations"])
-      : [],
-    dutyAssignments: Array.isArray(raw.dutyAssignments)
-      ? (raw.dutyAssignments as unknown as AppData["dutyAssignments"])
-      : [],
-    dutyRosters: Array.isArray(raw.dutyRosters)
-      ? (raw.dutyRosters as unknown as AppData["dutyRosters"])
-      : [],
+        : ((raw.exams ?? []) as unknown as AppData["exams"]),
+    dutyLocations: (raw.dutyLocations ?? []) as unknown as AppData["dutyLocations"],
+    dutyAssignments: (raw.dutyAssignments ?? []) as unknown as AppData["dutyAssignments"],
+    dutyRosters: (raw.dutyRosters ?? []) as unknown as AppData["dutyRosters"],
     schedule:
       typeof raw.schedule === "object" && raw.schedule ? (raw.schedule as AppData["schedule"]) : {},
-    conflicts: Array.isArray(raw.conflicts)
-      ? (raw.conflicts as unknown as AppData["conflicts"])
-      : [],
-    recentActivity: Array.isArray(raw.recentActivity)
-      ? (raw.recentActivity as unknown as AppData["recentActivity"])
-      : [],
+    conflicts: (raw.conflicts ?? []) as unknown as AppData["conflicts"],
+    recentActivity: (raw.recentActivity ?? []) as unknown as AppData["recentActivity"],
     lastGenerated: raw.lastGenerated ?? null,
   };
 };

@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>81/81</span>
+                <span class='fraction'>83/83</span>
             </div>
         
             
@@ -240,7 +240,9 @@
 <a name='L175'></a><a href='#L175'>175</a>
 <a name='L176'></a><a href='#L176'>176</a>
 <a name='L177'></a><a href='#L177'>177</a>
-<a name='L178'></a><a href='#L178'>178</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L178'></a><a href='#L178'>178</a>
+<a name='L179'></a><a href='#L179'>179</a>
+<a name='L180'></a><a href='#L180'>180</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
@@ -283,6 +285,7 @@
 <span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -291,6 +294,7 @@
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -435,12 +439,12 @@ export const generateFinalReport = (data: AppData): Conflict[] =&gt; {
     <span class="missing-if-branch" title="if path not taken" >I</span>if (!classSchedule) <span class="cstat-no" title="statement not covered" >continue;</span>
 &nbsp;
     const cls = data.classes.find((c: ClassGroup) =&gt; c.id === classId);
-    const structure = cls?.structure || dayStructure; 
+    const structure = cls?.structure || dayStructure;
 &nbsp;
     for (const dayStr of Object.keys(classSchedule)) {
       const day = parseInt(dayStr);
       const daySchedule = classSchedule[day];
-      
+&nbsp;
       const occupiedPeriods = new Set&lt;number&gt;();
       const subjectPlacements: Record&lt;number, string&gt; = {}; // p -&gt; subjectId
 &nbsp;
@@ -450,7 +454,7 @@ export const generateFinalReport = (data: AppData): Conflict[] =&gt; {
 &nbsp;
         occupiedPeriods.add(period);
         <span class="missing-if-branch" title="else path not taken" >E</span>if (slot.subjectId) {
-            subjectPlacements[period] = slot.subjectId;
+          subjectPlacements[period] = slot.subjectId;
         }
 &nbsp;
         // --- OCCUPANCY BUILDER ---
@@ -459,16 +463,18 @@ export const generateFinalReport = (data: AppData): Conflict[] =&gt; {
         <span class="missing-if-branch" title="else path not taken" >E</span>if (slot.teacherId) {
           if (!teacherOccupancy[slot.teacherId]) teacherOccupancy[slot.teacherId] = {};
           if (!teacherOccupancy[slot.teacherId][day]) teacherOccupancy[slot.teacherId][day] = {};
-          if (!teacherOccupancy[slot.teacherId][day][period]) teacherOccupancy[slot.teacherId][day][period] = [];
-          
+          if (!teacherOccupancy[slot.teacherId][day][period])
+            teacherOccupancy[slot.teacherId][day][period] = [];
+&nbsp;
           teacherOccupancy[slot.teacherId][day][period].push(classId);
         }
 &nbsp;
         if (slot.roomId) {
           if (!roomOccupancy[slot.roomId]) roomOccupancy[slot.roomId] = {};
           if (!roomOccupancy[slot.roomId][day]) roomOccupancy[slot.roomId][day] = {};
-          if (!roomOccupancy[slot.roomId][day][period]) roomOccupancy[slot.roomId][day][period] = [];
-          
+          if (!roomOccupancy[slot.roomId][day][period])
+            roomOccupancy[slot.roomId][day][period] = [];
+&nbsp;
           roomOccupancy[slot.roomId][day][period].push(classId);
         }
       }
@@ -476,62 +482,62 @@ export const generateFinalReport = (data: AppData): Conflict[] =&gt; {
       // --- CHECK: CLASS GAPS ---
       const sortedOccupied = Array.from(occupiedPeriods).sort((a, b) =&gt; a - b);
       if (sortedOccupied.length &gt; 1) {
-          const first = sortedOccupied[0];
-          const last = sortedOccupied[sortedOccupied.length - 1];
-          
-          for (let p = first + 1; p &lt; last; p++) {
-              if (!occupiedPeriods.has(p)) {
-                  // It's empty. Is it a CLASS period?
-                  <span class="missing-if-branch" title="else path not taken" >E</span>if (getPeriodType(structure, p) === "CLASS") {
-                      conflicts.push({
-                          classId,
-                          className: cls?.name || <span class="branch-1 cbranch-no" title="branch not covered" >classId,</span>
-                          day,
-                          period: p,
-                          reason: `Class Gap: Free period between lessons`,
-                          severity: "MEDIUM"
-                      });
-                  }
-              }
+        const first = sortedOccupied[0];
+        const last = sortedOccupied[sortedOccupied.length - 1];
+&nbsp;
+        for (let p = first + 1; p &lt; last; p++) {
+          if (!occupiedPeriods.has(p)) {
+            // It's empty. Is it a CLASS period?
+            <span class="missing-if-branch" title="else path not taken" >E</span>if (getPeriodType(structure, p) === "CLASS") {
+              conflicts.push({
+                classId,
+                className: cls?.name || <span class="branch-1 cbranch-no" title="branch not covered" >classId,</span>
+                day,
+                period: p,
+                reason: `Class Gap: Free period between lessons`,
+                severity: "MEDIUM",
+              });
+            }
           }
+        }
       }
 &nbsp;
       // --- CHECK: SUBJECT CONTINUITY ---
       const subjectsInDay = new Set(Object.values(subjectPlacements));
       for (const subjectId of subjectsInDay) {
-          const sPeriods = Object.entries(subjectPlacements)
-              .filter(([p, sId]) =&gt; sId === subjectId)
-              .map(([p]) =&gt; parseInt(p))
-              .sort((a, b) =&gt; a - b);
-          
-          if (sPeriods.length &gt; 1) {
-              const start = sPeriods[0];
-              const end = sPeriods[sPeriods.length - 1];
+        const sPeriods = Object.entries(subjectPlacements)
+          .filter(([p, sId]) =&gt; sId === subjectId)
+          .map(([p]) =&gt; parseInt(p))
+          .sort((a, b) =&gt; a - b);
 &nbsp;
-              for (let p = start + 1; p &lt; end; p++) {
-                  const type = getPeriodType(structure, p);
-                  <span class="missing-if-branch" title="else path not taken" >E</span>if (type === "CLASS") {
-                      const currentSubject = subjectPlacements[p];
-                      <span class="missing-if-branch" title="else path not taken" >E</span>if (currentSubject !== subjectId) {
-                          const reason = currentSubject 
-                              ? `sandwiched by another subject` 
-                              : `split by empty period`;
-                          
-                          conflicts.push({
-                              classId,
-                              className: cls?.name || <span class="branch-1 cbranch-no" title="branch not covered" >classId,</span>
-                              subjectId,
-                              subjectName: data.subjects.find((s: Subject) =&gt; s.id === subjectId)?.name,
-                              day,
-                              period: p,
-                              reason: `Subject Continuity: ${reason}`,
-                              severity: "HIGH"
-                          });
-                          break; // Report once per subject per day
-                      }
-                  }
+        if (sPeriods.length &gt; 1) {
+          const start = sPeriods[0];
+          const end = sPeriods[sPeriods.length - 1];
+&nbsp;
+          for (let p = start + 1; p &lt; end; p++) {
+            const type = getPeriodType(structure, p);
+            <span class="missing-if-branch" title="else path not taken" >E</span>if (type === "CLASS") {
+              const currentSubject = subjectPlacements[p];
+              <span class="missing-if-branch" title="else path not taken" >E</span>if (currentSubject !== subjectId) {
+                const reason = currentSubject
+                  ? `sandwiched by another subject`
+                  : `split by empty period`;
+&nbsp;
+                conflicts.push({
+                  classId,
+                  className: cls?.name || <span class="branch-1 cbranch-no" title="branch not covered" >classId,</span>
+                  subjectId,
+                  subjectName: data.subjects.find((s: Subject) =&gt; s.id === subjectId)?.name,
+                  day,
+                  period: p,
+                  reason: `Subject Continuity: ${reason}`,
+                  severity: "HIGH",
+                });
+                break; // Report once per subject per day
               }
+            }
           }
+        }
       }
     }
   }
@@ -545,20 +551,20 @@ export const generateFinalReport = (data: AppData): Conflict[] =&gt; {
         const classes = teacherOccupancy[teacherId][day][period];
 &nbsp;
         if (classes.length &gt; 1) {
-           classes.forEach(classId =&gt; {
-             const cls = data.classes.find((c: ClassGroup) =&gt; c.id === classId);
-             const teacher = data.teachers.find((t: Teacher) =&gt; t.id === teacherId);
-             
-             conflicts.push({
-               classId,
-               className: cls?.name || <span class="branch-1 cbranch-no" title="branch not covered" >classId,</span>
-               teacherId,
-               teacherName: teacher?.name,
-               day,
-               period,
-               reason: `Double Booking: Teacher ${teacher?.name || <span class="branch-1 cbranch-no" title="branch not covered" >teacherId}</span> is assigned to multiple classes (${classes.join(", ")})`,
-               severity: "HIGH"
-             });
+          classes.forEach((classId) =&gt; {
+            const cls = data.classes.find((c: ClassGroup) =&gt; c.id === classId);
+            const teacher = data.teachers.find((t: Teacher) =&gt; t.id === teacherId);
+&nbsp;
+            conflicts.push({
+              classId,
+              className: cls?.name || <span class="branch-1 cbranch-no" title="branch not covered" >classId,</span>
+              teacherId,
+              teacherName: teacher?.name,
+              day,
+              period,
+              reason: `Double Booking: Teacher ${teacher?.name || <span class="branch-1 cbranch-no" title="branch not covered" >teacherId}</span> is assigned to multiple classes (${classes.join(", ")})`,
+              severity: "HIGH",
+            });
           });
         }
       }
@@ -574,18 +580,18 @@ export const generateFinalReport = (data: AppData): Conflict[] =&gt; {
         const classes = roomOccupancy[roomId][day][period];
 &nbsp;
         <span class="missing-if-branch" title="else path not taken" >E</span>if (classes.length &gt; 1) {
-          classes.forEach(classId =&gt; {
-             const cls = data.classes.find((c: ClassGroup) =&gt; c.id === classId);
-             const room = data.rooms.find((r: Room) =&gt; r.id === roomId);
+          classes.forEach((classId) =&gt; {
+            const cls = data.classes.find((c: ClassGroup) =&gt; c.id === classId);
+            const room = data.rooms.find((r: Room) =&gt; r.id === roomId);
 &nbsp;
-             conflicts.push({
-               classId,
-               className: cls?.name || <span class="branch-1 cbranch-no" title="branch not covered" >classId,</span>
-               day,
-               period,
-               reason: `Double Booking: Room ${room?.name || <span class="branch-1 cbranch-no" title="branch not covered" >roomId}</span> is booked for multiple classes (${classes.join(", ")})`,
-               severity: "HIGH"
-             });
+            conflicts.push({
+              classId,
+              className: cls?.name || <span class="branch-1 cbranch-no" title="branch not covered" >classId,</span>
+              day,
+              period,
+              reason: `Double Booking: Room ${room?.name || <span class="branch-1 cbranch-no" title="branch not covered" >roomId}</span> is booked for multiple classes (${classes.join(", ")})`,
+              severity: "HIGH",
+            });
           });
         }
       }
@@ -601,7 +607,7 @@ export const generateFinalReport = (data: AppData): Conflict[] =&gt; {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-28T04:08:05.121Z
+                at 2026-05-28T05:56:49.107Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

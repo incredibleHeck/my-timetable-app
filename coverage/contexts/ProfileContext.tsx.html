@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">75.7% </span>
+                <span class="strong">75.92% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>81/107</span>
+                <span class='fraction'>82/108</span>
             </div>
         
             
@@ -37,16 +37,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">68.75% </span>
+                <span class="strong">70.58% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>11/16</span>
+                <span class='fraction'>12/17</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">79.79% </span>
+                <span class="strong">80% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>79/99</span>
+                <span class='fraction'>80/100</span>
             </div>
         
             
@@ -306,16 +306,7 @@
 <a name='L241'></a><a href='#L241'>241</a>
 <a name='L242'></a><a href='#L242'>242</a>
 <a name='L243'></a><a href='#L243'>243</a>
-<a name='L244'></a><a href='#L244'>244</a>
-<a name='L245'></a><a href='#L245'>245</a>
-<a name='L246'></a><a href='#L246'>246</a>
-<a name='L247'></a><a href='#L247'>247</a>
-<a name='L248'></a><a href='#L248'>248</a>
-<a name='L249'></a><a href='#L249'>249</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L244'></a><a href='#L244'>244</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -362,7 +353,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">76x</span>
 <span class="cline-any cline-yes">76x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">76x</span>
+<span class="cline-any cline-yes">74x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">76x</span>
 <span class="cline-any cline-yes">65x</span>
@@ -492,10 +486,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">76x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">61x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">61x</span>
@@ -590,11 +580,7 @@ interface ProfileContextType {
   createNewProfile: (name: string, templateData?: AppData) =&gt; Promise&lt;void&gt;;
   switchProfile: (id: string) =&gt; Promise&lt;void&gt;;
   updateActiveProfile: (data: AppData) =&gt; void;
-  addActivity: (
-    type: ActivityType,
-    message: string,
-    dataToUpdate?: AppData,
-  ) =&gt; void;
+  addActivity: (type: ActivityType, message: string, dataToUpdate?: AppData) =&gt; void;
   reloadProfiles: () =&gt; Promise&lt;void&gt;;
   getClassSchedule: (classId: string) =&gt; TimeSlot[];
 }
@@ -610,7 +596,10 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) =&gt; {
 &nbsp;
   const saveTimeoutRef = useRef&lt;ReturnType&lt;typeof setTimeout&gt; | null&gt;(null);
   const activeProfileRef = useRef&lt;Profile | null&gt;(null);
-  activeProfileRef.current = activeProfile;
+&nbsp;
+  useEffect(() =&gt; {
+    activeProfileRef.current = activeProfile;
+  }, [activeProfile]);
 &nbsp;
   const triggerSave = useCallback((updatedProfile: Profile) =&gt; {
     setIsDirty(true);
@@ -739,11 +728,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) =&gt; {
     applyState(data);
   };
 &nbsp;
-  const addActivity = (
-    type: ActivityType,
-    message: string,
-    dataToUpdate?: AppData,
-  ) =&gt; {
+  const addActivity = (type: ActivityType, message: string, dataToUpdate?: AppData) =&gt; {
     <span class="missing-if-branch" title="if path not taken" >I</span>if (!activeProfileRef.current) <span class="cstat-no" title="statement not covered" >return;</span>
 &nbsp;
     const newActivity: Activity = {
@@ -814,7 +799,7 @@ export const useProfile = () =&gt; {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-28T04:08:05.121Z
+                at 2026-05-28T05:56:49.107Z
             </div>
         <script src="../prettify.js"></script>
         <script>

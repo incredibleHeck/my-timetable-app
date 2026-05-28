@@ -13,6 +13,7 @@ import * as ProfileStorage from "../services/profile/profileStorage";
 import * as Migration from "../services/profile/migration";
 import { generateId, deepClone, mergeWithDefaults } from "../utils/utils";
 import { DEFAULT_DATA } from "../utils/constants";
+import { notify } from "../components/ui/Toast";
 import { calculateClassSchedule } from "../utils/timeUtils";
 import { TimeSlot } from "../types";
 import { auditFinalSchedule } from "../features/generator/scheduler/validation";
@@ -50,14 +51,34 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     activeProfileRef.current = activeProfile;
   }, [activeProfile]);
 
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = "";
+        return "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [isDirty]);
+
   const triggerSave = useCallback((updatedProfile: Profile) => {
     setIsDirty(true);
     setIsSaving(true);
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(async () => {
-      await ProfileStorage.saveProfile(updatedProfile);
-      setIsSaving(false);
-      setIsDirty(false);
+      try {
+        await ProfileStorage.saveProfile(updatedProfile);
+        setIsDirty(false);
+      } catch (error) {
+        console.error("Failed to auto-save profile:", error);
+        notify("Failed to save changes automatically. Check disk space or permissions.", "error");
+      } finally {
+        setIsSaving(false);
+      }
     }, 1000);
   }, []);
 
@@ -147,25 +168,39 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const createNewProfile = async (name: string, templateData?: AppData) => {
-    const newProfile: Profile = {
-      id: generateId(),
-      name,
-      created: Date.now(),
-      lastModified: Date.now(),
-      data: templateData ? deepClone(templateData) : deepClone(DEFAULT_DATA),
-      meta: {},
-    };
+    try {
+      const newProfile: Profile = {
+        id: generateId(),
+        name,
+        created: Date.now(),
+        lastModified: Date.now(),
+        data: templateData ? deepClone(templateData) : deepClone(DEFAULT_DATA),
+        meta: {},
+      };
 
-    await ProfileStorage.saveProfile(newProfile);
-    await reloadProfiles();
-    await switchProfile(newProfile.id);
+      await ProfileStorage.saveProfile(newProfile);
+      await reloadProfiles();
+      await switchProfile(newProfile.id);
+    } catch (error) {
+      console.error("Failed to create new profile:", error);
+      notify("Failed to create new profile.", "error");
+    }
   };
 
   const switchProfile = async (id: string) => {
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
+    if (saveTimeoutRef.current || isDirty) {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = null;
+      }
       if (activeProfileRef.current) {
-        await ProfileStorage.saveProfile(activeProfileRef.current);
+        try {
+          await ProfileStorage.saveProfile(activeProfileRef.current);
+          setIsDirty(false);
+        } catch (error) {
+          console.error("Failed to save profile on switch:", error);
+          notify("Failed to save changes before switching profiles.", "error");
+        }
       }
     }
     resetHistory();

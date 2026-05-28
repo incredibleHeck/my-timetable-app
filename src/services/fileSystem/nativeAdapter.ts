@@ -29,13 +29,15 @@ const getDialog = async () => {
  * @param content - The Uint8Array content.
  */
 export async function writeBinaryFile(path: string, content: Uint8Array): Promise<void> {
-  const { writeFile, mkdir } = await getFs();
+  const { writeFile, mkdir, rename } = await getFs();
   const { dirname } = await getPath();
   const dir = await dirname(path);
   if (dir) {
     await mkdir(dir, { recursive: true });
   }
-  await writeFile(path, content);
+  const tempPath = `${path}.tmp`;
+  await writeFile(tempPath, content);
+  await rename(tempPath, path);
 }
 
 /**
@@ -45,13 +47,32 @@ export async function writeBinaryFile(path: string, content: Uint8Array): Promis
  */
 export async function writeFile(path: string, content: string): Promise<void> {
   try {
-    const { writeTextFile, mkdir } = await getFs();
+    const { writeTextFile, mkdir, rename } = await getFs();
     const { dirname } = await getPath();
     const dir = await dirname(path);
-    await mkdir(dir, { recursive: true });
-    await writeTextFile(path, content);
+    if (dir) {
+      await mkdir(dir, { recursive: true });
+    }
+    const tempPath = `${path}.tmp`;
+    await writeTextFile(tempPath, content);
+    await rename(tempPath, path);
   } catch (error) {
     console.error(`Failed to write file to ${path}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Renames a file from one path to another.
+ * @param oldPath - The absolute source path.
+ * @param newPath - The absolute destination path.
+ */
+export async function renameFile(oldPath: string, newPath: string): Promise<void> {
+  try {
+    const { rename } = await getFs();
+    await rename(oldPath, newPath);
+  } catch (error) {
+    console.error(`Failed to rename file from ${oldPath} to ${newPath}:`, error);
     throw error;
   }
 }

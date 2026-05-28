@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">92.85% </span>
+                <span class="strong">93.18% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>39/42</span>
+                <span class='fraction'>41/44</span>
             </div>
         
             
@@ -174,7 +174,10 @@
 <a name='L109'></a><a href='#L109'>109</a>
 <a name='L110'></a><a href='#L110'>110</a>
 <a name='L111'></a><a href='#L111'>111</a>
-<a name='L112'></a><a href='#L112'>112</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L112'></a><a href='#L112'>112</a>
+<a name='L113'></a><a href='#L113'>113</a>
+<a name='L114'></a><a href='#L114'>114</a>
+<a name='L115'></a><a href='#L115'>115</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -186,13 +189,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">85x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -205,12 +201,17 @@
 <span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -237,6 +238,7 @@
 <span class="cline-any cline-yes">106x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -266,13 +268,16 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -285,6 +290,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">82x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { SchedulerState } from "../core/types";
 import { ValidationContext, ValidationResult } from "./types";
 &nbsp;
@@ -295,115 +301,118 @@ import { ValidationContext, ValidationResult } from "./types";
 export const checkOverlaps = (
   ctx: ValidationContext,
   p: number,
-  state: SchedulerState // Now Mandatory
+  state: SchedulerState, // Now Mandatory
 ): ValidationResult | null =&gt; {
-  const {
-    data,
-    classId,
-    teacherId,
-    roomId,
-    targetDay,
-    ignoredSlots,
-  } = ctx;
+  const { data, classId, teacherId, roomId, targetDay, ignoredSlots } = ctx;
 &nbsp;
   // 1. Teacher Overlap (O(1) fast path + O(P) staggered fallback)
   const dayOccupancy = state.teacherOccupancy[teacherId]?.[targetDay];
   <span class="missing-if-branch" title="else path not taken" >E</span>if (dayOccupancy) {
-      // A. Fast Path: Direct period index match
-      const teacherOccupant = dayOccupancy[p];
-      if (teacherOccupant &amp;&amp; teacherOccupant !== "BLOCK" &amp;&amp; !ignoredSlots.has(`${targetDay}-${p}`)) {
-          // Allow if it's the SAME unit (for double period heads/tails or joint sessions)
-          const currentUnitId = state.classOccupancy[classId]?.[targetDay]?.[p];
-          if (teacherOccupant !== currentUnitId) {
-              const isJoint = data.jointClasses?.some(jc =&gt; 
-                  jc.subjectId === ctx.subjectId &amp;&amp; 
-                  jc.classIds.includes(classId) &amp;&amp; 
-                  jc.classIds.some(cid =&gt; state.classOccupancy[cid]?.[targetDay]?.[p] === teacherOccupant)
-              );
-              if (!isJoint) {
-                  const otherCls = data.classes.find(c =&gt; state.classOccupancy[c.id]?.[targetDay]?.[p] === teacherOccupant);
-                  return {
-                    valid: false,
-                    message: `Teacher Busy in ${otherCls?.name || <span class="branch-1 cbranch-no" title="branch not covered" >"another class"}</span>`,
-                    severity: "HIGH",
-                    penaltyPoints: 1000,
-                    conflictCount: 1,
-                  };
-              }
-          }
+    // A. Fast Path: Direct period index match
+    const teacherOccupant = dayOccupancy[p];
+    if (teacherOccupant &amp;&amp; teacherOccupant !== "BLOCK" &amp;&amp; !ignoredSlots.has(`${targetDay}-${p}`)) {
+      // Allow if it's the SAME unit (for double period heads/tails or joint sessions)
+      const currentUnitId = state.classOccupancy[classId]?.[targetDay]?.[p];
+      if (teacherOccupant !== currentUnitId) {
+        const isJoint = data.jointClasses?.some(
+          (jc) =&gt;
+            jc.subjectId === ctx.subjectId &amp;&amp;
+            jc.classIds.includes(classId) &amp;&amp;
+            jc.classIds.some(
+              (cid) =&gt; state.classOccupancy[cid]?.[targetDay]?.[p] === teacherOccupant,
+            ),
+        );
+        if (!isJoint) {
+          const otherCls = data.classes.find(
+            (c) =&gt; state.classOccupancy[c.id]?.[targetDay]?.[p] === teacherOccupant,
+          );
+          return {
+            valid: false,
+            message: `Teacher Busy in ${otherCls?.name || <span class="branch-1 cbranch-no" title="branch not covered" >"another class"}</span>`,
+            severity: "HIGH",
+            penaltyPoints: 1000,
+            conflictCount: 1,
+          };
+        }
       }
+    }
 &nbsp;
-      // B. Staggered Path: Check for time overlaps in other period indices
-      const myRange = ctx.classSchedule[p];
-      if (myRange) {
-          for (let otherP = 0; otherP &lt; dayOccupancy.length; otherP++) {
-              if (otherP === p) continue; 
-              const uId = dayOccupancy[otherP];
-              if (uId &amp;&amp; uId !== "BLOCK" &amp;&amp; !ignoredSlots.has(`${targetDay}-${otherP}`)) {
-                  const otherClsId = state.unitToClassMap.get(uId);
-                  <span class="missing-if-branch" title="else path not taken" >E</span>if (otherClsId) {
-                      const otherSchedule = state.classTimeRanges.get(otherClsId);
-                      const otherRange = otherSchedule?.[otherP];
-                      
-                      if (otherRange &amp;&amp; myRange.start &lt; otherRange.end &amp;&amp; otherRange.start &lt; myRange.end) {
-                          // Apply joint class exception
-                          const isJoint = data.jointClasses?.some(<span class="fstat-no" title="function not covered" >jc =&gt; </span>
-<span class="cstat-no" title="statement not covered" >                              jc.subjectId === ctx.subjectId &amp;&amp; </span>
-                              jc.classIds.includes(classId) &amp;&amp; 
-                              jc.classIds.includes(otherClsId)
-                          );
-                          <span class="missing-if-branch" title="if path not taken" >I</span>if (isJoint) <span class="cstat-no" title="statement not covered" >continue;</span>
+    // B. Staggered Path: Check for time overlaps in other period indices
+    const myRange = ctx.classSchedule[p];
+    if (myRange) {
+      for (let otherP = 0; otherP &lt; dayOccupancy.length; otherP++) {
+        if (otherP === p) continue;
+        const uId = dayOccupancy[otherP];
+        if (uId &amp;&amp; uId !== "BLOCK" &amp;&amp; !ignoredSlots.has(`${targetDay}-${otherP}`)) {
+          const otherClsId = state.unitToClassMap.get(uId);
+          <span class="missing-if-branch" title="else path not taken" >E</span>if (otherClsId) {
+            const otherSchedule = state.classTimeRanges.get(otherClsId);
+            const otherRange = otherSchedule?.[otherP];
 &nbsp;
-                          const otherCls = data.classes.find(c =&gt; c.id === otherClsId);
-                          return {
-                            valid: false,
-                            message: `Teacher Busy in ${otherCls?.name || <span class="branch-1 cbranch-no" title="branch not covered" >"another class"}</span> (Staggered)`,
-                            severity: "HIGH",
-                            penaltyPoints: 1000,
-                            conflictCount: 1,
-                          };
-                      }
-                  }
-              }
-          }
-      }
-  }
-&nbsp;
-  // 2. Room Overlap (O(1))
-  if (roomId) {
-      const roomOccupant = state.roomOccupancy[roomId]?.[targetDay]?.[p];
-      if (roomOccupant &amp;&amp; roomOccupant !== "BLOCK" &amp;&amp; !ignoredSlots.has(`${targetDay}-${p}`)) {
-          const currentUnitId = state.classOccupancy[classId]?.[targetDay]?.[p];
-          <span class="missing-if-branch" title="else path not taken" >E</span>if (roomOccupant !== currentUnitId) {
-              // EXCEPTION: Joint Classes (Allowed to share same room)
-              const isJoint = data.jointClasses?.some(<span class="fstat-no" title="function not covered" >jc =&gt; </span>
-<span class="cstat-no" title="statement not covered" >                  jc.subjectId === ctx.subjectId &amp;&amp; </span>
-                  jc.classIds.includes(classId) &amp;&amp; 
-                  jc.classIds.some(<span class="fstat-no" title="function not covered" >cid =&gt; <span class="cstat-no" title="statement not covered" >s</span>tate.classOccupancy[cid]?.[targetDay]?.[p] === roomOccupant)</span>
+            if (otherRange &amp;&amp; myRange.start &lt; otherRange.end &amp;&amp; otherRange.start &lt; myRange.end) {
+              // Apply joint class exception
+              const isJoint = data.jointClasses?.some(
+<span class="fstat-no" title="function not covered" >                (j</span>c) =&gt;
+<span class="cstat-no" title="statement not covered" >                  jc.subjectId === ctx.subjectId &amp;&amp;</span>
+                  jc.classIds.includes(classId) &amp;&amp;
+                  jc.classIds.includes(otherClsId),
               );
-              <span class="missing-if-branch" title="if path not taken" >I</span>if (isJoint) <span class="cstat-no" title="statement not covered" >return null;</span>
+              <span class="missing-if-branch" title="if path not taken" >I</span>if (isJoint) <span class="cstat-no" title="statement not covered" >continue;</span>
 &nbsp;
-              const otherCls = data.classes.find(c =&gt; state.classOccupancy[c.id]?.[targetDay]?.[p] === roomOccupant);
+              const otherCls = data.classes.find((c) =&gt; c.id === otherClsId);
               return {
                 valid: false,
-                message: `Room occupied by ${otherCls?.name || <span class="branch-1 cbranch-no" title="branch not covered" >"another class"}</span>`,
+                message: `Teacher Busy in ${otherCls?.name || <span class="branch-1 cbranch-no" title="branch not covered" >"another class"}</span> (Staggered)`,
                 severity: "HIGH",
                 penaltyPoints: 1000,
                 conflictCount: 1,
               };
+            }
           }
+        }
       }
+    }
+  }
+&nbsp;
+  // 2. Room Overlap (O(1))
+  if (roomId) {
+    const roomOccupant = state.roomOccupancy[roomId]?.[targetDay]?.[p];
+    if (roomOccupant &amp;&amp; roomOccupant !== "BLOCK" &amp;&amp; !ignoredSlots.has(`${targetDay}-${p}`)) {
+      const currentUnitId = state.classOccupancy[classId]?.[targetDay]?.[p];
+      <span class="missing-if-branch" title="else path not taken" >E</span>if (roomOccupant !== currentUnitId) {
+        // EXCEPTION: Joint Classes (Allowed to share same room)
+        const isJoint = data.jointClasses?.some(
+<span class="fstat-no" title="function not covered" >          (j</span>c) =&gt;
+<span class="cstat-no" title="statement not covered" >            jc.subjectId === ctx.subjectId &amp;&amp;</span>
+            jc.classIds.includes(classId) &amp;&amp;
+            jc.classIds.some(<span class="fstat-no" title="function not covered" >(c</span>id) =&gt; <span class="cstat-no" title="statement not covered" >state.classOccupancy[cid]?.[targetDay]?.[p] === roomOccupant)</span>,
+        );
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (isJoint) <span class="cstat-no" title="statement not covered" >return null;</span>
+&nbsp;
+        const otherCls = data.classes.find(
+          (c) =&gt; state.classOccupancy[c.id]?.[targetDay]?.[p] === roomOccupant,
+        );
+        return {
+          valid: false,
+          message: `Room occupied by ${otherCls?.name || <span class="branch-1 cbranch-no" title="branch not covered" >"another class"}</span>`,
+          severity: "HIGH",
+          penaltyPoints: 1000,
+          conflictCount: 1,
+        };
+      }
+    }
   }
 &nbsp;
   return null;
-};</pre></td></tr></table></pre>
+};
+&nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
             </div><!-- /wrapper -->
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-28T04:08:05.121Z
+                at 2026-05-28T05:56:49.107Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>
