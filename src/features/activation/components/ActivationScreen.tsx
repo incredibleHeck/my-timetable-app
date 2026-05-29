@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Lock, KeyRound, AlertCircle } from "lucide-react";
-import { Button } from "../../components/ui";
+import { Button } from "../../../components/ui";
 
 interface ActivationScreenProps {
   onActivate: (key: string) => Promise<boolean>;

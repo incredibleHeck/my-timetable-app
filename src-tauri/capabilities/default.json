@@ -13,9 +13,6 @@
     "fs:allow-write-file",
     "fs:allow-mkdir",
     "fs:allow-download-write-recursive",
-    "fs:allow-desktop-write-recursive",
-    "fs:allow-document-write-recursive",
-    "fs:allow-home-write-recursive",
     "dialog:default",
     "dialog:allow-save"
   ]

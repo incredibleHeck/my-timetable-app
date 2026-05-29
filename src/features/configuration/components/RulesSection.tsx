@@ -11,6 +11,7 @@ interface RulesSectionProps {
   updateMaxSubjectPeriods: (val: number) => AppData;
   updateMaxTeacherPeriods: (val: number) => AppData;
   updateMaxTeachingPeriodsPerWeek: (val: number) => AppData;
+  updateSolverTimeout: (val: number) => AppData;
 }
 
 export const RulesSection: React.FC<RulesSectionProps> = ({
@@ -20,12 +21,14 @@ export const RulesSection: React.FC<RulesSectionProps> = ({
   updateMaxSubjectPeriods,
   updateMaxTeacherPeriods,
   updateMaxTeachingPeriodsPerWeek,
+  updateSolverTimeout,
 }) => {
   const {
     maxConsecutivePeriods: maxConsecutive,
     maxSubjectPeriodsPerDay: maxSubject,
     maxTeacherPeriodsPerDay: maxTeacher,
     maxTeachingPeriodsPerWeek: maxWeekly,
+    solverTimeoutMinutes,
   } = data.settings;
 
   return (
@@ -94,6 +97,20 @@ export const RulesSection: React.FC<RulesSectionProps> = ({
                 `Updated Max Teaching Periods Per Week to ${val}`,
                 updateMaxTeachingPeriodsPerWeek(val),
               )
+            }
+          />
+        </div>
+
+        <div className="flex items-start gap-2">
+          <ShieldAlert size={18} className="text-emerald-600 shrink-0 mt-1" aria-hidden />
+          <NumberStepper
+            label="Solver Timeout (Minutes)"
+            value={solverTimeoutMinutes ?? 1}
+            min={1}
+            max={10}
+            helpText="Maximum time allowed for the auto-generator algorithm."
+            onChange={(val) =>
+              commit(`Updated Solver Timeout to ${val} minutes`, updateSolverTimeout(val))
             }
           />
         </div>

@@ -1,6 +1,12 @@
 import { test, expect } from "@playwright/test";
 import { DEFAULT_DATA } from "../src/utils/constants";
 
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("eduscheduler_activated_key", "EDU-TEST-TEST-TEST");
+  });
+});
+
 const seedProfile = async (page: import("@playwright/test").Page, name = "E2E School", data = DEFAULT_DATA) => {
   await page.goto("/");
   await page.evaluate(

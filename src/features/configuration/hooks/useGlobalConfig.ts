@@ -194,6 +194,11 @@ export const useGlobalConfig = (data: AppData) => {
     },
   });
 
+  const updateSolverTimeout = (val: number): AppData => ({
+    ...data,
+    settings: { ...data.settings, solverTimeoutMinutes: val },
+  });
+
   const handleSlotClick = (d: number, p: number) => {
     let val: unknown = data.settings.fixedOccasions[d]?.[p];
     if (val === true) val = "Reserved";
@@ -245,6 +250,7 @@ export const useGlobalConfig = (data: AppData) => {
     updateMaxTeacherPeriods,
     updateMaxTeachingPeriodsPerWeek,
     updateExamGrid,
+    updateSolverTimeout,
     handleSlotClick,
     saveSlot,
   };

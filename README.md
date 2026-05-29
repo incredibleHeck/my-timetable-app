@@ -67,18 +67,19 @@ After setup, verify these core flows:
 4. **Academic data** — add subjects, teachers, rooms, classes with curriculum
 5. **Generator** — generate schedule, drag-and-drop edit, undo/redo, export Excel/PDF
 6. **Exams & duty** — create rosters, auto-assign, export
-7. **Edge cases** — double-period swaps, same-day load limits, fixed occasion blocks
+7: **Edge cases** — double-period swaps, same-day load limits, fixed occasion blocks
+8. **Activation Gate** — verifies dummy product key (EDU-XXXX-XXXX-XXXX) on cold start
 
 ## Project structure
 
 ```
 src/
-  features/       # Feature modules (dashboard, generator, exams, duty, etc.)
+  features/       # Feature modules (dashboard, generator, exams, duty, activation)
   components/     # Shared UI (layout, buttons, modals, toasts)
   contexts/       # React context (profiles, undo/redo)
   services/       # File system, export, profile storage
   types/          # Shared TypeScript types
-tests/            # Vitest test suite (69 files, 200 tests)
+tests/            # Vitest test suite (86 files, 295 tests)
 src-tauri/        # Tauri desktop shell (Rust)
 conductor/        # Internal planning docs (not required to run the app)
 ```

@@ -80,6 +80,8 @@ export interface Settings {
     session2DefaultTime?: string;
     sessionDefaultTimes?: string[];
   };
+  /** Timeout for the generator in minutes (defaults to 1 minute if unset) */
+  solverTimeoutMinutes?: number;
 }
 
 // ----------------------------------------------------------------------

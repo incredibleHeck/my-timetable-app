@@ -67,6 +67,7 @@ export const GlobalConfigView: React.FC<ViewProps> = ({
     updateMaxTeacherPeriods,
     updateMaxTeachingPeriodsPerWeek,
     updateExamGrid,
+    updateSolverTimeout,
     handleSlotClick,
     saveSlot,
   } = useGlobalConfig(data);
@@ -213,6 +214,7 @@ export const GlobalConfigView: React.FC<ViewProps> = ({
               updateMaxSubjectPeriods={updateMaxSubjectPeriods}
               updateMaxTeacherPeriods={updateMaxTeacherPeriods}
               updateMaxTeachingPeriodsPerWeek={updateMaxTeachingPeriodsPerWeek}
+              updateSolverTimeout={updateSolverTimeout}
             />
           </Card>
         </div>
