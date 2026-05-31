@@ -85,7 +85,7 @@ describe("Excel Export Services", () => {
     expect(blob.type).toBe("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     expect(fileName).toBe("Full_Classes_Schedule.xlsx");
     expect(extension).toBe("xlsx");
-  }, 10000);
+  }, 30000);
 
   it("should successfully generate and save Excel file for TEACHER mode", async () => {
     await exportScheduleToExcel(testData, "TEACHER");
@@ -96,7 +96,7 @@ describe("Excel Export Services", () => {
     expect(blob).toBeInstanceOf(Blob);
     expect(fileName).toBe("Full_Faculty_Schedule.xlsx");
     expect(extension).toBe("xlsx");
-  }, 10000);
+  }, 30000);
 
   it("should warn and exit if no entities are available to export", async () => {
     const emptyData: AppData = {

@@ -64,7 +64,7 @@ const curriculumItemSchema = z
     periodsPerWeek: z.number(),
     singles: z.number(),
     doubles: z.number(),
-    assignedTeacherId: z.string().optional(),
+    assignedTeacherId: z.string().nullish().transform(v => v ?? undefined),
     isWorkloadExempt: z.boolean().optional(),
   })
   .passthrough();
@@ -74,7 +74,7 @@ const classGroupSchema = z
     id: z.string(),
     name: z.string(),
     level: z.string().optional(),
-    classroomId: z.string().optional(),
+    classroomId: z.string().nullish().transform(v => v ?? undefined),
     defaultRoomId: z.string(),
     studentCount: z.number().optional(),
     curriculum: z.array(curriculumItemSchema),
@@ -93,7 +93,7 @@ const jointClassSchema = z
     name: z.string(),
     subjectId: z.string(),
     classIds: z.array(z.string()),
-    teacherId: z.string().optional(),
+    teacherId: z.string().nullish().transform(v => v ?? undefined),
   })
   .passthrough();
 
