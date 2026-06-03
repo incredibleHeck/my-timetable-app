@@ -1,5 +1,14 @@
 import { z } from "zod";
-import { AppData, FixedOccasion, Subject, Teacher, Room, ClassGroup, JointClass, ElectiveBlock } from "../types";
+import {
+  AppData,
+  FixedOccasion,
+  Subject,
+  Teacher,
+  Room,
+  ClassGroup,
+  JointClass,
+  ElectiveBlock,
+} from "../types";
 
 const passthroughRecord = z.record(z.string(), z.unknown());
 
@@ -20,39 +29,36 @@ const settingsSchema = z
   })
   .passthrough();
 
-const subjectSchema = z
-  .object({
-    id: z.string(),
-    name: z.string(),
-    color: z.string(),
-    isSingleResource: z.boolean().optional(),
-    isExaminable: z.boolean().optional(),
-    requiredRoomId: z.string().nullable().optional(),
-    preferredRoomIds: z.array(z.string()).optional(),
-    requiredRoomType: z.string().optional(),
-    isCore: z.boolean().optional(),
-    examPaperCount: z.number().optional(),
-    examPaperDurations: z.array(z.number()).optional(),
-  });
+const subjectSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  color: z.string(),
+  isSingleResource: z.boolean().optional(),
+  isExaminable: z.boolean().optional(),
+  requiredRoomId: z.string().nullable().optional(),
+  preferredRoomIds: z.array(z.string()).optional(),
+  requiredRoomType: z.string().optional(),
+  isCore: z.boolean().optional(),
+  examPaperCount: z.number().optional(),
+  examPaperDurations: z.array(z.number()).optional(),
+});
 
-const teacherSchema = z
-  .object({
-    id: z.string(),
-    name: z.string(),
-    specialtyIds: z.array(z.string()),
-    constraints: z.array(z.array(z.boolean())),
-    targetLoad: z.number().optional(),
-    maxPeriodsPerDay: z.number().optional(),
-  });
+const teacherSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  specialtyIds: z.array(z.string()),
+  constraints: z.array(z.array(z.boolean())),
+  targetLoad: z.number().optional(),
+  maxPeriodsPerDay: z.number().optional(),
+});
 
-const roomSchema = z
-  .object({
-    id: z.string(),
-    name: z.string(),
-    capacity: z.number(),
-    type: z.string(),
-    isHomeRoom: z.boolean().optional(),
-  });
+const roomSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  capacity: z.number(),
+  type: z.string(),
+  isHomeRoom: z.boolean().optional(),
+});
 
 const curriculumItemSchema = z
   .object({
@@ -61,27 +67,32 @@ const curriculumItemSchema = z
     periodsPerWeek: z.number(),
     singles: z.number(),
     doubles: z.number(),
-    assignedTeacherId: z.string().nullish().transform(v => v ?? undefined),
+    assignedTeacherId: z
+      .string()
+      .nullish()
+      .transform((v) => v ?? undefined),
     isWorkloadExempt: z.boolean().optional(),
   })
   .passthrough();
 
-const classGroupSchema = z
-  .object({
-    id: z.string(),
-    name: z.string(),
-    level: z.string().optional(),
-    classroomId: z.string().nullish().transform(v => v ?? undefined),
-    defaultRoomId: z.string(),
-    studentCount: z.number().optional(),
-    curriculum: z.array(curriculumItemSchema),
-    periodCount: z.number().optional(),
-    structure: z.array(z.union([z.string(), periodConfigSchema])).optional(),
-    duration: z.number().optional(),
-    breakDuration: z.number().optional(),
-    lunchDuration: z.number().optional(),
-    fixedSessions: z.array(z.array(z.unknown())).optional(),
-  });
+const classGroupSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  level: z.string().optional(),
+  classroomId: z
+    .string()
+    .nullish()
+    .transform((v) => v ?? undefined),
+  defaultRoomId: z.string(),
+  studentCount: z.number().optional(),
+  curriculum: z.array(curriculumItemSchema),
+  periodCount: z.number().optional(),
+  structure: z.array(z.union([z.string(), periodConfigSchema])).optional(),
+  duration: z.number().optional(),
+  breakDuration: z.number().optional(),
+  lunchDuration: z.number().optional(),
+  fixedSessions: z.array(z.array(z.unknown())).optional(),
+});
 
 const jointClassSchema = z
   .object({
@@ -89,7 +100,10 @@ const jointClassSchema = z
     name: z.string(),
     subjectId: z.string(),
     classIds: z.array(z.string()),
-    teacherId: z.string().nullish().transform(v => v ?? undefined),
+    teacherId: z
+      .string()
+      .nullish()
+      .transform((v) => v ?? undefined),
   })
   .passthrough();
 

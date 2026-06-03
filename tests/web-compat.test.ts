@@ -1,27 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { DEFAULT_DATA } from "../src/utils/constants";
+import { FileService } from "../src/services/fileSystem";
+import { isTauriEnv } from "../src/utils/platform";
+import * as ProfileStorage from "../src/services/profile/profileStorage";
 
 describe("Web Compatibility", () => {
   beforeEach(() => {
     // Ensure Tauri globals are NOT present
     vi.stubGlobal("__TAURI__", undefined);
     vi.stubGlobal("__TAURI_INTERNALS__", undefined);
-
-    // Reset modules to ensure we test the import behavior
-    vi.resetModules();
   });
 
-  it("should import FileService without crashing in a web environment", async () => {
-    // We use dynamic import here to trigger the module evaluation inside the test
-    const { FileService } = await import("../src/services/fileSystem");
-
+  it("should import FileService without crashing in a web environment", () => {
     expect(FileService).toBeDefined();
     expect(FileService.isTauri).toBe(false);
   });
 
   it("should use webDownload when saving project in web mode", async () => {
-    const { FileService } = await import("../src/services/fileSystem");
-
     // Spy on webDownload
     const webDownloadSpy = vi
       .spyOn(FileService, "webDownload")
@@ -35,8 +30,6 @@ describe("Web Compatibility", () => {
   });
 
   it("should use webDownload when saving export in web mode", async () => {
-    const { FileService } = await import("../src/services/fileSystem");
-
     const webDownloadSpy = vi
       .spyOn(FileService, "webDownload")
       .mockResolvedValue({ success: true });
@@ -48,9 +41,7 @@ describe("Web Compatibility", () => {
     expect(webDownloadSpy).toHaveBeenCalledWith(mockBlob, "test", "text/plain");
   });
 
-  it("should detect platform correctly via isTauriEnv", async () => {
-    const { isTauriEnv } = await import("../src/utils/platform");
-
+  it("should detect platform correctly via isTauriEnv", () => {
     // Test Web Mode
     vi.stubGlobal("__TAURI__", undefined);
     expect(isTauriEnv()).toBe(false);
@@ -61,8 +52,6 @@ describe("Web Compatibility", () => {
   });
 
   it("should initialize and use localStorage for profiles in web mode", async () => {
-    const ProfileStorage = await import("../src/services/profile/profileStorage");
-
     // Clear localStorage
     localStorage.clear();
 

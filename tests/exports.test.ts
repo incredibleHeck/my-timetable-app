@@ -23,8 +23,12 @@ vi.mock("../src/services/fileSystem", () => ({
 vi.mock("../src/services/export/excelLoader", () => {
   class MockCell {
     _value: any = "";
-    get value() { return this._value; }
-    set value(v: any) { this._value = v; }
+    get value() {
+      return this._value;
+    }
+    set value(v: any) {
+      this._value = v;
+    }
     font: any = {};
     alignment: any = {};
     border: any = {};
@@ -99,7 +103,6 @@ vi.mock("../src/services/export/excelLoader", () => {
   };
 });
 
-
 describe("Consolidated Export Services Suite", () => {
   let mockWindowOpen: any;
   let mockPrint: any;
@@ -171,7 +174,16 @@ describe("Consolidated Export Services Suite", () => {
         id: "c1",
         name: "Class 10A",
         defaultRoomId: "r1",
-        curriculum: [{ id: "curr1", subjectId: "s1", singles: 4, doubles: 0, assignedTeacherId: "t1", periodsPerWeek: 4 }],
+        curriculum: [
+          {
+            id: "curr1",
+            subjectId: "s1",
+            singles: 4,
+            doubles: 0,
+            assignedTeacherId: "t1",
+            periodsPerWeek: 4,
+          },
+        ],
       },
     ],
     schedule: {

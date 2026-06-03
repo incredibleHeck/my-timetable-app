@@ -19,7 +19,7 @@ export function useActivation() {
 
       // Dummy validation logic: EDU-XXXX-XXXX-XXXX
       const regex = /^EDU-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/i;
-      
+
       if (regex.test(key)) {
         localStorage.setItem(ACTIVATION_STORAGE_KEY, key.toUpperCase());
         setIsActivated(true);

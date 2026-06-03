@@ -1,5 +1,5 @@
 import React from "react";
-import { PlusCircle, FolderOpen, Save, Globe } from "lucide-react";
+import { Save, Globe } from "lucide-react";
 import { ViewState } from "../../types";
 import { isTauriEnv } from "../../utils/platform";
 

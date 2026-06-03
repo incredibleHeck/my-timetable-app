@@ -17,8 +17,11 @@ export const ActivationScreen: React.FC<ActivationScreenProps> = ({
 
   const handleSegmentChange = (index: number, value: string) => {
     if (index === 0) return; // 'EDU' is fixed
-    
-    const cleanValue = value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 4);
+
+    const cleanValue = value
+      .replace(/[^a-zA-Z0-9]/g, "")
+      .toUpperCase()
+      .slice(0, 4);
     const newSegments = [...keySegments];
     newSegments[index] = cleanValue;
     setKeySegments(newSegments);
@@ -58,15 +61,19 @@ export const ActivationScreen: React.FC<ActivationScreenProps> = ({
               <Lock className="text-slate-900" size={32} />
             </div>
           </div>
-          
+
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">Activate EduScheduler Pro</h1>
+            <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
+              Activate EduScheduler Pro
+            </h1>
             <p className="text-slate-400">Enter your product key to unlock the application.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300 block text-left">Product Key</label>
+              <label className="text-sm font-medium text-slate-300 block text-left">
+                Product Key
+              </label>
               <div className="flex gap-2 items-center justify-center">
                 {keySegments.map((segment, idx) => (
                   <React.Fragment key={idx}>
@@ -78,7 +85,9 @@ export const ActivationScreen: React.FC<ActivationScreenProps> = ({
                       onChange={(e) => handleSegmentChange(idx, e.target.value)}
                       onKeyDown={(e) => handleKeyDown(idx, e)}
                       className={`w-full max-w-[5rem] text-center font-mono text-lg bg-slate-900/50 border ${
-                        error ? "border-red-500/50 focus:border-red-500" : "border-slate-600 focus:border-amber-500"
+                        error
+                          ? "border-red-500/50 focus:border-red-500"
+                          : "border-slate-600 focus:border-amber-500"
                       } text-white rounded-lg px-2 py-3 focus:outline-none focus:ring-2 ${
                         error ? "focus:ring-red-500/20" : "focus:ring-amber-500/20"
                       } transition-all ${idx === 0 ? "text-slate-500 bg-slate-800/80 cursor-not-allowed" : ""}`}
@@ -113,9 +122,14 @@ export const ActivationScreen: React.FC<ActivationScreenProps> = ({
               )}
             </Button>
           </form>
-          
+
           <div className="mt-8 pt-6 border-t border-slate-700/50 text-center text-sm text-slate-500">
-            <p>Need a product key? <a href="#" className="text-amber-500 hover:text-amber-400 transition-colors">Purchase a license</a></p>
+            <p>
+              Need a product key?{" "}
+              <a href="#" className="text-amber-500 hover:text-amber-400 transition-colors">
+                Purchase a license
+              </a>
+            </p>
           </div>
         </div>
       </div>

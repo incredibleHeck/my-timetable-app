@@ -64,7 +64,11 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
             if (manifestContent) {
               const manifest = JSON.parse(manifestContent);
               const idx = manifest.profiles.findIndex((p: any) => p.id === profile.id);
-              const entry = { id: profile.id, name: profile.name, lastModified: profile.lastModified };
+              const entry = {
+                id: profile.id,
+                name: profile.name,
+                lastModified: profile.lastModified,
+              };
               if (idx >= 0) manifest.profiles[idx] = entry;
               else manifest.profiles.push(entry);
               localStorage.setItem("profile_manifest", JSON.stringify(manifest));
@@ -73,7 +77,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
             console.error("Failed to flush profile save on unload:", err);
           }
         }
-        
+
         e.preventDefault();
         e.returnValue = "";
         return "";
@@ -88,25 +92,27 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
       import("@tauri-apps/api/window").then(({ getCurrentWindow }) => {
         if (isCancelled) return;
         const appWindow = getCurrentWindow();
-        appWindow.onCloseRequested(async (event) => {
-          if (isDirty && activeProfileRef.current) {
-            event.preventDefault();
-            try {
-              setIsSaving(true);
-              await ProfileStorage.saveProfile(activeProfileRef.current);
-              setIsDirty(false);
-            } catch (err) {
-              console.error("Failed to flush tauri save on window close:", err);
+        appWindow
+          .onCloseRequested(async (event) => {
+            if (isDirty && activeProfileRef.current) {
+              event.preventDefault();
+              try {
+                setIsSaving(true);
+                await ProfileStorage.saveProfile(activeProfileRef.current);
+                setIsDirty(false);
+              } catch (err) {
+                console.error("Failed to flush tauri save on window close:", err);
+              }
+              appWindow.close();
             }
-            appWindow.close();
-          }
-        }).then((unlistenFn) => {
-          if (isCancelled) {
-            unlistenFn();
-          } else {
-            tauriUnlisten = unlistenFn;
-          }
-        });
+          })
+          .then((unlistenFn) => {
+            if (isCancelled) {
+              unlistenFn();
+            } else {
+              tauriUnlisten = unlistenFn;
+            }
+          });
       });
     }
 
@@ -130,7 +136,10 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
       } catch (error: any) {
         console.error("Failed to auto-save profile:", error);
         if (error?.message?.includes("QuotaExceededError")) {
-          notify("Local storage is full! Please export your data and delete old profiles.", "error");
+          notify(
+            "Local storage is full! Please export your data and delete old profiles.",
+            "error",
+          );
         } else {
           notify("Failed to save changes automatically. Check disk space or permissions.", "error");
         }
@@ -244,7 +253,10 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     } catch (error: any) {
       console.error("Failed to create new profile:", error);
       if (error?.message?.includes("QuotaExceededError")) {
-        notify("Failed to create new profile. Local storage is full! Please export and delete old profiles.", "error");
+        notify(
+          "Failed to create new profile. Local storage is full! Please export and delete old profiles.",
+          "error",
+        );
       } else {
         notify("Failed to create new profile.", "error");
       }

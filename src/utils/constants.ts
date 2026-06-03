@@ -1,5 +1,4 @@
 import { AppData, PeriodConfig } from "../types";
-import { generateId } from "./utils";
 import { generateDefaultTimeSlots } from "./timeUtils";
 
 // --- PRO COLOR PALETTE (Hex + Name) ---

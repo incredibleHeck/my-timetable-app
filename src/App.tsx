@@ -11,8 +11,13 @@ import { ViewRouter, isFullScreenView } from "./routing/ViewRouter";
 import { ViewState } from "./types";
 
 function App() {
-  const { isActivated, isLoading: isActivationLoading, activate, error: activationError } = useActivation();
-  
+  const {
+    isActivated,
+    isLoading: isActivationLoading,
+    activate,
+    error: activationError,
+  } = useActivation();
+
   const {
     profiles,
     activeProfile,
@@ -40,13 +45,7 @@ function App() {
   }
 
   if (!isActivated) {
-    return (
-      <ActivationScreen 
-        onActivate={activate} 
-        error={activationError} 
-        isLoading={false} 
-      />
-    );
+    return <ActivationScreen onActivate={activate} error={activationError} isLoading={false} />;
   }
 
   const autoSaveStatus = isSaving ? "SAVING" : "SAVED";

@@ -359,7 +359,9 @@ const generateSheet = (
   merges.forEach(({ r, c, c2 }) => {
     try {
       worksheet.mergeCells(r, c, r, c2);
-    } catch (e) {}
+    } catch {
+      // Ignore cell merge conflicts
+    }
   });
 };
 

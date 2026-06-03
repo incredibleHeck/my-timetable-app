@@ -487,8 +487,8 @@ export const solveSmartWithRestarts = (
   onProgress?: SolverProgressCallback,
   options: SolverOptions = {},
 ): SolverResult => {
-  const dynamicBudgetMs = data.settings.solverTimeoutMinutes 
-    ? data.settings.solverTimeoutMinutes * 60000 
+  const dynamicBudgetMs = data.settings.solverTimeoutMinutes
+    ? data.settings.solverTimeoutMinutes * 60000
     : SOLVER_TARGET_MS;
 
   return solveSmart(units, data, onProgress, {

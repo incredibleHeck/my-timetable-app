@@ -149,8 +149,7 @@ export const checkSubjectLimit = (
 
         if (slot.subjectId === subjectId) {
           const nextSlot = daySched[p + 1];
-          const isDouble =
-            nextSlot && nextSlot.isFixed && nextSlot.subjectId === subjectId;
+          const isDouble = nextSlot && nextSlot.isFixed && nextSlot.subjectId === subjectId;
 
           totalScheduled += isDouble ? 2 : 1;
         }

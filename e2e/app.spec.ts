@@ -7,7 +7,11 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-const seedProfile = async (page: import("@playwright/test").Page, name = "E2E School", data = DEFAULT_DATA) => {
+const seedProfile = async (
+  page: import("@playwright/test").Page,
+  name = "E2E School",
+  data = DEFAULT_DATA,
+) => {
   await page.goto("/");
   await page.evaluate(
     ({ profileName, data }) => {
@@ -40,7 +44,9 @@ test.describe("Profile bootstrap", () => {
     await page.getByRole("button", { name: "Create First Profile" }).click();
     await page.getByLabel(/profile name/i).fill("Playwright School");
     await page.getByRole("button", { name: /create profile/i }).click();
-    await expect(page.locator('strong:has-text("Playwright School")')).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('strong:has-text("Playwright School")')).toBeVisible({
+      timeout: 15_000,
+    });
   });
 
   test("loads seeded profile to dashboard", async ({ page }) => {
@@ -108,7 +114,16 @@ test.describe("Scheduler", () => {
           id: "c1",
           name: "10A",
           defaultRoomId: "r1",
-          curriculum: [{ id: "curr1", subjectId: "s1", singles: 4, doubles: 0, assignedTeacherId: "t1", periodsPerWeek: 4 }],
+          curriculum: [
+            {
+              id: "curr1",
+              subjectId: "s1",
+              singles: 4,
+              doubles: 0,
+              assignedTeacherId: "t1",
+              periodsPerWeek: 4,
+            },
+          ],
         },
       ],
       teachers: [
@@ -130,7 +145,9 @@ test.describe("Scheduler", () => {
 
     // Navigate to generator view
     await page.getByRole("button", { name: "Auto-Generator" }).click();
-    await expect(page.getByRole("heading", { name: "Auto-Scheduler" })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("heading", { name: "Auto-Scheduler" })).toBeVisible({
+      timeout: 15_000,
+    });
 
     // Click Generate Schedule
     await page.getByRole("button", { name: /generate schedule/i }).click();
@@ -143,7 +160,7 @@ test.describe("Scheduler", () => {
 
     // Verify stats updates
     await expect(page.getByText("fully placed")).toBeVisible({ timeout: 15_000 });
-    await expect(page.locator('text=/Last run:/')).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator("text=/Last run:/")).toBeVisible({ timeout: 15_000 });
   });
 });
 
@@ -162,7 +179,11 @@ test.describe("Profile switching E2E", () => {
 
     // Switch back to First School
     await page.getByRole("button", { name: "Switch Profile" }).click();
-    await page.locator("div").filter({ hasText: /^First SchoolSwitch$/ }).getByRole("button", { name: "Switch" }).click();
+    await page
+      .locator("div")
+      .filter({ hasText: /^First SchoolSwitch$/ })
+      .getByRole("button", { name: "Switch" })
+      .click();
     await expect(page.locator('strong:has-text("First School")')).toBeVisible({ timeout: 15_000 });
   });
 });
@@ -209,17 +230,23 @@ test.describe("Operational Views Navigation E2E", () => {
 
     // Navigate to Rooms View
     await page.getByRole("button", { name: "Rooms" }).click();
-    await expect(page.getByRole("heading", { name: "Room Management" })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("heading", { name: "Room Management" })).toBeVisible({
+      timeout: 15_000,
+    });
 
     // Navigate to Exams View
     await page.getByRole("button", { name: "Exam Timetable" }).click();
-    await expect(page.getByRole("heading", { name: "Exam Timetable" })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("heading", { name: "Exam Timetable" })).toBeVisible({
+      timeout: 15_000,
+    });
 
     // Go back to Dashboard to bring back the sidebar
     await page.getByTitle("Back to Dashboard").click();
 
     // Navigate to Duty View
     await page.getByRole("button", { name: "Duty Roster", exact: true }).click();
-    await expect(page.getByRole("heading", { name: "Duty Roster" })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("heading", { name: "Duty Roster" })).toBeVisible({
+      timeout: 15_000,
+    });
   });
 });

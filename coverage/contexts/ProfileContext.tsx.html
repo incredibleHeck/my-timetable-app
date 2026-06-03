@@ -409,7 +409,19 @@
 <a name='L344'></a><a href='#L344'>344</a>
 <a name='L345'></a><a href='#L345'>345</a>
 <a name='L346'></a><a href='#L346'>346</a>
-<a name='L347'></a><a href='#L347'>347</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L347'></a><a href='#L347'>347</a>
+<a name='L348'></a><a href='#L348'>348</a>
+<a name='L349'></a><a href='#L349'>349</a>
+<a name='L350'></a><a href='#L350'>350</a>
+<a name='L351'></a><a href='#L351'>351</a>
+<a name='L352'></a><a href='#L352'>352</a>
+<a name='L353'></a><a href='#L353'>353</a>
+<a name='L354'></a><a href='#L354'>354</a>
+<a name='L355'></a><a href='#L355'>355</a>
+<a name='L356'></a><a href='#L356'>356</a>
+<a name='L357'></a><a href='#L357'>357</a>
+<a name='L358'></a><a href='#L358'>358</a>
+<a name='L359'></a><a href='#L359'>359</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -476,6 +488,10 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -500,6 +516,7 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -510,6 +527,7 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -543,6 +561,9 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -656,6 +677,9 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -821,7 +845,11 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) =&gt; {
 <span class="cstat-no" title="statement not covered" >            if (manifestContent) {</span>
               const manifest = <span class="cstat-no" title="statement not covered" >JSON.parse(manifestContent);</span>
               const idx = <span class="cstat-no" title="statement not covered" >manifest.profiles.findIndex(<span class="fstat-no" title="function not covered" >(p</span>: any) =&gt; <span class="cstat-no" title="statement not covered" >p.id === profile.id)</span>;</span>
-              const entry = <span class="cstat-no" title="statement not covered" >{ id: profile.id, name: profile.name, lastModified: profile.lastModified };</span>
+              const entry = <span class="cstat-no" title="statement not covered" >{</span>
+                id: profile.id,
+                name: profile.name,
+                lastModified: profile.lastModified,
+              };
 <span class="cstat-no" title="statement not covered" >              if (idx &gt;= 0) <span class="cstat-no" title="statement not covered" >manifest.profiles[idx] = entry;</span></span>
               else <span class="cstat-no" title="statement not covered" >manifest.profiles.push(entry);</span>
 <span class="cstat-no" title="statement not covered" >              localStorage.setItem("profile_manifest", JSON.stringify(manifest));</span>
@@ -830,7 +858,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) =&gt; {
 <span class="cstat-no" title="statement not covered" >            console.error("Failed to flush profile save on unload:", err);</span>
           }
         }
-        
+&nbsp;
 <span class="cstat-no" title="statement not covered" >        e.preventDefault();</span>
 <span class="cstat-no" title="statement not covered" >        e.returnValue = "";</span>
 <span class="cstat-no" title="statement not covered" >        return "";</span>
@@ -845,25 +873,27 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) =&gt; {
 <span class="cstat-no" title="statement not covered" >      import("@tauri-apps/api/window").then(({ <span class="fstat-no" title="function not covered" >getCurrentWindow }</span>) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >        if (isCancelled) <span class="cstat-no" title="statement not covered" >return;</span></span>
         const appWindow = <span class="cstat-no" title="statement not covered" >getCurrentWindow();</span>
-<span class="cstat-no" title="statement not covered" >        appWindow.onCloseRequested(<span class="fstat-no" title="function not covered" >async (e</span>vent) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >          if (isDirty &amp;&amp; activeProfileRef.current) {</span>
-<span class="cstat-no" title="statement not covered" >            event.preventDefault();</span>
-<span class="cstat-no" title="statement not covered" >            try {</span>
-<span class="cstat-no" title="statement not covered" >              setIsSaving(true);</span>
-<span class="cstat-no" title="statement not covered" >              await ProfileStorage.saveProfile(activeProfileRef.current);</span>
-<span class="cstat-no" title="statement not covered" >              setIsDirty(false);</span>
-            } catch (err) {
-<span class="cstat-no" title="statement not covered" >              console.error("Failed to flush tauri save on window close:", err);</span>
+<span class="cstat-no" title="statement not covered" >        appWindow</span>
+          .onCloseRequested(<span class="fstat-no" title="function not covered" >async (e</span>vent) =&gt; {
+<span class="cstat-no" title="statement not covered" >            if (isDirty &amp;&amp; activeProfileRef.current) {</span>
+<span class="cstat-no" title="statement not covered" >              event.preventDefault();</span>
+<span class="cstat-no" title="statement not covered" >              try {</span>
+<span class="cstat-no" title="statement not covered" >                setIsSaving(true);</span>
+<span class="cstat-no" title="statement not covered" >                await ProfileStorage.saveProfile(activeProfileRef.current);</span>
+<span class="cstat-no" title="statement not covered" >                setIsDirty(false);</span>
+              } catch (err) {
+<span class="cstat-no" title="statement not covered" >                console.error("Failed to flush tauri save on window close:", err);</span>
+              }
+<span class="cstat-no" title="statement not covered" >              appWindow.close();</span>
             }
-<span class="cstat-no" title="statement not covered" >            appWindow.close();</span>
-          }
-        }).then(<span class="fstat-no" title="function not covered" >(u</span>nlistenFn) =&gt; {
-<span class="cstat-no" title="statement not covered" >          if (isCancelled) {</span>
-<span class="cstat-no" title="statement not covered" >            unlistenFn();</span>
-          } else {
-<span class="cstat-no" title="statement not covered" >            tauriUnlisten = unlistenFn;</span>
-          }
-        });
+          })
+          .then(<span class="fstat-no" title="function not covered" >(u</span>nlistenFn) =&gt; {
+<span class="cstat-no" title="statement not covered" >            if (isCancelled) {</span>
+<span class="cstat-no" title="statement not covered" >              unlistenFn();</span>
+            } else {
+<span class="cstat-no" title="statement not covered" >              tauriUnlisten = unlistenFn;</span>
+            }
+          });
       });
     }
 &nbsp;
@@ -887,7 +917,10 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) =&gt; {
       } catch (error: any) {
 <span class="cstat-no" title="statement not covered" >        console.error("Failed to auto-save profile:", error);</span>
 <span class="cstat-no" title="statement not covered" >        if (error?.message?.includes("QuotaExceededError")) {</span>
-<span class="cstat-no" title="statement not covered" >          notify("Local storage is full! Please export your data and delete old profiles.", "error");</span>
+<span class="cstat-no" title="statement not covered" >          notify(</span>
+            "Local storage is full! Please export your data and delete old profiles.",
+            "error",
+          );
         } else {
 <span class="cstat-no" title="statement not covered" >          notify("Failed to save changes automatically. Check disk space or permissions.", "error");</span>
         }
@@ -1001,7 +1034,10 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) =&gt; {
     } catch (error: any) {
 <span class="cstat-no" title="statement not covered" >      console.error("Failed to create new profile:", error);</span>
 <span class="cstat-no" title="statement not covered" >      if (error?.message?.includes("QuotaExceededError")) {</span>
-<span class="cstat-no" title="statement not covered" >        notify("Failed to create new profile. Local storage is full! Please export and delete old profiles.", "error");</span>
+<span class="cstat-no" title="statement not covered" >        notify(</span>
+          "Failed to create new profile. Local storage is full! Please export and delete old profiles.",
+          "error",
+        );
       } else {
 <span class="cstat-no" title="statement not covered" >        notify("Failed to create new profile.", "error");</span>
       }
@@ -1108,7 +1144,7 @@ export const useProfile = () =&gt; {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-03T09:37:44.392Z
+                at 2026-06-03T10:16:54.469Z
             </div>
         <script src="../prettify.js"></script>
         <script>

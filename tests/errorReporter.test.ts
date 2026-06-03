@@ -52,7 +52,7 @@ describe("errorReporter service", () => {
           filename: "test.js",
           lineno: 10,
           colno: 5,
-        })
+        }),
       );
 
       // Verify log in console
@@ -77,7 +77,7 @@ describe("errorReporter service", () => {
         new PromiseRejectionEvent("unhandledrejection", {
           promise: Promise.resolve(),
           reason: new Error("Test Rejection"),
-        })
+        }),
       );
 
       const logs = await errorReporter.getCrashLogs();
@@ -128,7 +128,9 @@ describe("errorReporter service", () => {
 
     it("should read and write Tauri file system for error reports", async () => {
       vi.mocked(NativeAdapter.fileExists).mockResolvedValue(true);
-      vi.mocked(NativeAdapter.readFile).mockResolvedValue(JSON.stringify([{ message: "Old Error" }]));
+      vi.mocked(NativeAdapter.readFile).mockResolvedValue(
+        JSON.stringify([{ message: "Old Error" }]),
+      );
 
       await errorReporter.reportError(new Error("New Desktop Error"));
 
@@ -144,7 +146,9 @@ describe("errorReporter service", () => {
 
     it("should get logs from file system when file exists", async () => {
       vi.mocked(NativeAdapter.fileExists).mockResolvedValue(true);
-      vi.mocked(NativeAdapter.readFile).mockResolvedValue(JSON.stringify([{ message: "File Log" }]));
+      vi.mocked(NativeAdapter.readFile).mockResolvedValue(
+        JSON.stringify([{ message: "File Log" }]),
+      );
 
       const logs = await errorReporter.getCrashLogs();
       expect(logs).toEqual([{ message: "File Log" }]);
@@ -159,13 +163,18 @@ describe("errorReporter service", () => {
     it("should clear desktop logs by writing empty array to file", async () => {
       vi.mocked(NativeAdapter.fileExists).mockResolvedValue(true);
       await errorReporter.clearCrashLogs();
-      expect(NativeAdapter.writeFile).toHaveBeenCalledWith(expect.stringContaining("crash.log"), "[]");
+      expect(NativeAdapter.writeFile).toHaveBeenCalledWith(
+        expect.stringContaining("crash.log"),
+        "[]",
+      );
     });
 
     it("should cap desktop logs at 100", async () => {
       vi.mocked(NativeAdapter.fileExists).mockResolvedValue(true);
       // Simulate existing 105 logs
-      const existing = Array(105).fill(null).map((_, i) => ({ message: `Error ${i}` }));
+      const existing = Array(105)
+        .fill(null)
+        .map((_, i) => ({ message: `Error ${i}` }));
       vi.mocked(NativeAdapter.readFile).mockResolvedValue(JSON.stringify(existing));
 
       await errorReporter.reportError(new Error("One More"));
