@@ -3,15 +3,15 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for features/generator/scheduler/validation/basic-rules.ts</title>
+    <title>Code coverage report for services/errorReporter.ts</title>
     <meta charset="utf-8" />
-    <link rel="stylesheet" href="../../../../prettify.css" />
-    <link rel="stylesheet" href="../../../../base.css" />
-    <link rel="shortcut icon" type="image/x-icon" href="../../../../favicon.png" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style type='text/css'>
         .coverage-summary .sorter {
-            background-image: url(../../../../sort-arrow-sprite.png);
+            background-image: url(../sort-arrow-sprite.png);
         }
     </style>
 </head>
@@ -19,34 +19,34 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../../../index.html">All files</a> / <a href="index.html">features/generator/scheduler/validation</a> basic-rules.ts</h1>
+        <h1><a href="../index.html">All files</a> / <a href="index.html">services</a> errorReporter.ts</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">62.5% </span>
+                <span class="strong">89.85% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>25/40</span>
+                <span class='fraction'>62/69</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">41.02% </span>
+                <span class="strong">73.8% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>16/39</span>
+                <span class='fraction'>31/42</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">83.33% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>5/6</span>
+                <span class='fraction'>7/7</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">63.88% </span>
+                <span class="strong">95.38% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>23/36</span>
+                <span class='fraction'>62/65</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line medium'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -201,7 +201,39 @@
 <a name='L136'></a><a href='#L136'>136</a>
 <a name='L137'></a><a href='#L137'>137</a>
 <a name='L138'></a><a href='#L138'>138</a>
-<a name='L139'></a><a href='#L139'>139</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L139'></a><a href='#L139'>139</a>
+<a name='L140'></a><a href='#L140'>140</a>
+<a name='L141'></a><a href='#L141'>141</a>
+<a name='L142'></a><a href='#L142'>142</a>
+<a name='L143'></a><a href='#L143'>143</a>
+<a name='L144'></a><a href='#L144'>144</a>
+<a name='L145'></a><a href='#L145'>145</a>
+<a name='L146'></a><a href='#L146'>146</a>
+<a name='L147'></a><a href='#L147'>147</a>
+<a name='L148'></a><a href='#L148'>148</a>
+<a name='L149'></a><a href='#L149'>149</a>
+<a name='L150'></a><a href='#L150'>150</a>
+<a name='L151'></a><a href='#L151'>151</a>
+<a name='L152'></a><a href='#L152'>152</a>
+<a name='L153'></a><a href='#L153'>153</a>
+<a name='L154'></a><a href='#L154'>154</a>
+<a name='L155'></a><a href='#L155'>155</a>
+<a name='L156'></a><a href='#L156'>156</a>
+<a name='L157'></a><a href='#L157'>157</a>
+<a name='L158'></a><a href='#L158'>158</a>
+<a name='L159'></a><a href='#L159'>159</a>
+<a name='L160'></a><a href='#L160'>160</a>
+<a name='L161'></a><a href='#L161'>161</a>
+<a name='L162'></a><a href='#L162'>162</a>
+<a name='L163'></a><a href='#L163'>163</a>
+<a name='L164'></a><a href='#L164'>164</a>
+<a name='L165'></a><a href='#L165'>165</a>
+<a name='L166'></a><a href='#L166'>166</a>
+<a name='L167'></a><a href='#L167'>167</a>
+<a name='L168'></a><a href='#L168'>168</a>
+<a name='L169'></a><a href='#L169'>169</a>
+<a name='L170'></a><a href='#L170'>170</a>
+<a name='L171'></a><a href='#L171'>171</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -210,106 +242,28 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">32x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">88x</span>
-<span class="cline-any cline-yes">88x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">88x</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">88x</span>
-<span class="cline-any cline-yes">88x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">88x</span>
-<span class="cline-any cline-yes">88x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">88x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">32x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">87x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">87x</span>
-<span class="cline-any cline-yes">87x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">87x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">90x</span>
-<span class="cline-any cline-yes">86x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -321,161 +275,303 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">61x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">61x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">61x</span>
+<span class="cline-any cline-yes">61x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">59x</span>
+<span class="cline-any cline-yes">59x</span>
+<span class="cline-any cline-yes">59x</span>
+<span class="cline-any cline-yes">55x</span>
+<span class="cline-any cline-yes">55x</span>
+<span class="cline-any cline-yes">55x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">59x</span>
+<span class="cline-any cline-yes">59x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">59x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">85x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { SchedulerState } from "../core/types";
-import { ValidationContext, ValidationResult } from "./types";
-import { getType } from "./utils";
-import { getOccasionLabel } from "../../../../utils/utils";
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { isTauriEnv, getTauriPath } from "../utils/platform";
+import * as NativeAdapter from "./fileSystem/nativeAdapter";
 &nbsp;
-/**
- * RULE: Global &amp; Class Blocks
- * Checks for immutable "Hard Walls" defined in the settings or class-specific data.
- */
-export const checkGlobalAndClassBlocks = (
-  ctx: ValidationContext,
-  p: number,
-): ValidationResult | null =&gt; {
-  const { data, targetDay, classId, structure } = ctx;
-  const cls = data.classes.find((c) =&gt; c.id === classId);
+export interface CrashReport {
+  timestamp: string;
+  message: string;
+  stack?: string;
+  type: "error" | "unhandledrejection" | "react" | "worker" | "manual";
+  userAgent: string;
+  environment: "tauri" | "web";
+  context?: any;
+}
 &nbsp;
-  // 1. STRUCTURE INTEGRITY: Ensure the slot is actually a 'CLASS' period
-  // This prevents scheduling lessons during official Breaks or Lunches.
-  <span class="missing-if-branch" title="if path not taken" >I</span>if (getType(structure, p) !== "CLASS") {
-<span class="cstat-no" title="statement not covered" >    return {</span>
-      valid: false,
-      message: `Invalid Period Type: ${getType(structure, p)}`,
-      severity: "HIGH",
-      penaltyPoints: 2000, // Absolute wall
-      conflictCount: 0,
+const WEB_CRASH_LOG_KEY = "eduscheduler_crash_logs";
+const MAX_WEB_LOGS = 50;
+&nbsp;
+async function getTauriLogPath(): Promise&lt;string&gt; {
+  const pathApi = await getTauriPath();
+  <span class="missing-if-branch" title="if path not taken" >I</span>if (!pathApi) <span class="cstat-no" title="statement not covered" >return "crash.log";</span>
+  const base = await pathApi.appDataDir();
+  const dir = await pathApi.join(base, "logs");
+  return await pathApi.join(dir, "crash.log");
+}
+&nbsp;
+export const errorReporter = {
+  /**
+   * Initialize global error listeners.
+   */
+  init() {
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (typeof window === "undefined") <span class="cstat-no" title="statement not covered" >return;</span>
+&nbsp;
+    window.addEventListener("error", (event) =&gt; {
+      this.reportError(event.error || <span class="branch-1 cbranch-no" title="branch not covered" >new Error(event.message), {</span>
+        type: "error",
+        context: {
+          filename: event.filename,
+          lineno: event.lineno,
+          colno: event.colno,
+        },
+      });
+    });
+&nbsp;
+    window.addEventListener("unhandledrejection", (event) =&gt; {
+      const reason = event.reason;
+      const error = reason instanceof Error ? reason : <span class="branch-1 cbranch-no" title="branch not covered" >new Error(String(reason));</span>
+      this.reportError(error, {
+        type: "unhandledrejection",
+      });
+    });
+&nbsp;
+    console.log("Structured error reporter initialized.");
+  },
+&nbsp;
+  /**
+   * Core reporting function.
+   */
+  async reportError(
+    error: Error,
+    options?: {
+      type?: CrashReport["type"];
+      context?: any;
+    },
+  ) {
+    const report: CrashReport = {
+      timestamp: new Date().toISOString(),
+      message: error.message || <span class="branch-1 cbranch-no" title="branch not covered" >"Unknown error",</span>
+      stack: error.stack,
+      type: options?.type || "manual",
+      userAgent: typeof navigator !== "undefined" ? navigator.userAgent : <span class="branch-1 cbranch-no" title="branch not covered" >"Node/Unknown",</span>
+      environment: isTauriEnv() ? "tauri" : "web",
+      context: options?.context,
     };
-  }
 &nbsp;
-  // 2. GLOBAL FIXED OCCASIONS (Worship, Assemblies, Public Holidays)
-  const globalFixed = data.settings.fixedOccasions?.[targetDay]?.[p];
-  <span class="missing-if-branch" title="if path not taken" >I</span>if (globalFixed) {
-    const <span class="cstat-no" title="statement not covered" >label = getOccasionLabel(globalFixed) || "Global Event";</span>
+    // Print to console
+    console.error("[Structured Error Report]:", report);
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    if (label.trim() !== "") {</span>
-<span class="cstat-no" title="statement not covered" >      return {</span>
-        valid: false,
-        message: `Blocked by School Event: ${label}`,
-        severity: "HIGH",
-        penaltyPoints: 1000,
-        conflictCount: 1, // High conflict: forces eviction
-      };
-    }
-  }
-&nbsp;
-  // 3. CLASS-SPECIFIC FIXED SESSIONS (Swimming, Off-site, Pre-scheduled blocks)
-  const classFixed = cls?.fixedSessions?.[targetDay]?.[p];
-  <span class="missing-if-branch" title="if path not taken" >I</span>if (classFixed) {
-<span class="cstat-no" title="statement not covered" >    return {</span>
-      valid: false,
-      message: `Class is pre-occupied: ${typeof classFixed === "string" ? classFixed : "Fixed Session"}`,
-      severity: "HIGH",
-      penaltyPoints: 1000,
-      conflictCount: 1,
-    };
-  }
-&nbsp;
-  return null;
-};
-&nbsp;
-/**
- * RULE: Resource &amp; Teacher Availability
- * Focuses on STATIC constraints (Teacher's personal schedule blocks).
- */
-export const checkResourceAndAvailability = (
-  ctx: ValidationContext,
-  p: number,
-  state?: SchedulerState,
-): ValidationResult | null =&gt; {
-  const { data, subjectId, targetDay, classId, teacherId, ignoredSlots } = ctx;
-&nbsp;
-  // 1. TEACHER STATIC CONSTRAINT CHECK
-  // We distinguish between "Busy with another class" (Dynamic)
-  // and "Unavailable to teach" (Static Block).
-  if (state) {
-    const occupantId = state.teacherOccupancy[teacherId]?.[targetDay]?.[p];
-&nbsp;
-    // Sentinel check: "BLOCK" represents a hard teacher constraint from their settings.
-    if (occupantId === "BLOCK") {
-      return {
-        valid: false,
-        message: `${data.teachers.find((t) =&gt; t.id === teacherId)?.name || <span class="branch-1 cbranch-no" title="branch not covered" >"Teacher"}</span> is unavailable`,
-        severity: "HIGH",
-        penaltyPoints: 1000,
-        conflictCount: 1,
-      };
-    }
-  } else <span class="missing-if-branch" title="else path not taken" >E</span>{
-    // UI Fallback: Direct lookup in the raw Teacher object
-    const teacher = <span class="cstat-no" title="statement not covered" >data.teachers.find(<span class="fstat-no" title="function not covered" >(t</span>) =&gt; <span class="cstat-no" title="statement not covered" >t.id === teacherId)</span>;</span>
-<span class="cstat-no" title="statement not covered" >    if (teacher?.constraints?.[targetDay]?.[p]) {</span>
-<span class="cstat-no" title="statement not covered" >      return {</span>
-        valid: false,
-        message: `${teacher.name || "Teacher"} marked this slot as unavailable`,
-        severity: "HIGH",
-        penaltyPoints: 1000,
-        conflictCount: 1,
-      };
-    }
-  }
-&nbsp;
-  // 2. SINGLE RESOURCE BOTTLENECK (Static Logic)
-  // If the subject requires a unique room (e.g., "The only Science Lab"),
-  // we ensure it isn't already double-booked at this period index.
-  const subject = data.subjects.find((s) =&gt; s.id === subjectId);
-  if (subject?.isSingleResource &amp;&amp; !ignoredSlots.has(`${targetDay}-${p}`)) {
-    // Note: Dynamic Time-Slot overlaps (staggered starts) are handled in overlap-checks.ts
-    // This check handles index-based resource exhaustion.
-    if (state) {
-      const resourceUser = state.singleResourceUsage[subjectId]?.[targetDay]?.[p];
-      <span class="missing-if-branch" title="else path not taken" >E</span>if (resourceUser &amp;&amp; resourceUser !== "AVAILABLE" &amp;&amp; resourceUser !== "BLOCK") {
-        return {
-          valid: false,
-          message: `${subject.name} Resource bottleneck`,
-          severity: "HIGH",
-          penaltyPoints: 1000,
-          conflictCount: 1,
-        };
-      }
-    } else <span class="missing-if-branch" title="else path not taken" >E</span>{
-      // O(N) Fallback scan for UI moves
-<span class="cstat-no" title="statement not covered" >      for (const otherCId of Object.keys(data.schedule)) {</span>
-<span class="cstat-no" title="statement not covered" >        if (otherCId === classId) <span class="cstat-no" title="statement not covered" >continue;</span></span>
-        const otherSlot = <span class="cstat-no" title="statement not covered" >data.schedule[otherCId]?.[targetDay]?.[p];</span>
-<span class="cstat-no" title="statement not covered" >        if (otherSlot &amp;&amp; otherSlot.subjectId === subjectId) {</span>
-<span class="cstat-no" title="statement not covered" >          return {</span>
-            valid: false,
-            message: `${subject.name} resource is currently occupied`,
-            severity: "HIGH",
-            penaltyPoints: 1000,
-            conflictCount: 1,
-          };
+    try {
+      if (isTauriEnv()) {
+        const logPath = await getTauriLogPath();
+        let existingContent = "";
+        try {
+          <span class="missing-if-branch" title="else path not taken" >E</span>if (await NativeAdapter.fileExists(logPath)) {
+            existingContent = await NativeAdapter.readFile(logPath);
+          }
+        } catch (e) {
+          // File doesn't exist or read fails, ignore and overwrite
         }
-      }
-    }
-  }
 &nbsp;
-  return null;
+        let logs: CrashReport[] = [];
+        <span class="missing-if-branch" title="else path not taken" >E</span>if (existingContent.trim()) {
+          try {
+            logs = JSON.parse(existingContent);
+            <span class="missing-if-branch" title="if path not taken" >I</span>if (!Array.isArray(logs)) <span class="cstat-no" title="statement not covered" >logs = [];</span>
+          } catch (e) {
+<span class="cstat-no" title="statement not covered" >            logs = [];</span>
+          }
+        }
+&nbsp;
+        logs.push(report);
+        // Keep last 100 logs in desktop app
+        if (logs.length &gt; 100) {
+          logs = logs.slice(logs.length - 100);
+        }
+&nbsp;
+        await NativeAdapter.writeFile(logPath, JSON.stringify(logs, null, 2));
+      } else {
+        // Web LocalStorage save
+        let logs: CrashReport[] = [];
+        const existing = localStorage.getItem(WEB_CRASH_LOG_KEY);
+        if (existing) {
+          try {
+            logs = JSON.parse(existing);
+            <span class="missing-if-branch" title="if path not taken" >I</span>if (!Array.isArray(logs)) <span class="cstat-no" title="statement not covered" >logs = [];</span>
+          } catch (e) {
+            logs = [];
+          }
+        }
+&nbsp;
+        logs.push(report);
+        if (logs.length &gt; MAX_WEB_LOGS) {
+          logs = logs.slice(logs.length - MAX_WEB_LOGS);
+        }
+&nbsp;
+        localStorage.setItem(WEB_CRASH_LOG_KEY, JSON.stringify(logs));
+      }
+    } catch (saveError) {
+<span class="cstat-no" title="statement not covered" >      console.error("Failed to save crash report:", saveError);</span>
+    }
+  },
+&nbsp;
+  /**
+   * Retrieve all logged crashes.
+   */
+  async getCrashLogs(): Promise&lt;CrashReport[]&gt; {
+    try {
+      if (isTauriEnv()) {
+        const logPath = await getTauriLogPath();
+        if (await NativeAdapter.fileExists(logPath)) {
+          const content = await NativeAdapter.readFile(logPath);
+          return JSON.parse(content);
+        }
+        return [];
+      } else {
+        const existing = localStorage.getItem(WEB_CRASH_LOG_KEY);
+        return existing ? JSON.parse(existing) : [];
+      }
+    } catch (e) {
+      console.error("Failed to retrieve crash logs:", e);
+      return [];
+    }
+  },
+&nbsp;
+  /**
+   * Clear crash logs.
+   */
+  async clearCrashLogs() {
+    try {
+      if (isTauriEnv()) {
+        const logPath = await getTauriLogPath();
+        <span class="missing-if-branch" title="else path not taken" >E</span>if (await NativeAdapter.fileExists(logPath)) {
+          await NativeAdapter.writeFile(logPath, JSON.stringify([]));
+        }
+      } else {
+        localStorage.removeItem(WEB_CRASH_LOG_KEY);
+      }
+    } catch (e) {
+<span class="cstat-no" title="statement not covered" >      console.error("Failed to clear crash logs:", e);</span>
+    }
+  },
 };
 &nbsp;</pre></td></tr></table></pre>
 
@@ -486,14 +582,14 @@ export const checkResourceAndAvailability = (
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
                 at 2026-06-03T09:37:44.392Z
             </div>
-        <script src="../../../../prettify.js"></script>
+        <script src="../prettify.js"></script>
         <script>
             window.onload = function () {
                 prettyPrint();
             };
         </script>
-        <script src="../../../../sorter.js"></script>
-        <script src="../../../../block-navigation.js"></script>
+        <script src="../sorter.js"></script>
+        <script src="../block-navigation.js"></script>
     </body>
 </html>
     

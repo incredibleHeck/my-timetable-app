@@ -20,6 +20,7 @@ import { auditFinalSchedule } from "../features/generator/scheduler/validation";
 import { syncHomeRooms } from "../features/classes/utils";
 import { useProfileHistory } from "./useProfileHistory";
 import { HistoryProvider } from "./HistoryContext";
+import { isTauriEnv } from "../utils/platform";
 
 interface ProfileContextType {
   profiles: ProfileManifest["profiles"];
@@ -54,14 +55,67 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isDirty) {
+        // Sync flush to localStorage for Web
+        if (!isTauriEnv() && activeProfileRef.current) {
+          const profile = activeProfileRef.current;
+          try {
+            localStorage.setItem(`profile_data_${profile.id}`, JSON.stringify(profile));
+            const manifestContent = localStorage.getItem("profile_manifest");
+            if (manifestContent) {
+              const manifest = JSON.parse(manifestContent);
+              const idx = manifest.profiles.findIndex((p: any) => p.id === profile.id);
+              const entry = { id: profile.id, name: profile.name, lastModified: profile.lastModified };
+              if (idx >= 0) manifest.profiles[idx] = entry;
+              else manifest.profiles.push(entry);
+              localStorage.setItem("profile_manifest", JSON.stringify(manifest));
+            }
+          } catch (err) {
+            console.error("Failed to flush profile save on unload:", err);
+          }
+        }
+        
         e.preventDefault();
         e.returnValue = "";
         return "";
       }
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
+
+    let isCancelled = false;
+    let tauriUnlisten: (() => void) | undefined;
+
+    if (isTauriEnv()) {
+      import("@tauri-apps/api/window").then(({ getCurrentWindow }) => {
+        if (isCancelled) return;
+        const appWindow = getCurrentWindow();
+        appWindow.onCloseRequested(async (event) => {
+          if (isDirty && activeProfileRef.current) {
+            event.preventDefault();
+            try {
+              setIsSaving(true);
+              await ProfileStorage.saveProfile(activeProfileRef.current);
+              setIsDirty(false);
+            } catch (err) {
+              console.error("Failed to flush tauri save on window close:", err);
+            }
+            appWindow.close();
+          }
+        }).then((unlistenFn) => {
+          if (isCancelled) {
+            unlistenFn();
+          } else {
+            tauriUnlisten = unlistenFn;
+          }
+        });
+      });
+    }
+
     return () => {
+      isCancelled = true;
       window.removeEventListener("beforeunload", handleBeforeUnload);
+      if (tauriUnlisten) {
+        tauriUnlisten();
+      }
     };
   }, [isDirty]);
 

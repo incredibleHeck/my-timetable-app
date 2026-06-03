@@ -79,7 +79,7 @@ src/
   contexts/       # React context (profiles, undo/redo)
   services/       # File system, export, profile storage
   types/          # Shared TypeScript types
-tests/            # Vitest test suite (86 files, 295 tests)
+tests/            # Vitest test suite (86 files, 308 tests)
 src-tauri/        # Tauri desktop shell (Rust)
 conductor/        # Internal planning docs (not required to run the app)
 ```

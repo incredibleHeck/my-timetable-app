@@ -135,7 +135,7 @@ export const saveProfile = async (profile: Profile): Promise<void> => {
         error.code === 22 ||
         error.code === 1014)
     ) {
-      throw new Error("QuotaExceededError: Local storage quota exceeded. Please export your profiles/data to free up space.");
+      throw new Error("QuotaExceededError: Local storage quota exceeded. Please export your profiles/data to free up space.", { cause: error });
     }
     throw error;
   }
