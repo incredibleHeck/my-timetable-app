@@ -146,3 +146,80 @@ test.describe("Scheduler", () => {
     await expect(page.locator('text=/Last run:/')).toBeVisible({ timeout: 15_000 });
   });
 });
+
+test.describe("Profile switching E2E", () => {
+  test("creates a second profile and switches back and forth", async ({ page }) => {
+    await seedProfile(page, "First School");
+    await expect(page.locator('strong:has-text("First School")')).toBeVisible({ timeout: 15_000 });
+
+    // Open Profile Wizard via New Profile button
+    await page.getByRole("button", { name: "New Profile" }).click();
+    await page.getByLabel(/profile name/i).fill("Second School");
+    await page.getByRole("button", { name: /save profile/i }).click();
+
+    // Verify switched to Second School
+    await expect(page.locator('strong:has-text("Second School")')).toBeVisible({ timeout: 15_000 });
+
+    // Switch back to First School
+    await page.getByRole("button", { name: "Switch Profile" }).click();
+    await page.locator("div").filter({ hasText: /^First SchoolSwitch$/ }).getByRole("button", { name: "Switch" }).click();
+    await expect(page.locator('strong:has-text("First School")')).toBeVisible({ timeout: 15_000 });
+  });
+});
+
+test.describe("JSON Backup Round-trip E2E", () => {
+  test("exports data and triggers import file picker", async ({ page }) => {
+    await seedProfile(page, "Backup School");
+    await expect(page.locator('strong:has-text("Backup School")')).toBeVisible({ timeout: 15_000 });
+
+    // Test Export JSON
+    const downloadPromise = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Export JSON" }).click();
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toMatch(/\.json$/);
+
+    // Test Import JSON button click triggers file input click
+    await page.getByRole("button", { name: "Import JSON" }).click();
+  });
+});
+
+test.describe("Undo/Redo E2E", () => {
+  test("performs undo and redo on config changes", async ({ page }) => {
+    await seedProfile(page, "Undo School");
+    await page.getByRole("button", { name: /configuration/i }).click();
+    await page.getByRole("tab", { name: "Day structure" }).click();
+    const slider = page.locator("#periods-per-day");
+    await slider.fill("10");
+    await expect(page.getByText("10 Blocks")).toBeVisible();
+
+    // Click Undo button in the header
+    await page.getByRole("button", { name: "Undo", exact: true }).click();
+    // Verify it reverts to original (which is 8 blocks in seed data)
+    await expect(page.getByText("8 Blocks")).toBeVisible();
+
+    // Click Redo button in the header
+    await page.getByRole("button", { name: "Redo", exact: true }).click();
+    await expect(page.getByText("10 Blocks")).toBeVisible();
+  });
+});
+
+test.describe("Operational Views Navigation E2E", () => {
+  test("navigates to exams, duty, and rooms views", async ({ page }) => {
+    await seedProfile(page, "Nav School");
+
+    // Navigate to Rooms View
+    await page.getByRole("button", { name: "Rooms" }).click();
+    await expect(page.getByRole("heading", { name: "Room Management" })).toBeVisible({ timeout: 15_000 });
+
+    // Navigate to Exams View
+    await page.getByRole("button", { name: "Exam Timetable" }).click();
+    await expect(page.getByRole("heading", { name: "Exam Timetable" })).toBeVisible({ timeout: 15_000 });
+
+    // Go back to Dashboard to bring back the sidebar
+    await page.getByTitle("Back to Dashboard").click();
+
+    // Navigate to Duty View
+    await page.getByRole("button", { name: "Duty Roster", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Duty Roster" })).toBeVisible({ timeout: 15_000 });
+  });
+});

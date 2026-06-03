@@ -156,7 +156,7 @@ describe("detectCurriculumGaps", () => {
     expect(detectCurriculumGaps(data)).toHaveLength(0);
   });
 
-  it("logs diagnostic output when a gap is detected", () => {
+  it("does not log diagnostic output when a gap is detected", () => {
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
     const data = buildData({}, [
@@ -165,11 +165,7 @@ describe("detectCurriculumGaps", () => {
 
     const gaps = detectCurriculumGaps(data);
     expect(gaps).toHaveLength(1);
-    expect(logSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        "[CurriculumGap] Class: 10A, Subject: Math, Required: 2, Actually Counted on Grid: 0",
-      ),
-    );
+    expect(logSpy).not.toHaveBeenCalled();
   });
 
   it("aligns auditFinalSchedule with a complete solver-style grid", () => {

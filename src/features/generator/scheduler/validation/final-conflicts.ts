@@ -313,10 +313,6 @@ export function detectCurriculumGaps(data: AppData, state?: SchedulerState): Cur
       const missing = expected - scheduled;
       const subject = data.subjects.find((s) => normalizeId(s.id) === normalizeId(item.subjectId));
 
-      console.log(
-        `[CurriculumGap] Class: ${cls.name}, Subject: ${subject?.name || item.subjectId}, Required: ${expected}, Actually Counted on Grid: ${scheduled}`,
-      );
-
       gaps.push({
         classId: cls.id,
         className: cls.name,

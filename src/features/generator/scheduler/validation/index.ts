@@ -199,7 +199,7 @@ export const checkSlotValidity = (
   // --- 5. SWAP ANALYSIS (interactive drag-and-drop only, not schedule re-audit) ---
   const targetSlot = data.schedule[classId]?.[targetDay]?.[targetPeriod];
   if (targetSlot && !isAuto && ignoreTargetSlot) {
-    if ((targetSlot as any).locked)
+    if (targetSlot.locked)
       return {
         valid: false,
         message: "Target slot is locked",

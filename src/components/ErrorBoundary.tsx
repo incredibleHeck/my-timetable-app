@@ -1,4 +1,5 @@
 import React, { ReactNode } from "react";
+import { errorReporter } from "../services/errorReporter";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -23,9 +24,15 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, _errorInfo: React.ErrorInfo) {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // Log to console for debugging
     console.error("Error caught by boundary:", error);
+    errorReporter.reportError(error, {
+      type: "react",
+      context: {
+        componentStack: errorInfo.componentStack,
+      },
+    });
   }
 
   handleReset = () => {

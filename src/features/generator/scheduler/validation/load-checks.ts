@@ -139,7 +139,7 @@ export const checkSubjectLimit = (
         const slot = daySched[p];
 
         // Skip tails of double periods (to count as a single unit below)
-        if (!slot || (slot as any).isFixed) return;
+        if (!slot || slot.isFixed) return;
 
         // SKIP if this slot is part of what we are currently "proposing" to add
         if (d === targetDay && proposedSlots.has(p)) return;
@@ -150,7 +150,7 @@ export const checkSubjectLimit = (
         if (slot.subjectId === subjectId) {
           const nextSlot = daySched[p + 1];
           const isDouble =
-            nextSlot && (nextSlot as any).isFixed && nextSlot.subjectId === subjectId;
+            nextSlot && nextSlot.isFixed && nextSlot.subjectId === subjectId;
 
           totalScheduled += isDouble ? 2 : 1;
         }

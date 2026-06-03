@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">70.54% </span>
+                <span class="strong">67.88% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>91/129</span>
+                <span class='fraction'>93/137</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">45% </span>
+                <span class="strong">39.13% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>18/40</span>
+                <span class='fraction'>18/46</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">73.55% </span>
+                <span class="strong">70.54% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>89/121</span>
+                <span class='fraction'>91/129</span>
             </div>
         
             
@@ -341,7 +341,21 @@
 <a name='L276'></a><a href='#L276'>276</a>
 <a name='L277'></a><a href='#L277'>277</a>
 <a name='L278'></a><a href='#L278'>278</a>
-<a name='L279'></a><a href='#L279'>279</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L279'></a><a href='#L279'>279</a>
+<a name='L280'></a><a href='#L280'>280</a>
+<a name='L281'></a><a href='#L281'>281</a>
+<a name='L282'></a><a href='#L282'>282</a>
+<a name='L283'></a><a href='#L283'>283</a>
+<a name='L284'></a><a href='#L284'>284</a>
+<a name='L285'></a><a href='#L285'>285</a>
+<a name='L286'></a><a href='#L286'>286</a>
+<a name='L287'></a><a href='#L287'>287</a>
+<a name='L288'></a><a href='#L288'>288</a>
+<a name='L289'></a><a href='#L289'>289</a>
+<a name='L290'></a><a href='#L290'>290</a>
+<a name='L291'></a><a href='#L291'>291</a>
+<a name='L292'></a><a href='#L292'>292</a>
+<a name='L293'></a><a href='#L293'>293</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -419,6 +433,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -447,6 +465,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">65x</span>
 <span class="cline-any cline-yes">65x</span>
+<span class="cline-any cline-yes">65x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -479,6 +498,7 @@
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -527,6 +547,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -543,6 +567,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -694,9 +722,13 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) =&gt; {
 <span class="cstat-no" title="statement not covered" >      try {</span>
 <span class="cstat-no" title="statement not covered" >        await ProfileStorage.saveProfile(updatedProfile);</span>
 <span class="cstat-no" title="statement not covered" >        setIsDirty(false);</span>
-      } catch (error) {
+      } catch (error: any) {
 <span class="cstat-no" title="statement not covered" >        console.error("Failed to auto-save profile:", error);</span>
-<span class="cstat-no" title="statement not covered" >        notify("Failed to save changes automatically. Check disk space or permissions.", "error");</span>
+<span class="cstat-no" title="statement not covered" >        if (error?.message?.includes("QuotaExceededError")) {</span>
+<span class="cstat-no" title="statement not covered" >          notify("Local storage is full! Please export your data and delete old profiles.", "error");</span>
+        } else {
+<span class="cstat-no" title="statement not covered" >          notify("Failed to save changes automatically. Check disk space or permissions.", "error");</span>
+        }
       } finally {
 <span class="cstat-no" title="statement not covered" >        setIsSaving(false);</span>
       }
@@ -724,6 +756,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) =&gt; {
         lastModified: Date.now(),
       };
       setActiveProfile(updated);
+      activeProfileRef.current = updated;
       triggerSave(updated);
     },
     [triggerSave],
@@ -755,6 +788,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) =&gt; {
       profile.data.rooms = updatedRooms;
 &nbsp;
       setActiveProfile(profile);
+      activeProfileRef.current = profile;
       await ProfileStorage.setActiveProfile(id);
       resetHistory();
     }
@@ -802,9 +836,13 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) =&gt; {
 <span class="cstat-no" title="statement not covered" >      await ProfileStorage.saveProfile(newProfile);</span>
 <span class="cstat-no" title="statement not covered" >      await reloadProfiles();</span>
 <span class="cstat-no" title="statement not covered" >      await switchProfile(newProfile.id);</span>
-    } catch (error) {
+    } catch (error: any) {
 <span class="cstat-no" title="statement not covered" >      console.error("Failed to create new profile:", error);</span>
-<span class="cstat-no" title="statement not covered" >      notify("Failed to create new profile.", "error");</span>
+<span class="cstat-no" title="statement not covered" >      if (error?.message?.includes("QuotaExceededError")) {</span>
+<span class="cstat-no" title="statement not covered" >        notify("Failed to create new profile. Local storage is full! Please export and delete old profiles.", "error");</span>
+      } else {
+<span class="cstat-no" title="statement not covered" >        notify("Failed to create new profile.", "error");</span>
+      }
     }
   };
 &nbsp;
@@ -818,9 +856,13 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) =&gt; {
         try {
           await ProfileStorage.saveProfile(activeProfileRef.current);
           setIsDirty(false);
-        } catch (error) {
+        } catch (error: any) {
 <span class="cstat-no" title="statement not covered" >          console.error("Failed to save profile on switch:", error);</span>
-<span class="cstat-no" title="statement not covered" >          notify("Failed to save changes before switching profiles.", "error");</span>
+<span class="cstat-no" title="statement not covered" >          if (error?.message?.includes("QuotaExceededError")) {</span>
+<span class="cstat-no" title="statement not covered" >            notify("Failed to save changes before switching. Local storage is full!", "error");</span>
+          } else {
+<span class="cstat-no" title="statement not covered" >            notify("Failed to save changes before switching profiles.", "error");</span>
+          }
         }
       }
     }
@@ -904,7 +946,7 @@ export const useProfile = () =&gt; {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-29T10:28:51.868Z
+                at 2026-06-03T08:40:01.982Z
             </div>
         <script src="../prettify.js"></script>
         <script>

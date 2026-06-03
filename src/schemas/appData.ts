@@ -33,8 +33,7 @@ const subjectSchema = z
     isCore: z.boolean().optional(),
     examPaperCount: z.number().optional(),
     examPaperDurations: z.array(z.number()).optional(),
-  })
-  .passthrough();
+  });
 
 const teacherSchema = z
   .object({
@@ -44,8 +43,7 @@ const teacherSchema = z
     constraints: z.array(z.array(z.boolean())),
     targetLoad: z.number().optional(),
     maxPeriodsPerDay: z.number().optional(),
-  })
-  .passthrough();
+  });
 
 const roomSchema = z
   .object({
@@ -54,8 +52,7 @@ const roomSchema = z
     capacity: z.number(),
     type: z.string(),
     isHomeRoom: z.boolean().optional(),
-  })
-  .passthrough();
+  });
 
 const curriculumItemSchema = z
   .object({
@@ -84,8 +81,7 @@ const classGroupSchema = z
     breakDuration: z.number().optional(),
     lunchDuration: z.number().optional(),
     fixedSessions: z.array(z.array(z.unknown())).optional(),
-  })
-  .passthrough();
+  });
 
 const jointClassSchema = z
   .object({

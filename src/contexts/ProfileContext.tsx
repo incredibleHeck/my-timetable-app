@@ -73,9 +73,13 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
       try {
         await ProfileStorage.saveProfile(updatedProfile);
         setIsDirty(false);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Failed to auto-save profile:", error);
-        notify("Failed to save changes automatically. Check disk space or permissions.", "error");
+        if (error?.message?.includes("QuotaExceededError")) {
+          notify("Local storage is full! Please export your data and delete old profiles.", "error");
+        } else {
+          notify("Failed to save changes automatically. Check disk space or permissions.", "error");
+        }
       } finally {
         setIsSaving(false);
       }
@@ -103,6 +107,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
         lastModified: Date.now(),
       };
       setActiveProfile(updated);
+      activeProfileRef.current = updated;
       triggerSave(updated);
     },
     [triggerSave],
@@ -134,6 +139,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
       profile.data.rooms = updatedRooms;
 
       setActiveProfile(profile);
+      activeProfileRef.current = profile;
       await ProfileStorage.setActiveProfile(id);
       resetHistory();
     }
@@ -181,9 +187,13 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
       await ProfileStorage.saveProfile(newProfile);
       await reloadProfiles();
       await switchProfile(newProfile.id);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to create new profile:", error);
-      notify("Failed to create new profile.", "error");
+      if (error?.message?.includes("QuotaExceededError")) {
+        notify("Failed to create new profile. Local storage is full! Please export and delete old profiles.", "error");
+      } else {
+        notify("Failed to create new profile.", "error");
+      }
     }
   };
 
@@ -197,9 +207,13 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
         try {
           await ProfileStorage.saveProfile(activeProfileRef.current);
           setIsDirty(false);
-        } catch (error) {
+        } catch (error: any) {
           console.error("Failed to save profile on switch:", error);
-          notify("Failed to save changes before switching profiles.", "error");
+          if (error?.message?.includes("QuotaExceededError")) {
+            notify("Failed to save changes before switching. Local storage is full!", "error");
+          } else {
+            notify("Failed to save changes before switching profiles.", "error");
+          }
         }
       }
     }

@@ -243,6 +243,7 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
     workerRef.current.onerror = (e) => {
       console.error("Worker connection error:", e);
       terminateWorker();
+      showToast("Background worker failed to initialize or execute.", "error");
     };
   };
 

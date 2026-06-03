@@ -229,7 +229,7 @@ export class MrvCache {
       if (u.defaultRoomId) res.add(`R:${u.defaultRoomId}`);
       if (u.requiredRoomType) res.add(`RT:${u.requiredRoomType}`);
       const sub = this.subjectMap.get(u.subjectId);
-      if (sub && (sub as any).requiredRoomId) res.add(`R:${(sub as any).requiredRoomId}`);
+      if (sub && sub.requiredRoomId) res.add(`R:${sub.requiredRoomId}`);
     }
     return res;
   }
@@ -243,8 +243,8 @@ export class MrvCache {
       if (u.defaultRoomId) placedResources.add(`R:${u.defaultRoomId}`);
       if (u.requiredRoomType) placedResources.add(`RT:${u.requiredRoomType}`);
       const sub = this.subjectMap.get(u.subjectId);
-      if (sub && (sub as any).requiredRoomId)
-        placedResources.add(`R:${(sub as any).requiredRoomId}`);
+      if (sub && sub.requiredRoomId)
+        placedResources.add(`R:${sub.requiredRoomId}`);
     }
 
     for (const [gangId, resources] of this.gangResources) {

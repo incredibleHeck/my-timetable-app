@@ -202,7 +202,7 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
             <Button variant="secondary" onClick={() => setModalOpen(false)}>
               Cancel
             </Button>
-            2<Button onClick={saveRoom}>Save Room</Button>
+            <Button onClick={saveRoom}>Save Room</Button>
           </div>
         }
         maxWidth="max-w-md"
