@@ -21,16 +21,6 @@ export const InvigilatorRoster: React.FC<Props> = ({ data, exams }) => {
     return [...classes].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
   }, [classes]);
 
-  // 3. Helper to format date
-  const formatDate = (dateStr: string) => {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString("en-GB", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-    });
-  };
-
   const getInvigilatorsForCell = (classId: string, date: string) => {
     const hasExams = exams.some((e) => e.date === date && e.classIds.includes(classId));
     if (!hasExams) return null;

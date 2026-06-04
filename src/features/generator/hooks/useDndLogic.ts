@@ -17,6 +17,13 @@ import { isPeriodBlockingDoubleMove } from "../utils/doublePeriodMove";
  * 3. Integrity: Ensures "Tail-Dragging" (moving the 2nd part of a double) is handled robustly.
  */
 
+interface DragItemData {
+  day: number;
+  period: number;
+  slot: ScheduleSlot;
+  classGroup?: { id: string; name: string };
+}
+
 export const useDndLogic = (
   data: AppData,
   activeId: string, // Current Class/Teacher ID in view
@@ -24,7 +31,7 @@ export const useDndLogic = (
   onUpdate: (d: AppData) => void,
   setHoverConflict?: (c: Conflict | null) => void,
 ) => {
-  const [activeDragItem, setActiveDragItem] = useState<any>(null);
+  const [activeDragItem, setActiveDragItem] = useState<DragItemData | null>(null);
   const { pushToHistory } = useHistory();
 
   // 1. Initialize O(1) State for Validation
@@ -118,7 +125,7 @@ export const useDndLogic = (
     const targetDuration = targetSlot ? getDuration(classId, targetDay, targetPeriod) : 1;
 
     const sourceSubject = subjects.find((s) => s.id === activeDragItem.slot.subjectId);
-    const sourceEffectiveRoomId = activeDragItem.slot.roomId || sourceSubject?.requiredRoomId;
+    const sourceEffectiveRoomId = activeDragItem.slot.roomId || sourceSubject?.requiredRoomId || undefined;
 
     // --- 3. CHECK DURATION / BOUNDS ---
     if (targetSlot) {
@@ -255,7 +262,7 @@ export const useDndLogic = (
   // --- HANDLERS ---
 
   const handleDragStart = (event: DragStartEvent) => {
-    setActiveDragItem(event.active.data.current);
+    setActiveDragItem((event.active.data.current as DragItemData) || null);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -268,7 +275,7 @@ export const useDndLogic = (
       day: number;
       period: number;
       slot: ScheduleSlot;
-      classGroup?: any;
+      classGroup?: { id: string; name: string };
     };
     const tData = over.data.current as { day: number; period: number };
 
@@ -369,13 +376,9 @@ export const useDndLogic = (
     const subjObj = subjects.find((s) => s.id === sourceSlot.subjectId);
     const teacherObj = teachers.find((t) => t.id === sourceSlot.teacherId);
 
-    let message = "";
-    if (destSlot) {
-      const targetSubj = subjects.find((s) => s.id === destSlot.subjectId);
-      message = `Swapped ${subjObj?.name} with ${targetSubj?.name} in ${classObj?.name}`;
-    } else {
-      message = `Moved ${subjObj?.name} (${teacherObj?.name}) in ${classObj?.name} to ${DAYS[tD]} P${tP + 1}`;
-    }
+    const message = destSlot
+      ? `Swapped ${subjObj?.name} with ${subjects.find((s) => s.id === destSlot.subjectId)?.name} in ${classObj?.name}`
+      : `Moved ${subjObj?.name} (${teacherObj?.name}) in ${classObj?.name} to ${DAYS[tD]} P${tP + 1}`;
 
     pushToHistory(data);
     // Single update — ProfileContext.applyState re-audits with generated tier.

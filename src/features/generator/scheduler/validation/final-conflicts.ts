@@ -47,7 +47,7 @@ function isTeacherOverlap(reason: string, c: Conflict): boolean {
   return !!c.teacherId && TEACHER_OVERLAP_PATTERNS.some((p) => r.includes(p));
 }
 
-function isRoomOverlap(reason: string, c: Conflict): boolean {
+function isRoomOverlap(reason: string, _c: Conflict): boolean {
   const r = normalizeReason(reason);
   return ROOM_OVERLAP_PATTERNS.some((p) => r.includes(p));
 }

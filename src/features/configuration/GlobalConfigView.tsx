@@ -17,6 +17,7 @@ import { ScheduleChainSection } from "./components/ScheduleChainSection";
 import { ReservationsGridSection } from "./components/ReservationsGridSection";
 import { SlotEditModal } from "./components/SlotEditModal";
 import { DaySummaryStrip } from "./components/DaySummaryStrip";
+import { TimelineVisualizer } from "./components/TimelineVisualizer";
 
 type ConfigTab = "identity" | "structure" | "rules" | "reservations" | "exams";
 
@@ -156,6 +157,10 @@ export const GlobalConfigView: React.FC<ViewProps> = ({
               handleDurationChange={handleDurationChange}
               recalculateAllSlotTimes={recalculateAllSlotTimes}
             />
+
+            <div className="mb-8">
+              <TimelineVisualizer data={data} />
+            </div>
 
             <div className="mb-10 bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
               <div className="flex justify-between items-center mb-4">

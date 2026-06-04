@@ -87,13 +87,13 @@ export const SolverProgressOverlay: React.FC<Props> = ({ progress, elapsedMs }) 
   const perfectRuns = progress?.perfectRuns ?? 0;
 
   return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center p-6">
+    <div className="absolute inset-0 z-50 flex items-center justify-center p-6 animate-in fade-in duration-300">
       <div
-        className={`absolute inset-0 bg-slate-900/10 backdrop-blur-[2px] ${meta.ring} ring-1 ring-inset`}
+        className={`absolute inset-0 bg-slate-950/40 backdrop-blur-md transition-all duration-300`}
         aria-hidden
       />
 
-      <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-white/60 bg-white/90 shadow-2xl shadow-slate-900/10 backdrop-blur-xl">
+      <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-white/40 bg-white/75 shadow-2xl shadow-slate-950/20 backdrop-blur-2xl transition-all duration-300">
         <div
           className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${meta.accent}`}
           style={{ width: `${timePct}%` }}
@@ -103,9 +103,10 @@ export const SolverProgressOverlay: React.FC<Props> = ({ progress, elapsedMs }) 
           <div className="flex items-start justify-between gap-4 mb-6">
             <div className="flex items-start gap-3">
               <div
-                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${meta.accent} text-white shadow-lg shadow-amber-500/20`}
+                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${meta.accent} text-white shadow-lg shadow-amber-500/25 relative overflow-hidden`}
               >
-                <PhaseIcon size={20} className="drop-shadow-sm" />
+                <div className="absolute inset-0 bg-white/20 animate-pulse pointer-events-none" />
+                <PhaseIcon size={20} className="drop-shadow-sm relative z-10" />
               </div>
               <div>
                 <div className="flex items-center gap-2 mb-1">
@@ -145,11 +146,13 @@ export const SolverProgressOverlay: React.FC<Props> = ({ progress, elapsedMs }) 
                   {iteration.toLocaleString()} / {total.toLocaleString()}
                 </span>
               </div>
-              <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+              <div className="h-2 rounded-full bg-slate-100/80 overflow-hidden border border-slate-200/50 p-0.5">
                 <div
-                  className="h-full rounded-full bg-slate-400/70 transition-[width] duration-200 ease-out"
+                  className={`h-full rounded-full bg-gradient-to-r ${meta.accent} transition-[width] duration-200 ease-out relative overflow-hidden`}
                   style={{ width: `${phasePct}%` }}
-                />
+                >
+                  <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                </div>
               </div>
             </div>
           )}

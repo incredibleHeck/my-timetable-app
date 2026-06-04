@@ -14,7 +14,7 @@ export const deepClone = <T>(obj: T): T => {
     return obj;
   }
   if (Array.isArray(obj)) {
-    return obj.map(deepClone) as any;
+    return obj.map(deepClone) as unknown as T;
   }
   const cloned = {} as T;
   for (const key in obj) {
@@ -26,7 +26,7 @@ export const deepClone = <T>(obj: T): T => {
 };
 
 // Download Helper
-export const triggerDownload = (data: any, filename: string) => {
+export const triggerDownload = (data: unknown, filename: string) => {
   const jsonStr = JSON.stringify(data, null, 2);
   const blob = new Blob([jsonStr], { type: "application/json" });
   const url = URL.createObjectURL(blob);

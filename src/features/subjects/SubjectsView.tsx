@@ -9,7 +9,6 @@ import {
   Users,
   Palette,
   Gem,
-  Info,
   FileText,
 } from "lucide-react";
 import { AppData } from "../../types";
@@ -25,7 +24,7 @@ interface ViewProps {
   onUpdate: (newData: AppData) => void;
 }
 
-export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
+export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate }) => {
   const { addActivity } = useProfile();
   const { getSubjectUsage } = useSubjectUsage(data);
   const [modalOpen, setModalOpen] = useState(false);
@@ -61,12 +60,12 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
     };
 
     let newSubjects = [...data.subjects];
-    let msg = "";
+    const msg = editingSubject
+      ? `Updated Subject: ${newSubj.name}`
+      : `Added Subject: ${newSubj.name}`;
     if (editingSubject) {
-      msg = `Updated Subject: ${newSubj.name}`;
       newSubjects = newSubjects.map((s) => (s.id === editingSubject.id ? newSubj : s));
     } else {
-      msg = `Added Subject: ${newSubj.name}`;
       newSubjects.push(newSubj);
     }
     const nextData = { ...data, subjects: newSubjects };

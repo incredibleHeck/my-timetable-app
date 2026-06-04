@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { AppData, Teacher } from "../../../types";
+import { AppData } from "../../../types";
 import { Modal, Button, Input } from "../../../components/ui";
 import { Users, Search, XCircle, CheckCircle, Settings2, Wand2 } from "lucide-react";
 

@@ -7,13 +7,13 @@ import {
   PointerSensor,
   MouseSensor,
   TouchSensor,
+  DragOverEvent,
 } from "@dnd-kit/core";
 import { Lock, ArrowRightLeft } from "lucide-react";
-import { AppData, Conflict } from "../../../types";
+import { AppData, Conflict, PeriodConfig } from "../../../types";
 import { DAYS } from "../../../utils/constants";
 import { getOccasionLabel } from "../../../utils/utils";
 import { calculateClassSchedule } from "../../../utils/timeUtils";
-import { useProfile } from "../../../contexts/ProfileContext";
 import { useToast } from "../../../components/ui/Toast";
 import { DraggableSlot } from "./DraggableSlot";
 import { DroppableCell } from "./DroppableCell";
@@ -58,7 +58,6 @@ export const ScheduleGrid: React.FC<Props> = ({
   );
 
   const { settings, schedule, classes, teachers, subjects } = data;
-  const { getClassSchedule } = useProfile();
   const currentClass = classes.find((c) => c.id === activeId);
   const currentTeacher = teachers.find((t) => t.id === activeId);
 
@@ -152,9 +151,9 @@ export const ScheduleGrid: React.FC<Props> = ({
     const type = typeof item === "object" ? item.type : item || "CLASS";
     const effectiveType = type || "CLASS";
 
-    let label = "";
+    let label: string;
     if (effectiveType !== "CLASS") {
-      const l = typeof item === "string" ? item : (item as any)?.label || effectiveType;
+      const l = typeof item === "string" ? item : (item as PeriodConfig)?.label || effectiveType;
       label = l || "Break";
     } else {
       let classCount = 0;
@@ -183,14 +182,16 @@ export const ScheduleGrid: React.FC<Props> = ({
     return label;
   };
 
-  const handleDragOver = (event: any) => {
+  const handleDragOver = (event: DragOverEvent) => {
     const { over } = event;
     if (!over) {
       if (setHoverConflict) setHoverConflict(null);
       return;
     }
-    const { day, period } = over.data.current;
-    checkDragValidity(day, period, true);
+    const currentData = over.data.current as { day: number; period: number } | undefined;
+    if (currentData) {
+      checkDragValidity(currentData.day, currentData.period, true);
+    }
   };
 
   return (
@@ -384,6 +385,8 @@ export const ScheduleGrid: React.FC<Props> = ({
                     day={dIdx}
                     period={pIdx}
                     data={{ day: dIdx, period: pIdx }}
+                    isValidTarget={isValidTarget}
+                    isActiveDrag={!!activeDragItem}
                     className={`h-16 my-1 rounded-md border border-slate-100 flex transition-all relative bg-slate-50/50 ${!content && !isValidTarget ? "bg-slate-100" : ""} ${highlightClass}`}
                   >
                     {content}

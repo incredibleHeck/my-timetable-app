@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { Plus, Trash2, Edit2, AlertTriangle, Building2, Users, Box } from "lucide-react";
+import { Plus, Trash2, Edit2, AlertTriangle, Building2, Users } from "lucide-react";
 import { AppData } from "../../types";
 import { Room } from "./types";
 import { Button, Modal, Input, Select } from "../../components/ui";
@@ -23,7 +23,7 @@ const ROOM_TYPES = [
   { value: "Workshop", label: "Workshop" },
 ];
 
-export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
+export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate }) => {
   const { addActivity } = useProfile();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
@@ -52,12 +52,12 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate }) => {
     };
 
     let newRooms = [...data.rooms];
-    let msg = "";
+    const msg = editingRoom
+      ? `Updated Room: ${newRoom.name}`
+      : `Added Room: ${newRoom.name}`;
     if (editingRoom) {
-      msg = `Updated Room: ${newRoom.name}`;
       newRooms = newRooms.map((r) => (r.id === editingRoom.id ? newRoom : r));
     } else {
-      msg = `Added Room: ${newRoom.name}`;
       newRooms.push(newRoom);
     }
     const nextData = { ...data, rooms: newRooms };

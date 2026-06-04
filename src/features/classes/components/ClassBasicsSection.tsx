@@ -1,6 +1,6 @@
 import React from "react";
 import { School } from "lucide-react";
-import { AppData } from "../../../types";
+import { AppData, FixedOccasion } from "../../../types";
 import { ClassGroup } from "../types";
 import { Input } from "../../../components/ui";
 import { getOccasionLabel } from "../../../utils/utils";
@@ -11,9 +11,8 @@ interface ClassBasicsSectionProps {
   editingClass: ClassGroup | null;
   cName: string;
   setCName: (name: string) => void;
-  cDefaultRoomId: string | null;
   cPeriodCount: number;
-  cFixedSessions: (string | null)[][];
+  cFixedSessions: FixedOccasion[][];
   setSlotLabel: (label: string) => void;
   setActiveSlot: (slot: { d: number; p: number } | null) => void;
 }
@@ -23,7 +22,6 @@ export const ClassBasicsSection: React.FC<ClassBasicsSectionProps> = ({
   editingClass,
   cName,
   setCName,
-  cDefaultRoomId,
   cPeriodCount,
   cFixedSessions,
   setSlotLabel,
@@ -89,7 +87,7 @@ export const ClassBasicsSection: React.FC<ClassBasicsSectionProps> = ({
                   const globalLabel = getOccasionLabel(data.settings.fixedOccasions[dIdx]?.[pIdx]);
 
                   // Check Local
-                  const localLabel = cFixedSessions[dIdx]?.[pIdx];
+                  const localLabel = getOccasionLabel(cFixedSessions[dIdx]?.[pIdx]);
                   const displayLabel = localLabel || globalLabel;
                   const isGlobal = !!globalLabel;
 

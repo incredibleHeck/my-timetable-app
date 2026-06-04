@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
-import { AppData, Teacher, DutyLocation, ClassGroup, DutyAssignment } from "../../../types";
-import { Modal, Button, Select, Input } from "../../../components/ui";
-import { Users, MapPin, Calendar, Clock, BookOpen, Plus } from "lucide-react";
+import { AppData, DutyAssignment } from "../../../types";
+import { Modal, Button, Select } from "../../../components/ui";
+import { Users, Calendar, Clock, Plus } from "lucide-react";
 import { generateId } from "../../../utils/utils";
 import { useToast } from "../../../components/ui/Toast";
 import { DAYS } from "../../../utils/constants";

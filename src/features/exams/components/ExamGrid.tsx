@@ -1,10 +1,9 @@
 import React, { useMemo, useState } from "react";
-import { AppData, ExamSession, Subject } from "../../../types";
+import { AppData, ExamSession } from "../../../types";
 import { ExamConflict } from "../logic/examValidation";
 import {
   AlertTriangle,
   Clock,
-  MapPin,
   GripVertical,
   CalendarDays,
   Users,
@@ -30,7 +29,6 @@ import {
 const DraggableExamCard = ({
   exams,
   data,
-  activeId,
   checkConflicts,
   onEdit,
   onToggleLock,
@@ -38,7 +36,6 @@ const DraggableExamCard = ({
 }: {
   exams: ExamSession[];
   data: AppData;
-  activeId: string;
   checkConflicts: (exam: ExamSession) => string[];
   onEdit: (e: ExamSession) => void;
   onToggleLock?: (exam: ExamSession) => void;
@@ -306,7 +303,6 @@ interface Props {
 export const ExamGrid: React.FC<Props> = ({
   data,
   exams,
-  activeId = "ALL",
   onEdit,
   onAddCell,
   checkConflicts,
@@ -356,7 +352,7 @@ export const ExamGrid: React.FC<Props> = ({
       return;
     }
 
-    const activeIds = activeData.allExams.map((e: any) => e.id);
+    const activeIds = activeData.allExams.map((e: ExamSession) => e.id);
 
     if (overData.type === "CELL_TARGET") {
       setOverCell({ date: overData.date, time: overData.startTime });
@@ -366,7 +362,7 @@ export const ExamGrid: React.FC<Props> = ({
       const targetExam = overData.exam;
       if (targetExam) {
         setOverCell({ date: targetExam.date, time: targetExam.startTime });
-        const overIds = overData.allExams.map((e: any) => e.id);
+        const overIds = overData.allExams.map((e: ExamSession) => e.id);
         const conflicts = checkMoveConflicts(activeIds, targetExam.date, targetExam.startTime, [
           ...activeIds,
           ...overIds,
@@ -508,7 +504,6 @@ export const ExamGrid: React.FC<Props> = ({
                               key={stack[0].id}
                               exams={stack}
                               data={data}
-                              activeId={activeId}
                               checkConflicts={checkConflicts}
                               onEdit={onEdit}
                               onToggleLock={onToggleLock}

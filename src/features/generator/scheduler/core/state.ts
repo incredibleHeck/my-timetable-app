@@ -156,8 +156,8 @@ export const initializeState = (data: AppData): SchedulerState => {
           const entry: ScheduleEntry = {
             ...slot,
             unitId,
-            duration: (slot as any).duration || 1,
-            isFixed: (slot as any).isFixed || false,
+            duration: slot.duration || 1,
+            isFixed: slot.isFixed || false,
           };
           state.schedule[cId][d][p] = entry;
 
@@ -183,7 +183,7 @@ export const initializeState = (data: AppData): SchedulerState => {
             // Only increment duration if this slot is the 'head' or not fixed
             // to avoid double counting doubles in legacy burn-in
             if (!slot.isFixed) {
-              state.classSubjectDuration[cId][slot.subjectId] += (slot as any).duration || 1;
+              state.classSubjectDuration[cId][slot.subjectId] += slot.duration || 1;
             }
           }
 
@@ -288,7 +288,7 @@ export function applyGangToState(
   });
 }
 
-export function removeGangFromState(state: SchedulerState, gang: AllocationUnit[], data: AppData) {
+export function removeGangFromState(state: SchedulerState, gang: AllocationUnit[], _data: AppData) {
   gang.forEach((u) => {
     unassignUnit(state, u);
   });

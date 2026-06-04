@@ -1,4 +1,3 @@
-import type ExcelJS from "exceljs";
 import { AppData, ExamSession } from "../../types";
 import { getStreamLevel, getClassDayInvigilationTeam } from "../../features/exams/logic/examUtils";
 import { FileService } from "../fileSystem";
@@ -449,7 +448,7 @@ export const exportInvigilatorsToExcel = async (data: AppData, currentExams?: Ex
 
   // Page Setup for A3 Landscape
   worksheet.pageSetup = {
-    // @ts-ignore
+    // @ts-expect-error: ExcelJS paperSize typings might not support numeric values directly
     paperSize: 8, // A3
     orientation: "landscape",
     fitToPage: true,
@@ -538,7 +537,7 @@ export const exportInvigilatorsToExcel = async (data: AppData, currentExams?: Ex
 
   // Data Rows
   sortedClasses.forEach((cls) => {
-    const rowData: any = { className: cls.name };
+    const rowData: Record<string, string> = { className: cls.name };
     uniqueDates.forEach((date) => {
       const teamIds = getClassDayInvigilationTeam(exams, cls.id, date);
       rowData[date] = teamIds

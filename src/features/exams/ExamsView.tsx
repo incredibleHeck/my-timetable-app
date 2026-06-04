@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Plus,
   Search,
@@ -7,13 +7,9 @@ import {
   List,
   Wand2,
   Users,
-  Eraser,
   Lock,
   Unlock,
-  Move,
-  Repeat,
   ArrowLeft,
-  BookOpen,
   Printer,
   FileSpreadsheet,
   Table,
@@ -21,11 +17,10 @@ import {
   Trash2,
   Pencil,
 } from "lucide-react";
-import { AppData } from "../../types";
-import { ExamSession, ExamRoster } from "./types";
+import { AppData, ViewState } from "../../types";
+import { ExamSession } from "./types";
 import { Button } from "../../components/ui";
 import { useToast } from "../../components/ui/Toast";
-import { generateId } from "../../utils/utils";
 
 // Hooks
 import { useExamSchedule } from "./hooks/useExamSchedule";
@@ -51,7 +46,7 @@ import {
 interface ViewProps {
   data: AppData;
   onUpdate: (newData: AppData) => void;
-  onNavigate?: (view: any) => void;
+  onNavigate?: (view: ViewState) => void;
 }
 
 export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) => {
@@ -74,11 +69,9 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
     updateExam,
     deleteExam,
     upsertExams,
-    clearAllExams,
     validateExam,
     checkMoveConflicts,
     swapExams,
-    moveExamToDate,
     moveExamToSlot,
   } = useExamSchedule(activeData, handleUpdateActiveRoster);
 
@@ -176,7 +169,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
 
   const handleCellClick = (date: string, time: string) => {
     // Create a skeleton exam session to pre-populate the modal
-    const skeleton: any = {
+    const skeleton: ExamSession = {
       id: "", // Empty ID signals "New"
       date,
       startTime: time,
@@ -188,12 +181,6 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
     };
     setEditingExam(skeleton);
     setManualModalOpen(true);
-  };
-
-  const handleClearAll = () => {
-    if (confirm("Delete ALL exams in this timetable? You can undo with Ctrl+Z.")) {
-      clearAllExams();
-    }
   };
 
   const handleAutoAssignInvigilators = () => {

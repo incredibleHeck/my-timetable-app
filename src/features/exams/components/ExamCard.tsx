@@ -1,8 +1,8 @@
 import React from "react";
 import { Calendar, Clock, Users, Trash2, Edit2, Lock, FileText, AlertTriangle } from "lucide-react";
-import { ExamSession, Subject, Teacher, ClassGroup, Room, AppData } from "../../../types";
+import { ExamSession, AppData } from "../../../types";
 import { Card } from "../../../components/ui";
-import { validateExamMove, ExamConflict } from "../logic/examValidation";
+import { validateExamMove } from "../logic/examValidation";
 
 interface Props {
   exam: ExamSession;
@@ -24,7 +24,6 @@ export const ExamCard: React.FC<Props> = ({
   const subject = data.subjects.find((s) => s.id === exam.subjectId);
   const teachers = data.teachers;
   const classes = data.classes;
-  const room = data.rooms.find((r) => r.id === exam.roomId);
 
   const conflicts = validateExamMove(exam, allExams, data);
   const hasCritical = conflicts.some((c) => c.severity === "CRITICAL");

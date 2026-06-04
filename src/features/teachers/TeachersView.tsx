@@ -7,13 +7,11 @@ import {
   Ban,
   AlertTriangle,
   CheckSquare,
-  BookOpen,
   Library,
   Users,
   Search,
 } from "lucide-react";
 import { AppData } from "../../types";
-import { Teacher } from "./types";
 import { Button, Modal, Badge, Input } from "../../components/ui";
 import { TeacherEditorModal } from "./components/TeacherEditorModal";
 import { useTeacherManagement } from "./hooks/useTeacherManagement";

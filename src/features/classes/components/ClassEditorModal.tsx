@@ -24,7 +24,6 @@ export const ClassEditorModal: React.FC<ClassEditorModalProps> = (props) => {
     setModalSubTab,
     handleSave,
     activeSlot,
-    setActiveSlot,
     slotLabel,
     setSlotLabel,
     saveSlotLabel,
@@ -67,7 +66,6 @@ export const ClassEditorModal: React.FC<ClassEditorModalProps> = (props) => {
                 editingClass={editingClass}
                 cName={form.cName}
                 setCName={form.setCName}
-                cDefaultRoomId={form.cDefaultRoomId}
                 cPeriodCount={form.cPeriodCount}
                 cFixedSessions={form.cFixedSessions}
                 setSlotLabel={form.setSlotLabel}

@@ -150,17 +150,7 @@ export const useWorkloadStats = (data: AppData) => {
         };
       })
       .sort((a, b) => b.utilizationPct - a.utilizationPct);
-  }, [
-    data.teachers,
-    data.classes,
-    data.jointClasses,
-    data.electives,
-    data.schedule,
-    data.settings.periodsPerDay,
-    data.settings.dayStructure,
-    data.settings.maxTeachingPeriodsPerWeek,
-    data.subjects,
-  ]);
+  }, [data]);
 
   return { workloadStats };
 };

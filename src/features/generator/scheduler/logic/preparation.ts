@@ -1,4 +1,4 @@
-import { AppData, Teacher, Subject, ClassGroup } from "../../../../types";
+import { AppData, Subject } from "../../../../types";
 import { AllocationUnit } from "../core/types";
 import { calculatePriority } from "../solver/heuristics";
 import { resolveSubjectIsCore } from "./subject-core";
@@ -7,6 +7,10 @@ import { resolveSubjectIsCore } from "./subject-core";
  * REFACTORED: Preparation Layer
  * Ensures 100% Curriculum Respect and prepares metadata for MRV/LCV.
  */
+interface LooseCurriculumItem {
+  electiveBlockId?: string;
+}
+
 export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
   const units: AllocationUnit[] = [];
   const { classes, jointClasses, subjects, teachers } = data;
@@ -108,7 +112,7 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
           rankLevel, // RANK 2 metadata
           defaultRoomId: cls.defaultRoomId || cls.classroomId,
           requiredRoomType,
-          electiveBlockId: (curr as any).electiveBlockId,
+          electiveBlockId: (curr as LooseCurriculumItem).electiveBlockId,
           isCore: isCoreSubject(subject),
         };
         u.priority = calculatePriority(u, data, teacherMap, subjectMap);

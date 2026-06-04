@@ -4,7 +4,7 @@ import { Teacher } from "../types";
 import { generateId } from "../../../utils/utils";
 import { useProfile } from "../../../contexts/ProfileContext";
 
-export const useTeacherManagement = (data: AppData, onUpdate: (d: AppData) => void) => {
+export const useTeacherManagement = (data: AppData, _onUpdate: (d: AppData) => void) => {
   const { addActivity } = useProfile();
   const [activeTab, setActiveTab] = useState<"LIST" | "FACULTIES">("LIST");
 

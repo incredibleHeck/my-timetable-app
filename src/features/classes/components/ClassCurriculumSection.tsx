@@ -26,7 +26,10 @@ export const ClassCurriculumSection: React.FC<ClassCurriculumSectionProps> = ({
           if (!subject) return null;
           const eligibleTeachers = data.teachers.filter((t) => t.specialtyIds.includes(subject.id));
 
-          const updateItem = (f: keyof CurriculumItem, v: any) => {
+          const updateItem = (
+            f: keyof CurriculumItem,
+            v: string | number | boolean | null | undefined,
+          ) => {
             setCCurriculum((prev) =>
               prev.map((p) =>
                 p.subjectId === item.subjectId
@@ -35,9 +38,9 @@ export const ClassCurriculumSection: React.FC<ClassCurriculumSectionProps> = ({
                       [f]: v,
                       periodsPerWeek:
                         f === "doubles"
-                          ? v * 2 + p.singles
+                          ? (v as number) * 2 + p.singles
                           : f === "singles"
-                            ? p.doubles * 2 + v
+                            ? p.doubles * 2 + (v as number)
                             : p.periodsPerWeek,
                     }
                   : p,

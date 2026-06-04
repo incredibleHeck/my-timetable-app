@@ -17,7 +17,6 @@ import {
 } from "../constants";
 import {
   getGangId,
-  PlaceRepairMove,
   RepairAction,
   SlotMove,
   SwapRepairMove,
@@ -266,7 +265,7 @@ function restoreGangPlacement(
   state: SchedulerState,
   gang: AllocationUnit[],
   saved: SavedGangPlacement,
-  data: AppData,
+  _data: AppData,
 ): void {
   applyGangToState(state, gang, saved);
 }
@@ -283,7 +282,6 @@ export function findMinConflictMove(
   tabu?: TabuManager,
   iteration: number = 0,
 ): SlotMove {
-  const globalPeriods = data.settings.periodsPerDay;
   const maxPossiblePeriods = 15;
   const days = getDaysPerWeek(data.settings);
 

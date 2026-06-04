@@ -28,7 +28,7 @@ export function useActivation() {
         setError("Invalid product key format. Expected format: EDU-XXXX-XXXX-XXXX.");
         return false;
       }
-    } catch (_err) {
+    } catch {
       setError("Activation failed. Please check your connection.");
       return false;
     } finally {

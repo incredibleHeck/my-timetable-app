@@ -1,5 +1,6 @@
 import { AppData, Subject, Teacher, ClassGroup, Room } from "../../../../types";
 import { AllocationUnit, SchedulerState } from "../core/types";
+import { ValidationContext } from "../validation/types";
 import {
   checkHardConstraints,
   checkImmutableConstraints,
@@ -205,15 +206,20 @@ export class EvaluationEngine {
     }
 
     // --- OTHER LOGICAL PENALTIES ---
-    const ctx = {
+    const ctx: ValidationContext = {
       data,
       classId: unit.classIds[0],
       subjectId: unit.subjectId,
       teacherId: unit.teacherIds[0],
       targetDay: d,
+      targetPeriod: p,
+      duration: unit.duration,
       maxPeriods: 15,
       structure: data.settings.dayStructure,
-    } as any;
+      classSchedule: [],
+      allClassSchedules: new Map(),
+      ignoredSlots: new Set(),
+    };
 
     const proposedSet = new Set([p]);
     if (p2 !== -1) proposedSet.add(p2);

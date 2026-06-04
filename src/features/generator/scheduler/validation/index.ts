@@ -3,7 +3,6 @@ import { getType } from "./utils";
 import { initializeState } from "../core/state";
 import {
   collectResourceDoubleBookings,
-  conflictDedupeKey,
   curriculumGapsToConflicts,
   dedupeConflicts,
   detectCurriculumGaps,
@@ -329,7 +328,7 @@ export const validateFullSchedule = (data: AppData, state: SchedulerState): Conf
           effectiveRoomId ?? undefined,
           duration,
           undefined,
-          false,
+          true,
         );
 
         if (!result.valid) {

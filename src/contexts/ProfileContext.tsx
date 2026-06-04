@@ -62,8 +62,8 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
             localStorage.setItem(`profile_data_${profile.id}`, JSON.stringify(profile));
             const manifestContent = localStorage.getItem("profile_manifest");
             if (manifestContent) {
-              const manifest = JSON.parse(manifestContent);
-              const idx = manifest.profiles.findIndex((p: any) => p.id === profile.id);
+              const manifest = JSON.parse(manifestContent) as ProfileManifest;
+              const idx = manifest.profiles.findIndex((p) => p.id === profile.id);
               const entry = {
                 id: profile.id,
                 name: profile.name,
@@ -133,9 +133,10 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
       try {
         await ProfileStorage.saveProfile(updatedProfile);
         setIsDirty(false);
-      } catch (error: any) {
+      } catch (error) {
         console.error("Failed to auto-save profile:", error);
-        if (error?.message?.includes("QuotaExceededError")) {
+        const errMsg = error instanceof Error ? error.message : String(error);
+        if (errMsg.includes("QuotaExceededError")) {
           notify(
             "Local storage is full! Please export your data and delete old profiles.",
             "error",
@@ -234,6 +235,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const createNewProfile = async (name: string, templateData?: AppData) => {
@@ -250,9 +252,10 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
       await ProfileStorage.saveProfile(newProfile);
       await reloadProfiles();
       await switchProfile(newProfile.id);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Failed to create new profile:", error);
-      if (error?.message?.includes("QuotaExceededError")) {
+      const errMsg = error instanceof Error ? error.message : String(error);
+      if (errMsg.includes("QuotaExceededError")) {
         notify(
           "Failed to create new profile. Local storage is full! Please export and delete old profiles.",
           "error",
@@ -273,9 +276,10 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
         try {
           await ProfileStorage.saveProfile(activeProfileRef.current);
           setIsDirty(false);
-        } catch (error: any) {
+        } catch (error) {
           console.error("Failed to save profile on switch:", error);
-          if (error?.message?.includes("QuotaExceededError")) {
+          const errMsg = error instanceof Error ? error.message : String(error);
+          if (errMsg.includes("QuotaExceededError")) {
             notify("Failed to save changes before switching. Local storage is full!", "error");
           } else {
             notify("Failed to save changes before switching profiles.", "error");

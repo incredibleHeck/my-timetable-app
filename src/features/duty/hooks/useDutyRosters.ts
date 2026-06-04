@@ -58,6 +58,7 @@ export const useDutyRosters = (data: AppData, onUpdate: (newData: AppData) => vo
     if (!activeRosterId && rosters.length > 0) {
       setActiveRosterId(rosters[0].id);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data.dutyRosters, data.dutyAssignments]);
 
   const activeRoster = useMemo(() => {

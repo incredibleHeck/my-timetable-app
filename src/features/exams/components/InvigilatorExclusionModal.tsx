@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
-import { AppData, Teacher } from "../../../types";
-import { Modal, Button, Input } from "../../../components/ui";
+import { AppData } from "../../../types";
+import { Modal, Button } from "../../../components/ui";
 import { Users, Search, XCircle, CheckCircle } from "lucide-react";
 
 interface Props {
@@ -37,10 +37,6 @@ export const InvigilatorExclusionModal: React.FC<Props> = ({
 
   const handleSelectAll = () => {
     setExcludedIds([]);
-  };
-
-  const handleExcludeAll = () => {
-    setExcludedIds(data.teachers.map((t) => t.id));
   };
 
   return (

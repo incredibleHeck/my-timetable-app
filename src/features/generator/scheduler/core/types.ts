@@ -1,4 +1,4 @@
-import { ScheduleResult, TimeSlot, Settings } from "../../../../types";
+import { TimeSlot, Settings } from "../../../../types";
 
 /**
  * OPTIMIZED ALLOCATION UNIT

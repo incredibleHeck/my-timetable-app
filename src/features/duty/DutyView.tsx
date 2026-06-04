@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState } from "react";
 import {
   Trash2,
   Shield,
@@ -7,7 +7,6 @@ import {
   Layout,
   Clock,
   Wand2,
-  Repeat,
   Plus,
   History,
   ArrowLeft,
@@ -18,7 +17,6 @@ import {
   Pencil,
 } from "lucide-react";
 import { AppData, ViewState } from "../../types";
-import { DutyAssignment, DutyRoster } from "./types";
 import { Button } from "../../components/ui";
 import { generateId } from "../../utils/utils";
 import { DAYS } from "../../utils/constants";
@@ -161,7 +159,12 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
     }
   };
 
-  const handleGenerateClick = (config: any) => {
+  const handleGenerateClick = (config: {
+    numWeeks: number;
+    minTeachers: number;
+    maxTeachers: number;
+    excludedTeacherIds: string[];
+  }) => {
     const newAssignments = generateDutyRoster(data, {
       ...config,
       viewType: currentType,

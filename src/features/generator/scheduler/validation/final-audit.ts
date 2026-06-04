@@ -83,7 +83,7 @@ export const generateFinalReport = (data: AppData): Conflict[] => {
       const subjectsInDay = new Set(Object.values(subjectPlacements));
       for (const subjectId of subjectsInDay) {
         const sPeriods = Object.entries(subjectPlacements)
-          .filter(([p, sId]) => sId === subjectId)
+          .filter(([_, sId]) => sId === subjectId)
           .map(([p]) => parseInt(p))
           .sort((a, b) => a - b);
 

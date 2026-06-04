@@ -24,12 +24,12 @@ export const useClassActions = (data: AppData, onUpdate: (newData: AppData) => v
 
   const handleSaveClass = (newClass: ClassGroup, editingClass: ClassGroup | null) => {
     let newClasses = [...data.classes];
-    let msg = "";
+    const msg = editingClass
+      ? `Updated Class: ${newClass.name}`
+      : `Added Class: ${newClass.name}`;
     if (editingClass) {
-      msg = `Updated Class: ${newClass.name}`;
       newClasses = newClasses.map((c) => (c.id === editingClass.id ? newClass : c));
     } else {
-      msg = `Added Class: ${newClass.name}`;
       newClasses.push(newClass);
     }
 

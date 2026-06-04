@@ -1,4 +1,4 @@
-import { AppData, DutyAssignment, Teacher } from "../../../types";
+import { AppData, DutyAssignment } from "../../../types";
 import { generateId } from "../../../utils/utils";
 
 interface GeneratorConfig {

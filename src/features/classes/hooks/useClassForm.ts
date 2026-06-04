@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { AppData, PeriodType } from "../../../types";
+import { AppData, PeriodType, FixedOccasion } from "../../../types";
 import { ClassGroup, CurriculumItem } from "../types";
 import { generateId } from "../../../utils/utils";
 
@@ -28,7 +28,7 @@ export const useClassForm = ({
   const [cCurriculum, setCCurriculum] = useState<CurriculumItem[]>([]);
 
   // New State for Class-Specific Reservations
-  const [cFixedSessions, setCFixedSessions] = useState<(string | null)[][]>([]);
+  const [cFixedSessions, setCFixedSessions] = useState<FixedOccasion[][]>([]);
   const [activeSlot, setActiveSlot] = useState<{ d: number; p: number } | null>(null);
   const [slotLabel, setSlotLabel] = useState("");
 
@@ -47,15 +47,12 @@ export const useClassForm = ({
 
       // 1. Structure Logic
       const defaultStruct = data.settings.dayStructure.map((s) => s.type || "CLASS");
-      let initialStruct: PeriodType[] = [];
-
-      if (editingClass?.structure && editingClass.structure.length > 0) {
-        initialStruct = editingClass.structure.map(
-          (s) => (typeof s === "object" ? s.type : s) || "CLASS",
-        );
-      } else {
-        initialStruct = [...defaultStruct];
-      }
+      let initialStruct =
+        editingClass?.structure && editingClass.structure.length > 0
+          ? editingClass.structure.map(
+              (s) => (typeof s === "object" ? s.type : s) || "CLASS",
+            )
+          : [...defaultStruct];
 
       // Resize Structure
       if (initialStruct.length < targetCount) {
@@ -75,7 +72,7 @@ export const useClassForm = ({
         editingClass.fixedSessions.forEach((row, d) => {
           if (d < 5) {
             row.forEach((val, p) => {
-              if (p < targetCount) initialFixed[d][p] = val as any;
+              if (p < targetCount) initialFixed[d][p] = val;
             });
           }
         });
@@ -161,7 +158,7 @@ export const useClassForm = ({
       breakDuration: cBreakDuration,
       lunchDuration: cLunchDuration,
       structure: finalStructure,
-      fixedSessions: cFixedSessions as any,
+      fixedSessions: cFixedSessions,
       curriculum: activeCurriculum,
     };
     onSave(newClass, editingClass);

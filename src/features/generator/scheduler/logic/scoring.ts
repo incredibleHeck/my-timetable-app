@@ -249,7 +249,7 @@ export const calculateScore = (
   p: number,
   unit: AllocationUnit,
   teacherMap: Map<string, Teacher>,
-  subjectMap: Map<string, Subject>,
+  _subjectMap: Map<string, Subject>,
 ): number => {
   let score = 0;
   const weights = resolveWeights(data);

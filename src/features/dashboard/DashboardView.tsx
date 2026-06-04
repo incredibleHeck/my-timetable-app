@@ -6,11 +6,9 @@ import {
   AlertTriangle,
   CheckCircle2,
   Activity,
-  Zap,
   Layers,
   FolderOpen,
   Plus,
-  Settings,
   Download,
   Upload,
   FileText,
@@ -20,7 +18,6 @@ import { AppData, ViewState } from "../../types";
 import { Card, Button, Badge } from "../../components/ui";
 import { useDashboard } from "./hooks/useDashboard";
 import { useProfile } from "../../contexts/ProfileContext";
-import { FileService } from "../../services/fileSystem";
 
 import { MetricCard } from "./components/MetricCard";
 import { QuickAction } from "./components/QuickAction";
@@ -36,7 +33,7 @@ interface ViewProps {
 }
 
 export const DashboardView: React.FC<ViewProps> = ({ data, profileName, onNavigate, onUpdate }) => {
-  const { profiles, activeProfile, createNewProfile, switchProfile, isSaving } = useProfile();
+  const { profiles, createNewProfile, switchProfile, isSaving } = useProfile();
 
   const {
     createModalOpen,

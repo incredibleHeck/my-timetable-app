@@ -1,7 +1,6 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useMemo } from "react";
 import { AppData, ViewState } from "../../../types";
 import { FileService } from "../../../services/fileSystem";
-import { sanitizeAppData } from "../../../services/fileSystem/sanitization";
 import { useWorkloadStats } from "../../workload/hooks/useWorkloadStats";
 import { useToast } from "../../../components/ui/Toast";
 
@@ -144,9 +143,10 @@ export const useDashboard = (data: AppData, onUpdate: (d: AppData) => void) => {
       onUpdate(newData); // Updates the entire app state
       showToast("Backup restored successfully!", "success");
       return true;
-    } catch (error: any) {
+    } catch (error) {
       console.error(error);
-      showToast(`Failed to load backup: ${error.message || "Unknown error"}`, "error");
+      const errMsg = error instanceof Error ? error.message : "Unknown error";
+      showToast(`Failed to load backup: ${errMsg}`, "error");
       return false;
     }
   };

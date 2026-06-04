@@ -126,19 +126,21 @@ export const saveProfile = async (profile: Profile): Promise<void> => {
 
       localStorage.setItem(WEB_MANIFEST_KEY, JSON.stringify(manifest));
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error(`Failed to save profile ${profile.id}:`, error);
-    if (
-      error &&
-      (error.name === "QuotaExceededError" ||
-        error.name === "NS_ERROR_DOM_QUOTA_REACHED" ||
-        error.code === 22 ||
-        error.code === 1014)
-    ) {
-      throw new Error(
-        "QuotaExceededError: Local storage quota exceeded. Please export your profiles/data to free up space.",
-        { cause: error },
-      );
+    if (error && typeof error === "object") {
+      const err = error as { name?: string; code?: number };
+      if (
+        err.name === "QuotaExceededError" ||
+        err.name === "NS_ERROR_DOM_QUOTA_REACHED" ||
+        err.code === 22 ||
+        err.code === 1014
+      ) {
+        throw new Error(
+          "QuotaExceededError: Local storage quota exceeded. Please export your profiles/data to free up space.",
+          { cause: error },
+        );
+      }
     }
     throw error;
   }
@@ -230,7 +232,7 @@ export const getActiveProfileId = async (): Promise<string | null> => {
       const manifest: ProfileManifest = JSON.parse(content);
       return manifest.activeProfileId;
     }
-  } catch (error) {
+  } catch {
     return null;
   }
 };

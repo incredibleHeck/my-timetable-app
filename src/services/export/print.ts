@@ -1,9 +1,9 @@
-import { AppData, ScheduleSlot, Subject, Teacher, ClassGroup } from "../../types";
+import { AppData, Subject, Teacher, ClassGroup } from "../../types";
 import { calculateClassSchedule, getFormattedTimeRange } from "../../utils/timeUtils";
 import { getOccasionLabel } from "../../utils/utils";
 
 // --- HELPER: GET DURATION ---
-const getDuration = (data: any, classId: string, d: number, p: number): number => {
+const getDuration = (data: AppData, classId: string, d: number, p: number): number => {
   const slot = data.schedule[classId]?.[d]?.[p];
   if (!slot) return 1;
   const nextSlot = data.schedule[classId]?.[d]?.[p + 1];

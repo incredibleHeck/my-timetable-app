@@ -6,7 +6,7 @@ import { runConflictAudit } from "../validation/audit";
 import { auditFinalSchedule, dedupeConflicts } from "../validation";
 import { SOLVER_TIME_LIMIT_MS, SOLVER_TARGET_MS } from "../constants";
 
-const ctx: Worker = self as any;
+const ctx: Worker = self as unknown as Worker;
 
 ctx.onmessage = (e: MessageEvent<AppData>) => {
   const data = e.data;

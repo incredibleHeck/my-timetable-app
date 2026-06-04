@@ -8,7 +8,7 @@ export interface CrashReport {
   type: "error" | "unhandledrejection" | "react" | "worker" | "manual";
   userAgent: string;
   environment: "tauri" | "web";
-  context?: any;
+  context?: Record<string, unknown>;
 }
 
 const WEB_CRASH_LOG_KEY = "eduscheduler_crash_logs";
@@ -58,7 +58,7 @@ export const errorReporter = {
     error: Error,
     options?: {
       type?: CrashReport["type"];
-      context?: any;
+      context?: Record<string, unknown>;
     },
   ) {
     const report: CrashReport = {
@@ -82,7 +82,7 @@ export const errorReporter = {
           if (await NativeAdapter.fileExists(logPath)) {
             existingContent = await NativeAdapter.readFile(logPath);
           }
-        } catch (e) {
+        } catch {
           // File doesn't exist or read fails, ignore and overwrite
         }
 
@@ -91,7 +91,7 @@ export const errorReporter = {
           try {
             logs = JSON.parse(existingContent);
             if (!Array.isArray(logs)) logs = [];
-          } catch (e) {
+          } catch {
             logs = [];
           }
         }
@@ -111,7 +111,7 @@ export const errorReporter = {
           try {
             logs = JSON.parse(existing);
             if (!Array.isArray(logs)) logs = [];
-          } catch (e) {
+          } catch {
             logs = [];
           }
         }
