@@ -11,3 +11,8 @@ src-tauri/target/
 *.log
 dev_server.log
 dev_server_err.log
+
+# Testing
+/coverage
+/test-results
+/playwright-report
