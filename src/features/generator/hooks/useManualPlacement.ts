@@ -14,7 +14,7 @@ export function canPlacePendingAt(
   day: number,
   period: number,
   pending: PendingPlacement,
-): { valid: boolean; message?: string } {
+): { valid: boolean; message?: string; warning?: string } {
   const cls = data.classes.find((c) => c.id === classId);
   const structure = cls?.structure || data.settings.dayStructure;
   const periodLimit = cls?.periodCount ?? data.settings.periodsPerDay;
@@ -47,8 +47,10 @@ export function canPlacePendingAt(
     pending.duration,
   );
 
-  return result.valid
-    ? { valid: true }
+  const isAllowed = result.valid || result.conflictCount === 0;
+
+  return isAllowed
+    ? { valid: true, warning: !result.valid ? result.message : undefined }
     : { valid: false, message: result.message || "Invalid placement" };
 }
 
@@ -62,9 +64,16 @@ export const useManualPlacement = (data: AppData, onUpdate: (d: AppData) => void
 
   const listValidPendingForSlot = useCallback(
     (classId: string, day: number, period: number) => {
-      return getPendingPlacementsForClass(data, classId).filter(
-        (pending) => canPlacePendingAt(data, classId, day, period, pending).valid,
-      );
+      return getPendingPlacementsForClass(data, classId)
+        .map((pending) => {
+          const check = canPlacePendingAt(data, classId, day, period, pending);
+          return { ...pending, _valid: check.valid, warning: check.warning };
+        })
+        .filter((p) => p._valid)
+        .map((p) => {
+          const { _valid, ...rest } = p;
+          return rest;
+        });
     },
     [data],
   );

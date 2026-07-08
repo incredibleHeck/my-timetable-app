@@ -30,9 +30,42 @@ export const ClassAssignmentsPanel: React.FC<Props> = ({ data, onUpdate }) => {
     if (!selectedClassId || !selectedTeacherId) return;
 
     const cls = data.classes.find((c) => c.id === selectedClassId);
-    const teacher = data.teachers.find((t) => t.id === selectedTeacherId);
+    if (!cls) return;
 
-    if (!cls || !teacher) return;
+    if (selectedTeacherId === "UNASSIGN") {
+      let unassignedCount = 0;
+      const newCurriculum = cls.curriculum.map((c) => {
+        if (c.assignedTeacherId) {
+          unassignedCount++;
+          return { ...c, assignedTeacherId: undefined };
+        }
+        return c;
+      });
+
+      if (unassignedCount === 0) {
+        setMessage({
+          text: `Warning: No teachers are currently assigned to ${cls.name}.`,
+          type: "error",
+        });
+        return;
+      }
+
+      const newClass = { ...cls, curriculum: newCurriculum };
+      const newClasses = data.classes.map((c) => (c.id === cls.id ? newClass : c));
+
+      pushToHistory(data);
+      onUpdate({ ...data, classes: newClasses });
+
+      setMessage({
+        text: `Successfully unassigned all teachers from ${cls.name}.`,
+        type: "success",
+      });
+      setSelectedTeacherId("");
+      return;
+    }
+
+    const teacher = data.teachers.find((t) => t.id === selectedTeacherId);
+    if (!teacher) return;
 
     // 1. Identify common subjects
     const teacherSubjects = teacher.specialtyIds;
@@ -124,6 +157,7 @@ export const ClassAssignmentsPanel: React.FC<Props> = ({ data, onUpdate }) => {
               onChange={(e) => setSelectedTeacherId(e.target.value)}
               options={[
                 { value: "", label: "Choose a Teacher..." },
+                { value: "UNASSIGN", label: "⚠️ Unassign All" },
                 ...sortedTeachers.map((t) => ({ value: t.id, label: t.name })),
               ]}
             />

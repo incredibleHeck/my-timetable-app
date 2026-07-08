@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { Lock } from "lucide-react";
+import { Lock, ChevronLeft, ChevronRight } from "lucide-react";
 import { AppData, ViewState, Conflict } from "../../types";
 import { ScheduleGrid } from "./components/ScheduleGrid";
 import { ConflictPanel } from "./components/ConflictPanel";
@@ -29,6 +29,8 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
   const [stats, setStats] = useState<GeneratorStats | null>(null);
   const [liveProgress, setLiveProgress] = useState<SolverLiveProgress | null>(null);
   const [elapsedMs, setElapsedMs] = useState(0);
+  const [isConflictPanelOpen, setIsConflictPanelOpen] = useState(true);
+
   const generationStartRef = useRef<number | null>(null);
   const generationBaseDataRef = useRef<AppData | null>(null);
   const lastPerfectScheduleRef = useRef<AppData["schedule"] | null>(null);
@@ -43,6 +45,17 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
       return () => clearTimeout(timer);
     }
   }, [hoverConflict]);
+
+  // Auto-hide conflict panel on successful generation
+  useEffect(() => {
+    if (!isGenerating && data.lastGenerated) {
+      if (data.conflicts.length === 0) {
+        setIsConflictPanelOpen(false);
+      } else {
+        setIsConflictPanelOpen(true);
+      }
+    }
+  }, [isGenerating, data.lastGenerated, data.conflicts.length]);
 
   // Clear highlighted conflict after 3 seconds
   useEffect(() => {
@@ -376,37 +389,55 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
           </div>
         </div>
 
-        {/* Conflict Panel */}
-        {(hoverConflict ||
-          (!isGenerating && (data.lastGenerated || data.conflicts.length > 0))) && (
-          <div>
-            {/* LIVE VALIDATION ERROR */}
-            {hoverConflict && (
-              <div
-                className="w-64 mb-4 border border-red-200 bg-red-50 rounded-xl shadow-sm p-4 animate-pulse cursor-pointer hover:bg-red-100 transition-colors"
-                onClick={() => setHighlightedConflict(hoverConflict)}
+        {/* Conflict Panel & Toggle */}
+        {(hoverConflict || (!isGenerating && (data.lastGenerated || data.conflicts.length > 0))) && (
+          <div className="relative flex">
+            {/* Toggle Button */}
+            {!isGenerating && data.lastGenerated && (
+              <button
+                onClick={() => setIsConflictPanelOpen(!isConflictPanelOpen)}
+                className="absolute -left-8 top-1/2 -translate-y-1/2 w-8 h-16 bg-white border border-slate-200 border-r-0 rounded-l-lg shadow-sm flex items-center justify-center text-slate-400 hover:text-amber-500 hover:bg-amber-50 z-10 transition-colors"
+                title={isConflictPanelOpen ? "Hide validation panel" : "Show validation panel"}
               >
-                <h4 className="font-bold text-red-800 mb-1 text-sm flex items-center gap-2">
-                  <Lock size={14} /> Invalid Move
-                </h4>
-                <p className="text-xs text-red-600 font-medium leading-relaxed">
-                  {hoverConflict.reason}
-                </p>
-                <div className="mt-2 pt-2 border-t border-red-100 flex flex-col gap-1">
-                  <span className="text-[10px] text-red-400">
-                    Target: {hoverConflict.className || "Unknown"}
-                  </span>
-                </div>
-              </div>
+                {isConflictPanelOpen ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+              </button>
             )}
 
-            {!isGenerating && (data.lastGenerated || data.conflicts.length > 0) && (
-              <ConflictPanel
-                conflicts={data.conflicts}
-                selectedConflict={highlightedConflict}
-                onConflictSelect={setHighlightedConflict}
-              />
-            )}
+            <div
+              className={`transition-all duration-300 ease-in-out origin-right ${
+                isConflictPanelOpen ? "w-96 opacity-100 ml-4" : "w-0 opacity-0 ml-0 overflow-hidden"
+              }`}
+            >
+              <div className="w-96">
+                {/* LIVE VALIDATION ERROR */}
+                {hoverConflict && (
+                  <div
+                    className="w-full mb-4 border border-red-200 bg-red-50 rounded-xl shadow-sm p-4 animate-pulse cursor-pointer hover:bg-red-100 transition-colors"
+                    onClick={() => setHighlightedConflict(hoverConflict)}
+                  >
+                    <h4 className="font-bold text-red-800 mb-1 text-sm flex items-center gap-2">
+                      <Lock size={14} /> Invalid Move
+                    </h4>
+                    <p className="text-xs text-red-600 font-medium leading-relaxed">
+                      {hoverConflict.reason}
+                    </p>
+                    <div className="mt-2 pt-2 border-t border-red-100 flex flex-col gap-1">
+                      <span className="text-[10px] text-red-400">
+                        Target: {hoverConflict.className || "Unknown"}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {!isGenerating && (data.lastGenerated || data.conflicts.length > 0) && (
+                  <ConflictPanel
+                    conflicts={data.conflicts}
+                    selectedConflict={highlightedConflict}
+                    onConflictSelect={setHighlightedConflict}
+                  />
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>

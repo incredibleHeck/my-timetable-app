@@ -4,6 +4,8 @@ import { Card, Button } from "../../components/ui";
 import { Upload, AlertCircle, Clock } from "lucide-react";
 import { useWorkloadStats } from "./hooks/useWorkloadStats";
 import { WorkloadTeacherDetail } from "./components/WorkloadTeacherDetail";
+import { useProfile } from "../../contexts/ProfileContext";
+import { exportWorkloadToExcel } from "../../services/export/workload";
 
 interface ViewProps {
   data: AppData;
@@ -12,36 +14,11 @@ interface ViewProps {
 
 export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
   const { workloadStats } = useWorkloadStats(data);
+  const { notify } = useProfile();
   const maxWeeklyDefault = data.settings.maxTeachingPeriodsPerWeek ?? 24;
 
-  const handleExportCSV = () => {
-    const headers = [
-      "Teacher Name",
-      "Requested Periods",
-      "Scheduled Periods",
-      "Blocked Slots",
-      "Max Weekly Periods",
-      "Utilization %",
-    ];
-    const rows = workloadStats.map((s) => [
-      s.t.name,
-      s.assignedPeriods,
-      s.scheduledPeriods,
-      s.blockedSlots,
-      s.maxWeeklyCapacity,
-      `${s.utilizationPct.toFixed(1)}%`,
-    ]);
-
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "faculty_workload_report.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleExportExcel = () => {
+    exportWorkloadToExcel(workloadStats, notify);
   };
 
   return (
@@ -66,7 +43,7 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
               <div className="w-2 h-2 rounded-full bg-red-500"></div> Overload
             </div>
           </div>
-          <Button variant="secondary" onClick={handleExportCSV} icon={<Upload size={16} />}>
+          <Button variant="secondary" onClick={handleExportExcel} icon={<Upload size={16} />}>
             Export Report
           </Button>
         </div>

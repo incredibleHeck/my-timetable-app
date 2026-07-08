@@ -24,7 +24,7 @@ export const ClassList: React.FC<ClassListProps> = ({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-in slide-in-from-bottom-2">
-      {data.classes.map((c) => {
+      {[...data.classes].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true })).map((c) => {
         const { assigned, capacity } = getLoadMetrics(c);
         const loadPercent = capacity > 0 ? (assigned / capacity) * 100 : 0;
         const isOverloaded = assigned > capacity;

@@ -7,40 +7,30 @@
   ],
   "permissions": [
     "core:default",
+    "core:window:allow-destroy",
+    "core:window:allow-close",
+    "fs:default",
+    "fs:allow-write-text-file",
+    "fs:allow-appdata-write",
+    "fs:allow-appdata-read",
+    "fs:allow-rename",
+    "fs:allow-exists",
+    "fs:allow-remove",
+    "fs:allow-mkdir",
+    "fs:allow-read-file",
+    "fs:allow-write-file",
     {
-      "identifier": "fs:allow-read",
+      "identifier": "fs:scope",
       "allow": [
-        { "path": "$APPDATA/com.eduscheduler.pro/**" }
-      ]
-    },
-    {
-      "identifier": "fs:allow-write",
-      "allow": [
-        { "path": "$APPDATA/com.eduscheduler.pro/**" }
-      ]
-    },
-    {
-      "identifier": "fs:allow-exists",
-      "allow": [
-        { "path": "$APPDATA/com.eduscheduler.pro/**" }
-      ]
-    },
-    {
-      "identifier": "fs:allow-mkdir",
-      "allow": [
-        { "path": "$APPDATA/com.eduscheduler.pro/**" }
-      ]
-    },
-    {
-      "identifier": "fs:allow-rename",
-      "allow": [
-        { "path": "$APPDATA/com.eduscheduler.pro/**" }
-      ]
-    },
-    {
-      "identifier": "fs:allow-remove",
-      "allow": [
-        { "path": "$APPDATA/com.eduscheduler.pro/**" }
+        { "path": "$APPDATA" },
+        { "path": "$APPDATA/**" },
+        { "path": "$DOCUMENT" },
+        { "path": "$DOCUMENT/**" },
+        { "path": "$DOWNLOAD" },
+        { "path": "$DOWNLOAD/**" },
+        { "path": "$DESKTOP" },
+        { "path": "$DESKTOP/**" },
+        { "path": "C:\\Users\\**" }
       ]
     },
     "dialog:default",

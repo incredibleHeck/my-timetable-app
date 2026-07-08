@@ -67,23 +67,13 @@ export const useWorkloadStats = (data: AppData) => {
                 if (!countedJointClassIds.has(joint.id)) {
                   assignedPeriods += curr.periodsPerWeek;
                   countedJointClassIds.add(joint.id);
-                  joint.classIds.forEach((cid) => {
-                    const cls = classes.find((x) => x.id === cid);
-                    if (cls) {
-                      addToBreakdown(cls.id, cls.name, curr.subjectId, curr.periodsPerWeek);
-                    }
-                  });
+                  addToBreakdown(`joint-${joint.id}`, `Joint: ${joint.name}`, curr.subjectId, curr.periodsPerWeek);
                 }
               } else if (elective) {
                 if (!countedElectiveIds.has(elective.id)) {
                   assignedPeriods += curr.periodsPerWeek;
                   countedElectiveIds.add(elective.id);
-                  elective.classIds.forEach((cid) => {
-                    const cls = classes.find((x) => x.id === cid);
-                    if (cls) {
-                      addToBreakdown(cls.id, cls.name, curr.subjectId, curr.periodsPerWeek);
-                    }
-                  });
+                  addToBreakdown(`elective-${elective.id}`, `Elective: ${elective.name}`, curr.subjectId, curr.periodsPerWeek);
                 }
               } else {
                 assignedPeriods += curr.periodsPerWeek;
@@ -131,9 +121,10 @@ export const useWorkloadStats = (data: AppData) => {
 
         const availableSlots = teachablePeriodIndices.length * 5 - blockedTeachableSlots;
 
+        const effectiveCapacity = t.targetLoad || maxWeeklyCapacity;
         const utilizationPct =
-          maxWeeklyCapacity > 0
-            ? (assignedPeriods / maxWeeklyCapacity) * 100
+          effectiveCapacity > 0
+            ? (assignedPeriods / effectiveCapacity) * 100
             : assignedPeriods > 0
               ? 100
               : 0;

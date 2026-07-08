@@ -13,6 +13,7 @@ export interface PendingPlacement {
   teacherName: string;
   duration: 1 | 2;
   roomId?: string;
+  warning?: string;
 }
 
 function normalizeId(id: string): string {
