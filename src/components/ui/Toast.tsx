@@ -10,14 +10,26 @@ import { CheckCircle2, AlertCircle, Info, X } from "lucide-react";
 
 type ToastVariant = "success" | "error" | "info";
 
+interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
 interface Toast {
   id: string;
   message: string;
   variant: ToastVariant;
+  action?: ToastAction;
+  duration: number;
+}
+
+interface ToastOptions {
+  action?: ToastAction;
+  duration?: number;
 }
 
 interface ToastContextType {
-  showToast: (message: string, variant?: ToastVariant) => void;
+  showToast: (message: string, variant?: ToastVariant, options?: ToastOptions) => void;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -37,13 +49,17 @@ const VARIANT_ICONS: Record<ToastVariant, React.ReactNode> = {
 export const ToastProvider = ({ children }: { children: ReactNode }) => {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const showToast = useCallback((message: string, variant: ToastVariant = "info") => {
-    const id = crypto.randomUUID();
-    setToasts((prev) => [...prev, { id, message, variant }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 5000);
-  }, []);
+  const showToast = useCallback(
+    (message: string, variant: ToastVariant = "info", options?: ToastOptions) => {
+      const id = crypto.randomUUID();
+      const duration = options?.duration ?? (variant === "error" ? 8000 : 5000);
+      setToasts((prev) => [...prev, { id, message, variant, action: options?.action, duration }]);
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+      }, duration);
+    },
+    [],
+  );
 
   useEffect(() => {
     registerToastHandler(showToast);
@@ -70,6 +86,17 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
           >
             {VARIANT_ICONS[toast.variant]}
             <span className="flex-1">{toast.message}</span>
+            {toast.action && (
+              <button
+                onClick={() => {
+                  toast.action!.onClick();
+                  dismiss(toast.id);
+                }}
+                className="shrink-0 text-xs font-bold underline underline-offset-2 hover:opacity-80 transition-opacity"
+              >
+                {toast.action.label}
+              </button>
+            )}
             <button
               onClick={() => dismiss(toast.id)}
               className="shrink-0 opacity-60 hover:opacity-100 transition-opacity"
@@ -99,11 +126,12 @@ export const registerToastHandler = (handler: ToastContextType["showToast"]) => 
   _showToast = handler;
 };
 
-export const notify = (message: string, variant: ToastVariant = "info") => {
+export const notify = (message: string, variant: ToastVariant = "info", options?: ToastOptions) => {
   if (_showToast) {
-    _showToast(message, variant);
+    _showToast(message, variant, options);
   } else {
     // Fallback for tests or pre-mount calls
     console.warn(`[${variant}] ${message}`);
   }
 };
+

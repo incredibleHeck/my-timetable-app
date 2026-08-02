@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useProfile } from "./contexts/ProfileContext";
 import { useActivation } from "./hooks/useActivation";
 import { FileService } from "./services/fileSystem";
@@ -9,6 +9,7 @@ import { ProfileWizard } from "./features/configuration/components/ProfileWizard
 import { ActivationScreen } from "./features/activation/components/ActivationScreen";
 import { ViewRouter, isFullScreenView } from "./routing/ViewRouter";
 import { ViewState } from "./types";
+import { CommandPalette } from "./components/ui/CommandPalette";
 
 function App() {
   const {
@@ -32,6 +33,7 @@ function App() {
   const [view, setView] = useState<ViewState>("DASHBOARD");
   const [activeFilePath, setActiveFilePath] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
 
   if (isActivationLoading) {
     return (
@@ -57,6 +59,25 @@ function App() {
       setActiveFilePath(result.path);
     }
   };
+
+  // Global keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMod = e.ctrlKey || e.metaKey;
+      const tag = (e.target as HTMLElement)?.tagName;
+      const isInput = tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable;
+      if (isMod && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setCommandPaletteOpen((o) => !o);
+      }
+      if (isMod && e.key.toLowerCase() === "s" && !isInput) {
+        e.preventDefault();
+        handleExport();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeProfile]);
 
   if (isLoading) {
     return (
@@ -98,6 +119,8 @@ function App() {
           activeProfile={activeProfile}
           profiles={profiles}
           onSwitchProfile={switchProfile}
+          onCreateProfile={() => setIsCreateModalOpen(true)}
+          data={activeProfile?.data}
         />
       )}
 
@@ -128,6 +151,14 @@ function App() {
         onClose={() => setIsCreateModalOpen(false)}
         onCreate={createNewProfile}
       />
+
+      {commandPaletteOpen && activeProfile && (
+        <CommandPalette
+          data={activeProfile.data}
+          onNavigate={(v) => { setView(v); setCommandPaletteOpen(false); }}
+          onClose={() => setCommandPaletteOpen(false)}
+        />
+      )}
     </div>
   );
 }

@@ -11,6 +11,7 @@ import {
   FileSpreadsheet,
   Square,
   Plus,
+  History,
 } from "lucide-react";
 import { AppData } from "../../../types";
 import { Button } from "../../../components/ui";
@@ -39,6 +40,8 @@ interface GeneratorToolbarProps {
   onStop: () => void;
   onExcelExport: () => void;
   onPrint: () => void;
+  canRestore?: boolean;
+  onRestore?: () => void;
 }
 
 export const GeneratorToolbar: React.FC<GeneratorToolbarProps> = ({
@@ -56,6 +59,8 @@ export const GeneratorToolbar: React.FC<GeneratorToolbarProps> = ({
   onStop,
   onExcelExport,
   onPrint,
+  canRestore,
+  onRestore,
 }) => (
   <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 print:hidden">
     <div className="flex flex-col md:flex-row md:items-center gap-6">
@@ -156,7 +161,17 @@ export const GeneratorToolbar: React.FC<GeneratorToolbarProps> = ({
       </div>
     </div>
 
-    <div className="flex gap-3">
+    <div className="flex gap-3 items-center">
+      {canRestore && onRestore && (
+        <button
+          onClick={onRestore}
+          className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-500 border border-slate-200 rounded-lg hover:border-amber-400 hover:text-amber-600 hover:bg-amber-50 transition-all"
+          title="Restore the schedule from before the last regeneration"
+        >
+          <History size={14} />
+          Restore Previous
+        </button>
+      )}
       {isGenerating ? (
         <Button
           onClick={onStop}

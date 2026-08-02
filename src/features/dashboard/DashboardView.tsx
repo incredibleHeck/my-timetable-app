@@ -24,6 +24,7 @@ import { QuickAction } from "./components/QuickAction";
 import { ProfileModals } from "./components/ProfileModals";
 import { SystemStatus } from "./components/SystemStatus";
 import { RecentActivity } from "./components/RecentActivity";
+import { SetupStepper } from "./components/SetupStepper";
 
 interface ViewProps {
   data: AppData;
@@ -148,6 +149,9 @@ export const DashboardView: React.FC<ViewProps> = ({ data, profileName, onNaviga
           </div>
         </div>
       </div>
+
+      {/* SETUP STEPPER */}
+      <SetupStepper data={data} onNavigate={onNavigate ?? (() => {})} />
 
       {/* METRICS GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">

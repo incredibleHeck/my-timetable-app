@@ -1,25 +1,55 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { AppData } from "../../types";
 import { Card, Button } from "../../components/ui";
-import { Upload, AlertCircle, Clock } from "lucide-react";
+import { Upload, AlertCircle, Clock, Search, ArrowUpDown, AlertTriangle } from "lucide-react";
 import { useWorkloadStats } from "./hooks/useWorkloadStats";
 import { WorkloadTeacherDetail } from "./components/WorkloadTeacherDetail";
-import { useProfile } from "../../contexts/ProfileContext";
 import { exportWorkloadToExcel } from "../../services/export/workload";
+import { notify } from "../../components/ui/Toast";
 
 interface ViewProps {
   data: AppData;
   onUpdate: (newData: AppData) => void;
 }
 
+type SortBy = "name" | "load" | "periods";
+
 export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
   const { workloadStats } = useWorkloadStats(data);
-  const { notify } = useProfile();
   const maxWeeklyDefault = data.settings.maxTeachingPeriodsPerWeek ?? 24;
+
+  const [nameFilter, setNameFilter] = useState("");
+  const [sortBy, setSortBy] = useState<SortBy>("load");
+  const [overloadedOnly, setOverloadedOnly] = useState(false);
 
   const handleExportExcel = () => {
     exportWorkloadToExcel(workloadStats, notify);
   };
+
+  const filteredStats = useMemo(() => {
+    let result = [...workloadStats];
+
+    if (nameFilter.trim()) {
+      const q = nameFilter.toLowerCase();
+      result = result.filter((s) => s.t.name.toLowerCase().includes(q));
+    }
+
+    if (overloadedOnly) {
+      result = result.filter((s) => s.utilizationPct > 100);
+    }
+
+    if (sortBy === "name") {
+      result.sort((a, b) => a.t.name.localeCompare(b.t.name));
+    } else if (sortBy === "load") {
+      result.sort((a, b) => b.utilizationPct - a.utilizationPct);
+    } else if (sortBy === "periods") {
+      result.sort((a, b) => b.assignedPeriods - a.assignedPeriods);
+    }
+
+    return result;
+  }, [workloadStats, nameFilter, sortBy, overloadedOnly]);
+
+  const overloadedCount = workloadStats.filter((s) => s.utilizationPct > 100).length;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto p-8">
@@ -49,8 +79,54 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
         </div>
       </div>
 
+      {/* Filter / Sort Bar */}
+      <div className="flex flex-wrap items-center gap-3 bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-sm">
+        <div className="relative flex-1 min-w-[180px]">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            value={nameFilter}
+            onChange={(e) => setNameFilter(e.target.value)}
+            placeholder="Search by teacher name..."
+            className="w-full pl-8 pr-3 py-1.5 text-sm border border-slate-200 rounded-lg outline-none focus:border-amber-400 text-slate-700 placeholder:text-slate-400"
+          />
+        </div>
+
+        <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+          <ArrowUpDown size={12} className="text-slate-400 ml-1.5" />
+          {(["load", "name", "periods"] as SortBy[]).map((s) => (
+            <button
+              key={s}
+              onClick={() => setSortBy(s)}
+              className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all capitalize ${
+                sortBy === s ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              {s === "load" ? "Load %" : s === "periods" ? "Periods" : "Name"}
+            </button>
+          ))}
+        </div>
+
+        <button
+          onClick={() => setOverloadedOnly((o) => !o)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border transition-all ${
+            overloadedOnly
+              ? "bg-red-50 border-red-200 text-red-700"
+              : "bg-white border-slate-200 text-slate-500 hover:border-red-200 hover:text-red-600"
+          }`}
+        >
+          <AlertTriangle size={12} />
+          Overloaded Only
+          {overloadedCount > 0 && (
+            <span className="ml-1 bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full">
+              {overloadedCount}
+            </span>
+          )}
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {workloadStats.map((stat) => {
+        {filteredStats.map((stat) => {
           const {
             t,
             assignedPeriods,
@@ -115,8 +191,8 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
                         utilizationPct > 100
                           ? "text-red-600"
                           : utilizationPct > 85
-                            ? "text-amber-600"
-                            : "text-slate-700"
+                          ? "text-amber-600"
+                          : "text-slate-700"
                       }`}
                     >
                       {Math.round(utilizationPct)}%
@@ -165,9 +241,11 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
             </WorkloadTeacherDetail>
           );
         })}
-        {workloadStats.length === 0 && (
+        {filteredStats.length === 0 && (
           <div className="col-span-full text-center py-12 text-slate-400">
-            No teachers found. Add faculty to see analysis.
+            {workloadStats.length === 0
+              ? "No teachers found. Add faculty to see analysis."
+              : "No teachers match your current filters."}
           </div>
         )}
       </div>

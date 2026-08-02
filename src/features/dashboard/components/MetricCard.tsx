@@ -1,5 +1,6 @@
 import React from "react";
 import { Card } from "../../../components/ui";
+import { useCountUp } from "../../../hooks/useCountUp";
 
 interface MetricCardProps {
   label: string;
@@ -26,6 +27,13 @@ export const MetricCard: React.FC<MetricCardProps> = ({
     red: "bg-red-50 text-red-600 border-red-100",
   };
 
+  // Count-up animation for numeric values
+  const numericValue = typeof value === "number" ? value : parseFloat(String(value));
+  const isNumeric = typeof value === "number" || (!isNaN(numericValue) && String(value) === String(numericValue));
+  const suffix = typeof value === "string" ? String(value).replace(String(Math.floor(numericValue)), "") : "";
+
+  const animatedValue = useCountUp(isNumeric ? numericValue : 0);
+
   return (
     <Card
       className={`p-5 hover:shadow-lg transition-all border-slate-100 active:scale-95 ${onClick ? "cursor-pointer hover:-translate-y-1" : ""}`}
@@ -34,7 +42,9 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       <div className="flex justify-between items-start mb-4">
         <div className={`p-3 rounded-xl ${colors[color]}`}>{icon}</div>
       </div>
-      <h3 className="text-3xl font-bold text-slate-800 mb-1">{value}</h3>
+      <h3 className="text-3xl font-bold text-slate-800 mb-1 tabular-nums">
+        {isNumeric ? `${animatedValue}${suffix}` : value}
+      </h3>
       <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{label}</p>
       <p className="text-xs text-slate-500 font-medium flex items-center gap-1">{subtext}</p>
     </Card>

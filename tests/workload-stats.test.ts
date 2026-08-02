@@ -67,7 +67,8 @@ describe("useWorkloadStats", () => {
     const { result } = renderHook(() => useWorkloadStats(mockData as AppData));
     const stat = result.current.workloadStats.find((s) => s.t.id === "t1");
 
-    expect(stat?.classBreakdown).toHaveLength(2);
+    // De-duplicated joint class entry for c1 and c2
+    expect(stat?.classBreakdown).toHaveLength(1);
     stat?.classBreakdown.forEach((row) => {
       expect(row.periods).toBe(2);
       expect(row.subjectName).toBe("Mathematics");

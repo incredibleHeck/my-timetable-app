@@ -7,12 +7,16 @@ export const NavItem = ({
   label,
   currentView,
   onClick,
+  badge,
+  badgeVariant = "default",
 }: {
   id: ViewState;
   icon: React.ReactNode;
   label: string;
   currentView: ViewState;
   onClick: (v: ViewState) => void;
+  badge?: number | string;
+  badgeVariant?: "default" | "danger";
 }) => (
   <button
     onClick={() => onClick(id)}
@@ -30,6 +34,17 @@ export const NavItem = ({
     >
       {icon}
     </span>
-    {label}
+    <span className="flex-1 text-left">{label}</span>
+    {badge !== undefined && badge !== 0 && (
+      <span
+        className={`ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none ${
+          badgeVariant === "danger"
+            ? "bg-red-500 text-white"
+            : "bg-slate-700 text-slate-300"
+        }`}
+      >
+        {badge}
+      </span>
+    )}
   </button>
 );

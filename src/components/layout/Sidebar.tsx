@@ -12,8 +12,9 @@ import {
   Building2,
   FileText,
   Shield,
+  Plus,
 } from "lucide-react";
-import { ViewState } from "../../types";
+import { AppData, ViewState } from "../../types";
 import { FileService } from "../../services/fileSystem";
 import { SidebarSection } from "./sidebar/SidebarSection";
 import { NavItem } from "./sidebar/NavItem";
@@ -27,6 +28,8 @@ interface SidebarProps {
   activeProfile?: { id: string; name: string } | null;
   profiles: { id: string; name: string }[];
   onSwitchProfile: (id: string) => void;
+  onCreateProfile?: () => void;
+  data?: AppData;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -38,7 +41,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
   activeProfile,
   profiles,
   onSwitchProfile,
+  onCreateProfile,
+  data,
 }) => {
+  const teacherCount = data?.teachers.length ?? 0;
+  const classCount = data?.classes.length ?? 0;
+  const subjectCount = data?.subjects.length ?? 0;
+  const roomCount = data?.rooms.length ?? 0;
+  const examCount = data?.exams.length ?? 0;
+  const conflictCount = data?.conflicts.length ?? 0;
+
   return (
     <aside
       className="w-64 bg-slate-900 flex flex-col h-screen text-slate-300 shadow-2xl shrink-0 z-20"
@@ -87,6 +99,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           label="Teachers"
           currentView={view}
           onClick={setView}
+          badge={teacherCount || undefined}
         />
         <NavItem
           id="ROOMS"
@@ -94,6 +107,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           label="Rooms"
           currentView={view}
           onClick={setView}
+          badge={roomCount || undefined}
         />
         <NavItem
           id="SUBJECTS"
@@ -101,6 +115,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           label="Subjects"
           currentView={view}
           onClick={setView}
+          badge={subjectCount || undefined}
         />
         <NavItem
           id="CLASSES"
@@ -108,6 +123,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           label="Classes"
           currentView={view}
           onClick={setView}
+          badge={classCount || undefined}
         />
 
         <SidebarSection label="Scheduling" />
@@ -117,6 +133,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           label="Auto-Generator"
           currentView={view}
           onClick={setView}
+          badge={conflictCount || undefined}
+          badgeVariant={conflictCount > 0 ? "danger" : "default"}
         />
         <NavItem
           id="WORKLOAD"
@@ -133,6 +151,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           label="Exam Timetable"
           currentView={view}
           onClick={setView}
+          badge={examCount || undefined}
         />
         <NavItem
           id="DUTY"
@@ -144,20 +163,37 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Profiles Section */}
         <SidebarSection label="Profiles" />
-        <div className="px-4 mb-4 space-y-1">
+        <div className="px-4 mb-2 space-y-1">
           {profiles.map((p) => (
             <button
               key={p.id}
               onClick={() => onSwitchProfile(p.id)}
-              className={`w-full text-left px-3 py-2 text-xs rounded-lg transition-all ${
+              className={`w-full text-left px-3 py-2 text-xs rounded-lg transition-all flex items-center gap-2 ${
                 activeProfile?.id === p.id
                   ? "bg-amber-500 text-slate-900 font-bold shadow-lg shadow-amber-500/20"
                   : "text-slate-400 hover:text-white hover:bg-slate-800"
               }`}
             >
-              {p.name}
+              {activeProfile?.id === p.id && (
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-900 shrink-0" />
+              )}
+              <span className="truncate">{p.name}</span>
+              {activeProfile?.id === p.id && (
+                <span className="ml-auto text-[9px] font-black uppercase tracking-widest opacity-70">
+                  Active
+                </span>
+              )}
             </button>
           ))}
+          {onCreateProfile && (
+            <button
+              onClick={onCreateProfile}
+              className="w-full text-left px-3 py-2 text-xs rounded-lg transition-all text-slate-500 hover:text-amber-400 hover:bg-slate-800 flex items-center gap-2"
+            >
+              <Plus size={12} />
+              New Profile
+            </button>
+          )}
         </div>
       </nav>
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { Lock, ChevronLeft, ChevronRight } from "lucide-react";
+import { Lock, ChevronLeft, ChevronRight, Zap, Search } from "lucide-react";
 import { AppData, ViewState, Conflict } from "../../types";
 import { ScheduleGrid } from "./components/ScheduleGrid";
 import { ConflictPanel } from "./components/ConflictPanel";
@@ -30,11 +30,15 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
   const [liveProgress, setLiveProgress] = useState<SolverLiveProgress | null>(null);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [isConflictPanelOpen, setIsConflictPanelOpen] = useState(true);
+  const [sidebarFilter, setSidebarFilter] = useState("");
+  const [canRestore, setCanRestore] = useState(false);
 
   const generationStartRef = useRef<number | null>(null);
   const generationBaseDataRef = useRef<AppData | null>(null);
   const lastPerfectScheduleRef = useRef<AppData["schedule"] | null>(null);
   const generationSessionRef = useRef(0);
+  const previousScheduleRef = useRef<AppData["schedule"] | null>(null);
+  const restoreTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Auto-hide conflict message after 6 seconds
   useEffect(() => {
@@ -145,6 +149,19 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
     return [...data.teachers].sort((a, b) => a.name.localeCompare(b.name));
   }, [data.teachers]);
 
+  // Filtered lists for sidebar
+  const filteredClasses = useMemo(() => {
+    if (!sidebarFilter.trim()) return sortedClasses;
+    const q = sidebarFilter.toLowerCase();
+    return sortedClasses.filter((c) => c.name.toLowerCase().includes(q));
+  }, [sortedClasses, sidebarFilter]);
+
+  const filteredTeachers = useMemo(() => {
+    if (!sidebarFilter.trim()) return sortedTeachers;
+    const q = sidebarFilter.toLowerCase();
+    return sortedTeachers.filter((t) => t.name.toLowerCase().includes(q));
+  }, [sortedTeachers, sidebarFilter]);
+
   // Initial Selection Logic
   useEffect(() => {
     if (mode === "CLASS") {
@@ -156,6 +173,7 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
         setActiveId(sortedTeachers[0].id);
       }
     }
+    setSidebarFilter(""); // Clear filter on mode switch
   }, [mode, sortedClasses, sortedTeachers, activeId]);
 
   // --- WORKER CLEANUP ---
@@ -177,6 +195,12 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
     }
     if (preflight.warnings.length > 0) {
       showToast(preflight.warnings[0].message, "info");
+    }
+
+    // Save previous schedule snapshot for restore
+    if (Object.keys(data.schedule).length > 0) {
+      previousScheduleRef.current = data.schedule;
+      if (restoreTimerRef.current) clearTimeout(restoreTimerRef.current);
     }
 
     // 0. Deep Clean up existing timetable
@@ -243,6 +267,11 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
         const baseData = generationBaseDataRef.current ?? clearedData;
         applyGeneratedSchedule(baseData, payload.schedule);
         terminateWorker();
+
+        // Start 60-second restore window
+        setCanRestore(true);
+        if (restoreTimerRef.current) clearTimeout(restoreTimerRef.current);
+        restoreTimerRef.current = setTimeout(() => setCanRestore(false), 60_000);
       } else if (type === "error") {
         console.error("Worker error:", payload.message);
         if (payload.stack) {
@@ -286,6 +315,15 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
     }
   };
 
+  const handleRestore = () => {
+    if (!previousScheduleRef.current) return;
+    onUpdate({ ...data, schedule: previousScheduleRef.current });
+    previousScheduleRef.current = null;
+    setCanRestore(false);
+    if (restoreTimerRef.current) clearTimeout(restoreTimerRef.current);
+    showToast("Previous schedule restored.", "success");
+  };
+
   const handleExcelExport = async () => {
     try {
       // One .xlsx file: every class or every teacher as its own sheet tab
@@ -317,6 +355,8 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
         onStop={handleStop}
         onExcelExport={handleExcelExport}
         onPrint={handlePrint}
+        canRestore={canRestore && !!previousScheduleRef.current}
+        onRestore={handleRestore}
       />
 
       {/* --- MAIN INTERACTIVE GRID --- */}
@@ -329,14 +369,35 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
           {isGenerating && <SolverProgressOverlay progress={liveProgress} elapsedMs={elapsedMs} />}
 
           {/* Sidebar */}
-          <div className="w-44 border-r border-slate-200 bg-slate-50 overflow-y-auto shrink-0">
-            <div className="p-4 border-b border-slate-100 sticky top-0 bg-slate-50 z-10">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+          <div className="w-44 border-r border-slate-200 bg-slate-50 overflow-y-auto shrink-0 flex flex-col">
+            <div className="p-3 border-b border-slate-100 sticky top-0 bg-slate-50 z-10 space-y-2">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
                 Select {mode === "CLASS" ? "Group" : "Teacher"}
               </span>
+              <div className="relative">
+                <Search size={11} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={sidebarFilter}
+                  onChange={(e) => setSidebarFilter(e.target.value)}
+                  placeholder="Filter..."
+                  className="w-full pl-6 pr-2 py-1 text-[11px] bg-white border border-slate-200 rounded-md outline-none focus:border-amber-400 text-slate-700 placeholder:text-slate-300"
+                />
+              </div>
             </div>
+            {/* Empty schedule CTA — shown when no schedule exists */}
+            {Object.keys(data.schedule).length === 0 && !isGenerating && (
+              <div className="flex-1 flex flex-col items-center justify-center p-4 text-center">
+                <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center mb-2">
+                  <Zap size={20} />
+                </div>
+                <p className="text-[10px] text-slate-400 font-medium leading-tight">
+                  No schedule yet
+                </p>
+              </div>
+            )}
             {mode === "CLASS"
-              ? sortedClasses.map((c) => (
+              ? filteredClasses.map((c) => (
                   <button
                     key={c.id}
                     onClick={() => setActiveId(c.id)}
@@ -347,14 +408,14 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
                     }`}
                   >
                     <div
-                      className={`w-2 h-2 rounded-full ${
+                      className={`w-2 h-2 rounded-full shrink-0 ${
                         activeId === c.id ? "bg-amber-500" : "bg-slate-300"
                       }`}
                     />
                     <span className="truncate">{c.name}</span>
                   </button>
                 ))
-              : sortedTeachers.map((t) => (
+              : filteredTeachers.map((t) => (
                   <button
                     key={t.id}
                     onClick={() => setActiveId(t.id)}
@@ -365,7 +426,7 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
                     }`}
                   >
                     <div
-                      className={`w-2 h-2 rounded-full ${
+                      className={`w-2 h-2 rounded-full shrink-0 ${
                         activeId === t.id ? "bg-amber-500" : "bg-slate-300"
                       }`}
                     />
@@ -375,7 +436,28 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
           </div>
 
           {/* Grid Area */}
-          <div className="flex-1 overflow-auto p-6 bg-slate-50/30 custom-scrollbar">
+          <div className="flex-1 overflow-auto p-6 bg-slate-50/30 custom-scrollbar relative">
+            {/* Empty Schedule CTA Overlay */}
+            {Object.keys(data.schedule).length === 0 && !isGenerating && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-slate-50/95">
+                <div className="text-center max-w-sm">
+                  <div className="w-20 h-20 rounded-2xl bg-amber-100 text-amber-500 flex items-center justify-center mx-auto mb-5 shadow-inner">
+                    <Zap size={40} />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-800 mb-2">No Schedule Generated Yet</h3>
+                  <p className="text-sm text-slate-500 mb-6 leading-relaxed">
+                    Run the auto-scheduler to build a complete timetable for all classes based on your curriculum and constraints.
+                  </p>
+                  <button
+                    onClick={handleGenerate}
+                    className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg shadow-amber-500/30 transition-all active:scale-95"
+                  >
+                    <Zap size={18} />
+                    Generate Schedule
+                  </button>
+                </div>
+              </div>
+            )}
             <ScheduleGrid
               data={data}
               activeId={activeId}

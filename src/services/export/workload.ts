@@ -3,7 +3,7 @@ import { loadExcelJS } from "./excelLoader";
 
 export const exportWorkloadToExcel = async (
   workloadStats: any[],
-  notify: (msg: string, type: "success" | "error" | "warning" | "info") => void
+  notify: (msg: string, type?: any) => void
 ) => {
   try {
     const ExcelJS = await loadExcelJS();

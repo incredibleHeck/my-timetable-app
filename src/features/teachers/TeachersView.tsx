@@ -15,6 +15,7 @@ import { AppData } from "../../types";
 import { Button, Modal, Badge, Input } from "../../components/ui";
 import { TeacherEditorModal } from "./components/TeacherEditorModal";
 import { useTeacherManagement } from "./hooks/useTeacherManagement";
+import { useWorkloadStats } from "../workload/hooks/useWorkloadStats";
 
 interface ViewProps {
   data: AppData;
@@ -45,6 +46,11 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
     confirmDelete,
     quickAddTeacherToFaculty,
   } = useTeacherManagement(data, onUpdate);
+
+  const { workloadStats } = useWorkloadStats(data);
+  const workloadByTeacherId = new Map(
+    workloadStats.map((s) => [s.t.id, s])
+  );
 
   const [quickAddSubjectId, setQuickAddSubjectId] = useState<string | null>(null);
   const [quickAddName, setQuickAddName] = useState("");
@@ -187,6 +193,30 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                         <span className="text-[10px] text-slate-400 italic">No specialties</span>
                       )}
                     </div>
+                    {/* Workload mini-bar */}
+                    {(() => {
+                      const stat = workloadByTeacherId.get(t.id);
+                      if (!stat) return null;
+                      const pct = Math.min(Math.round(stat.utilizationPct), 100);
+                      const isOver = stat.utilizationPct > 100;
+                      const isHigh = stat.utilizationPct > 85;
+                      const barColor = isOver ? "bg-red-500" : isHigh ? "bg-amber-500" : "bg-emerald-500";
+                      const textColor = isOver ? "text-red-600" : isHigh ? "text-amber-600" : "text-emerald-600";
+                      return (
+                        <div className="mt-2.5 space-y-1">
+                          <div className="flex justify-between text-[10px] font-medium">
+                            <span className="text-slate-400">{stat.assignedPeriods} periods/wk</span>
+                            <span className={textColor}>{Math.round(stat.utilizationPct)}%</span>
+                          </div>
+                          <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-700 ${barColor}`}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
                 <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
