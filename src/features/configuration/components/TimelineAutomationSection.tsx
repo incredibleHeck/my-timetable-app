@@ -26,7 +26,7 @@ export const TimelineAutomationSection: React.FC<TimelineAutomationSectionProps>
   return (
     <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 mb-8">
       <div className="flex items-center gap-2 mb-4">
-        <Calculator size={18} className="text-amber-600" aria-hidden />
+        <Calculator size={18} className="text-accent-ink" aria-hidden />
         <h4 className="font-bold text-slate-700 dark:text-slate-200 text-sm">
           Smart Timeline Automation
         </h4>
@@ -124,8 +124,8 @@ export const TimelineAutomationSection: React.FC<TimelineAutomationSectionProps>
           </button>
         </div>
       </div>
-      <p className="text-2xs text-slate-400 mt-3 italic">
-        <span className="font-bold text-amber-600">Tip:</span> Changing these numbers automatically
+      <p className="text-2xs text-content-muted mt-3 italic">
+        <span className="font-bold text-accent-ink">Tip:</span> Changing these numbers automatically
         recalculates all slot times below. You can still manually edit specific slots if needed.
       </p>
     </div>

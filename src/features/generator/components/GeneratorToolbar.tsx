@@ -78,7 +78,7 @@ export const GeneratorToolbar: React.FC<GeneratorToolbarProps> = ({
         <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
           Auto-Scheduler
           {data.lastGenerated && !isGenerating && (
-            <span className="text-2xs font-normal text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+            <span className="text-2xs font-normal text-content-muted bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
               Last run: {new Date(data.lastGenerated).toLocaleTimeString()}
             </span>
           )}
@@ -87,20 +87,22 @@ export const GeneratorToolbar: React.FC<GeneratorToolbarProps> = ({
           <span>v10.0 (Worker-Enabled)</span>
           {stats && (
             <>
-              <span className="text-emerald-600 font-medium">
+              <span className="text-success-ink font-medium">
                 • {(stats.duration / 1000).toFixed(1)}s
               </span>
-              <span className="text-slate-400">
+              <span className="text-content-muted">
                 • {stats.totalRuns} run{stats.totalRuns !== 1 ? "s" : ""}
               </span>
-              <span className="text-slate-400">• {stats.iterations.toLocaleString()} moves</span>
+              <span className="text-content-muted">
+                • {stats.iterations.toLocaleString()} moves
+              </span>
               {stats.perfectRuns > 0 && (
-                <span className="text-emerald-600 font-medium">• {stats.perfectRuns} perfect</span>
+                <span className="text-success-ink font-medium">• {stats.perfectRuns} perfect</span>
               )}
               {stats.unplaced === 0 ? (
-                <span className="text-emerald-600 font-medium">• fully placed</span>
+                <span className="text-success-ink font-medium">• fully placed</span>
               ) : (
-                <span className="text-amber-600 font-medium">• {stats.unplaced} unplaced</span>
+                <span className="text-accent-ink font-medium">• {stats.unplaced} unplaced</span>
               )}
             </>
           )}
@@ -172,7 +174,7 @@ export const GeneratorToolbar: React.FC<GeneratorToolbarProps> = ({
       {canRestore && onRestore && (
         <button
           onClick={onRestore}
-          className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-content-muted border border-slate-200 dark:border-slate-700 rounded-lg hover:border-amber-400 hover:text-amber-600 hover:bg-amber-50 transition-all"
+          className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-content-muted border border-slate-200 dark:border-slate-700 rounded-lg hover:border-amber-400 hover:text-accent-ink hover:bg-amber-50 transition-all"
           title="Restore the schedule from before the last regeneration"
         >
           <History size={14} />

@@ -281,8 +281,8 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
               onClick={() => setViewMode("GRID")}
               className={`p-1.5 rounded ${
                 viewMode === "GRID"
-                  ? "bg-white dark:bg-slate-800 shadow-sm text-amber-600"
-                  : "text-slate-400 hover:text-slate-600"
+                  ? "bg-white dark:bg-slate-800 shadow-sm text-accent-ink"
+                  : "text-content-muted hover:text-slate-600"
               }`}
               title="Master Table View"
             >
@@ -292,8 +292,8 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
               onClick={() => setViewMode("ROSTER")}
               className={`p-1.5 rounded ${
                 viewMode === "ROSTER"
-                  ? "bg-white dark:bg-slate-800 shadow-sm text-amber-600"
-                  : "text-slate-400 hover:text-slate-600"
+                  ? "bg-white dark:bg-slate-800 shadow-sm text-accent-ink"
+                  : "text-content-muted hover:text-slate-600"
               }`}
               title="Invigilator Roster"
             >
@@ -303,8 +303,8 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
               onClick={() => setViewMode("CARDS")}
               className={`p-1.5 rounded ${
                 viewMode === "CARDS"
-                  ? "bg-white dark:bg-slate-800 shadow-sm text-amber-600"
-                  : "text-slate-400 hover:text-slate-600"
+                  ? "bg-white dark:bg-slate-800 shadow-sm text-accent-ink"
+                  : "text-content-muted hover:text-slate-600"
               }`}
               title="Card List View"
             >
@@ -331,7 +331,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
           {/* Search */}
           <div className="relative w-48 ml-auto">
             <Search
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-content-muted"
               size={14}
             />
             <input
@@ -345,7 +345,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
 
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg border mr-2">
-            <div className="px-2 py-1 text-2xs font-bold text-slate-400 uppercase">
+            <div className="px-2 py-1 text-2xs font-bold text-content-muted uppercase">
               Staff / stream
             </div>
             <div className="flex items-center gap-1">
@@ -358,7 +358,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
                 max={8}
                 title="Minimum invigilators per stream per exam day"
               />
-              <span className="text-slate-400 text-xs">–</span>
+              <span className="text-content-muted text-xs">–</span>
               <input
                 type="number"
                 value={maxInv}
@@ -400,14 +400,14 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
         <div className="w-48 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 flex flex-col h-full shrink-0 shadow-[inset_-1px_0_0_rgba(0,0,0,0.05)]">
           <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-100/50">
             <div className="flex items-center gap-2">
-              <History size={16} className="text-slate-400" />
-              <span className="text-2xs font-black text-slate-400 uppercase tracking-wider">
+              <History size={16} className="text-content-muted" />
+              <span className="text-2xs font-black text-content-muted uppercase tracking-wider">
                 Timetables
               </span>
             </div>
             <button
               onClick={createNewRoster}
-              className="p-1 bg-white dark:bg-slate-800 text-amber-600 rounded border border-slate-200 dark:border-slate-700 hover:bg-amber-50 transition-all shadow-sm"
+              className="p-1 bg-white dark:bg-slate-800 text-accent-ink rounded border border-slate-200 dark:border-slate-700 hover:bg-amber-50 transition-all shadow-sm"
               title="New Timetable"
             >
               <Plus size={14} />
@@ -430,7 +430,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
                   >
                     {r.name}
                   </span>
-                  <span className="text-2xs font-bold text-slate-400">
+                  <span className="text-2xs font-bold text-content-muted">
                     {r.exams.length} Sessions
                   </span>
                 </div>
@@ -440,7 +440,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
                     e.stopPropagation();
                     deleteRoster(r.id);
                   }}
-                  className="absolute top-3 right-2 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                  className="absolute top-3 right-2 text-slate-300 hover:text-danger-ink opacity-0 group-hover:opacity-100 transition-all"
                 >
                   <Trash2 size={12} />
                 </button>
@@ -453,8 +453,8 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
         <div className="w-48 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col h-full shrink-0 z-10">
           <div className="p-4 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 sticky top-0 z-20">
             <div className="flex items-center gap-2">
-              <Users size={16} className="text-slate-400" />
-              <span className="text-2xs font-black text-slate-400 uppercase tracking-wider">
+              <Users size={16} className="text-content-muted" />
+              <span className="text-2xs font-black text-content-muted uppercase tracking-wider">
                 Class Filter
               </span>
             </div>
@@ -542,7 +542,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
 
           {/* EMPTY STATE */}
           {filteredExams.length === 0 && (
-            <div className="h-full flex flex-col items-center justify-center text-slate-400">
+            <div className="h-full flex flex-col items-center justify-center text-content-muted">
               <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-full mb-4 shadow-inner border border-slate-100 dark:border-slate-700">
                 <FileText size={64} className="text-slate-200" />
               </div>

@@ -13,8 +13,8 @@ interface StatTileProps {
 
 const TILE_COLORS: Record<StatTileProps["color"], string> = {
   blue: "bg-blue-50 text-blue-600 border-blue-100",
-  emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
-  amber: "bg-amber-50 text-amber-600 border-amber-100",
+  emerald: "bg-emerald-50 dark:bg-emerald-900/30 text-success-ink border-emerald-100",
+  amber: "bg-amber-50 dark:bg-amber-900/30 text-accent-ink border-amber-100",
   violet: "bg-violet-50 text-violet-600 border-violet-100",
 };
 
@@ -22,7 +22,9 @@ const StatTile: React.FC<StatTileProps> = ({ label, value, icon, color, hint }) 
   <Card className="p-5 border-slate-100 dark:border-slate-700">
     <div className={`inline-flex p-2.5 rounded-xl mb-3 ${TILE_COLORS[color]}`}>{icon}</div>
     <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tabular-nums">{value}</h3>
-    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-1">{label}</p>
+    <p className="text-[11px] font-bold text-content-muted uppercase tracking-wider mt-1">
+      {label}
+    </p>
     <p className="text-[11px] text-content-muted mt-1">{hint}</p>
   </Card>
 );
@@ -44,7 +46,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
   if (!hasSchedule) {
     return (
       <Card className="p-12 text-center border-slate-100 dark:border-slate-700">
-        <div className="inline-flex p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 mb-3">
+        <div className="inline-flex p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-content-muted mb-3">
           <CalendarCheck size={24} />
         </div>
         <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200">
@@ -105,7 +107,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
             </h3>
           </div>
           {rooms.length === 0 ? (
-            <p className="text-xs text-slate-400 italic">No rooms defined.</p>
+            <p className="text-xs text-content-muted italic">No rooms defined.</p>
           ) : (
             <ul className="space-y-3">
               {rooms.map((room) => (
@@ -114,7 +116,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
                     <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">
                       {room.roomName}
                       {room.isHomeRoom && (
-                        <span className="ml-1.5 text-2xs font-bold uppercase text-slate-400">
+                        <span className="ml-1.5 text-2xs font-bold uppercase text-content-muted">
                           home
                         </span>
                       )}
@@ -146,7 +148,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
             </h3>
           </div>
           {teachersWithGaps.length === 0 ? (
-            <p className="text-xs text-slate-400 italic">
+            <p className="text-xs text-content-muted italic">
               No gaps — every teacher's day runs back-to-back. 🎉
             </p>
           ) : (
@@ -160,13 +162,13 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
                     {t.teacherName}
                   </span>
                   <span className="flex items-center gap-3 whitespace-nowrap">
-                    <span className="text-slate-400">{t.teachingPeriods} taught</span>
+                    <span className="text-content-muted">{t.teachingPeriods} taught</span>
                     <span
                       className={`font-bold tabular-nums px-2 py-0.5 rounded-full ${
                         t.gapPeriods >= 4
-                          ? "bg-red-50 text-red-600"
+                          ? "bg-red-50 dark:bg-red-900/30 text-danger-ink"
                           : t.gapPeriods >= 2
-                            ? "bg-amber-50 text-amber-600"
+                            ? "bg-amber-50 dark:bg-amber-900/30 text-accent-ink"
                             : "bg-slate-100 dark:bg-slate-800 text-content-muted"
                       }`}
                     >
@@ -189,7 +191,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
           </h3>
         </div>
         {subjects.length === 0 ? (
-          <p className="text-xs text-slate-400 italic">No subjects scheduled.</p>
+          <p className="text-xs text-content-muted italic">No subjects scheduled.</p>
         ) : (
           <ul className="space-y-3">
             {subjects.map((s) => (

@@ -42,13 +42,13 @@ export const ClassBasicsSection: React.FC<ClassBasicsSectionProps> = ({
           Home Classroom
         </label>
         <div className="w-full rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm p-2 text-slate-600 dark:text-slate-300 font-medium flex items-center gap-2 italic">
-          <School size={14} className="text-amber-500" />
+          <School size={14} className="text-accent-ink" />
           {editingClass
             ? data.rooms.find((r) => r.id === editingClass.defaultRoomId)?.name ||
               `${cName} Classroom`
             : `${cName || "New Class"} Classroom`}
         </div>
-        <p className="text-2xs text-slate-400 italic">
+        <p className="text-2xs text-content-muted italic">
           The Home Room is automatically generated and managed by the system.
         </p>
       </div>
@@ -69,11 +69,11 @@ export const ClassBasicsSection: React.FC<ClassBasicsSectionProps> = ({
             }}
           >
             {/* Header */}
-            <div className="text-right pr-2 text-2xs font-bold text-slate-400 self-end pb-1">
+            <div className="text-right pr-2 text-2xs font-bold text-content-muted self-end pb-1">
               Day
             </div>
             {Array.from({ length: cPeriodCount }).map((_, i) => (
-              <div key={i} className="text-center text-2xs font-bold text-slate-400">
+              <div key={i} className="text-center text-2xs font-bold text-content-muted">
                 P{i + 1}
               </div>
             ))}
@@ -122,7 +122,7 @@ export const ClassBasicsSection: React.FC<ClassBasicsSectionProps> = ({
             ))}
           </div>
         </div>
-        <p className="text-2xs text-slate-400 mt-2">
+        <p className="text-2xs text-content-muted mt-2">
           Grey = Global Event (Locked). Amber = Class Event.
         </p>
       </div>

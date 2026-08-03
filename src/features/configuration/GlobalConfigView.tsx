@@ -139,7 +139,7 @@ export const GlobalConfigView: React.FC<ViewProps> = ({
         <div role="tabpanel" id="config-panel-structure" aria-labelledby="config-tab-structure">
           <Card className="p-8 border-t-4 border-t-amber-500">
             <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center">
-              <SettingsIcon className="mr-3 text-amber-500" size={24} aria-hidden />
+              <SettingsIcon className="mr-3 text-accent-ink" size={24} aria-hidden />
               Timetable Structure
             </h3>
 

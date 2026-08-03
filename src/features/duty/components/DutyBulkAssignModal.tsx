@@ -123,7 +123,7 @@ export const DutyBulkAssignModal: React.FC<Props> = ({ isOpen, onClose, data, on
 
         {/* Day Range Selection */}
         <div className="space-y-2">
-          <h4 className="text-xs font-bold text-slate-400 uppercase flex items-center gap-2">
+          <h4 className="text-xs font-bold text-content-muted uppercase flex items-center gap-2">
             <Calendar size={14} /> Day Range
           </h4>
           <div className="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
@@ -144,7 +144,7 @@ export const DutyBulkAssignModal: React.FC<Props> = ({ isOpen, onClose, data, on
 
         {/* Period Selection */}
         <div className="space-y-2">
-          <h4 className="text-xs font-bold text-slate-400 uppercase flex items-center gap-2">
+          <h4 className="text-xs font-bold text-content-muted uppercase flex items-center gap-2">
             <Clock size={14} /> Select Periods
           </h4>
           <div className="flex flex-wrap gap-2">
@@ -167,7 +167,7 @@ export const DutyBulkAssignModal: React.FC<Props> = ({ isOpen, onClose, data, on
         {/* Teacher Selection */}
         <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <h4 className="text-xs font-bold text-slate-400 uppercase flex items-center gap-2">
+            <h4 className="text-xs font-bold text-content-muted uppercase flex items-center gap-2">
               <Users size={14} /> Assign Teachers
             </h4>
             <span className="text-2xs font-bold text-content-muted bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">

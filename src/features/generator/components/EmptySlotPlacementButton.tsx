@@ -24,8 +24,8 @@ export const EmptySlotPlacementButton: React.FC<Props> = ({ onClick, hasPending 
       <div
         className={`p-1.5 rounded-full transition-colors ${
           hasPending
-            ? "bg-amber-100 text-amber-600 group-hover:bg-amber-200"
-            : "bg-slate-100 dark:bg-slate-800 text-slate-400 group-hover:bg-slate-200"
+            ? "bg-amber-100 text-accent-ink group-hover:bg-amber-200"
+            : "bg-slate-100 dark:bg-slate-800 text-content-muted group-hover:bg-slate-200"
         }`}
       >
         <Plus size={16} strokeWidth={2.5} />

@@ -29,7 +29,7 @@ export const SubjectTeacherListModal: React.FC<SubjectTeacherListModalProps> = (
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+            className="p-2 text-content-muted hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
           >
             <X size={20} />
           </button>

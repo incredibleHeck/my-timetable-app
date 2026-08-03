@@ -22,7 +22,7 @@ export const ExamDefaultsSection: React.FC<ExamDefaultsSectionProps> = ({
     </div>
     <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 space-y-4">
       <div className="flex items-center gap-2">
-        <Clock size={18} className="text-amber-600" aria-hidden />
+        <Clock size={18} className="text-accent-ink" aria-hidden />
         <h4 className="font-bold text-slate-700 dark:text-slate-200 text-sm">Exam grid</h4>
       </div>
       <p className="text-xs text-content-muted leading-relaxed">

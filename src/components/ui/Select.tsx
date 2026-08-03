@@ -25,7 +25,7 @@ export const Select: React.FC<SelectProps> = ({ label, options, className = "", 
         ))}
       </select>
       <ChevronDown
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-content-muted pointer-events-none"
         size={16}
       />
     </div>

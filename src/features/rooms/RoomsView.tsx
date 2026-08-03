@@ -142,7 +142,7 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate }) =>
                     {room.type}
                   </span>
                   {room.isHomeRoom && (
-                    <span className="text-2xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                    <span className="text-2xs font-bold text-accent-ink bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded-full border border-amber-200">
                       Home Room
                     </span>
                   )}
@@ -170,7 +170,7 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate }) =>
                   className={`flex-1 py-3 text-xs font-semibold flex items-center justify-center transition-colors ${
                     room.isHomeRoom
                       ? "text-slate-300 cursor-not-allowed opacity-50"
-                      : "text-slate-400 hover:text-red-600 hover:bg-red-50"
+                      : "text-content-muted hover:text-danger-ink hover:bg-red-50"
                   }`}
                 >
                   <Trash2 size={14} className="mr-1" /> Del
@@ -184,10 +184,10 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate }) =>
           onClick={() => openModal()}
           className="bg-slate-50 dark:bg-slate-900 rounded-xl border-2 border-dashed border-slate-300 hover:border-amber-400 hover:bg-amber-50 transition-all flex flex-col items-center justify-center p-6 group h-full min-h-[200px]"
         >
-          <div className="w-14 h-14 rounded-full bg-slate-200 dark:bg-slate-700 group-hover:bg-amber-100 text-slate-400 group-hover:text-amber-500 flex items-center justify-center mb-3 transition-colors shadow-inner">
+          <div className="w-14 h-14 rounded-full bg-slate-200 dark:bg-slate-700 group-hover:bg-amber-100 text-content-muted group-hover:text-accent-ink flex items-center justify-center mb-3 transition-colors shadow-inner">
             <Plus size={28} />
           </div>
-          <span className="font-bold text-content-muted group-hover:text-amber-600">Add Room</span>
+          <span className="font-bold text-content-muted group-hover:text-accent-ink">Add Room</span>
         </button>
       </div>
 
@@ -247,7 +247,7 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate }) =>
         }
       >
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600 shrink-0">
+          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-danger-ink shrink-0">
             <AlertTriangle size={24} />
           </div>
           <div>

@@ -126,7 +126,7 @@ export const ClassAssignmentsPanel: React.FC<Props> = ({ data, onUpdate }) => {
       {/* 1. ASSIGNMENT ACTION AREA */}
       <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
         <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-          <Plus size={20} className="text-amber-500" />
+          <Plus size={20} className="text-accent-ink" />
           Quick Assign Teacher
         </h3>
         <p className="text-sm text-content-muted mb-6">
@@ -224,7 +224,7 @@ export const ClassAssignmentsPanel: React.FC<Props> = ({ data, onUpdate }) => {
                       {assignments.length} Staff
                     </p>
                   </div>
-                  <div className="w-7 h-7 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-slate-400 text-2xs mt-2 hidden sm:flex">
+                  <div className="w-7 h-7 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-content-muted text-2xs mt-2 hidden sm:flex">
                     {cls.name.substring(0, 2).toUpperCase()}
                   </div>
                 </div>
@@ -247,13 +247,13 @@ export const ClassAssignmentsPanel: React.FC<Props> = ({ data, onUpdate }) => {
                             {item.subject?.name}
                           </p>
                         </div>
-                        <span className="text-2xs font-medium text-slate-400 bg-slate-50 dark:bg-slate-900 px-1 rounded ml-1">
+                        <span className="text-2xs font-medium text-content-muted bg-slate-50 dark:bg-slate-900 px-1 rounded ml-1">
                           {item.periods}p
                         </span>
                       </div>
                     ))
                   ) : (
-                    <div className="w-full py-2 text-center text-2xs text-slate-400 italic">
+                    <div className="w-full py-2 text-center text-2xs text-content-muted italic">
                       No teachers assigned.
                     </div>
                   )}

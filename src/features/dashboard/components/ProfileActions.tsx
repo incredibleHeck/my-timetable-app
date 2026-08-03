@@ -20,7 +20,7 @@ export const ProfileActions: React.FC<ProfileActionsProps> = ({
   return (
     <Card className="p-6">
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-700">
-        <div className="p-2 bg-amber-100 text-amber-600 rounded-lg">
+        <div className="p-2 bg-amber-100 text-accent-ink rounded-lg">
           <UserCircle size={20} />
         </div>
         <div>
@@ -31,7 +31,7 @@ export const ProfileActions: React.FC<ProfileActionsProps> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-3">
-          <p className="text-2xs font-bold text-slate-400 uppercase tracking-widest px-1">
+          <p className="text-2xs font-bold text-content-muted uppercase tracking-widest px-1">
             Local Profiles
           </p>
           <div className="flex flex-col gap-2">
@@ -55,7 +55,7 @@ export const ProfileActions: React.FC<ProfileActionsProps> = ({
         </div>
 
         <div className="space-y-3">
-          <p className="text-2xs font-bold text-slate-400 uppercase tracking-widest px-1">
+          <p className="text-2xs font-bold text-content-muted uppercase tracking-widest px-1">
             Backup & Sync
           </p>
           <div className="flex flex-col gap-2">

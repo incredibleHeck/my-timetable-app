@@ -166,13 +166,13 @@ function ConflictCard({
 
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
-          <BookOpen size={12} className="shrink-0 text-slate-400" />
+          <BookOpen size={12} className="shrink-0 text-content-muted" />
           <span className="truncate font-medium">{conflict.className}</span>
         </div>
 
         {conflict.teacherName && (
           <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
-            <Users size={12} className="shrink-0 text-slate-400" />
+            <Users size={12} className="shrink-0 text-content-muted" />
             <span className="truncate">{conflict.teacherName}</span>
           </div>
         )}
@@ -198,7 +198,7 @@ function ConflictCard({
           <div className="flex items-start gap-2">
             <Lightbulb
               size={14}
-              className={`shrink-0 mt-0.5 ${isCollision ? "text-red-500" : "text-amber-500"}`}
+              className={`shrink-0 mt-0.5 ${isCollision ? "text-danger-ink" : "text-accent-ink"}`}
             />
             <div>
               <p className="text-2xs font-bold uppercase tracking-wide text-content-muted mb-1">
@@ -213,7 +213,7 @@ function ConflictCard({
       )}
 
       {!isSelected && (
-        <div className="mt-2 flex items-center gap-1 text-2xs text-slate-400">
+        <div className="mt-2 flex items-center gap-1 text-2xs text-content-muted">
           <ChevronRight size={10} />
           <span>Click to highlight on grid</span>
         </div>
@@ -280,7 +280,7 @@ function ValidTimetableEmptyState() {
     <div className="w-96 flex flex-col items-center text-center p-8 rounded-2xl border border-emerald-200 bg-gradient-to-b from-emerald-50 to-white shadow-lg">
       <div className="relative mb-4">
         <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center">
-          <CheckCircle2 size={32} className="text-emerald-600" />
+          <CheckCircle2 size={32} className="text-success-ink" />
         </div>
         <Sparkles size={18} className="absolute -top-1 -right-1 text-amber-400" />
       </div>
@@ -336,7 +336,7 @@ export const ConflictPanel: React.FC<Props> = ({
   return (
     <div className="w-96 flex flex-col gap-3 h-fit max-h-[calc(100vh-140px)]">
       <div className="px-1">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-content-muted">
           Resolution Center
         </h2>
         <p className="text-[11px] text-content-muted mt-0.5">

@@ -41,8 +41,8 @@ const VARIANT_STYLES: Record<ToastVariant, string> = {
 };
 
 const VARIANT_ICONS: Record<ToastVariant, React.ReactNode> = {
-  success: <CheckCircle2 size={18} className="text-emerald-500 shrink-0" />,
-  error: <AlertCircle size={18} className="text-red-500 shrink-0" />,
+  success: <CheckCircle2 size={18} className="text-success-ink shrink-0" />,
+  error: <AlertCircle size={18} className="text-danger-ink shrink-0" />,
   info: <Info size={18} className="text-content-muted shrink-0" />,
 };
 

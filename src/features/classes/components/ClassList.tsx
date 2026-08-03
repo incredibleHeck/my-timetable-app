@@ -56,7 +56,7 @@ export const ClassList: React.FC<ClassListProps> = ({
                   <div className="flex justify-between text-xs">
                     <span className="text-content-muted">Home Room</span>
                     <span
-                      className="font-bold text-amber-600 truncate max-w-[100px]"
+                      className="font-bold text-accent-ink truncate max-w-[100px]"
                       title={data.rooms.find((r) => r.id === c.defaultRoomId)?.name || "Unassigned"}
                     >
                       {data.rooms.find((r) => r.id === c.defaultRoomId)?.name || "Unassigned"}
@@ -88,9 +88,9 @@ export const ClassList: React.FC<ClassListProps> = ({
                       <span
                         className={`font-bold ${
                           isOverloaded
-                            ? "text-red-600"
+                            ? "text-danger-ink"
                             : isFull
-                              ? "text-amber-600"
+                              ? "text-accent-ink"
                               : "text-slate-700 dark:text-slate-200"
                         }`}
                       >
@@ -111,14 +111,14 @@ export const ClassList: React.FC<ClassListProps> = ({
                   </Button>
                   <button
                     onClick={() => onDuplicate(c)}
-                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                    className="p-2 text-content-muted hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                     title="Duplicate Class"
                   >
                     <Copy size={16} />
                   </button>
                   <button
                     onClick={() => onDelete(c)}
-                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                    className="p-2 text-content-muted hover:text-danger-ink hover:bg-red-50 rounded transition-colors"
                     title="Delete Class"
                   >
                     <Trash2 size={16} />
@@ -130,7 +130,7 @@ export const ClassList: React.FC<ClassListProps> = ({
         })}
       <button
         onClick={onAdd}
-        className="min-h-[200px] rounded-xl border-2 border-dashed border-slate-300 hover:border-amber-400 hover:bg-amber-50 transition-all flex flex-col items-center justify-center p-6 text-slate-400 hover:text-amber-600"
+        className="min-h-[200px] rounded-xl border-2 border-dashed border-slate-300 hover:border-amber-400 hover:bg-amber-50 transition-all flex flex-col items-center justify-center p-6 text-content-muted hover:text-accent-ink"
       >
         <Plus size={32} className="mb-2" /> <span className="font-bold">Add Class</span>
       </button>

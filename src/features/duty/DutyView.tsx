@@ -57,7 +57,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
   if (!activeRoster || !activeRoster.dailyParams || !activeRoster.weeklyParams) {
     return (
       <div className="h-full w-full flex items-center justify-center bg-slate-50 dark:bg-slate-900">
-        <div className="flex flex-col items-center gap-4 text-slate-400">
+        <div className="flex flex-col items-center gap-4 text-content-muted">
           <Shield size={48} className="animate-pulse" />
           <p className="text-sm font-medium">Initializing Duty System...</p>
         </div>
@@ -263,8 +263,8 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
                 onClick={() => setActiveTab("ROSTER")}
                 className={`px-4 py-1.5 text-2xs font-black uppercase rounded-md transition-all ${
                   activeTab === "ROSTER"
-                    ? "bg-white dark:bg-slate-800 text-amber-600 shadow-sm"
-                    : "text-slate-400 hover:text-slate-600"
+                    ? "bg-white dark:bg-slate-800 text-accent-ink shadow-sm"
+                    : "text-content-muted hover:text-slate-600"
                 }`}
                 title="Grid View"
               >
@@ -274,8 +274,8 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
                 onClick={() => setActiveTab("SETTINGS")}
                 className={`px-4 py-1.5 text-2xs font-black uppercase rounded-md transition-all ${
                   activeTab === "SETTINGS"
-                    ? "bg-white dark:bg-slate-800 text-amber-600 shadow-sm"
-                    : "text-slate-400 hover:text-slate-600"
+                    ? "bg-white dark:bg-slate-800 text-accent-ink shadow-sm"
+                    : "text-content-muted hover:text-slate-600"
                 }`}
                 title="Info & Stats"
               >
@@ -313,14 +313,14 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
         <div className="w-48 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 flex flex-col h-full shrink-0 shadow-[inset_-1px_0_0_rgba(0,0,0,0.05)]">
           <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-100/50">
             <div className="flex items-center gap-2">
-              <History size={16} className="text-slate-400" />
-              <span className="text-2xs font-black text-slate-400 uppercase tracking-wider">
+              <History size={16} className="text-content-muted" />
+              <span className="text-2xs font-black text-content-muted uppercase tracking-wider">
                 Rosters
               </span>
             </div>
             <button
               onClick={createNewRoster}
-              className="p-1 bg-white dark:bg-slate-800 text-amber-600 rounded border border-slate-200 dark:border-slate-700 hover:bg-amber-50 transition-all shadow-sm"
+              className="p-1 bg-white dark:bg-slate-800 text-accent-ink rounded border border-slate-200 dark:border-slate-700 hover:bg-amber-50 transition-all shadow-sm"
               title="New Roster"
             >
               <Plus size={14} />
@@ -344,7 +344,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
                   >
                     {r.name}
                   </span>
-                  <div className="flex items-center gap-2 text-2xs font-bold text-slate-400">
+                  <div className="flex items-center gap-2 text-2xs font-bold text-content-muted">
                     <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-content-muted uppercase">
                       {r.type}
                     </span>
@@ -362,7 +362,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
                     e.stopPropagation();
                     deleteRoster(r.id);
                   }}
-                  className="absolute top-3 right-2 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                  className="absolute top-3 right-2 text-slate-300 hover:text-danger-ink opacity-0 group-hover:opacity-100 transition-all"
                 >
                   <Trash2 size={12} />
                 </button>
@@ -376,7 +376,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
           <div className="max-w-6xl mx-auto space-y-6">
             {activeTab === "SETTINGS" && (
               <div className="bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-200 dark:border-slate-700 p-12 text-center space-y-6 shadow-sm">
-                <div className="w-20 h-20 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto text-amber-500 shadow-inner">
+                <div className="w-20 h-20 bg-amber-50 dark:bg-amber-900/30 rounded-2xl flex items-center justify-center mx-auto text-accent-ink shadow-inner">
                   {currentType === "DAILY" ? <Clock size={40} /> : <Calendar size={40} />}
                 </div>
                 <div className="space-y-2">
@@ -396,8 +396,8 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
               <div className="bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-200 dark:border-slate-700 shadow-xl shadow-slate-200/20 overflow-hidden flex flex-col">
                 <div className="p-5 bg-slate-50/50 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center px-8">
                   <div className="flex items-center gap-3">
-                    <Layout size={18} className="text-amber-500" />
-                    <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">
+                    <Layout size={18} className="text-accent-ink" />
+                    <span className="text-[11px] font-black text-content-muted uppercase tracking-widest">
                       {rowCount} Rows • {slotCount} Columns
                     </span>
                   </div>
@@ -412,13 +412,13 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
                   <table className="w-full text-left border-collapse">
                     <thead className="bg-slate-50/30 border-b border-slate-200 dark:border-slate-700">
                       <tr>
-                        <th className="p-6 text-2xs font-black text-slate-400 uppercase tracking-widest border-r bg-slate-50/50 w-40 sticky left-0 z-10 backdrop-blur-md">
+                        <th className="p-6 text-2xs font-black text-content-muted uppercase tracking-widest border-r bg-slate-50/50 w-40 sticky left-0 z-10 backdrop-blur-md">
                           {currentType === "DAILY" ? "Day Index" : "Week Cycle"}
                         </th>
                         {Array.from({ length: slotCount }).map((_, i) => (
                           <th
                             key={i}
-                            className="p-6 text-2xs font-black text-slate-400 uppercase tracking-widest text-center min-w-[180px]"
+                            className="p-6 text-2xs font-black text-content-muted uppercase tracking-widest text-center min-w-[180px]"
                           >
                             Slot {i + 1}
                           </th>
@@ -474,7 +474,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
                                               e.stopPropagation();
                                               toggleAssignment(rIdx, slotIdx, assignedTeacher.id);
                                             }}
-                                            className="text-slate-300 hover:text-red-500 transition-colors"
+                                            className="text-slate-300 hover:text-danger-ink transition-colors"
                                           >
                                             <Trash2 size={14} />
                                           </button>
@@ -485,7 +485,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
                                           className={`w-1.5 h-1.5 rounded-full ${isSwapSource ? "bg-white dark:bg-slate-800 animate-pulse" : "bg-emerald-500"}`}
                                         />
                                         <span
-                                          className={`text-2xs font-black uppercase tracking-widest ${isSwapSource ? "text-amber-50" : "text-slate-400"}`}
+                                          className={`text-2xs font-black uppercase tracking-widest ${isSwapSource ? "text-amber-50" : "text-content-muted"}`}
                                         >
                                           {isSwapSource ? "Swapping..." : "Active"}
                                         </span>
@@ -501,7 +501,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
                                         }
                                         className={`w-full h-full border-2 border-dashed rounded-2xl flex items-center justify-center transition-all ${
                                           isDropdownOpen
-                                            ? "border-amber-400 bg-amber-50 text-amber-500"
+                                            ? "border-amber-400 bg-amber-50 dark:bg-amber-900/30 text-accent-ink"
                                             : isSwapMode
                                               ? "border-amber-100 bg-amber-50/20 text-amber-200"
                                               : "border-slate-100 dark:border-slate-700 text-slate-200 hover:border-slate-300 hover:text-slate-400 hover:bg-slate-50"
@@ -517,7 +517,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
                                             onClick={() => setOpenSlot(null)}
                                           />
                                           <div className="absolute top-full left-0 z-50 w-64 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-[1.5rem] shadow-2xl overflow-hidden mt-3 p-1 animate-in slide-in-from-top-2 duration-300">
-                                            <div className="p-4 text-2xs font-black text-slate-400 uppercase border-b bg-slate-50/50 rounded-t-[1rem] sticky top-0 backdrop-blur-sm">
+                                            <div className="p-4 text-2xs font-black text-content-muted uppercase border-b bg-slate-50/50 rounded-t-[1rem] sticky top-0 backdrop-blur-sm">
                                               Staff Selection
                                             </div>
                                             <div className="max-h-64 overflow-y-auto custom-scrollbar p-1 space-y-1">
@@ -551,7 +551,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
                                                       )}
                                                       {isAssignedThisCycle &&
                                                         !isAssignedThisRow && (
-                                                          <span className="text-2xs font-black bg-slate-100 dark:bg-slate-800 text-slate-400 px-2 py-1 rounded-lg uppercase">
+                                                          <span className="text-2xs font-black bg-slate-100 dark:bg-slate-800 text-content-muted px-2 py-1 rounded-lg uppercase">
                                                             Other Row
                                                           </span>
                                                         )}

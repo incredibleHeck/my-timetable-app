@@ -138,19 +138,19 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
             <div className="relative flex-1 min-w-[180px]">
               <Search
                 size={14}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-content-muted"
               />
               <input
                 type="text"
                 value={nameFilter}
                 onChange={(e) => setNameFilter(e.target.value)}
                 placeholder="Search by teacher name..."
-                className="w-full pl-8 pr-3 py-1.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-amber-400 text-slate-700 dark:text-slate-200 placeholder:text-slate-400"
+                className="w-full pl-8 pr-3 py-1.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-amber-400 text-slate-700 dark:text-slate-200 placeholder:text-content-muted"
               />
             </div>
 
             <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
-              <ArrowUpDown size={12} className="text-slate-400 ml-1.5" />
+              <ArrowUpDown size={12} className="text-content-muted ml-1.5" />
               {(["load", "name", "periods"] as SortBy[]).map((s) => (
                 <button
                   key={s}
@@ -171,7 +171,7 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
               className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border transition-all ${
                 overloadedOnly
                   ? "bg-red-50 border-red-200 text-red-700"
-                  : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-content-muted hover:border-red-200 hover:text-red-600"
+                  : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-content-muted hover:border-red-200 hover:text-danger-ink"
               }`}
             >
               <AlertTriangle size={12} />
@@ -235,7 +235,7 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
                           <span className="font-bold text-slate-800 dark:text-slate-100 block leading-tight">
                             {t.name}
                           </span>
-                          <span className="text-2xs text-slate-400 font-medium flex items-center gap-1">
+                          <span className="text-2xs text-content-muted font-medium flex items-center gap-1">
                             {blockedSlots > 0 ? (
                               <>
                                 <Clock size={10} /> {blockedSlots} periods blocked
@@ -250,15 +250,15 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
                         <span
                           className={`text-xl font-bold ${
                             utilizationPct > 100
-                              ? "text-red-600"
+                              ? "text-danger-ink"
                               : utilizationPct > 85
-                                ? "text-amber-600"
+                                ? "text-accent-ink"
                                 : "text-slate-700 dark:text-slate-200"
                           }`}
                         >
                           {Math.round(utilizationPct)}%
                         </span>
-                        <span className="text-2xs text-slate-400 font-bold uppercase block tracking-wider">
+                        <span className="text-2xs text-content-muted font-bold uppercase block tracking-wider">
                           Load
                         </span>
                       </div>
@@ -284,17 +284,17 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
                         <span className="text-content-muted">
                           <strong>{assignedPeriods}</strong> Requested
                         </span>
-                        <span className="text-slate-400">
+                        <span className="text-content-muted">
                           <strong>{scheduledPeriods}</strong> Scheduled
                         </span>
                       </div>
-                      <div className="text-slate-400 text-right">
+                      <div className="text-content-muted text-right">
                         <strong>{maxWeeklyCapacity}</strong> Weekly max
                       </div>
                     </div>
 
                     {utilizationPct > 100 && (
-                      <div className="flex items-center gap-2 text-2xs text-red-600 font-bold bg-white/50 px-2 py-1 rounded">
+                      <div className="flex items-center gap-2 text-2xs text-danger-ink font-bold bg-white/50 px-2 py-1 rounded">
                         <AlertCircle size={12} /> Teacher is overloaded!
                       </div>
                     )}
@@ -303,7 +303,7 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
               );
             })}
             {filteredStats.length === 0 && (
-              <div className="col-span-full text-center py-12 text-slate-400">
+              <div className="col-span-full text-center py-12 text-content-muted">
                 {workloadStats.length === 0
                   ? "No teachers found. Add faculty to see analysis."
                   : "No teachers match your current filters."}

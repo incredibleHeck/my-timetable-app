@@ -34,7 +34,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
           className={`absolute top-1 ${subj.isSingleResource ? "right-6" : "right-1"} bg-white/90 rounded-full p-0.5 shadow-sm`}
           title="Examinable"
         >
-          <FileText size={10} className="text-amber-600" />
+          <FileText size={10} className="text-accent-ink" />
         </div>
       )}
     </div>
@@ -105,7 +105,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
       <div className="w-px bg-slate-100 dark:bg-slate-800"></div>
       <button
         onClick={onDelete}
-        className="flex-1 py-3 text-slate-400 hover:text-red-600 hover:bg-red-50 text-xs font-semibold flex items-center justify-center transition-colors"
+        className="flex-1 py-3 text-content-muted hover:text-danger-ink hover:bg-red-50 text-xs font-semibold flex items-center justify-center transition-colors"
       >
         <Trash2 size={14} className="mr-1" /> Del
       </button>

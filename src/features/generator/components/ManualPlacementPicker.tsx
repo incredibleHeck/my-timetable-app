@@ -65,7 +65,7 @@ export const ManualPlacementPicker: React.FC<Props> = ({
                     />
                     <div className="min-w-0 flex-1">
                       <div className="font-bold text-sm text-slate-800 dark:text-slate-100 truncate flex items-center gap-2">
-                        <BookOpen size={14} className="text-slate-400 shrink-0" />
+                        <BookOpen size={14} className="text-content-muted shrink-0" />
                         {pending.subjectName}
                       </div>
                       <div className="text-[11px] text-content-muted mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">

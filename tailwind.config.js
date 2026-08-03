@@ -28,12 +28,21 @@ export default {
           secondary: token("content-secondary"),
           muted: token("content-muted"),
         },
+        // `DEFAULT` is decorative (fills/bars/borders/icons); `ink` is the
+        // text-safe variant — the decorative hues fail AA on light surfaces.
         accent: {
           DEFAULT: token("accent"),
           strong: token("accent-strong"),
+          ink: token("accent-ink"),
         },
-        danger: token("danger"),
-        success: token("success"),
+        danger: {
+          DEFAULT: token("danger"),
+          ink: token("danger-ink"),
+        },
+        success: {
+          DEFAULT: token("success"),
+          ink: token("success-ink"),
+        },
       },
       fontSize: {
         // Smallest permitted on-screen size. Replaces the ad-hoc

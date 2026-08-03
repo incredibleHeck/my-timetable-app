@@ -81,7 +81,10 @@ export const SubjectEditorModal: React.FC<SubjectEditorModalProps> = ({ form, da
               >
                 Single Resource Facility
               </h4>
-              <Gem size={14} className={isSingleResource ? "text-purple-600" : "text-slate-400"} />
+              <Gem
+                size={14}
+                className={isSingleResource ? "text-purple-600" : "text-content-muted"}
+              />
             </div>
             <p className="text-xs text-content-muted mt-1">
               Enable this for subjects that require a unique room (e.g. ICT Lab, Science Lab). The
@@ -118,7 +121,10 @@ export const SubjectEditorModal: React.FC<SubjectEditorModalProps> = ({ form, da
               >
                 Examinable Subject
               </h4>
-              <FileText size={14} className={isExaminable ? "text-amber-600" : "text-slate-400"} />
+              <FileText
+                size={14}
+                className={isExaminable ? "text-accent-ink" : "text-content-muted"}
+              />
             </div>
             <p className="text-xs text-content-muted mt-1">
               If enabled, this subject will be automatically selected for inclusion when
@@ -150,7 +156,7 @@ export const SubjectEditorModal: React.FC<SubjectEditorModalProps> = ({ form, da
               >
                 Core Subject
               </h4>
-              <BookOpen size={14} className={isCore ? "text-blue-600" : "text-slate-400"} />
+              <BookOpen size={14} className={isCore ? "text-blue-600" : "text-content-muted"} />
             </div>
             <p className="text-xs text-content-muted mt-1">
               Marks this as a core discipline for morning bias, weekly balance, and spread
@@ -181,7 +187,7 @@ export const SubjectEditorModal: React.FC<SubjectEditorModalProps> = ({ form, da
                 </option>
               ))}
             </select>
-            <p className="text-2xs text-slate-400 italic">
+            <p className="text-2xs text-content-muted italic">
               If selected, this subject will always be scheduled in this specific room.
             </p>
           </div>
@@ -192,7 +198,7 @@ export const SubjectEditorModal: React.FC<SubjectEditorModalProps> = ({ form, da
             <label className="block text-xs font-bold text-content-muted uppercase tracking-wide">
               Select Identifier Color
             </label>
-            <div className="flex items-center text-2xs text-slate-400 gap-1 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
+            <div className="flex items-center text-2xs text-content-muted gap-1 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
               <Palette size={10} /> {COLOR_PALETTE.length} Distinct Shades
             </div>
           </div>

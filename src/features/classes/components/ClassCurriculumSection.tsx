@@ -69,7 +69,9 @@ export const ClassCurriculumSection: React.FC<ClassCurriculumSectionProps> = ({
                     {subject.name}
                   </div>
                 </div>
-                <div className="text-xs font-bold text-slate-400">Total: {item.periodsPerWeek}</div>
+                <div className="text-xs font-bold text-content-muted">
+                  Total: {item.periodsPerWeek}
+                </div>
               </div>
 
               <div className="flex items-center gap-3">
@@ -89,7 +91,7 @@ export const ClassCurriculumSection: React.FC<ClassCurriculumSectionProps> = ({
                   >
                     <Plus size={12} />
                   </button>
-                  <span className="text-2xs text-slate-400 uppercase font-bold px-1.5 border-l border-slate-200 dark:border-slate-700">
+                  <span className="text-2xs text-content-muted uppercase font-bold px-1.5 border-l border-slate-200 dark:border-slate-700">
                     Dbl
                   </span>
                 </div>
@@ -109,7 +111,7 @@ export const ClassCurriculumSection: React.FC<ClassCurriculumSectionProps> = ({
                   >
                     <Plus size={12} />
                   </button>
-                  <span className="text-2xs text-slate-400 uppercase font-bold px-1.5 border-l border-slate-200 dark:border-slate-700">
+                  <span className="text-2xs text-content-muted uppercase font-bold px-1.5 border-l border-slate-200 dark:border-slate-700">
                     Sgl
                   </span>
                 </div>
@@ -135,7 +137,7 @@ export const ClassCurriculumSection: React.FC<ClassCurriculumSectionProps> = ({
                     className={`p-1.5 rounded border transition-colors ${
                       isExempt
                         ? "bg-amber-100 border-amber-300 text-amber-700"
-                        : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-400 hover:text-slate-600"
+                        : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-content-muted hover:text-slate-600"
                     }`}
                   >
                     <Zap size={14} className={isExempt ? "fill-amber-500" : ""} />

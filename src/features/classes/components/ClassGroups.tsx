@@ -39,7 +39,7 @@ export const ClassGroups: React.FC<ClassGroupsProps> = ({ data, onUpdate }) => {
             >
               <button
                 onClick={() => handleRemoveGroup(joint.id)}
-                className="absolute top-3 right-3 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute top-3 right-3 text-slate-300 hover:text-danger-ink opacity-0 group-hover:opacity-100 transition-opacity"
               >
                 <X size={16} />
               </button>
@@ -81,7 +81,7 @@ export const ClassGroups: React.FC<ClassGroupsProps> = ({ data, onUpdate }) => {
             >
               <button
                 onClick={() => handleRemoveBlock(elec.id)}
-                className="absolute top-3 right-3 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute top-3 right-3 text-slate-300 hover:text-danger-ink opacity-0 group-hover:opacity-100 transition-opacity"
               >
                 <X size={16} />
               </button>

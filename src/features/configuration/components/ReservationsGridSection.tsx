@@ -41,7 +41,7 @@ export const ReservationsGridSection: React.FC<ReservationsGridSectionProps> = (
             gridTemplateColumns: `100px repeat(${periodsPerDay}, minmax(80px, 1fr))`,
           }}
         >
-          <div className="text-xs font-bold text-slate-400 uppercase text-right pr-4 py-2 self-end sticky left-0 z-20 bg-slate-50 dark:bg-slate-900">
+          <div className="text-xs font-bold text-content-muted uppercase text-right pr-4 py-2 self-end sticky left-0 z-20 bg-slate-50 dark:bg-slate-900">
             Day
           </div>
           {dayStructure.map((p, i) => (
@@ -49,7 +49,7 @@ export const ReservationsGridSection: React.FC<ReservationsGridSectionProps> = (
               key={i}
               className={`text-center p-2 rounded-t-lg border-x border-t shadow-sm ${headerClassByType(p.type)}`}
             >
-              <div className="text-2xs font-bold text-amber-600 mb-1">P{i + 1}</div>
+              <div className="text-2xs font-bold text-accent-ink mb-1">P{i + 1}</div>
               <div className="text-2xs font-bold text-slate-700 dark:text-slate-200 truncate px-1 uppercase tracking-tighter">
                 {p.label}
               </div>
@@ -78,7 +78,7 @@ export const ReservationsGridSection: React.FC<ReservationsGridSectionProps> = (
                       ${
                         occasionName
                           ? "bg-slate-800 border-slate-900 text-amber-400 font-bold scale-[1.02] z-10 shadow-md"
-                          : "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-amber-400 hover:shadow-md text-slate-400 hover:scale-[1.02] hover:z-10"
+                          : "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-amber-400 hover:shadow-md text-content-muted hover:scale-[1.02] hover:z-10"
                       }
                     `}
                   >
@@ -87,7 +87,7 @@ export const ReservationsGridSection: React.FC<ReservationsGridSectionProps> = (
                     ) : (
                       <>
                         <span className="font-bold text-slate-300 group-hover:hidden">Set</span>
-                        <span className="hidden group-hover:inline font-bold text-lg text-amber-500">
+                        <span className="hidden group-hover:inline font-bold text-lg text-accent-ink">
                           +
                         </span>
                       </>
@@ -99,7 +99,7 @@ export const ReservationsGridSection: React.FC<ReservationsGridSectionProps> = (
           ))}
         </div>
       </div>
-      <p className="text-2xs text-slate-400 mt-2 text-center italic">
+      <p className="text-2xs text-content-muted mt-2 text-center italic">
         Tip: Scroll horizontally if you have many periods. The day column stays visible.
       </p>
     </div>

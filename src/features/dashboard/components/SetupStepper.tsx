@@ -68,7 +68,7 @@ export const SetupStepper: React.FC<SetupStepperProps> = ({ data, onNavigate }) 
       {/* Dismiss */}
       <button
         onClick={() => setDismissed(true)}
-        className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 hover:bg-white rounded-lg transition-colors"
+        className="absolute top-4 right-4 p-1.5 text-content-muted hover:text-slate-600 hover:bg-white rounded-lg transition-colors"
         aria-label="Dismiss setup guide"
       >
         <X size={16} />
@@ -77,7 +77,7 @@ export const SetupStepper: React.FC<SetupStepperProps> = ({ data, onNavigate }) 
       {/* Header */}
       <div className="mb-5">
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-2xs font-black uppercase tracking-widest text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">
+          <span className="text-2xs font-black uppercase tracking-widest text-accent-ink bg-amber-100 px-2 py-0.5 rounded-full">
             Getting Started
           </span>
         </div>
@@ -116,7 +116,7 @@ export const SetupStepper: React.FC<SetupStepperProps> = ({ data, onNavigate }) 
             >
               <div className="flex items-center justify-between w-full mb-2">
                 {done ? (
-                  <CheckCircle2 size={16} className="text-emerald-500" />
+                  <CheckCircle2 size={16} className="text-success-ink" />
                 ) : (
                   <Circle size={16} className={isNext ? "text-amber-400" : "text-slate-300"} />
                 )}
@@ -133,12 +133,12 @@ export const SetupStepper: React.FC<SetupStepperProps> = ({ data, onNavigate }) 
                     ? "text-emerald-700"
                     : isNext
                       ? "text-slate-800 dark:text-slate-100"
-                      : "text-slate-400"
+                      : "text-content-muted"
                 }`}
               >
                 {step.label}
               </span>
-              <span className="text-2xs text-slate-400 mt-0.5 leading-tight hidden sm:block">
+              <span className="text-2xs text-content-muted mt-0.5 leading-tight hidden sm:block">
                 {step.description}
               </span>
             </button>

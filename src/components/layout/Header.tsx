@@ -65,7 +65,7 @@ export const Header: React.FC<HeaderProps> = ({
           className={`text-xs font-bold transition-all duration-300 flex items-center gap-2 px-3 py-1.5 rounded-full ${
             autoSaveStatus === "SAVED"
               ? "text-content-muted"
-              : "bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400"
+              : "bg-amber-50 text-accent-ink dark:bg-amber-900/30 dark:text-amber-400"
           }`}
         >
           {autoSaveStatus === "SAVING" ? (

@@ -29,10 +29,17 @@
     --content-secondary: 51 65 85; /* slate-700 */
     --content-muted: 71 85 105; /* slate-600 — AA on canvas/surface */
 
-    --accent: 245 158 11; /* amber-500 */
-    --accent-strong: 217 119 6; /* amber-600 */
-    --danger: 220 38 38; /* red-600   */
+    /* Decorative (fills, bars, borders, icons) */
+    --accent: 245 158 11; /* amber-500   */
+    --accent-strong: 217 119 6; /* amber-600   */
+    --danger: 220 38 38; /* red-600     */
     --success: 5 150 105; /* emerald-600 */
+
+    /* "ink" = safe as TEXT. The decorative values above fail AA on light
+     * surfaces (amber-600 3.19:1, emerald-600 3.77:1 on white). */
+    --accent-ink: 180 83 9; /* amber-700   ~5.1:1 on white */
+    --danger-ink: 185 28 28; /* red-700     ~6.7:1 on white */
+    --success-ink: 4 120 87; /* emerald-700 ~5.4:1 on white */
   }
 
   .dark {
@@ -51,8 +58,13 @@
 
     --accent: 251 191 36; /* amber-400 — lifted for dark backgrounds */
     --accent-strong: 245 158 11; /* amber-500 */
-    --danger: 248 113 113; /* red-400   */
+    --danger: 248 113 113; /* red-400     */
     --success: 52 211 153; /* emerald-400 */
+
+    /* On dark surfaces the lifted hues already clear AA, so ink == decorative. */
+    --accent-ink: 251 191 36; /* amber-400   ~8.2:1 on slate-800 */
+    --danger-ink: 248 113 113; /* red-400     ~5.0:1 on slate-800 */
+    --success-ink: 52 211 153; /* emerald-400 ~7.9:1 on slate-800 */
   }
 }
 

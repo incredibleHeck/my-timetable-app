@@ -20,7 +20,7 @@ export const ConfigImpactBanner: React.FC<ConfigImpactBannerProps> = ({
       role="status"
     >
       <div className="flex items-start gap-3">
-        <AlertTriangle className="text-amber-600 shrink-0 mt-0.5" size={20} aria-hidden />
+        <AlertTriangle className="text-accent-ink shrink-0 mt-0.5" size={20} aria-hidden />
         <div>
           <p className="text-sm font-bold text-amber-900">
             {conflictCount} scheduling conflict{conflictCount === 1 ? "" : "s"} detected

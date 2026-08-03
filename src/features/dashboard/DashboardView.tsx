@@ -355,7 +355,11 @@ export const DashboardView: React.FC<ViewProps> = ({ data, profileName, onNaviga
             />
           </div>
 
-          <Card className="p-5 mt-4 bg-slate-900 text-white border-slate-800">
+          {/* Deliberately dark in both themes. The `!` modifiers are required:
+              Card's own `bg-white` is emitted after `bg-slate-900` in Tailwind's
+              output, so without them the card rendered white in light mode with
+              near-invisible slate-200 text (measured 1.23:1). */}
+          <Card className="p-5 mt-4 !bg-slate-900 text-white !border-slate-800">
             <div className="flex items-start justify-between mb-4">
               <div>
                 <h4 className="font-bold text-sm text-slate-200">Last Optimization</h4>

@@ -273,7 +273,7 @@ export const ExamManualModal: React.FC<Props> = ({
                 type="checkbox"
                 checked={hasTwoPapers}
                 onChange={(e) => setHasTwoPapers(e.target.checked)}
-                className="rounded text-amber-600 focus:ring-amber-500"
+                className="rounded text-accent-ink focus:ring-amber-500"
               />
               Schedule Two Papers
             </label>
@@ -282,9 +282,9 @@ export const ExamManualModal: React.FC<Props> = ({
           <div className="grid grid-cols-2 gap-4">
             {/* Paper 1 Config */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-400">Paper 1 Start</label>
+              <label className="text-xs font-bold text-content-muted">Paper 1 Start</label>
               <div className="flex items-center gap-2">
-                <Clock size={16} className="text-slate-400" />
+                <Clock size={16} className="text-content-muted" />
                 <input
                   type="time"
                   value={examStartTime}
@@ -297,9 +297,9 @@ export const ExamManualModal: React.FC<Props> = ({
             {/* Paper 2 Config (Conditional) */}
             {hasTwoPapers && (
               <div className="space-y-2 animate-in fade-in">
-                <label className="text-xs font-bold text-slate-400">Paper 2 Start</label>
+                <label className="text-xs font-bold text-content-muted">Paper 2 Start</label>
                 <div className="flex items-center gap-2">
-                  <Clock size={16} className="text-amber-500" />
+                  <Clock size={16} className="text-accent-ink" />
                   <input
                     type="time"
                     value={paper2StartTime}
@@ -314,7 +314,7 @@ export const ExamManualModal: React.FC<Props> = ({
 
         {/* SECTION 3: CLASSES */}
         <div>
-          <h4 className="text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-2">
+          <h4 className="text-xs font-bold text-content-muted uppercase mb-2 flex items-center gap-2">
             <BookOpen size={14} /> Participating Classes
           </h4>
           <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 shadow-sm">
@@ -346,7 +346,7 @@ export const ExamManualModal: React.FC<Props> = ({
             ))}
           </div>
           {examClassIds.length === 0 && (
-            <p className="text-2xs text-red-500 mt-1 font-bold">* Required</p>
+            <p className="text-2xs text-danger-ink mt-1 font-bold">* Required</p>
           )}
         </div>
 
@@ -366,10 +366,10 @@ export const ExamManualModal: React.FC<Props> = ({
           {/* Invigilator Select */}
           <div>
             <div className="flex justify-between items-end mb-2">
-              <h4 className="text-xs font-bold text-slate-400 uppercase flex items-center gap-2">
+              <h4 className="text-xs font-bold text-content-muted uppercase flex items-center gap-2">
                 <Users size={14} /> Invigilators
               </h4>
-              <span className="text-2xs text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+              <span className="text-2xs text-content-muted bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
                 {examInvigilatorIds.length} Selected
               </span>
             </div>
@@ -412,7 +412,7 @@ export const ExamManualModal: React.FC<Props> = ({
               type="checkbox"
               checked={examLocked}
               onChange={(e) => setExamLocked(e.target.checked)}
-              className="rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+              className="rounded border-slate-300 text-accent-ink focus:ring-amber-500"
             />
             <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
               Lock invigilator assignments (skipped when re-running Assign Staff)

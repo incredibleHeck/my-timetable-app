@@ -55,7 +55,7 @@ export const InvigilatorExclusionModal: React.FC<Props> = ({
     >
       <div className="space-y-4 max-h-[60vh] flex flex-col">
         <div className="bg-amber-50 border border-amber-100 p-3 rounded-lg flex items-start gap-3">
-          <Users className="text-amber-600 shrink-0" size={18} />
+          <Users className="text-accent-ink shrink-0" size={18} />
           <div>
             <p className="text-xs font-bold text-amber-800">Exclude Staff Members</p>
             <p className="text-2xs text-amber-700 mt-0.5">
@@ -68,7 +68,10 @@ export const InvigilatorExclusionModal: React.FC<Props> = ({
 
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-content-muted"
+              size={14}
+            />
             <input
               placeholder="Search teachers..."
               className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-amber-500 focus:border-amber-500 outline-none"
@@ -99,7 +102,7 @@ export const InvigilatorExclusionModal: React.FC<Props> = ({
                     <div
                       className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
                         isExcluded
-                          ? "bg-slate-200 dark:bg-slate-700 text-slate-400"
+                          ? "bg-slate-200 dark:bg-slate-700 text-content-muted"
                           : "bg-amber-100 text-amber-700"
                       }`}
                     >
@@ -109,7 +112,7 @@ export const InvigilatorExclusionModal: React.FC<Props> = ({
                       <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
                         {t.name}
                       </p>
-                      <p className="text-2xs text-slate-400">
+                      <p className="text-2xs text-content-muted">
                         {isExcluded ? "Excluded" : "Available"}
                       </p>
                     </div>
@@ -117,7 +120,7 @@ export const InvigilatorExclusionModal: React.FC<Props> = ({
                   {isExcluded ? (
                     <XCircle size={18} className="text-slate-300" />
                   ) : (
-                    <CheckCircle size={18} className="text-emerald-500" />
+                    <CheckCircle size={18} className="text-success-ink" />
                   )}
                 </button>
               );

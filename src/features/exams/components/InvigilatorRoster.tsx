@@ -36,7 +36,7 @@ export const InvigilatorRoster: React.FC<Props> = ({ data, exams }) => {
       <div className="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 flex justify-between items-center">
         <div>
           <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <Users size={18} className="text-amber-500" />
+            <Users size={18} className="text-accent-ink" />
             Master Invigilation Roster
           </h3>
           <p className="text-2xs text-content-muted uppercase font-bold tracking-wider mt-0.5">
@@ -61,7 +61,7 @@ export const InvigilatorRoster: React.FC<Props> = ({ data, exams }) => {
                   className="p-3 border-b border-r border-slate-200 dark:border-slate-700 text-center bg-slate-50 dark:bg-slate-900 min-w-[140px]"
                 >
                   <div className="flex flex-col items-center">
-                    <span className="text-2xs font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
+                    <span className="text-2xs font-black text-content-muted uppercase tracking-widest leading-none mb-1">
                       {new Date(date).toLocaleDateString("en-GB", { weekday: "short" })}
                     </span>
                     <span className="text-sm font-black text-slate-800 dark:text-slate-100 leading-none">

@@ -21,10 +21,10 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 }) => {
   const colors = {
     blue: "bg-blue-50 text-blue-600 border-blue-100",
-    emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
+    emerald: "bg-emerald-50 dark:bg-emerald-900/30 text-success-ink border-emerald-100",
     violet: "bg-violet-50 text-violet-600 border-violet-100",
-    amber: "bg-amber-50 text-amber-600 border-amber-100",
-    red: "bg-red-50 text-red-600 border-red-100",
+    amber: "bg-amber-50 dark:bg-amber-900/30 text-accent-ink border-amber-100",
+    red: "bg-red-50 dark:bg-red-900/30 text-danger-ink border-red-100",
   };
 
   // Count-up animation for numeric values
@@ -47,7 +47,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       <h3 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-1 tabular-nums">
         {isNumeric ? `${animatedValue}${suffix}` : value}
       </h3>
-      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{label}</p>
+      <p className="text-xs font-bold text-content-muted uppercase tracking-wider mb-2">{label}</p>
       <p className="text-xs text-content-muted font-medium flex items-center gap-1">{subtext}</p>
     </Card>
   );

@@ -101,7 +101,7 @@ export const ClassStructureSection: React.FC<ClassStructureSectionProps> = ({
                       ${type === "LUNCH" ? "bg-orange-50 border-orange-300 text-orange-700" : ""}
                   `}
           >
-            <div className="absolute top-1 left-1 text-2xs text-slate-400 font-normal opacity-50">
+            <div className="absolute top-1 left-1 text-2xs text-content-muted font-normal opacity-50">
               {idx + 1}
             </div>
             <div className="mt-1">

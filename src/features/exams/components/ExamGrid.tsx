@@ -128,7 +128,7 @@ const DraggableExamCard = ({
                             {exam.status}
                           </span>
                         )}
-                        {exam.locked && <Lock size={10} className="text-amber-600" />}
+                        {exam.locked && <Lock size={10} className="text-accent-ink" />}
                       </div>
                     </div>
                     {onToggleLock && (
@@ -140,7 +140,7 @@ const DraggableExamCard = ({
                         }}
                         className={`p-1 rounded ${
                           exam.locked
-                            ? "text-amber-600 bg-amber-50"
+                            ? "text-accent-ink bg-amber-50 dark:bg-amber-900/30"
                             : "text-slate-300 hover:text-slate-500"
                         }`}
                         title={
@@ -160,7 +160,7 @@ const DraggableExamCard = ({
                     {classNames}
                   </div>
                   <div className="flex items-center gap-2 text-[11px] font-bold text-content-muted p-1 rounded-lg bg-slate-50/50 border border-transparent group-hover/card:border-slate-100 group-hover/card:bg-white transition-all">
-                    <Users size={11} className="text-slate-400" />
+                    <Users size={11} className="text-content-muted" />
                     <span className="truncate">{invigilatorNames || "NO STAFF ASSIGNED"}</span>
                   </div>
                 </div>
@@ -187,7 +187,7 @@ const DraggableExamCard = ({
         <div
           {...listeners}
           {...attributes}
-          className="absolute -top-3 -right-3 cursor-grab active:cursor-grabbing text-amber-600 hover:text-amber-700 z-30 p-2 bg-white dark:bg-slate-800 border-2 border-amber-100 rounded-full shadow-xl opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
+          className="absolute -top-3 -right-3 cursor-grab active:cursor-grabbing text-accent-ink hover:text-amber-700 z-30 p-2 bg-white dark:bg-slate-800 border-2 border-amber-100 rounded-full shadow-xl opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
         >
           <GripVertical size={16} />
         </div>
@@ -259,7 +259,7 @@ const DroppableGridCell = ({
               {activeConflicts.map((c, i) => (
                 <div
                   key={i}
-                  className={`flex items-start gap-1.5 text-2xs font-bold ${c.severity === "CRITICAL" ? "text-red-600" : "text-amber-600"}`}
+                  className={`flex items-start gap-1.5 text-2xs font-bold ${c.severity === "CRITICAL" ? "text-danger-ink" : "text-accent-ink"}`}
                 >
                   <AlertTriangle size={12} className="shrink-0" />
                   <span>{c.message}</span>
@@ -426,7 +426,7 @@ export const ExamGrid: React.FC<Props> = ({
         <table className="w-full border-collapse table-fixed">
           <thead>
             <tr className="bg-slate-900 text-white">
-              <th className="p-4 border-r border-slate-800 text-left text-[11px] font-black text-slate-400 uppercase tracking-widest w-[140px] sticky left-0 z-40 bg-slate-900 shadow-md">
+              <th className="p-4 border-r border-slate-800 text-left text-[11px] font-black text-content-muted uppercase tracking-widest w-[140px] sticky left-0 z-40 bg-slate-900 shadow-md">
                 Date / Day
               </th>
               {sessionColumns.map((col) => (
@@ -438,7 +438,7 @@ export const ExamGrid: React.FC<Props> = ({
                     <span className="font-black text-sm uppercase tracking-widest">
                       {col.label}
                     </span>
-                    <span className="text-2xs text-slate-400 font-bold tracking-widest">
+                    <span className="text-2xs text-content-muted font-bold tracking-widest">
                       {col.headerHint}
                     </span>
                   </div>
@@ -457,7 +457,7 @@ export const ExamGrid: React.FC<Props> = ({
                 >
                   <td className="p-4 border-r border-slate-200 dark:border-slate-700 text-center w-[140px] sticky left-0 z-30 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] bg-slate-50 dark:bg-slate-900">
                     <div className="flex flex-col items-center gap-0.5">
-                      <span className="text-2xs font-black text-slate-400 uppercase tracking-widest">
+                      <span className="text-2xs font-black text-content-muted uppercase tracking-widest">
                         {new Date(date).toLocaleDateString("en-GB", {
                           weekday: "short",
                         })}
@@ -521,7 +521,7 @@ export const ExamGrid: React.FC<Props> = ({
         {activeDragId ? (
           <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-2xl border-2 border-amber-400 w-72 rotate-3 cursor-grabbing opacity-90 scale-105 pointer-events-none ring-4 ring-black/5">
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-amber-100 text-amber-600 rounded-lg">
+              <div className="p-2 bg-amber-100 text-accent-ink rounded-lg">
                 <CalendarDays size={20} />
               </div>
               <div className="flex flex-col">

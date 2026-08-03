@@ -78,7 +78,7 @@ export const ProfileModals: React.FC<ProfileModalsProps> = ({
             auto-save is off.
           </p>
           {savedProfiles.length === 0 ? (
-            <div className="p-8 text-center text-slate-400 italic bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 border-dashed">
+            <div className="p-8 text-center text-content-muted italic bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 border-dashed">
               No saved profiles found.
             </div>
           ) : (
@@ -96,7 +96,7 @@ export const ProfileModals: React.FC<ProfileModalsProps> = ({
                     {onDelete && (
                       <button
                         onClick={() => onDelete(p.id)}
-                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                        className="p-2 text-content-muted hover:text-danger-ink hover:bg-red-50 rounded transition-colors"
                         title="Delete Profile"
                       >
                         <Trash2 size={16} />

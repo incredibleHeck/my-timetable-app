@@ -43,7 +43,7 @@ export const RulesSection: React.FC<RulesSectionProps> = ({
       </p>
       <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="flex items-start gap-2">
-          <ShieldAlert size={18} className="text-amber-600 shrink-0 mt-1" aria-hidden />
+          <ShieldAlert size={18} className="text-accent-ink shrink-0 mt-1" aria-hidden />
           <NumberStepper
             label="Fatigue Guard"
             value={maxConsecutive || 4}
@@ -102,7 +102,7 @@ export const RulesSection: React.FC<RulesSectionProps> = ({
         </div>
 
         <div className="flex items-start gap-2">
-          <ShieldAlert size={18} className="text-emerald-600 shrink-0 mt-1" aria-hidden />
+          <ShieldAlert size={18} className="text-success-ink shrink-0 mt-1" aria-hidden />
           <NumberStepper
             label="Solver Timeout (Minutes)"
             value={solverTimeoutMinutes ?? 1}

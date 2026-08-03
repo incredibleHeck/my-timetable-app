@@ -386,13 +386,13 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
           {/* Sidebar */}
           <div className="w-44 border-r border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 overflow-y-auto shrink-0 flex flex-col">
             <div className="p-3 border-b border-slate-100 dark:border-slate-700 sticky top-0 bg-slate-50 dark:bg-slate-900 z-10 space-y-2">
-              <span className="text-2xs font-bold text-slate-400 uppercase tracking-wider block">
+              <span className="text-2xs font-bold text-content-muted uppercase tracking-wider block">
                 Select {mode === "CLASS" ? "Group" : "Teacher"}
               </span>
               <div className="relative">
                 <Search
                   size={11}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 text-content-muted"
                 />
                 <input
                   type="text"
@@ -406,10 +406,12 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
             {/* Empty schedule CTA — shown when no schedule exists */}
             {Object.keys(data.schedule).length === 0 && !isGenerating && (
               <div className="flex-1 flex flex-col items-center justify-center p-4 text-center">
-                <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center mb-2">
+                <div className="w-10 h-10 rounded-full bg-amber-100 text-accent-ink flex items-center justify-center mb-2">
                   <Zap size={20} />
                 </div>
-                <p className="text-2xs text-slate-400 font-medium leading-tight">No schedule yet</p>
+                <p className="text-2xs text-content-muted font-medium leading-tight">
+                  No schedule yet
+                </p>
               </div>
             )}
             {mode === "CLASS"
@@ -457,7 +459,7 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
             {Object.keys(data.schedule).length === 0 && !isGenerating && (
               <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-slate-50/95">
                 <div className="text-center max-w-sm">
-                  <div className="w-20 h-20 rounded-2xl bg-amber-100 text-amber-500 flex items-center justify-center mx-auto mb-5 shadow-inner">
+                  <div className="w-20 h-20 rounded-2xl bg-amber-100 text-accent-ink flex items-center justify-center mx-auto mb-5 shadow-inner">
                     <Zap size={40} />
                   </div>
                   <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">
@@ -498,7 +500,7 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
             {!isGenerating && data.lastGenerated && (
               <button
                 onClick={() => setIsConflictPanelOpen(!isConflictPanelOpen)}
-                className="absolute -left-8 top-1/2 -translate-y-1/2 w-8 h-16 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 border-r-0 rounded-l-lg shadow-sm flex items-center justify-center text-slate-400 hover:text-amber-500 hover:bg-amber-50 z-10 transition-colors"
+                className="absolute -left-8 top-1/2 -translate-y-1/2 w-8 h-16 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 border-r-0 rounded-l-lg shadow-sm flex items-center justify-center text-content-muted hover:text-accent-ink hover:bg-amber-50 z-10 transition-colors"
                 title={isConflictPanelOpen ? "Hide validation panel" : "Show validation panel"}
               >
                 {isConflictPanelOpen ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
@@ -520,7 +522,7 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
                     <h4 className="font-bold text-red-800 mb-1 text-sm flex items-center gap-2">
                       <Lock size={14} /> Invalid Move
                     </h4>
-                    <p className="text-xs text-red-600 font-medium leading-relaxed">
+                    <p className="text-xs text-danger-ink font-medium leading-relaxed">
                       {hoverConflict.reason}
                     </p>
                     <div className="mt-2 pt-2 border-t border-red-100 flex flex-col gap-1">

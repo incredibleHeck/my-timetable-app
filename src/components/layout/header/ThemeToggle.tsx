@@ -13,7 +13,7 @@ export const ThemeToggle: React.FC = () => {
       onClick={toggle}
       aria-label={t("theme.toggle")}
       title={t("theme.toggle")}
-      className="p-2 rounded-lg text-content-muted hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+      className="p-2 rounded-lg text-content-muted hover:text-accent-ink hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
     >
       {isDark ? <Sun size={16} /> : <Moon size={16} />}
     </button>

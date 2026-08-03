@@ -91,7 +91,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
           onClick={() => setActiveTab("LIST")}
           className={`flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${
             activeTab === "LIST"
-              ? "border-amber-500 text-amber-600"
+              ? "border-amber-500 text-accent-ink"
               : "border-transparent text-content-muted hover:text-slate-700"
           }`}
         >
@@ -101,7 +101,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
           onClick={() => setActiveTab("FACULTIES")}
           className={`flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${
             activeTab === "FACULTIES"
-              ? "border-amber-500 text-amber-600"
+              ? "border-amber-500 text-accent-ink"
               : "border-transparent text-content-muted hover:text-slate-700"
           }`}
         >
@@ -197,10 +197,10 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                           ? "bg-amber-500"
                           : "bg-emerald-500";
                       const textColor = isOver
-                        ? "text-red-600"
+                        ? "text-danger-ink"
                         : isHigh
-                          ? "text-amber-600"
-                          : "text-emerald-600";
+                          ? "text-accent-ink"
+                          : "text-success-ink";
                       return (
                         <div className="mt-2.5 space-y-1">
                           <div className="flex justify-between text-2xs font-medium">
@@ -223,11 +223,11 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                 <div className="pt-4 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center">
                   <div className="text-xs text-content-muted font-medium">
                     {t.constraints && t.constraints.flat().filter(Boolean).length > 0 ? (
-                      <span className="flex items-center text-amber-600">
+                      <span className="flex items-center text-accent-ink">
                         <Ban size={12} className="mr-1" /> Restrictions Active
                       </span>
                     ) : (
-                      <span className="flex items-center text-emerald-600">
+                      <span className="flex items-center text-success-ink">
                         <CheckSquare size={12} className="mr-1" /> Fully Available
                       </span>
                     )}
@@ -248,7 +248,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                         e.stopPropagation();
                         openModal(t);
                       }}
-                      className="p-2 hover:bg-slate-100 rounded-md text-content-muted hover:text-amber-600 transition-colors"
+                      className="p-2 hover:bg-slate-100 rounded-md text-content-muted hover:text-accent-ink transition-colors"
                       title="Edit"
                     >
                       <Edit2 size={14} />
@@ -258,7 +258,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                         e.stopPropagation();
                         initiateDelete(t);
                       }}
-                      className="p-2 hover:bg-red-50 rounded-md text-content-muted hover:text-red-600 transition-colors"
+                      className="p-2 hover:bg-red-50 rounded-md text-content-muted hover:text-danger-ink transition-colors"
                       title="Delete"
                     >
                       <Trash2 size={14} />
@@ -272,10 +272,10 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
               onClick={() => openModal()}
               className="rounded-xl border-2 border-dashed border-slate-300 hover:border-amber-400 hover:bg-amber-50/50 transition-all flex flex-col items-center justify-center p-6 min-h-[160px] group"
             >
-              <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-amber-100 text-content-muted group-hover:text-amber-500 flex items-center justify-center mb-3 transition-colors">
+              <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-amber-100 text-content-muted group-hover:text-accent-ink flex items-center justify-center mb-3 transition-colors">
                 <Plus size={24} />
               </div>
-              <span className="font-bold text-sm text-content-muted group-hover:text-amber-600">
+              <span className="font-bold text-sm text-content-muted group-hover:text-accent-ink">
                 Add New Teacher
               </span>
             </button>
@@ -314,7 +314,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                     </div>
                     <button
                       onClick={() => handleQuickAdd(subject.id)}
-                      className="p-1 rounded-full hover:bg-white text-content-muted hover:text-amber-600 transition-colors mt-2 hidden sm:block"
+                      className="p-1 rounded-full hover:bg-white text-content-muted hover:text-accent-ink transition-colors mt-2 hidden sm:block"
                       title="Quick Add Teacher"
                     >
                       <Plus size={16} />
@@ -385,7 +385,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
         }
       >
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600 shrink-0">
+          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-danger-ink shrink-0">
             <AlertTriangle size={24} />
           </div>
           <div>

@@ -82,7 +82,7 @@ export const ScheduleChainSection: React.FC<ScheduleChainSectionProps> = ({
                             : type === "LUNCH"
                               ? "bg-orange-50 border-orange-400 text-orange-800"
                               : "bg-violet-50 border-violet-400 text-violet-800"
-                        : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-400 hover:border-slate-300"
+                        : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-content-muted hover:border-slate-300"
                     }
                   `}
                 >
@@ -110,7 +110,7 @@ export const ScheduleChainSection: React.FC<ScheduleChainSectionProps> = ({
                       setEditingLabelIdx(idx);
                       setTempLabel(period.label);
                     }}
-                    className="text-sm font-bold text-content-muted uppercase text-left cursor-pointer hover:text-amber-600 truncate"
+                    className="text-sm font-bold text-content-muted uppercase text-left cursor-pointer hover:text-accent-ink truncate"
                   >
                     {period.label}
                   </button>
@@ -140,7 +140,7 @@ export const ScheduleChainSection: React.FC<ScheduleChainSectionProps> = ({
                   }}
                 />
               </div>
-              <div className="text-xs text-slate-400 mt-0.5">
+              <div className="text-xs text-content-muted mt-0.5">
                 {Math.round(
                   (new Date(`1970-01-01T${timeSlots[idx]?.end}`).getTime() -
                     new Date(`1970-01-01T${timeSlots[idx]?.start}`).getTime()) /

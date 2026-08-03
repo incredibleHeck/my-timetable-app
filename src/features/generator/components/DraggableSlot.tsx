@@ -77,14 +77,14 @@ export const DraggableSlot: React.FC<Props> = memo(
 
         {/* TIME LABEL (Teacher Mode Only) */}
         {mode === "TEACHER" && timeRange && (
-          <div className="text-2xs font-bold text-slate-400 mt-1 flex items-center gap-1 relative z-10 uppercase tracking-tight">
+          <div className="text-2xs font-bold text-content-muted mt-1 flex items-center gap-1 relative z-10 uppercase tracking-tight">
             <Clock size={8} /> {timeRange}
           </div>
         )}
 
         {/* Icons for Interaction Status */}
         {!slot.isFixed ? (
-          <div className="absolute top-1 right-1 text-slate-400 opacity-50 group-hover:opacity-100 transition-opacity">
+          <div className="absolute top-1 right-1 text-content-muted opacity-50 group-hover:opacity-100 transition-opacity">
             <Repeat size={10} />
           </div>
         ) : (

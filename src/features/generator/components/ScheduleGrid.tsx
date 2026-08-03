@@ -205,7 +205,7 @@ export const ScheduleGrid: React.FC<Props> = ({
         {/* STATUS BAR */}
         <div className="mb-3 p-3 rounded-lg text-xs font-bold flex items-center gap-3 transition-all shadow-sm border bg-white dark:bg-slate-800 text-content-muted border-slate-200 dark:border-slate-700">
           <div
-            className={`p-1 rounded ${editMode ? "bg-amber-100 text-amber-600" : "bg-slate-100 dark:bg-slate-800"}`}
+            className={`p-1 rounded ${editMode ? "bg-amber-100 text-accent-ink" : "bg-slate-100 dark:bg-slate-800"}`}
           >
             {editMode ? <ArrowRightLeft size={14} /> : <Lock size={14} />}
           </div>
@@ -223,7 +223,7 @@ export const ScheduleGrid: React.FC<Props> = ({
           className="grid gap-1 mb-1"
           style={{ gridTemplateColumns: `60px repeat(${periodsToRender}, minmax(120px, 1fr))` }}
         >
-          <div className="text-right pr-3 text-2xs font-bold text-slate-400 uppercase self-end pb-2">
+          <div className="text-right pr-3 text-2xs font-bold text-content-muted uppercase self-end pb-2">
             Day
           </div>
           {Array.from({ length: periodsToRender }).map((_, i) => (
@@ -304,7 +304,7 @@ export const ScheduleGrid: React.FC<Props> = ({
                           </div>
                         ))}
                         {blockSubjects.length === 0 && (
-                          <div className="flex-1 flex items-center justify-center text-2xs text-slate-400 italic">
+                          <div className="flex-1 flex items-center justify-center text-2xs text-content-muted italic">
                             Unknown Elective
                           </div>
                         )}

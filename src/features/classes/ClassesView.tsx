@@ -133,7 +133,7 @@ const TabButton: React.FC<{
     onClick={onClick}
     className={`px-4 py-2 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${
       active
-        ? "border-amber-500 text-amber-600"
+        ? "border-amber-500 text-accent-ink"
         : "border-transparent text-content-muted hover:text-slate-700"
     }`}
   >
@@ -153,7 +153,7 @@ const DeleteClassModal: React.FC<{
     <Modal isOpen={isOpen} onClose={onClose} title="Confirm Deletion">
       <div className="space-y-6">
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600 shrink-0">
+          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-danger-ink shrink-0">
             <AlertTriangle size={24} />
           </div>
           <div>

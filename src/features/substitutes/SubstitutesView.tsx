@@ -40,7 +40,7 @@ export const SubstitutesView: React.FC<ViewProps> = ({ data }) => {
     <div className="space-y-6 animate-in fade-in duration-500 max-w-5xl mx-auto p-8">
       <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
         <div className="flex items-center gap-2">
-          <UserX size={20} className="text-amber-500" />
+          <UserX size={20} className="text-accent-ink" />
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Cover Planner</h2>
         </div>
         <p className="text-xs text-content-muted mt-1">
@@ -52,7 +52,7 @@ export const SubstitutesView: React.FC<ViewProps> = ({ data }) => {
       {/* Controls */}
       <div className="flex flex-wrap items-end gap-4 bg-white dark:bg-slate-800 px-6 py-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
         <label className="flex flex-col gap-1">
-          <span className="text-2xs font-bold uppercase tracking-wider text-slate-400">
+          <span className="text-2xs font-bold uppercase tracking-wider text-content-muted">
             Absent teacher
           </span>
           <select
@@ -70,7 +70,9 @@ export const SubstitutesView: React.FC<ViewProps> = ({ data }) => {
         </label>
 
         <label className="flex flex-col gap-1">
-          <span className="text-2xs font-bold uppercase tracking-wider text-slate-400">Day</span>
+          <span className="text-2xs font-bold uppercase tracking-wider text-content-muted">
+            Day
+          </span>
           <select
             value={day}
             onChange={(e) => resetFor(absentTeacherId, Number(e.target.value))}
@@ -86,14 +88,14 @@ export const SubstitutesView: React.FC<ViewProps> = ({ data }) => {
 
         {absentTeacherId && plan.length > 0 && (
           <div className="ml-auto flex items-center gap-2 text-xs">
-            <CalendarDays size={14} className="text-slate-400" />
+            <CalendarDays size={14} className="text-content-muted" />
             <span className="text-content-muted">
               <strong className="text-slate-700 dark:text-slate-200">{plan.length}</strong> lesson
               {plan.length !== 1 ? "s" : ""}
             </span>
-            <span className="text-emerald-600 font-semibold">{assignedCount} covered</span>
+            <span className="text-success-ink font-semibold">{assignedCount} covered</span>
             {unassignedCount > 0 && (
-              <span className="text-amber-600 font-semibold">{unassignedCount} open</span>
+              <span className="text-accent-ink font-semibold">{unassignedCount} open</span>
             )}
           </div>
         )}
@@ -102,7 +104,7 @@ export const SubstitutesView: React.FC<ViewProps> = ({ data }) => {
       {/* Results */}
       {!absentTeacherId ? (
         <Card className="p-12 text-center border-slate-100 dark:border-slate-700">
-          <div className="inline-flex p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 mb-3">
+          <div className="inline-flex p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-content-muted mb-3">
             <Info size={24} />
           </div>
           <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200">
@@ -114,7 +116,7 @@ export const SubstitutesView: React.FC<ViewProps> = ({ data }) => {
         </Card>
       ) : plan.length === 0 ? (
         <Card className="p-12 text-center border-slate-100 dark:border-slate-700">
-          <div className="inline-flex p-3 rounded-xl bg-emerald-50 text-emerald-500 mb-3">
+          <div className="inline-flex p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 text-success-ink mb-3">
             <Check size={24} />
           </div>
           <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200">Nothing to cover</h3>
@@ -136,7 +138,7 @@ export const SubstitutesView: React.FC<ViewProps> = ({ data }) => {
                     <div className="flex flex-col items-center justify-center w-14 h-14 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0">
                       <span className="text-sm font-black">{lesson.periodLabel}</span>
                       {lesson.timeRange && (
-                        <span className="text-2xs text-slate-400">{lesson.timeRange}</span>
+                        <span className="text-2xs text-content-muted">{lesson.timeRange}</span>
                       )}
                     </div>
                     <div className="min-w-0">
@@ -155,7 +157,7 @@ export const SubstitutesView: React.FC<ViewProps> = ({ data }) => {
                   {/* Cover selector */}
                   <div className="flex-1 min-w-0">
                     {candidates.length === 0 ? (
-                      <div className="flex items-center gap-2 text-xs text-red-600 font-semibold">
+                      <div className="flex items-center gap-2 text-xs text-danger-ink font-semibold">
                         <AlertTriangle size={14} /> No available teacher for this period
                       </div>
                     ) : (
@@ -191,11 +193,11 @@ export const SubstitutesView: React.FC<ViewProps> = ({ data }) => {
                           ))}
                         </select>
                         {chosenId ? (
-                          <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 whitespace-nowrap">
+                          <span className="flex items-center gap-1 text-xs font-bold text-success-ink whitespace-nowrap">
                             <Check size={14} /> Covered
                           </span>
                         ) : (
-                          <span className="text-xs font-semibold text-amber-600 whitespace-nowrap">
+                          <span className="text-xs font-semibold text-accent-ink whitespace-nowrap">
                             Open
                           </span>
                         )}

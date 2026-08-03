@@ -84,7 +84,7 @@ export const ExportMenu: React.FC<ExportMenuProps> = ({
           role="menu"
           className="absolute right-0 top-full z-30 mt-2 w-72 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-lg"
         >
-          <p className="text-2xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+          <p className="text-2xs font-bold uppercase tracking-wider text-content-muted mb-1.5">
             Target
           </p>
           <div
@@ -108,7 +108,9 @@ export const ExportMenu: React.FC<ExportMenuProps> = ({
             ))}
           </div>
 
-          <p className="text-2xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Scope</p>
+          <p className="text-2xs font-bold uppercase tracking-wider text-content-muted mb-1.5">
+            Scope
+          </p>
           <select
             value={entityId}
             onChange={(e) => setEntityId(e.target.value)}
@@ -143,7 +145,7 @@ export const ExportMenu: React.FC<ExportMenuProps> = ({
             </button>
           </div>
           {icalDisabled && (
-            <p className="text-2xs text-slate-400 mt-2">
+            <p className="text-2xs text-content-muted mt-2">
               Calendar export needs a single class or teacher selected.
             </p>
           )}

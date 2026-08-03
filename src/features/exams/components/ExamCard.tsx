@@ -71,7 +71,7 @@ export const ExamCard: React.FC<Props> = ({
             <span className="inline-flex items-center px-2 py-0.5 rounded text-2xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
               {exam.paperLabel || `Paper ${exam.paperNumber}`}
             </span>
-            {isLocked && <Lock size={12} className="text-slate-400" />}
+            {isLocked && <Lock size={12} className="text-content-muted" />}
             {exam.status && exam.status !== "DRAFT" && (
               <span className="text-2xs font-bold uppercase px-1.5 py-0.5 rounded bg-slate-700 text-white">
                 {exam.status}
@@ -90,8 +90,8 @@ export const ExamCard: React.FC<Props> = ({
               }}
               className={`p-1.5 rounded transition-colors ${
                 isLocked
-                  ? "bg-amber-50 text-amber-600 hover:bg-amber-100"
-                  : "hover:bg-slate-100 text-slate-400 hover:text-slate-600"
+                  ? "bg-amber-50 dark:bg-amber-900/30 text-accent-ink hover:bg-amber-100"
+                  : "hover:bg-slate-100 text-content-muted hover:text-slate-600"
               }`}
               title={isLocked ? "Unlock invigilator assignments" : "Lock invigilator assignments"}
             >
@@ -100,14 +100,14 @@ export const ExamCard: React.FC<Props> = ({
           )}
           <button
             onClick={onEdit}
-            className="p-1.5 hover:bg-slate-100 text-slate-400 hover:text-amber-600 rounded transition-colors"
+            className="p-1.5 hover:bg-slate-100 text-content-muted hover:text-accent-ink rounded transition-colors"
             title="Edit Exam"
           >
             <Edit2 size={14} />
           </button>
           <button
             onClick={onDelete}
-            className="p-1.5 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded transition-colors"
+            className="p-1.5 hover:bg-red-50 text-content-muted hover:text-danger-ink rounded transition-colors"
             title="Delete Exam"
           >
             <Trash2 size={14} />
@@ -119,15 +119,15 @@ export const ExamCard: React.FC<Props> = ({
       <div className="grid grid-cols-2 gap-y-2 text-xs pl-2">
         {/* Date */}
         <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-          <Calendar size={14} className="text-slate-400" />
+          <Calendar size={14} className="text-content-muted" />
           <span className="font-medium">{new Date(exam.date).toLocaleDateString()}</span>
         </div>
 
         {/* Time & Duration */}
         <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-          <Clock size={14} className="text-slate-400" />
+          <Clock size={14} className="text-content-muted" />
           <span className="font-medium">
-            {exam.startTime} <span className="text-slate-400">({exam.duration}m)</span>
+            {exam.startTime} <span className="text-content-muted">({exam.duration}m)</span>
           </span>
         </div>
 
@@ -135,12 +135,12 @@ export const ExamCard: React.FC<Props> = ({
         <div className="flex items-start gap-2 col-span-2">
           <Users
             size={14}
-            className={invigilatorNames ? "text-slate-400 mt-0.5" : "text-amber-400 mt-0.5"}
+            className={invigilatorNames ? "text-content-muted mt-0.5" : "text-amber-400 mt-0.5"}
           />
           <span
             className={`text-[11px] leading-tight ${
               !invigilatorNames
-                ? "text-amber-600 italic"
+                ? "text-accent-ink italic"
                 : "text-slate-600 dark:text-slate-300 font-medium"
             }`}
           >
@@ -152,7 +152,7 @@ export const ExamCard: React.FC<Props> = ({
         {classNames && (
           <div className="col-span-2 mt-1 pt-2 border-t border-slate-100 dark:border-slate-700 flex items-start gap-2">
             <FileText size={14} className="text-slate-300 mt-0.5 shrink-0" />
-            <span className="text-slate-400 leading-tight line-clamp-1" title={classNames}>
+            <span className="text-content-muted leading-tight line-clamp-1" title={classNames}>
               {classNames}
             </span>
           </div>

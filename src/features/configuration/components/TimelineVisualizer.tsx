@@ -89,10 +89,10 @@ export const TimelineVisualizer: React.FC<TimelineVisualizerProps> = ({ data }) 
     <div className="w-full space-y-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 shadow-sm">
       <div className="flex justify-between items-center">
         <h4 className="text-xs font-bold text-content-muted uppercase tracking-wide flex items-center gap-1.5">
-          <Clock size={14} className="text-amber-500" />
+          <Clock size={14} className="text-accent-ink" />
           Proportional Day Timeline
         </h4>
-        <div className="text-2xs text-slate-400 font-medium">
+        <div className="text-2xs text-content-muted font-medium">
           Start: <strong className="text-slate-700 dark:text-slate-200">{firstBlock.start}</strong>{" "}
           &bull; End:{" "}
           <strong className="text-slate-700 dark:text-slate-200">{lastBlock.end}</strong>
@@ -127,7 +127,7 @@ export const TimelineVisualizer: React.FC<TimelineVisualizerProps> = ({ data }) 
                   <span className={`w-2 h-2 rounded-full ${style.dot}`} />
                   <span className="font-bold text-slate-200">{block.label}</span>
                 </div>
-                <div className="space-y-0.5 text-slate-400 font-medium">
+                <div className="space-y-0.5 text-content-muted font-medium">
                   <div>
                     Type:{" "}
                     <span className="text-slate-200 uppercase font-semibold text-2xs">

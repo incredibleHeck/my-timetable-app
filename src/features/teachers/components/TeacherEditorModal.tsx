@@ -188,12 +188,12 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
               </button>
             ))}
             {sortedSubjects.length === 0 && (
-              <span className="text-xs text-slate-400 italic">
+              <span className="text-xs text-content-muted italic">
                 No subjects defined. Go to Subjects library.
               </span>
             )}
           </div>
-          <p className="text-2xs text-slate-400 mt-2">
+          <p className="text-2xs text-content-muted mt-2">
             Selecting subjects here adds this teacher to the corresponding Faculty. Max Periods Per
             Day overrides the global daily scheduler limit ({globalMaxDaily}). Workload % uses
             Configuration → Max Teaching Periods / Week.
@@ -220,7 +220,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
               </button>
               <button
                 onClick={() => applyTemplate("FRIDAYS")}
-                className="text-2xs px-2 py-1 bg-red-50 text-red-600 rounded hover:bg-red-100 font-bold flex items-center gap-1"
+                className="text-2xs px-2 py-1 bg-red-50 dark:bg-red-900/30 text-danger-ink rounded hover:bg-red-100 font-bold flex items-center gap-1"
               >
                 <Calendar size={10} /> No Fridays
               </button>
@@ -240,7 +240,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
                 gridTemplateColumns: `80px repeat(${maxClassPeriods}, 1fr)`,
               }}
             >
-              <div className="text-right pr-2 text-2xs font-bold text-slate-400 self-end pb-1">
+              <div className="text-right pr-2 text-2xs font-bold text-content-muted self-end pb-1">
                 Day \ Per
               </div>
               {Array.from({ length: maxClassPeriods }).map((_, i) => {
@@ -273,7 +273,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
                 <React.Fragment key={d}>
                   <button
                     onClick={() => toggleDay(dIdx)}
-                    className="text-right text-xs font-bold text-slate-600 dark:text-slate-300 pr-3 hover:text-amber-600 transition-colors uppercase tracking-wider h-9 flex items-center justify-end"
+                    className="text-right text-xs font-bold text-slate-600 dark:text-slate-300 pr-3 hover:text-accent-ink transition-colors uppercase tracking-wider h-9 flex items-center justify-end"
                     title="Toggle Entire Day"
                   >
                     {d.substring(0, 3)}

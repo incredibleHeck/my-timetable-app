@@ -156,16 +156,16 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ data, onNavigate
       >
         {/* Search Input */}
         <div className="flex items-center gap-3 px-4 py-4 border-b border-slate-100 dark:border-slate-700">
-          <Search size={18} className="text-slate-400 shrink-0" />
+          <Search size={18} className="text-content-muted shrink-0" />
           <input
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Search views, teachers, classes, subjects..."
-            className="flex-1 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 text-sm font-medium bg-transparent outline-none"
+            className="flex-1 text-slate-800 dark:text-slate-100 placeholder:text-content-muted text-sm font-medium bg-transparent outline-none"
           />
-          <kbd className="text-2xs font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
+          <kbd className="text-2xs font-bold text-content-muted bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
             ESC
           </kbd>
         </div>
@@ -173,11 +173,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ data, onNavigate
         {/* Results */}
         <div ref={listRef} className="max-h-80 overflow-y-auto py-2">
           {filtered.length === 0 ? (
-            <div className="text-center py-8 text-slate-400 text-sm">No results found.</div>
+            <div className="text-center py-8 text-content-muted text-sm">No results found.</div>
           ) : (
             Array.from(grouped.entries()).map(([category, items]) => (
               <div key={category}>
-                <div className="px-4 py-1.5 text-2xs font-bold text-slate-400 uppercase tracking-widest">
+                <div className="px-4 py-1.5 text-2xs font-bold text-content-muted uppercase tracking-widest">
                   {category}
                 </div>
                 {items.map((item) => {
@@ -195,18 +195,18 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ data, onNavigate
                       }`}
                     >
                       <span
-                        className={`shrink-0 ${isActive ? "text-amber-600" : "text-slate-400"}`}
+                        className={`shrink-0 ${isActive ? "text-accent-ink" : "text-content-muted"}`}
                       >
                         {item.icon}
                       </span>
                       <span className="flex-1 min-w-0">
                         <span className="text-sm font-semibold block truncate">{item.label}</span>
                         {item.sublabel && (
-                          <span className="text-[11px] text-slate-400">{item.sublabel}</span>
+                          <span className="text-[11px] text-content-muted">{item.sublabel}</span>
                         )}
                       </span>
                       {isActive && (
-                        <kbd className="text-2xs font-bold text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200 shrink-0">
+                        <kbd className="text-2xs font-bold text-accent-ink bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200 shrink-0">
                           ↵
                         </kbd>
                       )}
@@ -219,7 +219,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ data, onNavigate
         </div>
 
         {/* Footer hint */}
-        <div className="px-4 py-2.5 border-t border-slate-100 dark:border-slate-700 flex items-center gap-4 text-2xs text-slate-400 font-medium">
+        <div className="px-4 py-2.5 border-t border-slate-100 dark:border-slate-700 flex items-center gap-4 text-2xs text-content-muted font-medium">
           <span>
             <kbd className="bg-slate-100 dark:bg-slate-800 px-1 rounded border border-slate-200 dark:border-slate-700">
               ↑↓

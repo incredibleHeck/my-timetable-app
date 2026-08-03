@@ -85,7 +85,7 @@ export const DutyGeneratorModal: React.FC<Props> = ({
       <div className="space-y-6 max-h-[70vh] overflow-y-auto px-1 custom-scrollbar">
         {/* CONFIG SECTION */}
         <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-4">
-          <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+          <h4 className="text-xs font-black text-content-muted uppercase tracking-widest flex items-center gap-2">
             <Settings2 size={14} /> Basic Parameters
           </h4>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -116,18 +116,23 @@ export const DutyGeneratorModal: React.FC<Props> = ({
         <div className="space-y-4">
           <div className="flex justify-between items-end">
             <div>
-              <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <h4 className="text-xs font-black text-content-muted uppercase tracking-widest flex items-center gap-2">
                 <Users size={14} /> Staff Availability
               </h4>
               <p className="text-2xs text-content-muted mt-1">
                 Select teachers to EXCLUDE from this rotation.
               </p>
             </div>
-            <div className="text-2xs font-bold text-slate-400">{excludedIds.length} Excluded</div>
+            <div className="text-2xs font-bold text-content-muted">
+              {excludedIds.length} Excluded
+            </div>
           </div>
 
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-content-muted"
+              size={14}
+            />
             <input
               placeholder="Search staff..."
               className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
@@ -151,7 +156,7 @@ export const DutyGeneratorModal: React.FC<Props> = ({
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${isExcluded ? "bg-slate-200 dark:bg-slate-700 text-slate-400" : "bg-amber-100 text-amber-700"}`}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${isExcluded ? "bg-slate-200 dark:bg-slate-700 text-content-muted" : "bg-amber-100 text-amber-700"}`}
                     >
                       {t.name.charAt(0)}
                     </div>
@@ -159,7 +164,7 @@ export const DutyGeneratorModal: React.FC<Props> = ({
                       <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
                         {t.name}
                       </p>
-                      <p className="text-2xs text-slate-400">
+                      <p className="text-2xs text-content-muted">
                         {isExcluded ? "Excluded" : "Available"}
                       </p>
                     </div>
@@ -167,7 +172,7 @@ export const DutyGeneratorModal: React.FC<Props> = ({
                   {isExcluded ? (
                     <XCircle size={18} className="text-slate-300" />
                   ) : (
-                    <CheckCircle size={18} className="text-emerald-500" />
+                    <CheckCircle size={18} className="text-success-ink" />
                   )}
                 </button>
               );

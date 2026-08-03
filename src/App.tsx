@@ -69,7 +69,7 @@ function App() {
     return (
       <div className="flex items-center justify-center h-screen bg-slate-900 text-slate-400">
         <div className="flex flex-col items-center gap-2">
-          <span className="animate-spin text-2xl text-amber-500">⟳</span>
+          <span className="animate-spin text-2xl text-amber-400">⟳</span>
           <p>Verifying License...</p>
         </div>
       </div>

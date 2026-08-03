@@ -147,7 +147,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
             onClick={() => setMode("UNIFORM")}
             className={`flex flex-col items-center p-3 rounded-md transition-all ${
               mode === "UNIFORM"
-                ? "bg-white dark:bg-slate-800 text-amber-600 shadow-sm ring-1 ring-amber-200"
+                ? "bg-white dark:bg-slate-800 text-accent-ink shadow-sm ring-1 ring-amber-200"
                 : "text-content-muted hover:bg-slate-200"
             }`}
           >
@@ -160,7 +160,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
             onClick={() => setMode("RANDOM")}
             className={`flex flex-col items-center p-3 rounded-md transition-all ${
               mode === "RANDOM"
-                ? "bg-white dark:bg-slate-800 text-amber-600 shadow-sm ring-1 ring-amber-200"
+                ? "bg-white dark:bg-slate-800 text-accent-ink shadow-sm ring-1 ring-amber-200"
                 : "text-content-muted hover:bg-slate-200"
             }`}
           >
@@ -184,7 +184,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
               className={`p-1.5 rounded-full ${
                 syncStreams
                   ? "bg-amber-500 text-white"
-                  : "bg-slate-200 dark:bg-slate-700 text-slate-400"
+                  : "bg-slate-200 dark:bg-slate-700 text-content-muted"
               }`}
             >
               <LinkIcon size={14} />
@@ -198,7 +198,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
                 same time.
               </p>
             </div>
-            {syncStreams && <Check size={16} className="text-amber-600" />}
+            {syncStreams && <Check size={16} className="text-accent-ink" />}
           </div>
         )}
 
@@ -218,12 +218,14 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
               Use a deterministic shuffle so the same inputs produce the same timetable.
             </p>
           </div>
-          {deterministic && <Check size={16} className="text-amber-600" />}
+          {deterministic && <Check size={16} className="text-accent-ink" />}
         </div>
 
         {/* Sessions per day (grid columns) */}
         <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
-          <h4 className="text-xs font-bold text-slate-400 uppercase mb-3">Exam sessions per day</h4>
+          <h4 className="text-xs font-bold text-content-muted uppercase mb-3">
+            Exam sessions per day
+          </h4>
           <p className="text-xs text-content-muted mb-3">
             Choose how many session columns the timetable uses. Exams are placed into the matching
             session column (Session 1 or Session 2).
@@ -286,18 +288,18 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
         {/* 4. CLASS SELECTION */}
         <div>
           <div className="flex justify-between items-center mb-2">
-            <h4 className="text-xs font-bold text-slate-400 uppercase">Select Classes</h4>
+            <h4 className="text-xs font-bold text-content-muted uppercase">Select Classes</h4>
             <div className="flex gap-2">
               <button
                 onClick={() => setSelectedClassIds(data.classes.map((c) => c.id))}
-                className="text-2xs font-bold text-amber-600 hover:underline"
+                className="text-2xs font-bold text-accent-ink hover:underline"
               >
                 Select All
               </button>
               <span className="text-slate-300">|</span>
               <button
                 onClick={() => setSelectedClassIds([])}
-                className="text-2xs font-bold text-slate-400 hover:underline"
+                className="text-2xs font-bold text-content-muted hover:underline"
               >
                 Clear
               </button>
@@ -311,7 +313,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
                 className={`px-3 py-1.5 rounded-md text-[11px] font-bold border transition-all ${
                   selectedClassIds.includes(c.id)
                     ? "bg-amber-50 border-amber-300 text-amber-700 shadow-sm"
-                    : "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 hover:border-slate-200"
+                    : "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-content-muted hover:border-slate-200"
                 }`}
               >
                 {c.name}
@@ -322,7 +324,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
 
         {/* 5. SUBJECT SELECTION */}
         <div>
-          <h4 className="text-xs font-bold text-slate-400 uppercase mb-2">Select Subjects</h4>
+          <h4 className="text-xs font-bold text-content-muted uppercase mb-2">Select Subjects</h4>
           <div className="grid grid-cols-1 gap-2">
             {data.subjects.map((s) => {
               const config = selectedConfigs[s.id];

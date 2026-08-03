@@ -154,10 +154,12 @@ export const WorkloadTeacherDetail: React.FC<WorkloadTeacherDetailProps> = ({
               ))}
             </ul>
           ) : (
-            <p className="text-[11px] text-slate-400 italic">No class assignments in curriculum.</p>
+            <p className="text-[11px] text-content-muted italic">
+              No class assignments in curriculum.
+            </p>
           )}
 
-          <p className="text-2xs text-slate-400 mt-2">
+          <p className="text-2xs text-content-muted mt-2">
             {pinned ? "Click again or press Escape to close" : "Click to pin · hover to preview"}
           </p>
         </div>
