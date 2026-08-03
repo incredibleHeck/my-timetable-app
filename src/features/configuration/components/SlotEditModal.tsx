@@ -59,7 +59,7 @@ export const SlotEditModal: React.FC<SlotEditModalProps> = ({
                 key={preset}
                 type="button"
                 onClick={() => setLabel(preset)}
-                className="px-3 py-1.5 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-amber-400 hover:bg-amber-50 text-slate-600 dark:text-slate-300 transition-colors"
+                className="px-3 py-1.5 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-amber-400 hover:bg-amber-50 dark:bg-amber-900/30 text-slate-600 dark:text-slate-300 transition-colors"
               >
                 {preset}
               </button>
@@ -69,7 +69,7 @@ export const SlotEditModal: React.FC<SlotEditModalProps> = ({
         <label
           className={`flex items-center p-3 rounded-lg border cursor-pointer transition-colors ${
             applyToAllDays
-              ? "bg-amber-50 border-amber-300"
+              ? "bg-amber-50 dark:bg-amber-900/30 border-amber-300"
               : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-50"
           }`}
         >
@@ -81,7 +81,7 @@ export const SlotEditModal: React.FC<SlotEditModalProps> = ({
           />
           <div>
             <p
-              className={`text-sm font-bold ${applyToAllDays ? "text-amber-800" : "text-slate-700 dark:text-slate-200"}`}
+              className={`text-sm font-bold ${applyToAllDays ? "text-amber-800 dark:text-amber-200" : "text-slate-700 dark:text-slate-200"}`}
             >
               Apply to all days
             </p>

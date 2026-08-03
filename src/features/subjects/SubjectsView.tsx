@@ -99,9 +99,9 @@ export const SubjectsView: React.FC<ViewProps> = ({ data }) => {
 
         <button
           onClick={() => form.openModal()}
-          className="bg-slate-50 dark:bg-slate-900 rounded-xl border-2 border-dashed border-slate-300 hover:border-amber-400 hover:bg-amber-50 transition-all flex flex-col items-center justify-center p-6 group h-full min-h-[200px]"
+          className="bg-slate-50 dark:bg-slate-900 rounded-xl border-2 border-dashed border-slate-300 hover:border-amber-400 hover:bg-amber-50 dark:bg-amber-900/30 transition-all flex flex-col items-center justify-center p-6 group h-full min-h-[200px]"
         >
-          <div className="w-14 h-14 rounded-full bg-slate-200 dark:bg-slate-700 group-hover:bg-amber-100 text-content-muted group-hover:text-accent-ink flex items-center justify-center mb-3 transition-colors shadow-inner">
+          <div className="w-14 h-14 rounded-full bg-slate-200 dark:bg-slate-700 group-hover:bg-amber-100 dark:bg-amber-900/40 text-content-muted group-hover:text-accent-ink flex items-center justify-center mb-3 transition-colors shadow-inner">
             <Plus size={28} />
           </div>
           <span className="font-bold text-content-muted group-hover:text-accent-ink">
@@ -128,7 +128,7 @@ export const SubjectsView: React.FC<ViewProps> = ({ data }) => {
         }
       >
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-danger-ink shrink-0">
+          <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center text-danger-ink shrink-0">
             <AlertTriangle size={24} />
           </div>
           <div>
@@ -137,7 +137,7 @@ export const SubjectsView: React.FC<ViewProps> = ({ data }) => {
             </p>
 
             {usageToDelete.classCount > 0 || usageToDelete.teacherCount > 0 ? (
-              <div className="mt-3 bg-red-50 border border-red-100 p-3 rounded-lg text-sm text-red-700">
+              <div className="mt-3 bg-red-50 dark:bg-red-900/30 border border-red-100 p-3 rounded-lg text-sm text-red-800 dark:text-red-200">
                 <p className="font-bold mb-1">Warning: Active Dependencies</p>
                 <ul className="list-disc list-inside space-y-1">
                   {usageToDelete.teacherCount > 0 && (

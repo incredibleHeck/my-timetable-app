@@ -226,7 +226,9 @@ export const DashboardView: React.FC<ViewProps> = ({ data, profileName, onNaviga
                 <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-4 shadow-sm">
                   <CheckCircle2 size={32} />
                 </div>
-                <h4 className="text-lg font-bold text-emerald-900">All Systems Nominal</h4>
+                <h4 className="text-lg font-bold text-emerald-800 dark:text-emerald-200">
+                  All Systems Nominal
+                </h4>
                 <p className="text-emerald-700/80 max-w-md mt-2 text-sm">
                   Data integrity is perfect. Teachers, classes, and subjects are properly linked.
                   You are ready to generate a schedule.
@@ -249,8 +251,10 @@ export const DashboardView: React.FC<ViewProps> = ({ data, profileName, onNaviga
                         <AlertTriangle size={20} />
                       </div>
                       <div>
-                        <h4 className="font-bold text-red-900">Schedule Conflicts Detected</h4>
-                        <p className="text-xs text-red-700">
+                        <h4 className="font-bold text-red-800 dark:text-red-200">
+                          Schedule Conflicts Detected
+                        </h4>
+                        <p className="text-xs text-red-800 dark:text-red-200">
                           {conflicts} lessons could not be placed during the last run.
                         </p>
                       </div>
@@ -288,7 +292,7 @@ export const DashboardView: React.FC<ViewProps> = ({ data, profileName, onNaviga
                         <h4
                           className={`font-bold ${
                             issue.type === "error"
-                              ? "text-orange-900"
+                              ? "text-orange-800 dark:text-orange-200"
                               : "text-slate-700 dark:text-slate-200"
                           }`}
                         >
@@ -296,7 +300,9 @@ export const DashboardView: React.FC<ViewProps> = ({ data, profileName, onNaviga
                         </h4>
                         <p
                           className={`text-xs ${
-                            issue.type === "error" ? "text-orange-700" : "text-content-muted"
+                            issue.type === "error"
+                              ? "text-orange-800 dark:text-orange-200"
+                              : "text-content-muted"
                           }`}
                         >
                           {issue.message}

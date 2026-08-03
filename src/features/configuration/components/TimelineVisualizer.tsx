@@ -10,29 +10,37 @@ const TYPE_ICONS: Record<PeriodType, React.ReactNode> = {
   ASSEMBLY: <Users size={14} className="shrink-0" aria-hidden />,
 };
 
+/**
+ * Period-type styling. Each tint needs an explicit dark counterpart: a
+ * fixed light tint left the block labels at 1.54:1 in dark mode, because the
+ * label colour follows the theme while the background did not.
+ */
 const TYPE_STYLES: Record<PeriodType, { bg: string; border: string; text: string; dot: string }> = {
   CLASS: {
-    bg: "bg-blue-50/80 hover:bg-blue-100/90",
-    border: "border-blue-200 hover:border-blue-400",
-    text: "text-blue-800",
+    bg: "bg-blue-50/80 hover:bg-blue-100/90 dark:bg-blue-900/30 dark:hover:bg-blue-900/50",
+    border: "border-blue-200 hover:border-blue-400 dark:border-blue-800 dark:hover:border-blue-600",
+    text: "text-blue-800 dark:text-blue-200",
     dot: "bg-blue-500",
   },
   BREAK: {
-    bg: "bg-amber-50/80 hover:bg-amber-100/90",
-    border: "border-amber-200 hover:border-amber-400",
-    text: "text-amber-800",
+    bg: "bg-amber-50/80 hover:bg-amber-100/90 dark:bg-amber-900/30 dark:hover:bg-amber-900/50",
+    border:
+      "border-amber-200 hover:border-amber-400 dark:border-amber-800 dark:hover:border-amber-600",
+    text: "text-amber-800 dark:text-amber-200",
     dot: "bg-amber-500",
   },
   LUNCH: {
-    bg: "bg-orange-50/80 hover:bg-orange-100/90",
-    border: "border-orange-200 hover:border-orange-400",
-    text: "text-orange-800",
+    bg: "bg-orange-50/80 hover:bg-orange-100/90 dark:bg-orange-900/30 dark:hover:bg-orange-900/50",
+    border:
+      "border-orange-200 hover:border-orange-400 dark:border-orange-800 dark:hover:border-orange-600",
+    text: "text-orange-800 dark:text-orange-200",
     dot: "bg-orange-500",
   },
   ASSEMBLY: {
-    bg: "bg-violet-50/80 hover:bg-violet-100/90",
-    border: "border-violet-200 hover:border-violet-400",
-    text: "text-violet-800",
+    bg: "bg-violet-50/80 hover:bg-violet-100/90 dark:bg-violet-900/30 dark:hover:bg-violet-900/50",
+    border:
+      "border-violet-200 hover:border-violet-400 dark:border-violet-800 dark:hover:border-violet-600",
+    text: "text-violet-800 dark:text-violet-200",
     dot: "bg-violet-500",
   },
 };
@@ -117,7 +125,7 @@ export const TimelineVisualizer: React.FC<TimelineVisualizerProps> = ({ data }) 
                   {block.label || `Block ${block.index + 1}`}
                 </span>
               </div>
-              <span className="text-2xs opacity-70 font-semibold truncate leading-none mt-0.5 text-content-muted">
+              <span className="text-2xs font-semibold truncate leading-none mt-0.5 text-content-muted">
                 {block.start} - {block.end}
               </span>
 
@@ -127,7 +135,7 @@ export const TimelineVisualizer: React.FC<TimelineVisualizerProps> = ({ data }) 
                   <span className={`w-2 h-2 rounded-full ${style.dot}`} />
                   <span className="font-bold text-slate-200">{block.label}</span>
                 </div>
-                <div className="space-y-0.5 text-content-muted font-medium">
+                <div className="space-y-0.5 text-slate-300 font-medium">
                   <div>
                     Type:{" "}
                     <span className="text-slate-200 uppercase font-semibold text-2xs">

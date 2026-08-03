@@ -61,7 +61,7 @@ export const ClassStructureSection: React.FC<ClassStructureSectionProps> = ({
 
   return (
     <div className="space-y-4 animate-in fade-in">
-      <p className="text-xs text-content-muted bg-blue-50 p-3 rounded border border-blue-100">
+      <p className="text-xs text-content-muted bg-blue-50 dark:bg-blue-900/30 p-3 rounded border border-blue-100">
         <span className="font-bold">Instructions:</span> Click any block below to toggle it between{" "}
         <b>Class</b>, <b>Break</b>, or <b>Lunch</b>. This overrides the global schedule for this
         specific class only.
@@ -97,8 +97,8 @@ export const ClassStructureSection: React.FC<ClassStructureSectionProps> = ({
                           ? "bg-white dark:bg-slate-800 border-slate-300 text-slate-700 dark:text-slate-200 hover:border-blue-400"
                           : ""
                       }
-                      ${type === "BREAK" ? "bg-amber-50 border-amber-300 text-amber-700" : ""}
-                      ${type === "LUNCH" ? "bg-orange-50 border-orange-300 text-orange-700" : ""}
+                      ${type === "BREAK" ? "bg-amber-50 dark:bg-amber-900/30 border-amber-300 text-amber-800 dark:text-amber-200" : ""}
+                      ${type === "LUNCH" ? "bg-orange-50 dark:bg-orange-900/30 border-orange-300 text-orange-800 dark:text-orange-200" : ""}
                   `}
           >
             <div className="absolute top-1 left-1 text-2xs text-content-muted font-normal opacity-50">

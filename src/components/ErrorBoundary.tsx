@@ -55,11 +55,13 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
         );
       }
       return (
-        <div className="flex items-center justify-center h-screen bg-red-50">
+        <div className="flex items-center justify-center h-screen bg-red-50 dark:bg-red-900/30">
           <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-8 max-w-md">
             <div className="mb-4">
               <div className="text-5xl mb-3">⚠️</div>
-              <h1 className="text-2xl font-bold text-red-900">Something went wrong</h1>
+              <h1 className="text-2xl font-bold text-red-800 dark:text-red-200">
+                Something went wrong
+              </h1>
             </div>
 
             <p className="text-slate-600 dark:text-slate-300 mb-4">

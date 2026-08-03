@@ -258,7 +258,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                         e.stopPropagation();
                         initiateDelete(t);
                       }}
-                      className="p-2 hover:bg-red-50 rounded-md text-content-muted hover:text-danger-ink transition-colors"
+                      className="p-2 hover:bg-red-50 dark:bg-red-900/30 rounded-md text-content-muted hover:text-danger-ink transition-colors"
                       title="Delete"
                     >
                       <Trash2 size={14} />
@@ -272,7 +272,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
               onClick={() => openModal()}
               className="rounded-xl border-2 border-dashed border-slate-300 hover:border-amber-400 hover:bg-amber-50/50 transition-all flex flex-col items-center justify-center p-6 min-h-[160px] group"
             >
-              <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-amber-100 text-content-muted group-hover:text-accent-ink flex items-center justify-center mb-3 transition-colors">
+              <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-amber-100 dark:bg-amber-900/40 text-content-muted group-hover:text-accent-ink flex items-center justify-center mb-3 transition-colors">
                 <Plus size={24} />
               </div>
               <span className="font-bold text-sm text-content-muted group-hover:text-accent-ink">
@@ -286,7 +286,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
       {/* --- TAB 2: FACULTIES --- */}
       {activeTab === "FACULTIES" && (
         <div className="animate-in slide-in-from-right-4">
-          <div className="mb-6 bg-blue-50 border border-blue-100 p-4 rounded-xl text-blue-800 text-sm">
+          <div className="mb-6 bg-blue-50 dark:bg-blue-900/30 border border-blue-100 p-4 rounded-xl text-blue-800 dark:text-blue-200 text-sm">
             <span className="font-bold block mb-1">Faculty Overview</span>
             Teachers are automatically grouped here based on the subjects they are set to teach.
           </div>
@@ -385,7 +385,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
         }
       >
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-danger-ink shrink-0">
+          <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center text-danger-ink shrink-0">
             <AlertTriangle size={24} />
           </div>
           <div>

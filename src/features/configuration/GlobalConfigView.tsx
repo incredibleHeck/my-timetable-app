@@ -116,7 +116,7 @@ export const GlobalConfigView: React.FC<ViewProps> = ({
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-3 text-sm font-bold whitespace-nowrap border-b-2 transition-colors ${
               activeTab === tab.id
-                ? "border-amber-500 text-amber-700"
+                ? "border-amber-500 text-amber-800 dark:text-amber-200"
                 : "border-transparent text-content-muted hover:text-slate-800"
             }`}
           >
@@ -143,7 +143,7 @@ export const GlobalConfigView: React.FC<ViewProps> = ({
               Timetable Structure
             </h3>
 
-            <div className="flex items-start gap-2 p-3 mb-6 rounded-lg bg-blue-50 border border-blue-100 text-xs text-blue-900">
+            <div className="flex items-start gap-2 p-3 mb-6 rounded-lg bg-blue-50 dark:bg-blue-900/30 border border-blue-100 text-xs text-blue-800 dark:text-blue-200">
               <Info size={16} className="shrink-0 mt-0.5" aria-hidden />
               <p>
                 Individual classes can override period count and day structure in{" "}

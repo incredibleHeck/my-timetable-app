@@ -58,7 +58,7 @@ export const SubjectEditorModal: React.FC<SubjectEditorModalProps> = ({ form, da
         <div
           className={`flex items-start gap-3 p-4 rounded-xl border transition-colors cursor-pointer ${
             isSingleResource
-              ? "bg-purple-50 border-purple-200"
+              ? "bg-purple-50 dark:bg-purple-900/30 border-purple-200"
               : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300"
           }`}
           onClick={() => setIsSingleResource(!isSingleResource)}
@@ -76,7 +76,9 @@ export const SubjectEditorModal: React.FC<SubjectEditorModalProps> = ({ form, da
             <div className="flex items-center gap-2">
               <h4
                 className={`text-sm font-bold ${
-                  isSingleResource ? "text-purple-800" : "text-slate-700 dark:text-slate-200"
+                  isSingleResource
+                    ? "text-purple-800 dark:text-purple-200"
+                    : "text-slate-700 dark:text-slate-200"
                 }`}
               >
                 Single Resource Facility
@@ -98,7 +100,7 @@ export const SubjectEditorModal: React.FC<SubjectEditorModalProps> = ({ form, da
         <div
           className={`flex items-start gap-3 p-4 rounded-xl border transition-colors cursor-pointer ${
             isExaminable
-              ? "bg-amber-50 border-amber-200"
+              ? "bg-amber-50 dark:bg-amber-900/30 border-amber-200"
               : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300"
           }`}
           onClick={() => setIsExaminable(!isExaminable)}
@@ -116,7 +118,9 @@ export const SubjectEditorModal: React.FC<SubjectEditorModalProps> = ({ form, da
             <div className="flex items-center gap-2">
               <h4
                 className={`text-sm font-bold ${
-                  isExaminable ? "text-amber-800" : "text-slate-700 dark:text-slate-200"
+                  isExaminable
+                    ? "text-amber-800 dark:text-amber-200"
+                    : "text-slate-700 dark:text-slate-200"
                 }`}
               >
                 Examinable Subject
@@ -137,7 +141,7 @@ export const SubjectEditorModal: React.FC<SubjectEditorModalProps> = ({ form, da
         <div
           className={`flex items-start gap-3 p-4 rounded-xl border transition-colors cursor-pointer ${
             isCore
-              ? "bg-blue-50 border-blue-200"
+              ? "bg-blue-50 dark:bg-blue-900/30 border-blue-200"
               : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300"
           }`}
           onClick={() => setIsCore(!isCore)}
@@ -152,7 +156,7 @@ export const SubjectEditorModal: React.FC<SubjectEditorModalProps> = ({ form, da
           <div>
             <div className="flex items-center gap-2">
               <h4
-                className={`text-sm font-bold ${isCore ? "text-blue-800" : "text-slate-700 dark:text-slate-200"}`}
+                className={`text-sm font-bold ${isCore ? "text-blue-800 dark:text-blue-200" : "text-slate-700 dark:text-slate-200"}`}
               >
                 Core Subject
               </h4>

@@ -177,8 +177,8 @@ export const ClassAssignmentsPanel: React.FC<Props> = ({ data, onUpdate }) => {
           <div
             className={`mt-4 p-3 rounded text-sm font-medium flex items-center gap-2 ${
               message.type === "success"
-                ? "bg-emerald-50 text-emerald-700"
-                : "bg-red-50 text-red-700"
+                ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200"
+                : "bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-200"
             }`}
           >
             {message.type === "success" ? <Check size={16} /> : null}

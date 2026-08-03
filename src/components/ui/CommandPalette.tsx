@@ -190,7 +190,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ data, onNavigate
                       onMouseEnter={() => setSelectedIndex(idx)}
                       className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
                         isActive
-                          ? "bg-amber-50 text-amber-900"
+                          ? "bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200"
                           : "text-slate-700 dark:text-slate-200 hover:bg-slate-50"
                       }`}
                     >
@@ -206,7 +206,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ data, onNavigate
                         )}
                       </span>
                       {isActive && (
-                        <kbd className="text-2xs font-bold text-accent-ink bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200 shrink-0">
+                        <kbd className="text-2xs font-bold text-accent-ink bg-amber-100 dark:bg-amber-900/40 px-1.5 py-0.5 rounded border border-amber-200 shrink-0">
                           ↵
                         </kbd>
                       )}

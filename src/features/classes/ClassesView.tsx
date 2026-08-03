@@ -153,7 +153,7 @@ const DeleteClassModal: React.FC<{
     <Modal isOpen={isOpen} onClose={onClose} title="Confirm Deletion">
       <div className="space-y-6">
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-danger-ink shrink-0">
+          <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center text-danger-ink shrink-0">
             <AlertTriangle size={24} />
           </div>
           <div>

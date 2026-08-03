@@ -77,7 +77,7 @@ export const SetupStepper: React.FC<SetupStepperProps> = ({ data, onNavigate }) 
       {/* Header */}
       <div className="mb-5">
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-2xs font-black uppercase tracking-widest text-accent-ink bg-amber-100 px-2 py-0.5 rounded-full">
+          <span className="text-2xs font-black uppercase tracking-widest text-accent-ink bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 rounded-full">
             Getting Started
           </span>
         </div>
@@ -85,13 +85,13 @@ export const SetupStepper: React.FC<SetupStepperProps> = ({ data, onNavigate }) 
           Set up your profile
         </h3>
         <div className="flex items-center gap-3 mt-2">
-          <div className="flex-1 h-1.5 bg-amber-100 rounded-full overflow-hidden">
+          <div className="flex-1 h-1.5 bg-amber-100 dark:bg-amber-900/40 rounded-full overflow-hidden">
             <div
               className="h-full bg-amber-500 rounded-full transition-all duration-700"
               style={{ width: `${progressPct}%` }}
             />
           </div>
-          <span className="text-xs font-bold text-amber-700 shrink-0">
+          <span className="text-xs font-bold text-amber-800 dark:text-amber-200 shrink-0">
             {completedCount}/{STEPS.length} steps
           </span>
         </div>
@@ -108,7 +108,7 @@ export const SetupStepper: React.FC<SetupStepperProps> = ({ data, onNavigate }) 
               onClick={() => onNavigate(step.view)}
               className={`flex flex-col items-start p-3 rounded-xl border text-left transition-all group ${
                 done
-                  ? "bg-emerald-50 border-emerald-200 opacity-80"
+                  ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 opacity-80"
                   : isNext
                     ? "bg-white dark:bg-slate-800 border-amber-300 shadow-sm hover:shadow-md hover:border-amber-400"
                     : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 opacity-60 hover:opacity-80"
@@ -130,7 +130,7 @@ export const SetupStepper: React.FC<SetupStepperProps> = ({ data, onNavigate }) 
               <span
                 className={`text-xs font-bold leading-tight ${
                   done
-                    ? "text-emerald-700"
+                    ? "text-emerald-800 dark:text-emerald-200"
                     : isNext
                       ? "text-slate-800 dark:text-slate-100"
                       : "text-content-muted"

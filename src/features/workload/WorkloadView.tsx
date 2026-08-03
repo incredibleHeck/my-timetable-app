@@ -170,7 +170,7 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
               onClick={() => setOverloadedOnly((o) => !o)}
               className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border transition-all ${
                 overloadedOnly
-                  ? "bg-red-50 border-red-200 text-red-700"
+                  ? "bg-red-50 dark:bg-red-900/30 border-red-200 text-red-800 dark:text-red-200"
                   : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-content-muted hover:border-red-200 hover:text-danger-ink"
               }`}
             >
@@ -225,7 +225,7 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
                         <div
                           className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-slate-600 dark:text-slate-300 border ${
                             utilizationPct > 100
-                              ? "bg-red-100 border-red-300 text-red-700"
+                              ? "bg-red-100 dark:bg-red-900/40 border-red-300 text-red-800 dark:text-red-200"
                               : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
                           }`}
                         >
@@ -294,7 +294,7 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
                     </div>
 
                     {utilizationPct > 100 && (
-                      <div className="flex items-center gap-2 text-2xs text-danger-ink font-bold bg-white/50 px-2 py-1 rounded">
+                      <div className="flex items-center gap-2 text-2xs text-danger-ink font-bold bg-white/50 dark:bg-slate-800/50 px-2 py-1 rounded">
                         <AlertCircle size={12} /> Teacher is overloaded!
                       </div>
                     )}

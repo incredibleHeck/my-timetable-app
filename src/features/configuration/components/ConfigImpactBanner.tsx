@@ -16,13 +16,13 @@ export const ConfigImpactBanner: React.FC<ConfigImpactBannerProps> = ({
 
   return (
     <div
-      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-amber-200 bg-amber-50"
+      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-900/30"
       role="status"
     >
       <div className="flex items-start gap-3">
         <AlertTriangle className="text-accent-ink shrink-0 mt-0.5" size={20} aria-hidden />
         <div>
-          <p className="text-sm font-bold text-amber-900">
+          <p className="text-sm font-bold text-amber-800 dark:text-amber-200">
             {conflictCount} scheduling conflict{conflictCount === 1 ? "" : "s"} detected
           </p>
           <p className="text-xs text-amber-800/80 mt-0.5">
@@ -34,7 +34,7 @@ export const ConfigImpactBanner: React.FC<ConfigImpactBannerProps> = ({
       {onNavigate && (
         <Button
           variant="secondary"
-          className="shrink-0 border-amber-300 text-amber-900 hover:bg-amber-100"
+          className="shrink-0 border-amber-300 text-amber-800 dark:text-amber-200 hover:bg-amber-100 dark:bg-amber-900/40"
           onClick={() => onNavigate("GENERATOR")}
         >
           Review in Generator

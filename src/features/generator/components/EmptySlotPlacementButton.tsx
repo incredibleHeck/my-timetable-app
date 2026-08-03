@@ -16,15 +16,15 @@ export const EmptySlotPlacementButton: React.FC<Props> = ({ onClick, hasPending 
       }}
       className={`flex flex-col items-center justify-center w-full h-full rounded-md border-2 border-dashed transition-all group ${
         hasPending
-          ? "border-amber-300 bg-amber-50/40 hover:border-amber-400 hover:bg-amber-50"
-          : "border-slate-200 dark:border-slate-700 bg-slate-50/30 hover:border-slate-300 hover:bg-slate-50"
+          ? "border-amber-300 bg-amber-50/40 hover:border-amber-400 hover:bg-amber-50 dark:bg-amber-900/30"
+          : "border-slate-200 dark:border-slate-700 bg-slate-50/30 dark:bg-slate-900/30 hover:border-slate-300 hover:bg-slate-50"
       }`}
       title={hasPending ? "Assign an unplaced lesson here" : "No unplaced lessons for this class"}
     >
       <div
         className={`p-1.5 rounded-full transition-colors ${
           hasPending
-            ? "bg-amber-100 text-accent-ink group-hover:bg-amber-200"
+            ? "bg-amber-100 dark:bg-amber-900/40 text-accent-ink group-hover:bg-amber-200"
             : "bg-slate-100 dark:bg-slate-800 text-content-muted group-hover:bg-slate-200"
         }`}
       >

@@ -20,9 +20,9 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   onClick,
 }) => {
   const colors = {
-    blue: "bg-blue-50 text-blue-600 border-blue-100",
+    blue: "bg-blue-50 dark:bg-blue-900/30 text-blue-600 border-blue-100",
     emerald: "bg-emerald-50 dark:bg-emerald-900/30 text-success-ink border-emerald-100",
-    violet: "bg-violet-50 text-violet-600 border-violet-100",
+    violet: "bg-violet-50 dark:bg-violet-900/30 text-violet-600 border-violet-100",
     amber: "bg-amber-50 dark:bg-amber-900/30 text-accent-ink border-amber-100",
     red: "bg-red-50 dark:bg-red-900/30 text-danger-ink border-red-100",
   };

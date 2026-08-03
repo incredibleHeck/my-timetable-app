@@ -43,7 +43,7 @@ export const SubjectTeacherListModal: React.FC<SubjectTeacherListModalProps> = (
                 key={teacher.id}
                 className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-100 dark:border-slate-700"
               >
-                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
+                <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 flex items-center justify-center font-bold text-sm">
                   {teacher.name.charAt(0)}
                 </div>
                 <div>

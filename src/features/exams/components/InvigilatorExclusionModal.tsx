@@ -54,11 +54,13 @@ export const InvigilatorExclusionModal: React.FC<Props> = ({
       }
     >
       <div className="space-y-4 max-h-[60vh] flex flex-col">
-        <div className="bg-amber-50 border border-amber-100 p-3 rounded-lg flex items-start gap-3">
+        <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-100 p-3 rounded-lg flex items-start gap-3">
           <Users className="text-accent-ink shrink-0" size={18} />
           <div>
-            <p className="text-xs font-bold text-amber-800">Exclude Staff Members</p>
-            <p className="text-2xs text-amber-700 mt-0.5">
+            <p className="text-xs font-bold text-amber-800 dark:text-amber-200">
+              Exclude Staff Members
+            </p>
+            <p className="text-2xs text-amber-800 dark:text-amber-200 mt-0.5">
               Uncheck teachers who should NOT be assigned. During exams, teaching stops — all other
               staff can invigilate. Use the min–max range on the toolbar for how many invigilators
               each stream gets per day.
@@ -103,7 +105,7 @@ export const InvigilatorExclusionModal: React.FC<Props> = ({
                       className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
                         isExcluded
                           ? "bg-slate-200 dark:bg-slate-700 text-content-muted"
-                          : "bg-amber-100 text-amber-700"
+                          : "bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200"
                       }`}
                     >
                       {t.name.charAt(0)}

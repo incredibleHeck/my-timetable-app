@@ -208,7 +208,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
             <div className="flex gap-1">
               <button
                 onClick={() => applyTemplate("MORNINGS")}
-                className="text-2xs px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 font-bold flex items-center gap-1"
+                className="text-2xs px-2 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded hover:bg-blue-100 dark:bg-blue-900/40 font-bold flex items-center gap-1"
               >
                 <Sun size={10} /> Mornings Only
               </button>
@@ -220,7 +220,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
               </button>
               <button
                 onClick={() => applyTemplate("FRIDAYS")}
-                className="text-2xs px-2 py-1 bg-red-50 dark:bg-red-900/30 text-danger-ink rounded hover:bg-red-100 font-bold flex items-center gap-1"
+                className="text-2xs px-2 py-1 bg-red-50 dark:bg-red-900/30 text-danger-ink rounded hover:bg-red-100 dark:bg-red-900/40 font-bold flex items-center gap-1"
               >
                 <Calendar size={10} /> No Fridays
               </button>
@@ -259,7 +259,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
                     key={i}
                     className={`text-center text-2xs font-bold rounded py-1 flex flex-col items-center justify-center h-8 leading-tight ${
                       isBreak
-                        ? "bg-orange-100 text-orange-700"
+                        ? "bg-orange-100 dark:bg-orange-900/40 text-orange-800 dark:text-orange-200"
                         : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
                     }`}
                   >
@@ -292,7 +292,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
                                   isBlocked
                                     ? "bg-red-500 border-red-600 shadow-inner"
                                     : isGlobalBreak
-                                      ? "bg-amber-50 border-dashed border-amber-300"
+                                      ? "bg-amber-50 dark:bg-amber-900/30 border-dashed border-amber-300"
                                       : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-amber-400 hover:shadow-sm"
                                 }`}
                         title={
@@ -322,7 +322,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
               Available
             </div>
             <div className="flex items-center gap-1 text-2xs text-content-muted">
-              <div className="w-3 h-3 bg-amber-50 border border-dashed border-amber-300 rounded"></div>{" "}
+              <div className="w-3 h-3 bg-amber-50 dark:bg-amber-900/30 border border-dashed border-amber-300 rounded"></div>{" "}
               Teaching during Break
             </div>
             <div className="flex items-center gap-1 text-2xs text-content-muted">

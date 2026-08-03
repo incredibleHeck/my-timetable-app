@@ -156,7 +156,7 @@ export const DutyGeneratorModal: React.FC<Props> = ({
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${isExcluded ? "bg-slate-200 dark:bg-slate-700 text-content-muted" : "bg-amber-100 text-amber-700"}`}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${isExcluded ? "bg-slate-200 dark:bg-slate-700 text-content-muted" : "bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200"}`}
                     >
                       {t.name.charAt(0)}
                     </div>

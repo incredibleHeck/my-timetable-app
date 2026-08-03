@@ -406,7 +406,7 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
             {/* Empty schedule CTA — shown when no schedule exists */}
             {Object.keys(data.schedule).length === 0 && !isGenerating && (
               <div className="flex-1 flex flex-col items-center justify-center p-4 text-center">
-                <div className="w-10 h-10 rounded-full bg-amber-100 text-accent-ink flex items-center justify-center mb-2">
+                <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/40 text-accent-ink flex items-center justify-center mb-2">
                   <Zap size={20} />
                 </div>
                 <p className="text-2xs text-content-muted font-medium leading-tight">
@@ -454,12 +454,12 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
           </div>
 
           {/* Grid Area */}
-          <div className="flex-1 overflow-auto p-6 bg-slate-50/30 custom-scrollbar relative">
+          <div className="flex-1 overflow-auto p-6 bg-slate-50/30 dark:bg-slate-900/30 custom-scrollbar relative">
             {/* Empty Schedule CTA Overlay */}
             {Object.keys(data.schedule).length === 0 && !isGenerating && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-slate-50/95">
+              <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-slate-50/95 dark:bg-slate-900/95">
                 <div className="text-center max-w-sm">
-                  <div className="w-20 h-20 rounded-2xl bg-amber-100 text-accent-ink flex items-center justify-center mx-auto mb-5 shadow-inner">
+                  <div className="w-20 h-20 rounded-2xl bg-amber-100 dark:bg-amber-900/40 text-accent-ink flex items-center justify-center mx-auto mb-5 shadow-inner">
                     <Zap size={40} />
                   </div>
                   <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">
@@ -500,7 +500,7 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
             {!isGenerating && data.lastGenerated && (
               <button
                 onClick={() => setIsConflictPanelOpen(!isConflictPanelOpen)}
-                className="absolute -left-8 top-1/2 -translate-y-1/2 w-8 h-16 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 border-r-0 rounded-l-lg shadow-sm flex items-center justify-center text-content-muted hover:text-accent-ink hover:bg-amber-50 z-10 transition-colors"
+                className="absolute -left-8 top-1/2 -translate-y-1/2 w-8 h-16 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 border-r-0 rounded-l-lg shadow-sm flex items-center justify-center text-content-muted hover:text-accent-ink hover:bg-amber-50 dark:bg-amber-900/30 z-10 transition-colors"
                 title={isConflictPanelOpen ? "Hide validation panel" : "Show validation panel"}
               >
                 {isConflictPanelOpen ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
@@ -516,10 +516,10 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
                 {/* LIVE VALIDATION ERROR */}
                 {hoverConflict && (
                   <div
-                    className="w-full mb-4 border border-red-200 bg-red-50 rounded-xl shadow-sm p-4 animate-pulse cursor-pointer hover:bg-red-100 transition-colors"
+                    className="w-full mb-4 border border-red-200 bg-red-50 dark:bg-red-900/30 rounded-xl shadow-sm p-4 animate-pulse cursor-pointer hover:bg-red-100 dark:bg-red-900/40 transition-colors"
                     onClick={() => setHighlightedConflict(hoverConflict)}
                   >
-                    <h4 className="font-bold text-red-800 mb-1 text-sm flex items-center gap-2">
+                    <h4 className="font-bold text-red-800 dark:text-red-200 mb-1 text-sm flex items-center gap-2">
                       <Lock size={14} /> Invalid Move
                     </h4>
                     <p className="text-xs text-danger-ink font-medium leading-relaxed">

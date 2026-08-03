@@ -35,8 +35,9 @@ interface ToastContextType {
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 const VARIANT_STYLES: Record<ToastVariant, string> = {
-  success: "bg-emerald-50 border-emerald-200 text-emerald-800",
-  error: "bg-red-50 border-red-200 text-red-800",
+  success:
+    "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 text-emerald-800 dark:text-emerald-200",
+  error: "bg-red-50 dark:bg-red-900/30 border-red-200 text-red-800 dark:text-red-200",
   info: "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100",
 };
 

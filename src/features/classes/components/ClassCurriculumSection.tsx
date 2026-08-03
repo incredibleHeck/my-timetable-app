@@ -136,7 +136,7 @@ export const ClassCurriculumSection: React.FC<ClassCurriculumSectionProps> = ({
                     title={isExempt ? "Include in Workload" : "Exempt from Workload"}
                     className={`p-1.5 rounded border transition-colors ${
                       isExempt
-                        ? "bg-amber-100 border-amber-300 text-amber-700"
+                        ? "bg-amber-100 dark:bg-amber-900/40 border-amber-300 text-amber-800 dark:text-amber-200"
                         : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-content-muted hover:text-slate-600"
                     }`}
                   >

@@ -41,7 +41,7 @@ export const ExamDefaultsSection: React.FC<ExamDefaultsSectionProps> = ({
             }}
             className={`px-3 py-1 rounded border text-xs font-bold ${
               (data.settings.examGrid?.sessionsPerDay ?? 2) === n
-                ? "bg-amber-50 border-amber-300 text-amber-700"
+                ? "bg-amber-50 dark:bg-amber-900/30 border-amber-300 text-amber-800 dark:text-amber-200"
                 : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-content-muted"
             }`}
           >

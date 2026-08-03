@@ -21,8 +21,8 @@ export const ClassGroups: React.FC<ClassGroupsProps> = ({ data, onUpdate }) => {
     <div className="space-y-12">
       {/* CLASS GROUPS */}
       <div className="space-y-4 animate-in slide-in-from-right-4">
-        <div className="flex justify-between items-center bg-blue-50 p-4 rounded-xl border border-blue-100">
-          <div className="text-sm text-blue-800">
+        <div className="flex justify-between items-center bg-blue-50 dark:bg-blue-900/30 p-4 rounded-xl border border-blue-100">
+          <div className="text-sm text-blue-800 dark:text-blue-200">
             <span className="font-bold">Horizontal Linking:</span> Schedule <b>Multiple Classes</b>{" "}
             to have the <b>Same Subject</b> at the <b>Same Time</b>.
           </div>
@@ -63,8 +63,8 @@ export const ClassGroups: React.FC<ClassGroupsProps> = ({ data, onUpdate }) => {
 
       {/* ELECTIVE BLOCKS */}
       <div className="space-y-4 animate-in slide-in-from-right-4">
-        <div className="flex justify-between items-center bg-purple-50 p-4 rounded-xl border border-purple-100">
-          <div className="text-sm text-purple-800">
+        <div className="flex justify-between items-center bg-purple-50 dark:bg-purple-900/30 p-4 rounded-xl border border-purple-100">
+          <div className="text-sm text-purple-800 dark:text-purple-200">
             <span className="font-bold">Vertical Blocking:</span> Schedule <b>Multiple Subjects</b>{" "}
             for <b>One Class</b> at the <b>Same Time</b> (Options/Electives).
           </div>

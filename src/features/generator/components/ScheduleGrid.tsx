@@ -205,7 +205,7 @@ export const ScheduleGrid: React.FC<Props> = ({
         {/* STATUS BAR */}
         <div className="mb-3 p-3 rounded-lg text-xs font-bold flex items-center gap-3 transition-all shadow-sm border bg-white dark:bg-slate-800 text-content-muted border-slate-200 dark:border-slate-700">
           <div
-            className={`p-1 rounded ${editMode ? "bg-amber-100 text-accent-ink" : "bg-slate-100 dark:bg-slate-800"}`}
+            className={`p-1 rounded ${editMode ? "bg-amber-100 dark:bg-amber-900/40 text-accent-ink" : "bg-slate-100 dark:bg-slate-800"}`}
           >
             {editMode ? <ArrowRightLeft size={14} /> : <Lock size={14} />}
           </div>
@@ -347,7 +347,7 @@ export const ScheduleGrid: React.FC<Props> = ({
                 } else if (isBreakSlot) {
                   content = (
                     <div className="flex items-center justify-center h-full">
-                      <span className="text-2xs font-bold text-slate-300 uppercase tracking-widest">
+                      <span className="text-2xs font-bold text-content-muted uppercase tracking-widest">
                         {structType}
                       </span>
                     </div>
@@ -368,7 +368,9 @@ export const ScheduleGrid: React.FC<Props> = ({
                   }
 
                   if (!content && activeDragItem && !isValidTarget) {
-                    content = <div className="w-full h-full bg-slate-100/50 opacity-50"></div>;
+                    content = (
+                      <div className="w-full h-full bg-slate-100/50 dark:bg-slate-800/50 opacity-50"></div>
+                    );
                   }
 
                   if (!content && showManualPlacement && !fixedText) {
@@ -389,7 +391,7 @@ export const ScheduleGrid: React.FC<Props> = ({
                     data={{ day: dIdx, period: pIdx }}
                     isValidTarget={isValidTarget}
                     isActiveDrag={!!activeDragItem}
-                    className={`h-16 my-1 rounded-md border border-slate-100 dark:border-slate-700 flex transition-all relative bg-slate-50/50 ${!content && !isValidTarget ? "bg-slate-100 dark:bg-slate-800" : ""} ${highlightClass}`}
+                    className={`h-16 my-1 rounded-md border border-slate-100 dark:border-slate-700 flex transition-all relative bg-slate-50/50 dark:bg-slate-900/50 ${!content && !isValidTarget ? "bg-slate-100 dark:bg-slate-800" : ""} ${highlightClass}`}
                   >
                     {content}
                   </DroppableCell>

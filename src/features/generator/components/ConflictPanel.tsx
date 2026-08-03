@@ -96,8 +96,9 @@ function Badge({
 }) {
   const tones = {
     neutral: "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300",
-    red: "bg-red-50 text-red-700 border border-red-100",
-    amber: "bg-amber-50 text-amber-800 border border-amber-100",
+    red: "bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-200 border border-red-100",
+    amber:
+      "bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border border-amber-100",
     slate:
       "bg-slate-50 dark:bg-slate-900 text-content-muted border border-slate-100 dark:border-slate-700",
   };
@@ -112,7 +113,7 @@ function Badge({
 
 function SectionEmptyState({ message }: { message: string }) {
   return (
-    <div className="flex items-center gap-2 px-3 py-4 rounded-lg bg-emerald-50/60 border border-emerald-100 text-emerald-700 text-xs font-medium">
+    <div className="flex items-center gap-2 px-3 py-4 rounded-lg bg-emerald-50/60 border border-emerald-100 text-emerald-800 dark:text-emerald-200 text-xs font-medium">
       <CheckCircle2 size={14} className="shrink-0" />
       <span>{message}</span>
     </div>
@@ -243,9 +244,16 @@ function ResolutionSection({
   onConflictSelect?: (conflict: Conflict) => void;
   variant: "collision" | "unplaced";
 }) {
-  const headerBg = tone === "red" ? "bg-red-50 border-red-100" : "bg-amber-50 border-amber-100";
-  const headerText = tone === "red" ? "text-red-800" : "text-amber-900";
-  const badgeBg = tone === "red" ? "bg-red-200 text-red-800" : "bg-amber-200 text-amber-900";
+  const headerBg =
+    tone === "red"
+      ? "bg-red-50 dark:bg-red-900/30 border-red-100"
+      : "bg-amber-50 dark:bg-amber-900/30 border-amber-100";
+  const headerText =
+    tone === "red" ? "text-red-800 dark:text-red-200" : "text-amber-800 dark:text-amber-200";
+  const badgeBg =
+    tone === "red"
+      ? "bg-red-200 text-red-800 dark:text-red-200"
+      : "bg-amber-200 text-amber-800 dark:text-amber-200";
 
   return (
     <section className="flex flex-col border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl shadow-lg overflow-hidden">
@@ -279,12 +287,14 @@ function ValidTimetableEmptyState() {
   return (
     <div className="w-96 flex flex-col items-center text-center p-8 rounded-2xl border border-emerald-200 bg-gradient-to-b from-emerald-50 to-white shadow-lg">
       <div className="relative mb-4">
-        <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center">
+        <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center">
           <CheckCircle2 size={32} className="text-success-ink" />
         </div>
         <Sparkles size={18} className="absolute -top-1 -right-1 text-amber-400" />
       </div>
-      <h3 className="text-lg font-bold text-emerald-900 mb-2">Timetable Valid</h3>
+      <h3 className="text-lg font-bold text-emerald-800 dark:text-emerald-200 mb-2">
+        Timetable Valid
+      </h3>
       <p className="text-sm text-emerald-700/90 leading-relaxed max-w-[260px]">
         No hard collisions or curriculum gaps detected. Your final timetable is 100% schedulable.
       </p>

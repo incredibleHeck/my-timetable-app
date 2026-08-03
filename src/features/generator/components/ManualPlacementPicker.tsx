@@ -39,11 +39,11 @@ export const ManualPlacementPicker: React.FC<Props> = ({
       </p>
 
       {allPendingCount === 0 ? (
-        <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-xs text-emerald-700 font-medium">
+        <div className="rounded-lg border border-emerald-100 bg-emerald-50 dark:bg-emerald-900/30 px-4 py-3 text-xs text-emerald-800 dark:text-emerald-200 font-medium">
           All curriculum periods for this class are already on the grid.
         </div>
       ) : pendingOptions.length === 0 ? (
-        <div className="rounded-lg border border-amber-100 bg-amber-50 px-4 py-3 text-xs text-amber-800 font-medium">
+        <div className="rounded-lg border border-amber-100 bg-amber-50 dark:bg-amber-900/30 px-4 py-3 text-xs text-amber-800 dark:text-amber-200 font-medium">
           {allPendingCount} unplaced lesson{allPendingCount === 1 ? "" : "s"} remain, but none can
           be placed in this slot (teacher, room, or double-period rules). Try another empty period.
         </div>
@@ -81,7 +81,7 @@ export const ManualPlacementPicker: React.FC<Props> = ({
                     </div>
                   </div>
                   {pending.warning && (
-                    <div className="mt-3 bg-amber-50 border border-amber-100 rounded text-[11px] text-amber-800 px-3 py-1.5 font-medium">
+                    <div className="mt-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-100 rounded text-[11px] text-amber-800 dark:text-amber-200 px-3 py-1.5 font-medium">
                       Warning: {pending.warning}
                     </div>
                   )}

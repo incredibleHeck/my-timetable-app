@@ -145,7 +145,7 @@ export const GeneratorToolbar: React.FC<GeneratorToolbarProps> = ({
           aria-pressed={isEditMode}
           className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
             isEditMode
-              ? "bg-amber-50 text-amber-700 border-amber-200"
+              ? "bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border-amber-200"
               : "bg-white dark:bg-slate-800 text-content-muted border-slate-200 dark:border-slate-700"
           }`}
         >
@@ -159,7 +159,7 @@ export const GeneratorToolbar: React.FC<GeneratorToolbarProps> = ({
             aria-pressed={isManualPlacementMode}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
               isManualPlacementMode
-                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200 border-emerald-200"
                 : "bg-white dark:bg-slate-800 text-content-muted border-slate-200 dark:border-slate-700"
             }`}
           >
@@ -174,7 +174,7 @@ export const GeneratorToolbar: React.FC<GeneratorToolbarProps> = ({
       {canRestore && onRestore && (
         <button
           onClick={onRestore}
-          className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-content-muted border border-slate-200 dark:border-slate-700 rounded-lg hover:border-amber-400 hover:text-accent-ink hover:bg-amber-50 transition-all"
+          className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-content-muted border border-slate-200 dark:border-slate-700 rounded-lg hover:border-amber-400 hover:text-accent-ink hover:bg-amber-50 dark:bg-amber-900/30 transition-all"
           title="Restore the schedule from before the last regeneration"
         >
           <History size={14} />

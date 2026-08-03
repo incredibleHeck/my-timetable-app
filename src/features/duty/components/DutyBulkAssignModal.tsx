@@ -174,13 +174,13 @@ export const DutyBulkAssignModal: React.FC<Props> = ({ isOpen, onClose, data, on
               {selectedTeacherIds.length} Selected
             </span>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50/30 max-h-48 overflow-y-auto custom-scrollbar">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50/30 dark:bg-slate-900/30 max-h-48 overflow-y-auto custom-scrollbar">
             {sortedTeachers.map((t) => (
               <label
                 key={t.id}
                 className={`flex items-center gap-2 px-2 py-1.5 rounded border text-2xs cursor-pointer select-none transition-all ${
                   selectedTeacherIds.includes(t.id)
-                    ? "bg-white dark:bg-slate-800 border-amber-300 text-amber-900 shadow-sm ring-1 ring-amber-100"
+                    ? "bg-white dark:bg-slate-800 border-amber-300 text-amber-800 dark:text-amber-200 shadow-sm ring-1 ring-amber-100"
                     : "border-transparent hover:bg-white hover:border-slate-200 text-slate-600 dark:text-slate-300"
                 }`}
               >

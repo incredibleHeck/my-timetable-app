@@ -78,10 +78,10 @@ export const ScheduleChainSection: React.FC<ScheduleChainSectionProps> = ({
                         ? type === "CLASS"
                           ? "bg-white dark:bg-slate-800 border-slate-400 text-slate-800 dark:text-slate-100"
                           : type === "BREAK"
-                            ? "bg-amber-50 border-amber-400 text-amber-800"
+                            ? "bg-amber-50 dark:bg-amber-900/30 border-amber-400 text-amber-800 dark:text-amber-200"
                             : type === "LUNCH"
-                              ? "bg-orange-50 border-orange-400 text-orange-800"
-                              : "bg-violet-50 border-violet-400 text-violet-800"
+                              ? "bg-orange-50 dark:bg-orange-900/30 border-orange-400 text-orange-800 dark:text-orange-200"
+                              : "bg-violet-50 dark:bg-violet-900/30 border-violet-400 text-violet-800 dark:text-violet-200"
                         : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-content-muted hover:border-slate-300"
                     }
                   `}

@@ -51,7 +51,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
       >
         {subj.name.substring(0, 2).toUpperCase()}
         {subj.isSingleResource && (
-          <div className="absolute -bottom-1 -right-1 bg-purple-100 border border-purple-200 text-purple-700 text-2xs font-bold px-1 rounded-full">
+          <div className="absolute -bottom-1 -right-1 bg-purple-100 border border-purple-200 text-purple-800 dark:text-purple-200 text-2xs font-bold px-1 rounded-full">
             1x
           </div>
         )}

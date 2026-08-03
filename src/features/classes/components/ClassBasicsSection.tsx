@@ -109,7 +109,7 @@ export const ClassBasicsSection: React.FC<ClassBasicsSectionProps> = ({
                                                 isGlobal
                                                   ? "bg-slate-200 dark:bg-slate-700 text-content-muted border-slate-300 cursor-not-allowed"
                                                   : localLabel
-                                                    ? "bg-amber-100 text-amber-700 border-amber-300"
+                                                    ? "bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 border-amber-300"
                                                     : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-amber-400"
                                               }
                                           `}

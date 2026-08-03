@@ -156,10 +156,10 @@ const DraggableExamCard = ({
                 )}
 
                 <div className="flex flex-col gap-2 flex-1 justify-center">
-                  <div className="text-xs font-black text-slate-700 dark:text-slate-200 bg-amber-50 border border-amber-100 px-2 py-1 rounded-md text-center">
+                  <div className="text-xs font-black text-slate-700 dark:text-slate-200 bg-amber-50 dark:bg-amber-900/30 border border-amber-100 px-2 py-1 rounded-md text-center">
                     {classNames}
                   </div>
-                  <div className="flex items-center gap-2 text-[11px] font-bold text-content-muted p-1 rounded-lg bg-slate-50/50 border border-transparent group-hover/card:border-slate-100 group-hover/card:bg-white transition-all">
+                  <div className="flex items-center gap-2 text-[11px] font-bold text-content-muted p-1 rounded-lg bg-slate-50/50 dark:bg-slate-900/50 border border-transparent group-hover/card:border-slate-100 group-hover/card:bg-white transition-all">
                     <Users size={11} className="text-content-muted" />
                     <span className="truncate">{invigilatorNames || "NO STAFF ASSIGNED"}</span>
                   </div>
@@ -187,7 +187,7 @@ const DraggableExamCard = ({
         <div
           {...listeners}
           {...attributes}
-          className="absolute -top-3 -right-3 cursor-grab active:cursor-grabbing text-accent-ink hover:text-amber-700 z-30 p-2 bg-white dark:bg-slate-800 border-2 border-amber-100 rounded-full shadow-xl opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
+          className="absolute -top-3 -right-3 cursor-grab active:cursor-grabbing text-accent-ink hover:text-amber-800 dark:text-amber-200 z-30 p-2 bg-white dark:bg-slate-800 border-2 border-amber-100 rounded-full shadow-xl opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
         >
           <GripVertical size={16} />
         </div>
@@ -243,11 +243,11 @@ const DroppableGridCell = ({
         ${
           isOver && isEditMode
             ? hasCritical
-              ? "bg-red-50 ring-inset ring-2 ring-red-300"
+              ? "bg-red-50 dark:bg-red-900/30 ring-inset ring-2 ring-red-300"
               : hasWarning
-                ? "bg-amber-50 ring-inset ring-2 ring-amber-300"
-                : "bg-emerald-50 ring-inset ring-2 ring-emerald-300"
-            : "bg-white dark:bg-slate-800 hover:bg-slate-50/30"
+                ? "bg-amber-50 dark:bg-amber-900/30 ring-inset ring-2 ring-amber-300"
+                : "bg-emerald-50 dark:bg-emerald-900/30 ring-inset ring-2 ring-emerald-300"
+            : "bg-white dark:bg-slate-800 hover:bg-slate-50/30 dark:bg-slate-900/30"
         }
         ${!children ? "cursor-pointer" : ""}
       `}
@@ -426,7 +426,7 @@ export const ExamGrid: React.FC<Props> = ({
         <table className="w-full border-collapse table-fixed">
           <thead>
             <tr className="bg-slate-900 text-white">
-              <th className="p-4 border-r border-slate-800 text-left text-[11px] font-black text-content-muted uppercase tracking-widest w-[140px] sticky left-0 z-40 bg-slate-900 shadow-md">
+              <th className="p-4 border-r border-slate-800 text-left text-[11px] font-black text-slate-300 uppercase tracking-widest w-[140px] sticky left-0 z-40 bg-slate-900 shadow-md">
                 Date / Day
               </th>
               {sessionColumns.map((col) => (
@@ -438,7 +438,7 @@ export const ExamGrid: React.FC<Props> = ({
                     <span className="font-black text-sm uppercase tracking-widest">
                       {col.label}
                     </span>
-                    <span className="text-2xs text-content-muted font-bold tracking-widest">
+                    <span className="text-2xs text-slate-300 font-bold tracking-widest">
                       {col.headerHint}
                     </span>
                   </div>
@@ -521,7 +521,7 @@ export const ExamGrid: React.FC<Props> = ({
         {activeDragId ? (
           <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-2xl border-2 border-amber-400 w-72 rotate-3 cursor-grabbing opacity-90 scale-105 pointer-events-none ring-4 ring-black/5">
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-amber-100 text-accent-ink rounded-lg">
+              <div className="p-2 bg-amber-100 dark:bg-amber-900/40 text-accent-ink rounded-lg">
                 <CalendarDays size={20} />
               </div>
               <div className="flex flex-col">

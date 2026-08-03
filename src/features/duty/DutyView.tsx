@@ -246,7 +246,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
               onClick={() => setIsSwapMode(!isSwapMode)}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
                 isSwapMode
-                  ? "bg-amber-50 text-amber-700 border-amber-200 shadow-sm"
+                  ? "bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border-amber-200 shadow-sm"
                   : "bg-white dark:bg-slate-800 text-content-muted border-slate-200 dark:border-slate-700 hover:bg-slate-50"
               }`}
               title={isSwapMode ? "Disable Drag & Drop" : "Enable Drag & Drop"}
@@ -311,7 +311,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
       <div className="flex flex-1 overflow-hidden">
         {/* SIDEBAR: HISTORY (Rosters) */}
         <div className="w-48 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 flex flex-col h-full shrink-0 shadow-[inset_-1px_0_0_rgba(0,0,0,0.05)]">
-          <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-100/50">
+          <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-100/50 dark:bg-slate-800/50">
             <div className="flex items-center gap-2">
               <History size={16} className="text-content-muted" />
               <span className="text-2xs font-black text-content-muted uppercase tracking-wider">
@@ -320,7 +320,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
             </div>
             <button
               onClick={createNewRoster}
-              className="p-1 bg-white dark:bg-slate-800 text-accent-ink rounded border border-slate-200 dark:border-slate-700 hover:bg-amber-50 transition-all shadow-sm"
+              className="p-1 bg-white dark:bg-slate-800 text-accent-ink rounded border border-slate-200 dark:border-slate-700 hover:bg-amber-50 dark:bg-amber-900/30 transition-all shadow-sm"
               title="New Roster"
             >
               <Plus size={14} />
@@ -340,7 +340,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
               >
                 <div className="flex flex-col gap-0.5 pr-6">
                   <span
-                    className={`text-[11px] font-black truncate ${activeRosterId === r.id ? "text-amber-700" : "text-slate-600 dark:text-slate-300"}`}
+                    className={`text-[11px] font-black truncate ${activeRosterId === r.id ? "text-amber-800 dark:text-amber-200" : "text-slate-600 dark:text-slate-300"}`}
                   >
                     {r.name}
                   </span>
@@ -394,7 +394,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
 
             {activeTab === "ROSTER" && (
               <div className="bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-200 dark:border-slate-700 shadow-xl shadow-slate-200/20 overflow-hidden flex flex-col">
-                <div className="p-5 bg-slate-50/50 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center px-8">
+                <div className="p-5 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center px-8">
                   <div className="flex items-center gap-3">
                     <Layout size={18} className="text-accent-ink" />
                     <span className="text-[11px] font-black text-content-muted uppercase tracking-widest">
@@ -410,9 +410,9 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
 
                 <div className="overflow-x-auto custom-scrollbar">
                   <table className="w-full text-left border-collapse">
-                    <thead className="bg-slate-50/30 border-b border-slate-200 dark:border-slate-700">
+                    <thead className="bg-slate-50/30 dark:bg-slate-900/30 border-b border-slate-200 dark:border-slate-700">
                       <tr>
-                        <th className="p-6 text-2xs font-black text-content-muted uppercase tracking-widest border-r bg-slate-50/50 w-40 sticky left-0 z-10 backdrop-blur-md">
+                        <th className="p-6 text-2xs font-black text-content-muted uppercase tracking-widest border-r bg-slate-50/50 dark:bg-slate-900/50 w-40 sticky left-0 z-10 backdrop-blur-md">
                           {currentType === "DAILY" ? "Day Index" : "Week Cycle"}
                         </th>
                         {Array.from({ length: slotCount }).map((_, i) => (
@@ -427,8 +427,11 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {rowLabels.map((label, rIdx) => (
-                        <tr key={label} className="group hover:bg-slate-50/30 transition-colors">
-                          <td className="p-6 border-r whitespace-nowrap bg-slate-50/50 sticky left-0 z-10 font-black text-slate-600 dark:text-slate-300 text-xs uppercase tracking-tighter">
+                        <tr
+                          key={label}
+                          className="group hover:bg-slate-50/30 dark:bg-slate-900/30 transition-colors"
+                        >
+                          <td className="p-6 border-r whitespace-nowrap bg-slate-50/50 dark:bg-slate-900/50 sticky left-0 z-10 font-black text-slate-600 dark:text-slate-300 text-xs uppercase tracking-tighter">
                             {label}
                           </td>
                           {Array.from({ length: slotCount }).map((_, slotIdx) => {
@@ -517,7 +520,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
                                             onClick={() => setOpenSlot(null)}
                                           />
                                           <div className="absolute top-full left-0 z-50 w-64 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-[1.5rem] shadow-2xl overflow-hidden mt-3 p-1 animate-in slide-in-from-top-2 duration-300">
-                                            <div className="p-4 text-2xs font-black text-content-muted uppercase border-b bg-slate-50/50 rounded-t-[1rem] sticky top-0 backdrop-blur-sm">
+                                            <div className="p-4 text-2xs font-black text-content-muted uppercase border-b bg-slate-50/50 dark:bg-slate-900/50 rounded-t-[1rem] sticky top-0 backdrop-blur-sm">
                                               Staff Selection
                                             </div>
                                             <div className="max-h-64 overflow-y-auto custom-scrollbar p-1 space-y-1">
@@ -540,12 +543,12 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
                                                       className={`w-full text-left px-3 py-3 text-[11px] font-bold flex justify-between items-center rounded-xl transition-all ${
                                                         isAssignedThisCycle
                                                           ? "bg-slate-50 dark:bg-slate-900 text-slate-300 opacity-60"
-                                                          : "text-slate-600 dark:text-slate-300 hover:bg-amber-50 hover:text-amber-700"
+                                                          : "text-slate-600 dark:text-slate-300 hover:bg-amber-50 dark:bg-amber-900/30 hover:text-amber-800 dark:text-amber-200"
                                                       }`}
                                                     >
                                                       <span className="truncate">{t.name}</span>
                                                       {isAssignedThisRow && (
-                                                        <span className="text-2xs font-black bg-amber-100 text-amber-700 px-2 py-1 rounded-lg uppercase">
+                                                        <span className="text-2xs font-black bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 px-2 py-1 rounded-lg uppercase">
                                                           Selected
                                                         </span>
                                                       )}

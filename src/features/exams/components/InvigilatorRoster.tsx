@@ -33,7 +33,7 @@ export const InvigilatorRoster: React.FC<Props> = ({ data, exams }) => {
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col h-full">
-      <div className="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 flex justify-between items-center">
+      <div className="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
         <div>
           <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
             <Users size={18} className="text-accent-ink" />
@@ -43,7 +43,7 @@ export const InvigilatorRoster: React.FC<Props> = ({ data, exams }) => {
             Invigilation team per stream per day (all sessions)
           </p>
         </div>
-        <div className="text-2xs bg-amber-100 text-amber-700 px-2 py-1 rounded font-bold uppercase">
+        <div className="text-2xs bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 px-2 py-1 rounded font-bold uppercase">
           {uniqueDates.length} Exam Days
         </div>
       </div>
@@ -77,7 +77,10 @@ export const InvigilatorRoster: React.FC<Props> = ({ data, exams }) => {
           </thead>
           <tbody>
             {sortedClasses.map((cls) => (
-              <tr key={cls.id} className="group hover:bg-slate-50/50 transition-colors">
+              <tr
+                key={cls.id}
+                className="group hover:bg-slate-50/50 dark:bg-slate-900/50 transition-colors"
+              >
                 <td className="p-3 border-b border-r border-slate-200 dark:border-slate-700 font-bold text-xs text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 sticky left-0 z-10 group-hover:bg-slate-50">
                   {cls.name}
                 </td>
@@ -87,7 +90,9 @@ export const InvigilatorRoster: React.FC<Props> = ({ data, exams }) => {
                     <td
                       key={date}
                       className={`p-2 border-b border-r border-slate-200 dark:border-slate-700 text-center align-middle h-20 ${
-                        !names ? "bg-slate-50/30" : "bg-white dark:bg-slate-800"
+                        !names
+                          ? "bg-slate-50/30 dark:bg-slate-900/30"
+                          : "bg-white dark:bg-slate-800"
                       }`}
                     >
                       {names ? (
@@ -95,7 +100,7 @@ export const InvigilatorRoster: React.FC<Props> = ({ data, exams }) => {
                           {names.map((name, idx) => (
                             <span
                               key={idx}
-                              className="px-2 py-1 bg-amber-50 text-amber-700 border border-amber-100 rounded text-2xs font-bold shadow-sm w-full"
+                              className="px-2 py-1 bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border border-amber-100 rounded text-2xs font-bold shadow-sm w-full"
                             >
                               {name}
                             </span>

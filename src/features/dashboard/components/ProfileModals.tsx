@@ -96,7 +96,7 @@ export const ProfileModals: React.FC<ProfileModalsProps> = ({
                     {onDelete && (
                       <button
                         onClick={() => onDelete(p.id)}
-                        className="p-2 text-content-muted hover:text-danger-ink hover:bg-red-50 rounded transition-colors"
+                        className="p-2 text-content-muted hover:text-danger-ink hover:bg-red-50 dark:bg-red-900/30 rounded transition-colors"
                         title="Delete Profile"
                       >
                         <Trash2 size={16} />

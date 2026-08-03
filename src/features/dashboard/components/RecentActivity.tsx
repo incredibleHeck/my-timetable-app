@@ -28,7 +28,7 @@ export const RecentActivity: React.FC = () => {
       case "SCHEDULING":
         return "text-accent-ink bg-amber-50 dark:bg-amber-900/30";
       case "ACADEMIC":
-        return "text-blue-500 bg-blue-50";
+        return "text-blue-500 bg-blue-50 dark:bg-blue-900/30";
       case "SYSTEM":
         return "text-content-muted bg-slate-50 dark:bg-slate-900";
       default:

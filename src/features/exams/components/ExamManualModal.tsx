@@ -325,7 +325,7 @@ export const ExamManualModal: React.FC<Props> = ({
                   flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-medium cursor-pointer select-none transition-all border
                   ${
                     examClassIds.includes(cls.id)
-                      ? "bg-amber-50 border-amber-300 text-amber-800 shadow-sm"
+                      ? "bg-amber-50 dark:bg-amber-900/30 border-amber-300 text-amber-800 dark:text-amber-200 shadow-sm"
                       : "bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-700 text-content-muted hover:bg-slate-100"
                   }
                 `}
@@ -374,7 +374,7 @@ export const ExamManualModal: React.FC<Props> = ({
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50/50">
+            <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50/50 dark:bg-slate-900/50">
               {sortedTeachers.map((t) => {
                 const isSelected = examInvigilatorIds.includes(t.id);
                 return (
@@ -384,7 +384,7 @@ export const ExamManualModal: React.FC<Props> = ({
                         flex items-center gap-2 px-2 py-1.5 rounded border text-xs cursor-pointer select-none transition-all
                         ${
                           isSelected
-                            ? "bg-white dark:bg-slate-800 border-amber-300 text-amber-900 shadow-sm ring-1 ring-amber-100"
+                            ? "bg-white dark:bg-slate-800 border-amber-300 text-amber-800 dark:text-amber-200 shadow-sm ring-1 ring-amber-100"
                             : "border-transparent hover:bg-white hover:border-slate-200 text-slate-600 dark:text-slate-300"
                         }
                       `}

@@ -20,7 +20,7 @@ export const ProfileActions: React.FC<ProfileActionsProps> = ({
   return (
     <Card className="p-6">
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-700">
-        <div className="p-2 bg-amber-100 text-accent-ink rounded-lg">
+        <div className="p-2 bg-amber-100 dark:bg-amber-900/40 text-accent-ink rounded-lg">
           <UserCircle size={20} />
         </div>
         <div>

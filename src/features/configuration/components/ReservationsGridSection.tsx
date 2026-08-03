@@ -11,11 +11,11 @@ interface ReservationsGridSectionProps {
 const headerClassByType = (type: PeriodType): string => {
   switch (type) {
     case "BREAK":
-      return "bg-amber-50 border-amber-200";
+      return "bg-amber-50 dark:bg-amber-900/30 border-amber-200";
     case "LUNCH":
-      return "bg-orange-50 border-orange-200";
+      return "bg-orange-50 dark:bg-orange-900/30 border-orange-200";
     case "ASSEMBLY":
-      return "bg-violet-50 border-violet-200";
+      return "bg-violet-50 dark:bg-violet-900/30 border-violet-200";
     default:
       return "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700";
   }

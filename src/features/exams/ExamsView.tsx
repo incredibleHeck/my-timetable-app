@@ -318,7 +318,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
               onClick={() => setIsEditMode(!isEditMode)}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
                 isEditMode
-                  ? "bg-amber-50 text-amber-700 border-amber-200 shadow-sm"
+                  ? "bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border-amber-200 shadow-sm"
                   : "bg-white dark:bg-slate-800 text-content-muted border-slate-200 dark:border-slate-700 hover:bg-slate-50"
               }`}
               title={isEditMode ? "Disable Drag & Drop" : "Enable Drag & Drop"}
@@ -374,7 +374,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
             <Button
               variant="secondary"
               size="sm"
-              className="h-7 text-2xs px-2 bg-white dark:bg-slate-800 hover:bg-amber-50 text-amber-700 font-bold"
+              className="h-7 text-2xs px-2 bg-white dark:bg-slate-800 hover:bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 font-bold"
               onClick={handleAutoAssignInvigilators}
               title="Assign min–max staff per stream; same team covers all sessions that day"
             >
@@ -398,7 +398,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
       <div className="flex-1 flex overflow-hidden">
         {/* SIDEBAR 1: HISTORY (Timetables) */}
         <div className="w-48 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 flex flex-col h-full shrink-0 shadow-[inset_-1px_0_0_rgba(0,0,0,0.05)]">
-          <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-100/50">
+          <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-100/50 dark:bg-slate-800/50">
             <div className="flex items-center gap-2">
               <History size={16} className="text-content-muted" />
               <span className="text-2xs font-black text-content-muted uppercase tracking-wider">
@@ -407,7 +407,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
             </div>
             <button
               onClick={createNewRoster}
-              className="p-1 bg-white dark:bg-slate-800 text-accent-ink rounded border border-slate-200 dark:border-slate-700 hover:bg-amber-50 transition-all shadow-sm"
+              className="p-1 bg-white dark:bg-slate-800 text-accent-ink rounded border border-slate-200 dark:border-slate-700 hover:bg-amber-50 dark:bg-amber-900/30 transition-all shadow-sm"
               title="New Timetable"
             >
               <Plus size={14} />
@@ -426,7 +426,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
               >
                 <div className="flex flex-col gap-0.5 pr-6">
                   <span
-                    className={`text-[11px] font-black truncate ${activeRosterId === r.id ? "text-amber-700" : "text-slate-600 dark:text-slate-300"}`}
+                    className={`text-[11px] font-black truncate ${activeRosterId === r.id ? "text-amber-800 dark:text-amber-200" : "text-slate-600 dark:text-slate-300"}`}
                   >
                     {r.name}
                   </span>
@@ -464,7 +464,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
               onClick={() => setActiveId("ALL")}
               className={`w-full text-left px-3 py-2 rounded-lg text-[11px] font-black transition-all flex items-center gap-2 border ${
                 activeId === "ALL"
-                  ? "bg-amber-50 border-amber-200 text-amber-700 shadow-sm"
+                  ? "bg-amber-50 dark:bg-amber-900/30 border-amber-200 text-amber-800 dark:text-amber-200 shadow-sm"
                   : "bg-white dark:bg-slate-800 border-transparent text-content-muted hover:bg-slate-50 hover:border-slate-100"
               }`}
             >

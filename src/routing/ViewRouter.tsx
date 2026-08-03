@@ -53,7 +53,9 @@ const ViewErrorFallback = (view: ViewState, onNavigate: (view: ViewState) => voi
       <div className="flex items-center justify-center h-full p-6">
         <div className="bg-white dark:bg-slate-800 border border-red-200 rounded-lg shadow-sm p-8 max-w-md text-center">
           <div className="text-4xl mb-3">⚠️</div>
-          <h2 className="text-xl font-bold text-red-900 mb-1">This view hit an error</h2>
+          <h2 className="text-xl font-bold text-red-800 dark:text-red-200 mb-1">
+            This view hit an error
+          </h2>
           <p className="text-slate-600 dark:text-slate-300 mb-4">
             The {view.toLowerCase()} screen couldn't render. Your data is safe — you can retry or
             switch to another view.

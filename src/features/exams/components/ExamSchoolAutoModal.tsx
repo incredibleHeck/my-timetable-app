@@ -176,7 +176,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
             onClick={() => setSyncStreams(!syncStreams)}
             className={`flex items-center gap-3 p-3 rounded border cursor-pointer transition-colors ${
               syncStreams
-                ? "bg-amber-50 border-amber-200"
+                ? "bg-amber-50 dark:bg-amber-900/30 border-amber-200"
                 : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
             }`}
           >
@@ -206,7 +206,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
           onClick={() => setDeterministic(!deterministic)}
           className={`flex items-center gap-3 p-3 rounded border cursor-pointer transition-colors ${
             deterministic
-              ? "bg-amber-50 border-amber-200"
+              ? "bg-amber-50 dark:bg-amber-900/30 border-amber-200"
               : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
           }`}
         >
@@ -243,7 +243,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
                 }}
                 className={`flex-1 py-2.5 rounded-lg border text-sm font-bold transition-all ${
                   sessionsPerDay === n
-                    ? "bg-amber-50 border-amber-300 text-amber-700 shadow-sm"
+                    ? "bg-amber-50 dark:bg-amber-900/30 border-amber-300 text-amber-800 dark:text-amber-200 shadow-sm"
                     : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-content-muted hover:border-slate-300"
                 }`}
               >
@@ -312,7 +312,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
                 onClick={() => toggleClass(c.id)}
                 className={`px-3 py-1.5 rounded-md text-[11px] font-bold border transition-all ${
                   selectedClassIds.includes(c.id)
-                    ? "bg-amber-50 border-amber-300 text-amber-700 shadow-sm"
+                    ? "bg-amber-50 dark:bg-amber-900/30 border-amber-300 text-amber-800 dark:text-amber-200 shadow-sm"
                     : "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-content-muted hover:border-slate-200"
                 }`}
               >
@@ -333,7 +333,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
                   key={s.id}
                   className={`flex justify-between items-center p-2 rounded border ${
                     config
-                      ? "bg-amber-50 border-amber-300"
+                      ? "bg-amber-50 dark:bg-amber-900/30 border-amber-300"
                       : "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700"
                   }`}
                 >
