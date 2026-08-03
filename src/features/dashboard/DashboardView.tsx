@@ -86,12 +86,22 @@ export const DashboardView: React.FC<ViewProps> = ({ data, profileName, onNaviga
         <div className="relative p-8 md:p-12 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="space-y-6">
             <div className="flex items-center gap-4">
-              <Badge className="bg-amber-500 text-slate-900 border-none px-3 py-1 font-black shadow-[0_0_15px_rgba(245,158,11,0.4)] tracking-wide">
-                PRO SUITE 10.0
-              </Badge>
-              <span className="text-amber-500/60 text-xs font-mono font-bold uppercase tracking-widest">
-                {new Date().toLocaleDateString()}
-              </span>
+              {/* App Icon */}
+              <div className="w-14 h-14 rounded-2xl overflow-hidden shadow-xl shadow-amber-500/20 shrink-0 ring-2 ring-amber-500/30">
+                <img
+                  src="/icon.png"
+                  alt="EduScheduler Pro"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Badge className="bg-amber-500 text-slate-900 border-none px-3 py-1 font-black shadow-[0_0_15px_rgba(245,158,11,0.4)] tracking-wide">
+                  PRO SUITE 10.0
+                </Badge>
+                <span className="text-amber-500/60 text-xs font-mono font-bold uppercase tracking-widest">
+                  {new Date().toLocaleDateString()}
+                </span>
+              </div>
             </div>
 
             <div className="space-y-2">

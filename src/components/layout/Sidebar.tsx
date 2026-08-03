@@ -5,7 +5,6 @@ import {
   BookOpen,
   Zap,
   HardDrive,
-  GraduationCap,
   Library,
   Sliders,
   BarChart3,
@@ -57,15 +56,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
       aria-label="Main navigation"
     >
       {/* Brand */}
-      <div className="p-6 flex items-center gap-3">
-        <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center text-slate-900 shadow-lg shadow-amber-500/20">
-          <GraduationCap size={24} />
+      <div className="p-5 flex items-center gap-3 border-b border-slate-800/60">
+        <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 shadow-lg shadow-amber-500/10">
+          <img src="/icon.png" alt="EduScheduler Pro" className="w-full h-full object-cover" />
         </div>
         <div>
           <h1 className="font-bold text-white leading-none text-lg">
             Edu <span className="text-amber-400">Scheduler</span>
           </h1>
-          <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-1">Pro</p>
+          <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-0.5">
+            Pro
+          </p>
         </div>
       </div>
 
