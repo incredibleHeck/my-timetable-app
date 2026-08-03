@@ -7,6 +7,13 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
+/**
+ * Scope a query to the sidebar. Several labels ("Configuration", "New Profile",
+ * "Generate Schedule") appear both in the sidebar/toolbar and again in dashboard
+ * shortcuts, which trips Playwright's strict mode.
+ */
+const nav = (page: import("@playwright/test").Page) => page.getByLabel("Main navigation");
+
 const seedProfile = async (
   page: import("@playwright/test").Page,
   name = "E2E School",
@@ -61,7 +68,7 @@ test.describe("Configuration", () => {
   });
 
   test("updates periods per day from config view", async ({ page }) => {
-    await page.getByRole("button", { name: /configuration/i }).click();
+    await nav(page).getByRole("button", { name: "Configuration", exact: true }).click();
     await page.getByRole("tab", { name: "Day structure" }).click();
     const slider = page.locator("#periods-per-day");
     await slider.fill("10");
@@ -150,7 +157,10 @@ test.describe("Scheduler", () => {
     });
 
     // Click Generate Schedule
-    await page.getByRole("button", { name: /generate schedule/i }).click();
+    await page
+      .getByRole("button", { name: /generate schedule/i })
+      .first()
+      .click();
 
     // Wait for the solver to find a perfect schedule
     await expect(page.getByText("Perfect timetable found!")).toBeVisible({ timeout: 15_000 });
@@ -170,9 +180,10 @@ test.describe("Profile switching E2E", () => {
     await expect(page.locator('strong:has-text("First School")')).toBeVisible({ timeout: 15_000 });
 
     // Open Profile Wizard via New Profile button
-    await page.getByRole("button", { name: "New Profile" }).click();
+    await nav(page).getByRole("button", { name: "New Profile" }).click();
     await page.getByLabel(/profile name/i).fill("Second School");
-    await page.getByRole("button", { name: /save profile/i }).click();
+    // The wizard's confirm button is labelled "Create Profile" (never "Save Profile").
+    await page.getByRole("button", { name: /create profile/i }).click();
 
     // Verify switched to Second School
     await expect(page.locator('strong:has-text("Second School")')).toBeVisible({ timeout: 15_000 });
@@ -207,7 +218,7 @@ test.describe("JSON Backup Round-trip E2E", () => {
 test.describe("Undo/Redo E2E", () => {
   test("performs undo and redo on config changes", async ({ page }) => {
     await seedProfile(page, "Undo School");
-    await page.getByRole("button", { name: /configuration/i }).click();
+    await nav(page).getByRole("button", { name: "Configuration", exact: true }).click();
     await page.getByRole("tab", { name: "Day structure" }).click();
     const slider = page.locator("#periods-per-day");
     await slider.fill("10");
