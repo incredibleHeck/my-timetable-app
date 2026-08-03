@@ -1,0 +1,24 @@
+# Normalize all text files to LF in the repository and on checkout.
+# Without this, core.autocrlf=true on Windows checks files out as CRLF, which
+# makes Prettier (endOfLine: "lf") fail `npm run format:check` locally after
+# every branch switch, while CI on Linux passes. eol=lf overrides autocrlf.
+* text=auto eol=lf
+
+# Binary assets — never normalize or diff as text.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.icns binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.pdf binary
+*.xlsx binary
+
+# Windows-only scripts must keep CRLF to run correctly.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
