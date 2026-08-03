@@ -14,6 +14,7 @@ const VIEW_TITLES: Record<ViewState, string> = {
   GENERATOR: "Auto-Generator",
   EXAMS: "Exam Timetable",
   DUTY: "Duty Roster",
+  SUBSTITUTES: "Cover Planner",
 };
 import { UndoRedoControls } from "./UndoRedoControls";
 import { ProfileSwitcher } from "./header/ProfileSwitcher";

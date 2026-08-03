@@ -12,6 +12,7 @@ import {
   Sliders,
   Building2,
   User,
+  UserX,
   GraduationCap,
 } from "lucide-react";
 import { AppData, ViewState } from "../../types";
@@ -42,6 +43,7 @@ const NAV_ITEMS: { view: ViewState; label: string; icon: React.ReactNode }[] = [
   { view: "WORKLOAD", label: "Workload Analysis", icon: <BarChart3 size={16} /> },
   { view: "EXAMS", label: "Exam Timetable", icon: <FileText size={16} /> },
   { view: "DUTY", label: "Duty Roster", icon: <Shield size={16} /> },
+  { view: "SUBSTITUTES", label: "Cover Planner", icon: <UserX size={16} /> },
 ];
 
 export const CommandPalette: React.FC<CommandPaletteProps> = ({ data, onNavigate, onClose }) => {

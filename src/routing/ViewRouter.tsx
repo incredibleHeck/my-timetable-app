@@ -8,6 +8,7 @@ import { RoomsView } from "../features/rooms/RoomsView";
 import { TeachersView } from "../features/teachers/TeachersView";
 import { ClassesView } from "../features/classes/ClassesView";
 import { WorkloadView } from "../features/workload/WorkloadView";
+import { SubstitutesView } from "../features/substitutes/SubstitutesView";
 
 const GeneratorView = React.lazy(() =>
   import("../features/generator/GeneratorView").then((m) => ({
@@ -119,6 +120,8 @@ export const ViewRouter: React.FC<ViewRouterProps> = ({
         return <ClassesView data={data} onUpdate={onUpdate} />;
       case "WORKLOAD":
         return <WorkloadView data={data} onUpdate={onUpdate} />;
+      case "SUBSTITUTES":
+        return <SubstitutesView data={data} onUpdate={onUpdate} />;
       case "GENERATOR":
         return (
           <Suspense fallback={<LazyComponentFallback />}>

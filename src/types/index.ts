@@ -128,4 +128,5 @@ export type ViewState =
   | "WORKLOAD"
   | "GENERATOR"
   | "EXAMS"
-  | "DUTY";
+  | "DUTY"
+  | "SUBSTITUTES";

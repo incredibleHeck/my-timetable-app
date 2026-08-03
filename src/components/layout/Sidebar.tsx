@@ -11,6 +11,7 @@ import {
   Building2,
   FileText,
   Shield,
+  UserX,
   Plus,
 } from "lucide-react";
 import { AppData, ViewState } from "../../types";
@@ -158,6 +159,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
           id="DUTY"
           icon={<Shield size={18} />}
           label="Duty Roster"
+          currentView={view}
+          onClick={setView}
+        />
+        <NavItem
+          id="SUBSTITUTES"
+          icon={<UserX size={18} />}
+          label="Cover Planner"
           currentView={view}
           onClick={setView}
         />
