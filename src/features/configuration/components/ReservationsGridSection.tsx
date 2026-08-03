@@ -30,7 +30,7 @@ export const ReservationsGridSection: React.FC<ReservationsGridSectionProps> = (
   return (
     <div className="mt-2">
       <div className="flex justify-between items-end mb-3">
-        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+        <p className="text-xs font-bold text-content-muted uppercase tracking-wide">
           Global Reservations (Fixed Slots)
         </p>
       </div>
@@ -49,8 +49,8 @@ export const ReservationsGridSection: React.FC<ReservationsGridSectionProps> = (
               key={i}
               className={`text-center p-2 rounded-t-lg border-x border-t shadow-sm ${headerClassByType(p.type)}`}
             >
-              <div className="text-[10px] font-bold text-amber-600 mb-1">P{i + 1}</div>
-              <div className="text-[9px] font-bold text-slate-700 dark:text-slate-200 truncate px-1 uppercase tracking-tighter">
+              <div className="text-2xs font-bold text-amber-600 mb-1">P{i + 1}</div>
+              <div className="text-2xs font-bold text-slate-700 dark:text-slate-200 truncate px-1 uppercase tracking-tighter">
                 {p.label}
               </div>
             </div>
@@ -74,7 +74,7 @@ export const ReservationsGridSection: React.FC<ReservationsGridSectionProps> = (
                     }
                     onClick={() => handleSlotClick(dIdx, pIdx)}
                     className={`
-                      h-16 rounded-lg transition-all duration-200 border-2 flex flex-col items-center justify-center px-2 text-[10px] leading-tight overflow-hidden break-words relative group shadow-sm
+                      h-16 rounded-lg transition-all duration-200 border-2 flex flex-col items-center justify-center px-2 text-2xs leading-tight overflow-hidden break-words relative group shadow-sm
                       ${
                         occasionName
                           ? "bg-slate-800 border-slate-900 text-amber-400 font-bold scale-[1.02] z-10 shadow-md"
@@ -99,7 +99,7 @@ export const ReservationsGridSection: React.FC<ReservationsGridSectionProps> = (
           ))}
         </div>
       </div>
-      <p className="text-[10px] text-slate-400 mt-2 text-center italic">
+      <p className="text-2xs text-slate-400 mt-2 text-center italic">
         Tip: Scroll horizontally if you have many periods. The day column stays visible.
       </p>
     </div>

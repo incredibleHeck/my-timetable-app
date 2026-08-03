@@ -47,7 +47,7 @@ export const ClassEditorModal: React.FC<ClassEditorModalProps> = (props) => {
                 className={`flex-1 py-1 text-xs font-bold rounded transition-colors ${
                   modalSubTab === "BASICS"
                     ? "bg-white dark:bg-slate-800 shadow text-slate-800 dark:text-slate-100"
-                    : "text-slate-500 dark:text-slate-400"
+                    : "text-content-muted"
                 }`}
               >
                 Basics
@@ -57,7 +57,7 @@ export const ClassEditorModal: React.FC<ClassEditorModalProps> = (props) => {
                 className={`flex-1 py-1 text-xs font-bold rounded transition-colors ${
                   modalSubTab === "STRUCTURE"
                     ? "bg-white dark:bg-slate-800 shadow text-slate-800 dark:text-slate-100"
-                    : "text-slate-500 dark:text-slate-400"
+                    : "text-content-muted"
                 }`}
               >
                 Structure

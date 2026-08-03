@@ -117,7 +117,7 @@ export const GlobalConfigView: React.FC<ViewProps> = ({
             className={`px-4 py-3 text-sm font-bold whitespace-nowrap border-b-2 transition-colors ${
               activeTab === tab.id
                 ? "border-amber-500 text-amber-700"
-                : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800"
+                : "border-transparent text-content-muted hover:text-slate-800"
             }`}
           >
             {tab.label}
@@ -171,7 +171,7 @@ export const GlobalConfigView: React.FC<ViewProps> = ({
                   >
                     Total Daily Periods
                   </label>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-xs text-content-muted">
                     Adjusting this will add or remove slots from the daily structure.
                   </p>
                 </div>

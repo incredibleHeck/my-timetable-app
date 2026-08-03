@@ -279,7 +279,7 @@ export const DashboardView: React.FC<ViewProps> = ({ data, profileName, onNaviga
                         className={`p-2 rounded-lg ${
                           issue.type === "error"
                             ? "bg-orange-100 text-orange-600"
-                            : "bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700"
+                            : "bg-white dark:bg-slate-800 text-content-muted border border-slate-200 dark:border-slate-700"
                         }`}
                       >
                         <AlertTriangle size={20} />
@@ -296,9 +296,7 @@ export const DashboardView: React.FC<ViewProps> = ({ data, profileName, onNaviga
                         </h4>
                         <p
                           className={`text-xs ${
-                            issue.type === "error"
-                              ? "text-orange-700"
-                              : "text-slate-500 dark:text-slate-400"
+                            issue.type === "error" ? "text-orange-700" : "text-content-muted"
                           }`}
                         >
                           {issue.message}
@@ -371,7 +369,7 @@ export const DashboardView: React.FC<ViewProps> = ({ data, profileName, onNaviga
                 </Badge>
               )}
             </div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">
+            <div className="text-xs text-slate-400">
               Algorithm: <span className="text-slate-300">Constructive Heuristic v10 (Worker)</span>
             </div>
           </Card>

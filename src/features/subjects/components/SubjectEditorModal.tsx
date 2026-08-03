@@ -83,7 +83,7 @@ export const SubjectEditorModal: React.FC<SubjectEditorModalProps> = ({ form, da
               </h4>
               <Gem size={14} className={isSingleResource ? "text-purple-600" : "text-slate-400"} />
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-xs text-content-muted mt-1">
               Enable this for subjects that require a unique room (e.g. ICT Lab, Science Lab). The
               scheduler will ensure <strong>only one class</strong> in the entire school is
               scheduled for this subject at any given time.
@@ -120,7 +120,7 @@ export const SubjectEditorModal: React.FC<SubjectEditorModalProps> = ({ form, da
               </h4>
               <FileText size={14} className={isExaminable ? "text-amber-600" : "text-slate-400"} />
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-xs text-content-muted mt-1">
               If enabled, this subject will be automatically selected for inclusion when
               auto-generating the exam timetable.
             </p>
@@ -152,7 +152,7 @@ export const SubjectEditorModal: React.FC<SubjectEditorModalProps> = ({ form, da
               </h4>
               <BookOpen size={14} className={isCore ? "text-blue-600" : "text-slate-400"} />
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-xs text-content-muted mt-1">
               Marks this as a core discipline for morning bias, weekly balance, and spread
               heuristics. When unset, the scheduler falls back to English name matching.
             </p>
@@ -166,7 +166,7 @@ export const SubjectEditorModal: React.FC<SubjectEditorModalProps> = ({ form, da
           </h4>
 
           <div className="space-y-2">
-            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
+            <label className="block text-xs font-bold text-content-muted uppercase">
               Fixed Facility / Room
             </label>
             <select
@@ -181,7 +181,7 @@ export const SubjectEditorModal: React.FC<SubjectEditorModalProps> = ({ form, da
                 </option>
               ))}
             </select>
-            <p className="text-[10px] text-slate-400 italic">
+            <p className="text-2xs text-slate-400 italic">
               If selected, this subject will always be scheduled in this specific room.
             </p>
           </div>
@@ -189,10 +189,10 @@ export const SubjectEditorModal: React.FC<SubjectEditorModalProps> = ({ form, da
 
         <div>
           <div className="flex justify-between items-center mb-3">
-            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+            <label className="block text-xs font-bold text-content-muted uppercase tracking-wide">
               Select Identifier Color
             </label>
-            <div className="flex items-center text-[10px] text-slate-400 gap-1 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
+            <div className="flex items-center text-2xs text-slate-400 gap-1 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
               <Palette size={10} /> {COLOR_PALETTE.length} Distinct Shades
             </div>
           </div>
@@ -227,7 +227,7 @@ export const SubjectEditorModal: React.FC<SubjectEditorModalProps> = ({ form, da
                   title={isUsed && !isSelected ? `${colorObj.name} (Used)` : colorObj.name}
                 >
                   {isSelected && <Check size={12} className="text-white drop-shadow-md" />}
-                  <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover/btn:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-opacity shadow-lg">
+                  <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 text-white text-2xs rounded opacity-0 group-hover/btn:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-opacity shadow-lg">
                     {colorObj.name}
                   </span>
                 </button>

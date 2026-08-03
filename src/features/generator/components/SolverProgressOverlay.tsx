@@ -111,7 +111,7 @@ export const SolverProgressOverlay: React.FC<Props> = ({ progress, elapsedMs }) 
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <span
-                    className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${meta.badge}`}
+                    className={`text-2xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${meta.badge}`}
                   >
                     {meta.label}
                   </span>
@@ -124,7 +124,7 @@ export const SolverProgressOverlay: React.FC<Props> = ({ progress, elapsedMs }) 
                       ? "Run finished"
                       : meta.headline}
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{meta.detail}</p>
+                <p className="text-xs text-slate-600 mt-0.5">{meta.detail}</p>
               </div>
             </div>
 
@@ -132,7 +132,7 @@ export const SolverProgressOverlay: React.FC<Props> = ({ progress, elapsedMs }) 
               <div className="text-2xl font-mono font-bold tabular-nums text-slate-800 dark:text-slate-100">
                 {formatSeconds(elapsedMs)}
               </div>
-              <div className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">
+              <div className="text-2xs font-medium text-slate-400 uppercase tracking-wide">
                 of {formatSeconds(budgetMs)}
               </div>
             </div>
@@ -140,7 +140,7 @@ export const SolverProgressOverlay: React.FC<Props> = ({ progress, elapsedMs }) 
 
           {progress && total > 0 && (
             <div className="mb-5">
-              <div className="flex justify-between text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+              <div className="flex justify-between text-2xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
                 <span>{phase === "REPAIR" ? "Repair moves" : "Lessons placed"}</span>
                 <span>
                   {iteration.toLocaleString()} / {total.toLocaleString()}
@@ -169,12 +169,10 @@ export const SolverProgressOverlay: React.FC<Props> = ({ progress, elapsedMs }) 
                 <CheckCircle2 size={18} />
               </div>
               <div>
-                <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-800/70">
+                <div className="text-2xs font-bold uppercase tracking-wider text-emerald-800/70">
                   Perfect timetables
                 </div>
-                <div className="text-xs text-slate-500 dark:text-slate-400">
-                  Runs with zero audit conflicts
-                </div>
+                <div className="text-xs text-slate-600">Runs with zero audit conflicts</div>
               </div>
             </div>
             <div
@@ -213,7 +211,7 @@ export const SolverProgressOverlay: React.FC<Props> = ({ progress, elapsedMs }) 
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-60" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
           </span>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+          <p className="text-[11px] text-slate-600 font-medium">
             Exploring combinations in the background — you can stop anytime
           </p>
         </div>
@@ -242,7 +240,7 @@ function StatTile({
 
   return (
     <div className={`rounded-xl border px-3 py-2.5 ${tones[tone]} transition-colors duration-300`}>
-      <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide opacity-70 mb-1">
+      <div className="flex items-center gap-1.5 text-2xs font-semibold uppercase tracking-wide opacity-70 mb-1">
         {icon}
         {label}
       </div>

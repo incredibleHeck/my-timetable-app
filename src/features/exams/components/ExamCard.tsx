@@ -68,12 +68,12 @@ export const ExamCard: React.FC<Props> = ({
             {subject?.name || "Unknown Subject"}
           </h3>
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-2xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
               {exam.paperLabel || `Paper ${exam.paperNumber}`}
             </span>
             {isLocked && <Lock size={12} className="text-slate-400" />}
             {exam.status && exam.status !== "DRAFT" && (
-              <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-700 text-white">
+              <span className="text-2xs font-bold uppercase px-1.5 py-0.5 rounded bg-slate-700 text-white">
                 {exam.status}
               </span>
             )}
@@ -162,7 +162,7 @@ export const ExamCard: React.FC<Props> = ({
       {/* Conflict Display */}
       {conflicts.length > 0 && (
         <div
-          className={`mt-1 p-2 rounded flex flex-col gap-1 text-[10px] ml-2 border ${
+          className={`mt-1 p-2 rounded flex flex-col gap-1 text-2xs ml-2 border ${
             hasCritical
               ? "bg-red-50 border-red-100 text-red-700"
               : "bg-amber-50 border-amber-100 text-amber-700"

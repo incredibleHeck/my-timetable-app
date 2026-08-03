@@ -51,7 +51,7 @@ export const ClassGroups: React.FC<ClassGroupsProps> = ({ data, onUpdate }) => {
               </div>
               <div className="flex flex-wrap gap-1">
                 {joint.classIds.map((cid) => (
-                  <span key={cid} className="text-[10px] border px-1 rounded">
+                  <span key={cid} className="text-2xs border px-1 rounded">
                     {data.classes.find((c) => c.id === cid)?.name}
                   </span>
                 ))}
@@ -88,7 +88,7 @@ export const ClassGroups: React.FC<ClassGroupsProps> = ({ data, onUpdate }) => {
               <h4 className="font-bold text-slate-800 dark:text-slate-100 mb-2 flex items-center gap-2">
                 <Layers size={16} className="text-purple-500" /> {elec.name}
               </h4>
-              <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-3">
+              <div className="text-xs font-bold text-content-muted mb-3">
                 Classes:{" "}
                 <span className="text-slate-800 dark:text-slate-100">
                   {elec.classIds

@@ -90,12 +90,10 @@ export const ActivationScreen: React.FC<ActivationScreenProps> = ({
                           : "border-slate-600 focus:border-amber-500"
                       } text-white rounded-lg px-2 py-3 focus:outline-none focus:ring-2 ${
                         error ? "focus:ring-red-500/20" : "focus:ring-amber-500/20"
-                      } transition-all ${idx === 0 ? "text-slate-500 dark:text-slate-400 bg-slate-800/80 cursor-not-allowed" : ""}`}
+                      } transition-all ${idx === 0 ? "text-slate-400 bg-slate-800/80 cursor-not-allowed" : ""}`}
                       placeholder={idx === 0 ? "EDU" : "XXXX"}
                     />
-                    {idx < 3 && (
-                      <span className="text-slate-500 dark:text-slate-400 font-bold">-</span>
-                    )}
+                    {idx < 3 && <span className="text-slate-400 font-bold">-</span>}
                   </React.Fragment>
                 ))}
               </div>
@@ -125,7 +123,7 @@ export const ActivationScreen: React.FC<ActivationScreenProps> = ({
             </Button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-slate-700/50 text-center text-sm text-slate-500 dark:text-slate-400">
+          <div className="mt-8 pt-6 border-t border-slate-700/50 text-center text-sm text-slate-400">
             <p>
               Need a product key?{" "}
               <a href="#" className="text-amber-500 hover:text-amber-400 transition-colors">

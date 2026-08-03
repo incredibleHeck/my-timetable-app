@@ -43,7 +43,7 @@ export const SubstitutesView: React.FC<ViewProps> = ({ data }) => {
           <UserX size={20} className="text-amber-500" />
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Cover Planner</h2>
         </div>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-xs text-content-muted mt-1">
           Mark a teacher absent for a day to see their lessons and assign qualified, available
           substitutes. Suggestions are ranked by subject match and current daily load.
         </p>
@@ -52,7 +52,7 @@ export const SubstitutesView: React.FC<ViewProps> = ({ data }) => {
       {/* Controls */}
       <div className="flex flex-wrap items-end gap-4 bg-white dark:bg-slate-800 px-6 py-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
         <label className="flex flex-col gap-1">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+          <span className="text-2xs font-bold uppercase tracking-wider text-slate-400">
             Absent teacher
           </span>
           <select
@@ -70,7 +70,7 @@ export const SubstitutesView: React.FC<ViewProps> = ({ data }) => {
         </label>
 
         <label className="flex flex-col gap-1">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Day</span>
+          <span className="text-2xs font-bold uppercase tracking-wider text-slate-400">Day</span>
           <select
             value={day}
             onChange={(e) => resetFor(absentTeacherId, Number(e.target.value))}
@@ -87,7 +87,7 @@ export const SubstitutesView: React.FC<ViewProps> = ({ data }) => {
         {absentTeacherId && plan.length > 0 && (
           <div className="ml-auto flex items-center gap-2 text-xs">
             <CalendarDays size={14} className="text-slate-400" />
-            <span className="text-slate-500 dark:text-slate-400">
+            <span className="text-content-muted">
               <strong className="text-slate-700 dark:text-slate-200">{plan.length}</strong> lesson
               {plan.length !== 1 ? "s" : ""}
             </span>
@@ -108,7 +108,7 @@ export const SubstitutesView: React.FC<ViewProps> = ({ data }) => {
           <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200">
             Select a teacher to begin
           </h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-sm text-content-muted mt-1">
             Choose who is absent and on which day to build a cover plan.
           </p>
         </Card>
@@ -118,7 +118,7 @@ export const SubstitutesView: React.FC<ViewProps> = ({ data }) => {
             <Check size={24} />
           </div>
           <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200">Nothing to cover</h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-sm text-content-muted mt-1">
             This teacher has no scheduled lessons on {DAY_NAMES[day]}.
           </p>
         </Card>
@@ -136,14 +136,14 @@ export const SubstitutesView: React.FC<ViewProps> = ({ data }) => {
                     <div className="flex flex-col items-center justify-center w-14 h-14 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0">
                       <span className="text-sm font-black">{lesson.periodLabel}</span>
                       {lesson.timeRange && (
-                        <span className="text-[8px] text-slate-400">{lesson.timeRange}</span>
+                        <span className="text-2xs text-slate-400">{lesson.timeRange}</span>
                       )}
                     </div>
                     <div className="min-w-0">
                       <p className="font-bold text-slate-800 dark:text-slate-100 text-sm truncate">
                         {lesson.subjectName}
                       </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                      <p className="text-xs text-content-muted truncate">
                         {lesson.className}
                         {lesson.roomName ? ` · ${lesson.roomName}` : ""}
                       </p>
@@ -173,7 +173,7 @@ export const SubstitutesView: React.FC<ViewProps> = ({ data }) => {
                           className={`flex-1 min-w-0 px-3 py-2 text-sm border rounded-lg outline-none focus:border-amber-400 bg-white dark:bg-slate-800 ${
                             chosenId
                               ? "border-emerald-300 text-slate-800 dark:text-slate-100"
-                              : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400"
+                              : "border-slate-200 dark:border-slate-700 text-content-muted"
                           }`}
                         >
                           <option value="">

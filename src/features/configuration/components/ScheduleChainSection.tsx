@@ -45,7 +45,7 @@ export const ScheduleChainSection: React.FC<ScheduleChainSectionProps> = ({
   return (
     <div className="w-full">
       <div className="flex justify-between items-end mb-3">
-        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+        <p className="text-xs font-bold text-content-muted uppercase tracking-wide">
           Interactive Schedule Chain
         </p>
       </div>
@@ -72,7 +72,7 @@ export const ScheduleChainSection: React.FC<ScheduleChainSectionProps> = ({
                     commit(`Updated period ${idx + 1} to ${type}`, nextData);
                   }}
                   className={`
-                    flex items-center justify-center gap-1 px-2 py-1 rounded text-[10px] font-bold border transition-colors
+                    flex items-center justify-center gap-1 px-2 py-1 rounded text-2xs font-bold border transition-colors
                     ${
                       period.type === type
                         ? type === "CLASS"
@@ -110,7 +110,7 @@ export const ScheduleChainSection: React.FC<ScheduleChainSectionProps> = ({
                       setEditingLabelIdx(idx);
                       setTempLabel(period.label);
                     }}
-                    className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase text-left cursor-pointer hover:text-amber-600 truncate"
+                    className="text-sm font-bold text-content-muted uppercase text-left cursor-pointer hover:text-amber-600 truncate"
                   >
                     {period.label}
                   </button>

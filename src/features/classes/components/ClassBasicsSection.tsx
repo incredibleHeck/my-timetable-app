@@ -38,7 +38,7 @@ export const ClassBasicsSection: React.FC<ClassBasicsSectionProps> = ({
       />
 
       <div className="space-y-2">
-        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
+        <label className="block text-xs font-bold text-content-muted uppercase">
           Home Classroom
         </label>
         <div className="w-full rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm p-2 text-slate-600 dark:text-slate-300 font-medium flex items-center gap-2 italic">
@@ -48,7 +48,7 @@ export const ClassBasicsSection: React.FC<ClassBasicsSectionProps> = ({
               `${cName} Classroom`
             : `${cName || "New Class"} Classroom`}
         </div>
-        <p className="text-[10px] text-slate-400 italic">
+        <p className="text-2xs text-slate-400 italic">
           The Home Room is automatically generated and managed by the system.
         </p>
       </div>
@@ -56,7 +56,7 @@ export const ClassBasicsSection: React.FC<ClassBasicsSectionProps> = ({
       {/* RESERVATIONS GRID */}
       <div>
         <div className="flex justify-between items-end mb-2">
-          <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
+          <label className="block text-xs font-bold text-content-muted uppercase">
             Class-Specific Events
           </label>
         </div>
@@ -69,11 +69,11 @@ export const ClassBasicsSection: React.FC<ClassBasicsSectionProps> = ({
             }}
           >
             {/* Header */}
-            <div className="text-right pr-2 text-[9px] font-bold text-slate-400 self-end pb-1">
+            <div className="text-right pr-2 text-2xs font-bold text-slate-400 self-end pb-1">
               Day
             </div>
             {Array.from({ length: cPeriodCount }).map((_, i) => (
-              <div key={i} className="text-center text-[9px] font-bold text-slate-400">
+              <div key={i} className="text-center text-2xs font-bold text-slate-400">
                 P{i + 1}
               </div>
             ))}
@@ -81,7 +81,7 @@ export const ClassBasicsSection: React.FC<ClassBasicsSectionProps> = ({
             {/* Body */}
             {DAYS.map((d, dIdx) => (
               <React.Fragment key={d}>
-                <div className="text-right text-[10px] font-bold text-slate-600 dark:text-slate-300 pr-2 uppercase self-center">
+                <div className="text-right text-2xs font-bold text-slate-600 dark:text-slate-300 pr-2 uppercase self-center">
                   {d.substring(0, 3)}
                 </div>
                 {Array.from({ length: cPeriodCount }).map((_, pIdx) => {
@@ -104,10 +104,10 @@ export const ClassBasicsSection: React.FC<ClassBasicsSectionProps> = ({
                       disabled={isGlobal}
                       title={displayLabel || "Available"}
                       className={`
-                                              h-6 rounded border text-[8px] font-bold truncate px-0.5 transition-all
+                                              h-6 rounded border text-2xs font-bold truncate px-0.5 transition-all
                                               ${
                                                 isGlobal
-                                                  ? "bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 border-slate-300 cursor-not-allowed"
+                                                  ? "bg-slate-200 dark:bg-slate-700 text-content-muted border-slate-300 cursor-not-allowed"
                                                   : localLabel
                                                     ? "bg-amber-100 text-amber-700 border-amber-300"
                                                     : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-amber-400"
@@ -122,7 +122,7 @@ export const ClassBasicsSection: React.FC<ClassBasicsSectionProps> = ({
             ))}
           </div>
         </div>
-        <p className="text-[10px] text-slate-400 mt-2">
+        <p className="text-2xs text-slate-400 mt-2">
           Grey = Global Event (Locked). Amber = Class Event.
         </p>
       </div>

@@ -165,7 +165,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ data, onNavigate
             placeholder="Search views, teachers, classes, subjects..."
             className="flex-1 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 text-sm font-medium bg-transparent outline-none"
           />
-          <kbd className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
+          <kbd className="text-2xs font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
             ESC
           </kbd>
         </div>
@@ -177,7 +177,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ data, onNavigate
           ) : (
             Array.from(grouped.entries()).map(([category, items]) => (
               <div key={category}>
-                <div className="px-4 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                <div className="px-4 py-1.5 text-2xs font-bold text-slate-400 uppercase tracking-widest">
                   {category}
                 </div>
                 {items.map((item) => {
@@ -206,7 +206,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ data, onNavigate
                         )}
                       </span>
                       {isActive && (
-                        <kbd className="text-[10px] font-bold text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200 shrink-0">
+                        <kbd className="text-2xs font-bold text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200 shrink-0">
                           ↵
                         </kbd>
                       )}
@@ -219,7 +219,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ data, onNavigate
         </div>
 
         {/* Footer hint */}
-        <div className="px-4 py-2.5 border-t border-slate-100 dark:border-slate-700 flex items-center gap-4 text-[10px] text-slate-400 font-medium">
+        <div className="px-4 py-2.5 border-t border-slate-100 dark:border-slate-700 flex items-center gap-4 text-2xs text-slate-400 font-medium">
           <span>
             <kbd className="bg-slate-100 dark:bg-slate-800 px-1 rounded border border-slate-200 dark:border-slate-700">
               ↑↓

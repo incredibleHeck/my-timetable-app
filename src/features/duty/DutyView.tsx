@@ -193,7 +193,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
           {/* Back Button */}
           <button
             onClick={() => onNavigate && onNavigate("DASHBOARD")}
-            className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-slate-500 dark:text-slate-400 mr-2"
+            className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-content-muted mr-2"
             title="Back to Dashboard"
           >
             <ArrowLeft size={20} />
@@ -211,7 +211,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
                 className="text-slate-300 ml-1 opacity-0 group-hover/title:opacity-100 transition-opacity pointer-events-none"
               />
             </div>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-tight">
+            <p className="text-2xs text-content-muted font-bold uppercase tracking-tight">
               Duty Roster Management
             </p>
           </div>
@@ -223,7 +223,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
               className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${
                 activeRoster.type === "DAILY"
                   ? "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700"
+                  : "text-content-muted hover:text-slate-700"
               }`}
             >
               Daily
@@ -233,7 +233,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
               className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${
                 activeRoster.type === "WEEKLY"
                   ? "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700"
+                  : "text-content-muted hover:text-slate-700"
               }`}
             >
               Weekly
@@ -247,7 +247,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
                 isSwapMode
                   ? "bg-amber-50 text-amber-700 border-amber-200 shadow-sm"
-                  : "bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50"
+                  : "bg-white dark:bg-slate-800 text-content-muted border-slate-200 dark:border-slate-700 hover:bg-slate-50"
               }`}
               title={isSwapMode ? "Disable Drag & Drop" : "Enable Drag & Drop"}
             >
@@ -261,7 +261,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
             <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
               <button
                 onClick={() => setActiveTab("ROSTER")}
-                className={`px-4 py-1.5 text-[10px] font-black uppercase rounded-md transition-all ${
+                className={`px-4 py-1.5 text-2xs font-black uppercase rounded-md transition-all ${
                   activeTab === "ROSTER"
                     ? "bg-white dark:bg-slate-800 text-amber-600 shadow-sm"
                     : "text-slate-400 hover:text-slate-600"
@@ -272,7 +272,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
               </button>
               <button
                 onClick={() => setActiveTab("SETTINGS")}
-                className={`px-4 py-1.5 text-[10px] font-black uppercase rounded-md transition-all ${
+                className={`px-4 py-1.5 text-2xs font-black uppercase rounded-md transition-all ${
                   activeTab === "SETTINGS"
                     ? "bg-white dark:bg-slate-800 text-amber-600 shadow-sm"
                     : "text-slate-400 hover:text-slate-600"
@@ -314,7 +314,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
           <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-100/50">
             <div className="flex items-center gap-2">
               <History size={16} className="text-slate-400" />
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+              <span className="text-2xs font-black text-slate-400 uppercase tracking-wider">
                 Rosters
               </span>
             </div>
@@ -344,8 +344,8 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
                   >
                     {r.name}
                   </span>
-                  <div className="flex items-center gap-2 text-[9px] font-bold text-slate-400">
-                    <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-500 dark:text-slate-400 uppercase">
+                  <div className="flex items-center gap-2 text-2xs font-bold text-slate-400">
+                    <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-content-muted uppercase">
                       {r.type}
                     </span>
                     <span>
@@ -383,7 +383,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
                   <h3 className="font-black text-slate-800 dark:text-slate-100 text-2xl uppercase tracking-tight">
                     {currentType === "DAILY" ? "Daily Rotation" : "Weekly Rotation"}
                   </h3>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm max-w-md mx-auto leading-relaxed">
+                  <p className="text-content-muted text-sm max-w-md mx-auto leading-relaxed">
                     {currentType === "DAILY"
                       ? "This mode schedules staff for each day of the week. The generator ensures staff appear only once in the 5-day cycle."
                       : `This mode schedules staff for a ${activeRoster.weeklyParams?.weeks || 0}-week block. The generator ensures staff are rotated fairly across all weeks.`}
@@ -412,13 +412,13 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
                   <table className="w-full text-left border-collapse">
                     <thead className="bg-slate-50/30 border-b border-slate-200 dark:border-slate-700">
                       <tr>
-                        <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest border-r bg-slate-50/50 w-40 sticky left-0 z-10 backdrop-blur-md">
+                        <th className="p-6 text-2xs font-black text-slate-400 uppercase tracking-widest border-r bg-slate-50/50 w-40 sticky left-0 z-10 backdrop-blur-md">
                           {currentType === "DAILY" ? "Day Index" : "Week Cycle"}
                         </th>
                         {Array.from({ length: slotCount }).map((_, i) => (
                           <th
                             key={i}
-                            className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center min-w-[180px]"
+                            className="p-6 text-2xs font-black text-slate-400 uppercase tracking-widest text-center min-w-[180px]"
                           >
                             Slot {i + 1}
                           </th>
@@ -485,7 +485,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
                                           className={`w-1.5 h-1.5 rounded-full ${isSwapSource ? "bg-white dark:bg-slate-800 animate-pulse" : "bg-emerald-500"}`}
                                         />
                                         <span
-                                          className={`text-[8px] font-black uppercase tracking-widest ${isSwapSource ? "text-amber-50" : "text-slate-400"}`}
+                                          className={`text-2xs font-black uppercase tracking-widest ${isSwapSource ? "text-amber-50" : "text-slate-400"}`}
                                         >
                                           {isSwapSource ? "Swapping..." : "Active"}
                                         </span>
@@ -517,7 +517,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
                                             onClick={() => setOpenSlot(null)}
                                           />
                                           <div className="absolute top-full left-0 z-50 w-64 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-[1.5rem] shadow-2xl overflow-hidden mt-3 p-1 animate-in slide-in-from-top-2 duration-300">
-                                            <div className="p-4 text-[10px] font-black text-slate-400 uppercase border-b bg-slate-50/50 rounded-t-[1rem] sticky top-0 backdrop-blur-sm">
+                                            <div className="p-4 text-2xs font-black text-slate-400 uppercase border-b bg-slate-50/50 rounded-t-[1rem] sticky top-0 backdrop-blur-sm">
                                               Staff Selection
                                             </div>
                                             <div className="max-h-64 overflow-y-auto custom-scrollbar p-1 space-y-1">
@@ -545,13 +545,13 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
                                                     >
                                                       <span className="truncate">{t.name}</span>
                                                       {isAssignedThisRow && (
-                                                        <span className="text-[8px] font-black bg-amber-100 text-amber-700 px-2 py-1 rounded-lg uppercase">
+                                                        <span className="text-2xs font-black bg-amber-100 text-amber-700 px-2 py-1 rounded-lg uppercase">
                                                           Selected
                                                         </span>
                                                       )}
                                                       {isAssignedThisCycle &&
                                                         !isAssignedThisRow && (
-                                                          <span className="text-[8px] font-black bg-slate-100 dark:bg-slate-800 text-slate-400 px-2 py-1 rounded-lg uppercase">
+                                                          <span className="text-2xs font-black bg-slate-100 dark:bg-slate-800 text-slate-400 px-2 py-1 rounded-lg uppercase">
                                                             Other Row
                                                           </span>
                                                         )}

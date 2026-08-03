@@ -37,7 +37,7 @@ export const NavItem = ({
     <span className="flex-1 text-left">{label}</span>
     {badge !== undefined && badge !== 0 && (
       <span
-        className={`ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none ${
+        className={`ml-auto text-2xs font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none ${
           badgeVariant === "danger" ? "bg-red-500 text-white" : "bg-slate-700 text-slate-300"
         }`}
       >

@@ -46,7 +46,7 @@ export const ProfileModals: React.FC<ProfileModalsProps> = ({
         }
       >
         <div className="space-y-4">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-content-muted">
             Create a new profile based on your current data. This will be saved to local storage.
           </p>
           <Input
@@ -73,7 +73,7 @@ export const ProfileModals: React.FC<ProfileModalsProps> = ({
         }
       >
         <div className="space-y-4">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-content-muted">
             Select a saved profile to load. Unsaved changes in your current session will be lost if
             auto-save is off.
           </p>

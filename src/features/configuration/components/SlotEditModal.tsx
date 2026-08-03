@@ -50,7 +50,7 @@ export const SlotEditModal: React.FC<SlotEditModalProps> = ({
           autoFocus
         />
         <div>
-          <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+          <p className="text-xs font-bold text-content-muted uppercase tracking-wider mb-2">
             Presets
           </p>
           <div className="flex flex-wrap gap-2">
@@ -85,9 +85,7 @@ export const SlotEditModal: React.FC<SlotEditModalProps> = ({
             >
               Apply to all days
             </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Block this period for Monday–Friday.
-            </p>
+            <p className="text-xs text-content-muted">Block this period for Monday–Friday.</p>
           </div>
         </label>
       </div>

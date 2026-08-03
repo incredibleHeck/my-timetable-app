@@ -77,7 +77,7 @@ export const SetupStepper: React.FC<SetupStepperProps> = ({ data, onNavigate }) 
       {/* Header */}
       <div className="mb-5">
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-[10px] font-black uppercase tracking-widest text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">
+          <span className="text-2xs font-black uppercase tracking-widest text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">
             Getting Started
           </span>
         </div>
@@ -138,7 +138,7 @@ export const SetupStepper: React.FC<SetupStepperProps> = ({ data, onNavigate }) 
               >
                 {step.label}
               </span>
-              <span className="text-[10px] text-slate-400 mt-0.5 leading-tight hidden sm:block">
+              <span className="text-2xs text-slate-400 mt-0.5 leading-tight hidden sm:block">
                 {step.description}
               </span>
             </button>

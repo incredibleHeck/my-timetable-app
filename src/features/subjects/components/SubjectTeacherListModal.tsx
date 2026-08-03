@@ -23,7 +23,7 @@ export const SubjectTeacherListModal: React.FC<SubjectTeacherListModalProps> = (
             <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
               Teachers for {subject.name}
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-xs text-content-muted mt-1">
               Staff members specializing in this subject
             </p>
           </div>
@@ -51,9 +51,7 @@ export const SubjectTeacherListModal: React.FC<SubjectTeacherListModalProps> = (
                     {teacher.name}
                   </div>
                   {teacher.email && (
-                    <div className="text-xs text-slate-500 dark:text-slate-400">
-                      {teacher.email}
-                    </div>
+                    <div className="text-xs text-content-muted">{teacher.email}</div>
                   )}
                 </div>
               </div>

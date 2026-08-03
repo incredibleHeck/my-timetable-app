@@ -120,11 +120,11 @@ const DraggableExamCard = ({
                         {subject?.name}
                       </div>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded flex items-center gap-1 border border-slate-200 dark:border-slate-700">
+                        <span className="text-2xs font-bold text-content-muted bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded flex items-center gap-1 border border-slate-200 dark:border-slate-700">
                           <Clock size={10} /> {exam.startTime}
                         </span>
                         {exam.status && exam.status !== "DRAFT" && (
-                          <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-800 text-white">
+                          <span className="text-2xs font-bold uppercase px-1.5 py-0.5 rounded bg-slate-800 text-white">
                             {exam.status}
                           </span>
                         )}
@@ -159,7 +159,7 @@ const DraggableExamCard = ({
                   <div className="text-xs font-black text-slate-700 dark:text-slate-200 bg-amber-50 border border-amber-100 px-2 py-1 rounded-md text-center">
                     {classNames}
                   </div>
-                  <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 p-1 rounded-lg bg-slate-50/50 border border-transparent group-hover/card:border-slate-100 group-hover/card:bg-white transition-all">
+                  <div className="flex items-center gap-2 text-[11px] font-bold text-content-muted p-1 rounded-lg bg-slate-50/50 border border-transparent group-hover/card:border-slate-100 group-hover/card:bg-white transition-all">
                     <Users size={11} className="text-slate-400" />
                     <span className="truncate">{invigilatorNames || "NO STAFF ASSIGNED"}</span>
                   </div>
@@ -197,7 +197,7 @@ const DraggableExamCard = ({
         <div className="grid grid-cols-2 gap-2 h-full">
           {paperNumbers.map((pNum) => (
             <div key={pNum} className="flex flex-col gap-2 min-w-0">
-              <div className="text-[10px] font-black text-white uppercase text-center bg-slate-800 rounded-lg py-1 shadow-sm mb-1 tracking-wider">
+              <div className="text-2xs font-black text-white uppercase text-center bg-slate-800 rounded-lg py-1 shadow-sm mb-1 tracking-wider">
                 Paper {pNum}
               </div>
               {renderExamStack(paperGroups[pNum])}
@@ -259,7 +259,7 @@ const DroppableGridCell = ({
               {activeConflicts.map((c, i) => (
                 <div
                   key={i}
-                  className={`flex items-start gap-1.5 text-[10px] font-bold ${c.severity === "CRITICAL" ? "text-red-600" : "text-amber-600"}`}
+                  className={`flex items-start gap-1.5 text-2xs font-bold ${c.severity === "CRITICAL" ? "text-red-600" : "text-amber-600"}`}
                 >
                   <AlertTriangle size={12} className="shrink-0" />
                   <span>{c.message}</span>
@@ -438,7 +438,7 @@ export const ExamGrid: React.FC<Props> = ({
                     <span className="font-black text-sm uppercase tracking-widest">
                       {col.label}
                     </span>
-                    <span className="text-[10px] text-slate-400 font-bold tracking-widest">
+                    <span className="text-2xs text-slate-400 font-bold tracking-widest">
                       {col.headerHint}
                     </span>
                   </div>
@@ -457,7 +457,7 @@ export const ExamGrid: React.FC<Props> = ({
                 >
                   <td className="p-4 border-r border-slate-200 dark:border-slate-700 text-center w-[140px] sticky left-0 z-30 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] bg-slate-50 dark:bg-slate-900">
                     <div className="flex flex-col items-center gap-0.5">
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      <span className="text-2xs font-black text-slate-400 uppercase tracking-widest">
                         {new Date(date).toLocaleDateString("en-GB", {
                           weekday: "short",
                         })}
@@ -467,7 +467,7 @@ export const ExamGrid: React.FC<Props> = ({
                           day: "numeric",
                         })}
                       </span>
-                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">
+                      <span className="text-2xs font-bold text-content-muted uppercase">
                         {new Date(date).toLocaleDateString("en-GB", {
                           month: "short",
                         })}
@@ -528,9 +528,7 @@ export const ExamGrid: React.FC<Props> = ({
                 <div className="font-black text-slate-800 dark:text-slate-100 text-sm uppercase">
                   Rescheduling...
                 </div>
-                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">
-                  Release to drop
-                </div>
+                <div className="text-2xs text-content-muted font-bold">Release to drop</div>
               </div>
             </div>
           </div>

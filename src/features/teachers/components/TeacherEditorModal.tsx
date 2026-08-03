@@ -166,7 +166,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">
+          <label className="block text-xs font-bold text-content-muted uppercase mb-2">
             Subject Specialties
           </label>
           <div className="flex flex-wrap gap-2 p-3 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 max-h-32 overflow-y-auto custom-scrollbar">
@@ -193,7 +193,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
               </span>
             )}
           </div>
-          <p className="text-[10px] text-slate-400 mt-2">
+          <p className="text-2xs text-slate-400 mt-2">
             Selecting subjects here adds this teacher to the corresponding Faculty. Max Periods Per
             Day overrides the global daily scheduler limit ({globalMaxDaily}). Workload % uses
             Configuration → Max Teaching Periods / Week.
@@ -202,31 +202,31 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
 
         <div>
           <div className="flex justify-between items-end mb-2">
-            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
+            <label className="block text-xs font-bold text-content-muted uppercase">
               Availability Constraints
             </label>
             <div className="flex gap-1">
               <button
                 onClick={() => applyTemplate("MORNINGS")}
-                className="text-[10px] px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 font-bold flex items-center gap-1"
+                className="text-2xs px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 font-bold flex items-center gap-1"
               >
                 <Sun size={10} /> Mornings Only
               </button>
               <button
                 onClick={() => applyTemplate("AFTERNOONS")}
-                className="text-[10px] px-2 py-1 bg-indigo-50 text-indigo-600 rounded hover:bg-indigo-100 font-bold flex items-center gap-1"
+                className="text-2xs px-2 py-1 bg-indigo-50 text-indigo-600 rounded hover:bg-indigo-100 font-bold flex items-center gap-1"
               >
                 <Moon size={10} /> Afternoons Only
               </button>
               <button
                 onClick={() => applyTemplate("FRIDAYS")}
-                className="text-[10px] px-2 py-1 bg-red-50 text-red-600 rounded hover:bg-red-100 font-bold flex items-center gap-1"
+                className="text-2xs px-2 py-1 bg-red-50 text-red-600 rounded hover:bg-red-100 font-bold flex items-center gap-1"
               >
                 <Calendar size={10} /> No Fridays
               </button>
               <button
                 onClick={() => applyTemplate("CLEAR")}
-                className="text-[10px] px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded hover:bg-slate-200 font-bold flex items-center gap-1"
+                className="text-2xs px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded hover:bg-slate-200 font-bold flex items-center gap-1"
               >
                 <XSquare size={10} /> Reset
               </button>
@@ -240,7 +240,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
                 gridTemplateColumns: `80px repeat(${maxClassPeriods}, 1fr)`,
               }}
             >
-              <div className="text-right pr-2 text-[10px] font-bold text-slate-400 self-end pb-1">
+              <div className="text-right pr-2 text-2xs font-bold text-slate-400 self-end pb-1">
                 Day \ Per
               </div>
               {Array.from({ length: maxClassPeriods }).map((_, i) => {
@@ -257,7 +257,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
                 return (
                   <div
                     key={i}
-                    className={`text-center text-[9px] font-bold rounded py-1 flex flex-col items-center justify-center h-8 leading-tight ${
+                    className={`text-center text-2xs font-bold rounded py-1 flex flex-col items-center justify-center h-8 leading-tight ${
                       isBreak
                         ? "bg-orange-100 text-orange-700"
                         : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
@@ -287,7 +287,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
                       <button
                         key={pIdx}
                         onClick={() => toggleConstraint(dIdx, pIdx)}
-                        className={`h-9 rounded-md border flex items-center justify-center transition-all duration-200 text-[9px] font-bold 
+                        className={`h-9 rounded-md border flex items-center justify-center transition-all duration-200 text-2xs font-bold 
                                 ${
                                   isBlocked
                                     ? "bg-red-500 border-red-600 shadow-inner"
@@ -317,15 +317,15 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
             </div>
           </div>
           <div className="flex gap-4 mt-2 justify-end">
-            <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-1 text-2xs text-content-muted">
               <div className="w-3 h-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded"></div>{" "}
               Available
             </div>
-            <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-1 text-2xs text-content-muted">
               <div className="w-3 h-3 bg-amber-50 border border-dashed border-amber-300 rounded"></div>{" "}
               Teaching during Break
             </div>
-            <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-1 text-2xs text-content-muted">
               <div className="w-3 h-3 bg-red-500 border border-red-600 rounded"></div> Blocked
             </div>
           </div>

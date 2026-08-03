@@ -81,7 +81,7 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
             className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-md transition-all ${
               tab === t.key
                 ? "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm"
-                : "text-slate-500 dark:text-slate-400 hover:text-slate-700"
+                : "text-content-muted hover:text-slate-700"
             }`}
           >
             {t.icon}
@@ -96,7 +96,7 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
             <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
               Scheduling Analytics
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-xs text-content-muted mt-1">
               Utilisation insights derived from the generated timetable — room occupancy, teacher
               idle windows, and how periods are spread across subjects.
             </p>
@@ -110,13 +110,13 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
               <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
                 Capacity Planning
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <p className="text-xs text-content-muted mt-1">
                 Utilization is based on requested curriculum load vs the school-wide max of{" "}
                 {maxWeeklyDefault} periods per week. Hover or click a card for class breakdown.
               </p>
             </div>
             <div className="flex gap-4 items-center">
-              <div className="flex gap-4 text-[10px] font-bold uppercase tracking-wider border-r border-slate-200 dark:border-slate-700 pr-4 mr-2">
+              <div className="flex gap-4 text-2xs font-bold uppercase tracking-wider border-r border-slate-200 dark:border-slate-700 pr-4 mr-2">
                 <div className="flex items-center gap-1.5">
                   <div className="w-2 h-2 rounded-full bg-emerald-500"></div> Optimal
                 </div>
@@ -158,7 +158,7 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
                   className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all capitalize ${
                     sortBy === s
                       ? "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm"
-                      : "text-slate-500 dark:text-slate-400 hover:text-slate-700"
+                      : "text-content-muted hover:text-slate-700"
                   }`}
                 >
                   {s === "load" ? "Load %" : s === "periods" ? "Periods" : "Name"}
@@ -171,13 +171,13 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
               className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border transition-all ${
                 overloadedOnly
                   ? "bg-red-50 border-red-200 text-red-700"
-                  : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-red-200 hover:text-red-600"
+                  : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-content-muted hover:border-red-200 hover:text-red-600"
               }`}
             >
               <AlertTriangle size={12} />
               Overloaded Only
               {overloadedCount > 0 && (
-                <span className="ml-1 bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full">
+                <span className="ml-1 bg-red-500 text-white text-2xs font-black px-1.5 py-0.5 rounded-full">
                   {overloadedCount}
                 </span>
               )}
@@ -235,7 +235,7 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
                           <span className="font-bold text-slate-800 dark:text-slate-100 block leading-tight">
                             {t.name}
                           </span>
-                          <span className="text-[10px] text-slate-400 font-medium flex items-center gap-1">
+                          <span className="text-2xs text-slate-400 font-medium flex items-center gap-1">
                             {blockedSlots > 0 ? (
                               <>
                                 <Clock size={10} /> {blockedSlots} periods blocked
@@ -258,7 +258,7 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
                         >
                           {Math.round(utilizationPct)}%
                         </span>
-                        <span className="text-[9px] text-slate-400 font-bold uppercase block tracking-wider">
+                        <span className="text-2xs text-slate-400 font-bold uppercase block tracking-wider">
                           Load
                         </span>
                       </div>
@@ -281,7 +281,7 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
 
                     <div className="flex justify-between items-center text-[11px] pt-2 border-t border-slate-50 mt-1">
                       <div className="flex flex-col gap-0.5">
-                        <span className="text-slate-500 dark:text-slate-400">
+                        <span className="text-content-muted">
                           <strong>{assignedPeriods}</strong> Requested
                         </span>
                         <span className="text-slate-400">
@@ -294,7 +294,7 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
                     </div>
 
                     {utilizationPct > 100 && (
-                      <div className="flex items-center gap-2 text-[10px] text-red-600 font-bold bg-white/50 px-2 py-1 rounded">
+                      <div className="flex items-center gap-2 text-2xs text-red-600 font-bold bg-white/50 px-2 py-1 rounded">
                         <AlertCircle size={12} /> Teacher is overloaded!
                       </div>
                     )}

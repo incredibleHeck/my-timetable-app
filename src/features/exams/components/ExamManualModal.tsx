@@ -265,7 +265,7 @@ export const ExamManualModal: React.FC<Props> = ({
         {/* SECTION 2: PAPER CONFIGURATION */}
         <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
           <div className="flex items-center justify-between mb-4">
-            <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center gap-2">
+            <h4 className="text-xs font-bold text-content-muted uppercase flex items-center gap-2">
               <Layers size={14} /> Session Configuration
             </h4>
             <label className="flex items-center gap-2 text-sm font-medium cursor-pointer text-slate-700 dark:text-slate-200">
@@ -326,7 +326,7 @@ export const ExamManualModal: React.FC<Props> = ({
                   ${
                     examClassIds.includes(cls.id)
                       ? "bg-amber-50 border-amber-300 text-amber-800 shadow-sm"
-                      : "bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-100"
+                      : "bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-700 text-content-muted hover:bg-slate-100"
                   }
                 `}
               >
@@ -346,7 +346,7 @@ export const ExamManualModal: React.FC<Props> = ({
             ))}
           </div>
           {examClassIds.length === 0 && (
-            <p className="text-[10px] text-red-500 mt-1 font-bold">* Required</p>
+            <p className="text-2xs text-red-500 mt-1 font-bold">* Required</p>
           )}
         </div>
 
@@ -369,7 +369,7 @@ export const ExamManualModal: React.FC<Props> = ({
               <h4 className="text-xs font-bold text-slate-400 uppercase flex items-center gap-2">
                 <Users size={14} /> Invigilators
               </h4>
-              <span className="text-[10px] text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+              <span className="text-2xs text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
                 {examInvigilatorIds.length} Selected
               </span>
             </div>

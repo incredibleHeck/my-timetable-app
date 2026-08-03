@@ -25,13 +25,13 @@ export const ProfileActions: React.FC<ProfileActionsProps> = ({
         </div>
         <div>
           <h3 className="font-bold text-slate-800 dark:text-slate-100">Profile Management</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400">Current: {activeProfileName}</p>
+          <p className="text-xs text-content-muted">Current: {activeProfileName}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-3">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">
+          <p className="text-2xs font-bold text-slate-400 uppercase tracking-widest px-1">
             Local Profiles
           </p>
           <div className="flex flex-col gap-2">
@@ -55,7 +55,7 @@ export const ProfileActions: React.FC<ProfileActionsProps> = ({
         </div>
 
         <div className="space-y-3">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">
+          <p className="text-2xs font-bold text-slate-400 uppercase tracking-widest px-1">
             Backup & Sync
           </p>
           <div className="flex flex-col gap-2">

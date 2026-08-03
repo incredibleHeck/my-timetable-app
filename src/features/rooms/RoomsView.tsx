@@ -110,9 +110,7 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate }) =>
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Room Management</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Define physical spaces and their capacities.
-          </p>
+          <p className="text-xs text-content-muted">Define physical spaces and their capacities.</p>
         </div>
         <Button onClick={() => openModal()} icon={<Plus size={16} />}>
           Add Room
@@ -140,18 +138,18 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate }) =>
                 </h3>
 
                 <div className="flex gap-1 mb-3">
-                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
+                  <span className="text-2xs font-bold text-content-muted bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
                     {room.type}
                   </span>
                   {room.isHomeRoom && (
-                    <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                    <span className="text-2xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
                       Home Room
                     </span>
                   )}
                 </div>
 
                 <div className="flex flex-col gap-1 w-full mt-auto">
-                  <div className="text-[10px] py-1 px-2 rounded flex items-center justify-center gap-1 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400">
+                  <div className="text-2xs py-1 px-2 rounded flex items-center justify-center gap-1 bg-slate-50 dark:bg-slate-900 text-content-muted">
                     <Users size={12} />
                     Capacity: <b>{room.capacity}</b>
                   </div>
@@ -189,9 +187,7 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate }) =>
           <div className="w-14 h-14 rounded-full bg-slate-200 dark:bg-slate-700 group-hover:bg-amber-100 text-slate-400 group-hover:text-amber-500 flex items-center justify-center mb-3 transition-colors shadow-inner">
             <Plus size={28} />
           </div>
-          <span className="font-bold text-slate-500 dark:text-slate-400 group-hover:text-amber-600">
-            Add Room
-          </span>
+          <span className="font-bold text-content-muted group-hover:text-amber-600">Add Room</span>
         </button>
       </div>
 
@@ -258,7 +254,7 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate }) =>
             <p className="font-bold text-slate-800 dark:text-slate-100 text-lg">
               Delete "{roomToDelete?.name}"?
             </p>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+            <p className="text-sm text-content-muted mt-2">
               This will remove the room from your facility list.
             </p>
           </div>

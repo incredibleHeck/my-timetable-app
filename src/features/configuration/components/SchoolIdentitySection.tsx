@@ -38,7 +38,7 @@ export const SchoolIdentitySection: React.FC<SchoolIdentitySectionProps> = ({
             <GraduationCap className="text-slate-800 dark:text-slate-100" size={24} aria-hidden />{" "}
             School Identity
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs text-content-muted mt-1">
             Appears on printed schedules and reports. Changes save when you leave each field.
           </p>
         </div>

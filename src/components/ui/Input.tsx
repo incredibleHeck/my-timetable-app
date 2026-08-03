@@ -13,7 +13,7 @@ export const Input: React.FC<InputProps> = ({ label, error, className = "", id, 
       {label && (
         <label
           htmlFor={inputId}
-          className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5"
+          className="block text-xs font-bold text-content-muted uppercase tracking-wider mb-1.5"
         >
           {label}
         </label>

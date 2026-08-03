@@ -72,7 +72,7 @@ export const SubjectsView: React.FC<ViewProps> = ({ data }) => {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Subject Library</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-content-muted">
             Manage academic disciplines and track their usage.
           </p>
         </div>
@@ -104,7 +104,7 @@ export const SubjectsView: React.FC<ViewProps> = ({ data }) => {
           <div className="w-14 h-14 rounded-full bg-slate-200 dark:bg-slate-700 group-hover:bg-amber-100 text-slate-400 group-hover:text-amber-500 flex items-center justify-center mb-3 transition-colors shadow-inner">
             <Plus size={28} />
           </div>
-          <span className="font-bold text-slate-500 dark:text-slate-400 group-hover:text-amber-600">
+          <span className="font-bold text-content-muted group-hover:text-amber-600">
             Add Subject
           </span>
         </button>
@@ -154,7 +154,7 @@ export const SubjectsView: React.FC<ViewProps> = ({ data }) => {
                 <p className="mt-2 text-xs opacity-80">This action cannot be undone.</p>
               </div>
             ) : (
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+              <p className="text-sm text-content-muted mt-2">
                 This subject is not currently in use. It is safe to delete.
               </p>
             )}

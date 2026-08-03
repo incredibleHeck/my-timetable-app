@@ -63,7 +63,7 @@ export const DraggableSlot: React.FC<Props> = memo(
           {subject?.name}
         </div>
 
-        <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-1 flex items-center gap-1 relative z-10">
+        <div className="text-2xs text-content-muted truncate mt-1 flex items-center gap-1 relative z-10">
           {mode === "CLASS" ? (
             <>
               <Users size={10} /> {teacher?.name || "Unassigned"}
@@ -77,7 +77,7 @@ export const DraggableSlot: React.FC<Props> = memo(
 
         {/* TIME LABEL (Teacher Mode Only) */}
         {mode === "TEACHER" && timeRange && (
-          <div className="text-[9px] font-bold text-slate-400 mt-1 flex items-center gap-1 relative z-10 uppercase tracking-tight">
+          <div className="text-2xs font-bold text-slate-400 mt-1 flex items-center gap-1 relative z-10 uppercase tracking-tight">
             <Clock size={8} /> {timeRange}
           </div>
         )}

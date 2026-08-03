@@ -119,13 +119,11 @@ export const DutyGeneratorModal: React.FC<Props> = ({
               <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                 <Users size={14} /> Staff Availability
               </h4>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+              <p className="text-2xs text-content-muted mt-1">
                 Select teachers to EXCLUDE from this rotation.
               </p>
             </div>
-            <div className="text-[10px] font-bold text-slate-400">
-              {excludedIds.length} Excluded
-            </div>
+            <div className="text-2xs font-bold text-slate-400">{excludedIds.length} Excluded</div>
           </div>
 
           <div className="relative">
@@ -161,7 +159,7 @@ export const DutyGeneratorModal: React.FC<Props> = ({
                       <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
                         {t.name}
                       </p>
-                      <p className="text-[10px] text-slate-400">
+                      <p className="text-2xs text-slate-400">
                         {isExcluded ? "Excluded" : "Available"}
                       </p>
                     </div>

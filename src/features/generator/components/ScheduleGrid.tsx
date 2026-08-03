@@ -172,7 +172,7 @@ export const ScheduleGrid: React.FC<Props> = ({
       return (
         <div className="flex flex-col items-center">
           <span>{label}</span>
-          <span className="text-[10px] font-normal lowercase opacity-70">
+          <span className="text-2xs font-normal lowercase opacity-70">
             ({time.start} - {time.end})
           </span>
         </div>
@@ -203,7 +203,7 @@ export const ScheduleGrid: React.FC<Props> = ({
     >
       <div className="flex flex-col h-full min-w-full w-fit print:min-w-0">
         {/* STATUS BAR */}
-        <div className="mb-3 p-3 rounded-lg text-xs font-bold flex items-center gap-3 transition-all shadow-sm border bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700">
+        <div className="mb-3 p-3 rounded-lg text-xs font-bold flex items-center gap-3 transition-all shadow-sm border bg-white dark:bg-slate-800 text-content-muted border-slate-200 dark:border-slate-700">
           <div
             className={`p-1 rounded ${editMode ? "bg-amber-100 text-amber-600" : "bg-slate-100 dark:bg-slate-800"}`}
           >
@@ -223,7 +223,7 @@ export const ScheduleGrid: React.FC<Props> = ({
           className="grid gap-1 mb-1"
           style={{ gridTemplateColumns: `60px repeat(${periodsToRender}, minmax(120px, 1fr))` }}
         >
-          <div className="text-right pr-3 text-[10px] font-bold text-slate-400 uppercase self-end pb-2">
+          <div className="text-right pr-3 text-2xs font-bold text-slate-400 uppercase self-end pb-2">
             Day
           </div>
           {Array.from({ length: periodsToRender }).map((_, i) => (
@@ -289,7 +289,7 @@ export const ScheduleGrid: React.FC<Props> = ({
                         {blockSubjects.map((subj, idx) => (
                           <div
                             key={subj?.id || idx}
-                            className={`flex-1 flex items-center px-2 text-[9px] font-bold truncate relative ${
+                            className={`flex-1 flex items-center px-2 text-2xs font-bold truncate relative ${
                               idx < blockSubjects.length - 1
                                 ? "border-b border-slate-200 dark:border-slate-700"
                                 : ""
@@ -304,7 +304,7 @@ export const ScheduleGrid: React.FC<Props> = ({
                           </div>
                         ))}
                         {blockSubjects.length === 0 && (
-                          <div className="flex-1 flex items-center justify-center text-[9px] text-slate-400 italic">
+                          <div className="flex-1 flex items-center justify-center text-2xs text-slate-400 italic">
                             Unknown Elective
                           </div>
                         )}
@@ -347,7 +347,7 @@ export const ScheduleGrid: React.FC<Props> = ({
                 } else if (isBreakSlot) {
                   content = (
                     <div className="flex items-center justify-center h-full">
-                      <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">
+                      <span className="text-2xs font-bold text-slate-300 uppercase tracking-widest">
                         {structType}
                       </span>
                     </div>
@@ -361,7 +361,7 @@ export const ScheduleGrid: React.FC<Props> = ({
                   const fixedText = getOccasionLabel(finalFixed);
                   if (fixedText) {
                     content = (
-                      <div className="flex items-center justify-center w-full h-full bg-slate-800 rounded text-amber-400 font-bold text-[9px] uppercase tracking-wider border border-slate-700">
+                      <div className="flex items-center justify-center w-full h-full bg-slate-800 rounded text-amber-400 font-bold text-2xs uppercase tracking-wider border border-slate-700">
                         {fixedText}
                       </div>
                     );

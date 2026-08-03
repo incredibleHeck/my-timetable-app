@@ -34,7 +34,7 @@ export const ManualPlacementPicker: React.FC<Props> = ({
       title={`Place lesson — ${className}`}
       maxWidth="max-w-md"
     >
-      <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+      <p className="text-xs text-content-muted mb-4">
         {dayLabel}, {periodLabel}. Choose an unplaced lesson that fits this slot.
       </p>
 
@@ -68,7 +68,7 @@ export const ManualPlacementPicker: React.FC<Props> = ({
                         <BookOpen size={14} className="text-slate-400 shrink-0" />
                         {pending.subjectName}
                       </div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <div className="text-[11px] text-content-muted mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
                         <span className="inline-flex items-center gap-1">
                           <Users size={11} />
                           {pending.teacherName}

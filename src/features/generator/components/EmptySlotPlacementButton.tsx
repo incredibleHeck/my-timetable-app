@@ -31,7 +31,7 @@ export const EmptySlotPlacementButton: React.FC<Props> = ({ onClick, hasPending 
         <Plus size={16} strokeWidth={2.5} />
       </div>
       {hasPending && (
-        <span className="text-[9px] font-bold text-amber-700/80 mt-1 uppercase tracking-wide">
+        <span className="text-2xs font-bold text-amber-700/80 mt-1 uppercase tracking-wide">
           Assign
         </span>
       )}

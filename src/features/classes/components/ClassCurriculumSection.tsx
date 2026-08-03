@@ -18,9 +18,7 @@ export const ClassCurriculumSection: React.FC<ClassCurriculumSectionProps> = ({
   return (
     <div className="flex-1 flex flex-col min-h-0">
       <div className="flex justify-between items-center mb-2 shrink-0">
-        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
-          Curriculum
-        </label>
+        <label className="text-xs font-bold text-content-muted uppercase">Curriculum</label>
       </div>
       <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-2">
         {cCurriculum.map((item) => {
@@ -91,7 +89,7 @@ export const ClassCurriculumSection: React.FC<ClassCurriculumSectionProps> = ({
                   >
                     <Plus size={12} />
                   </button>
-                  <span className="text-[9px] text-slate-400 uppercase font-bold px-1.5 border-l border-slate-200 dark:border-slate-700">
+                  <span className="text-2xs text-slate-400 uppercase font-bold px-1.5 border-l border-slate-200 dark:border-slate-700">
                     Dbl
                   </span>
                 </div>
@@ -111,7 +109,7 @@ export const ClassCurriculumSection: React.FC<ClassCurriculumSectionProps> = ({
                   >
                     <Plus size={12} />
                   </button>
-                  <span className="text-[9px] text-slate-400 uppercase font-bold px-1.5 border-l border-slate-200 dark:border-slate-700">
+                  <span className="text-2xs text-slate-400 uppercase font-bold px-1.5 border-l border-slate-200 dark:border-slate-700">
                     Sgl
                   </span>
                 </div>

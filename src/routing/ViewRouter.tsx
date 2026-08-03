@@ -34,7 +34,7 @@ const LazyComponentFallback = () => (
   <div className="flex items-center justify-center h-full">
     <div className="flex flex-col items-center gap-3">
       <span className="animate-spin text-3xl">⟳</span>
-      <p className="text-slate-500 dark:text-slate-400">Loading feature...</p>
+      <p className="text-content-muted">Loading feature...</p>
     </div>
   </div>
 );

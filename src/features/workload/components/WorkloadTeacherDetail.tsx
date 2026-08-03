@@ -112,7 +112,7 @@ export const WorkloadTeacherDetail: React.FC<WorkloadTeacherDetailProps> = ({
           onClick={(e) => e.stopPropagation()}
         >
           <p className="text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">{teacherName}</p>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-3">
+          <p className="text-[11px] text-content-muted mb-3">
             <strong>{assignedPeriods}</strong> requested / <strong>{maxWeeklyCapacity}</strong>{" "}
             weekly max
             {targetLoad != null && targetLoad > 0 && (
@@ -146,9 +146,7 @@ export const WorkloadTeacherDetail: React.FC<WorkloadTeacherDetailProps> = ({
                   <span className="font-medium text-slate-800 dark:text-slate-100 whitespace-nowrap">
                     {row.className}
                   </span>
-                  <span className="text-slate-500 dark:text-slate-400 truncate">
-                    {row.subjectName}
-                  </span>
+                  <span className="text-content-muted truncate">{row.subjectName}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-100 whitespace-nowrap text-right">
                     {row.periods} {row.periods === 1 ? "period" : "periods"}
                   </span>
@@ -159,7 +157,7 @@ export const WorkloadTeacherDetail: React.FC<WorkloadTeacherDetailProps> = ({
             <p className="text-[11px] text-slate-400 italic">No class assignments in curriculum.</p>
           )}
 
-          <p className="text-[9px] text-slate-400 mt-2">
+          <p className="text-2xs text-slate-400 mt-2">
             {pinned ? "Click again or press Escape to close" : "Click to pin · hover to preview"}
           </p>
         </div>

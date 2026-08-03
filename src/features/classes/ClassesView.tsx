@@ -57,7 +57,7 @@ export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Class Management</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-content-muted">
             Configure classes, curriculum, and advanced grouping.
           </p>
         </div>
@@ -134,7 +134,7 @@ const TabButton: React.FC<{
     className={`px-4 py-2 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${
       active
         ? "border-amber-500 text-amber-600"
-        : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700"
+        : "border-transparent text-content-muted hover:text-slate-700"
     }`}
   >
     {label}
@@ -160,7 +160,7 @@ const DeleteClassModal: React.FC<{
             <p className="font-bold text-slate-800 dark:text-slate-100 text-lg">
               Delete "{classGroup.name}"?
             </p>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+            <p className="text-sm text-content-muted mt-2">
               This will remove the class, its curriculum assignments, and its associated
               system-managed Home Room.
             </p>

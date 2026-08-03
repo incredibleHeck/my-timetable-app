@@ -21,14 +21,14 @@ export const ProfileSwitcher: React.FC<ProfileSwitcherProps> = ({
         className="flex items-center gap-2 hover:bg-slate-50 px-3 py-1.5 rounded-lg transition-colors"
       >
         <div className="text-right">
-          <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">
+          <p className="text-xs text-content-muted font-bold uppercase tracking-wider">
             Current Profile
           </p>
           <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
             {activeProfile.name}
           </p>
         </div>
-        <ChevronDown size={16} className="text-slate-400" />
+        <ChevronDown size={16} className="text-content-muted" />
       </button>
 
       {/* Dropdown */}

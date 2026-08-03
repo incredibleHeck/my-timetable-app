@@ -48,9 +48,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         {isNumeric ? `${animatedValue}${suffix}` : value}
       </h3>
       <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{label}</p>
-      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
-        {subtext}
-      </p>
+      <p className="text-xs text-content-muted font-medium flex items-center gap-1">{subtext}</p>
     </Card>
   );
 };

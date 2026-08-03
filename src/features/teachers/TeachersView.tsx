@@ -12,7 +12,7 @@ import {
   Search,
 } from "lucide-react";
 import { AppData } from "../../types";
-import { Button, Modal, Badge, Input } from "../../components/ui";
+import { Button, Modal, Badge, Input, EntityChip } from "../../components/ui";
 import { TeacherEditorModal } from "./components/TeacherEditorModal";
 import { useTeacherManagement } from "./hooks/useTeacherManagement";
 import { useWorkloadStats } from "../workload/hooks/useWorkloadStats";
@@ -74,7 +74,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
             Faculty Management
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-content-muted">
             Manage teachers, availability, and view departmental groupings.
           </p>
         </div>
@@ -92,7 +92,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
           className={`flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${
             activeTab === "LIST"
               ? "border-amber-500 text-amber-600"
-              : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700"
+              : "border-transparent text-content-muted hover:text-slate-700"
           }`}
         >
           <Users size={16} /> Teacher Directory
@@ -102,7 +102,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
           className={`flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${
             activeTab === "FACULTIES"
               ? "border-amber-500 text-amber-600"
-              : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700"
+              : "border-transparent text-content-muted hover:text-slate-700"
           }`}
         >
           <Library size={16} /> Faculties
@@ -115,11 +115,11 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
           <div className="flex flex-col md:flex-row gap-2 bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
             <div className="flex-1 relative">
               <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-content-muted"
                 size={16}
               />
               <input
-                className="w-full pl-9 pr-4 py-2 text-sm border-none focus:ring-0 text-slate-700 dark:text-slate-200 placeholder:text-slate-400 font-medium"
+                className="w-full pl-9 pr-4 py-2 text-sm border-none focus:ring-0 text-slate-700 dark:text-slate-200 placeholder:text-content-muted font-medium"
                 placeholder="Search by name..."
                 value={nameFilter}
                 onChange={(e) => setNameFilter(e.target.value)}
@@ -128,11 +128,11 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
             <div className="h-8 w-px bg-slate-200 dark:bg-slate-700 hidden md:block"></div>
             <div className="flex-1 relative">
               <Library
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-content-muted"
                 size={16}
               />
               <input
-                className="w-full pl-9 pr-4 py-2 text-sm border-none focus:ring-0 text-slate-700 dark:text-slate-200 placeholder:text-slate-400 font-medium"
+                className="w-full pl-9 pr-4 py-2 text-sm border-none focus:ring-0 text-slate-700 dark:text-slate-200 placeholder:text-content-muted font-medium"
                 placeholder="Filter by subject..."
                 value={subjectFilter}
                 onChange={(e) => setSubjectFilter(e.target.value)}
@@ -156,7 +156,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                 className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between hover:shadow-md transition-all group cursor-pointer"
               >
                 <div className="flex items-start space-x-3 mb-4">
-                  <div className="w-12 h-12 shrink-0 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center font-bold text-slate-500 dark:text-slate-400 border border-slate-300 shadow-inner">
+                  <div className="w-12 h-12 shrink-0 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center font-bold text-content-muted border border-slate-300 shadow-inner">
                     {t.name
                       .split(" ")
                       .map((n) => n[0])
@@ -173,27 +173,15 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                     <div className="flex flex-wrap gap-1 mt-2">
                       {t.specialtyIds.slice(0, 3).map((sid) => {
                         const s = data.subjects.find((sub) => sub.id === sid);
-                        return s ? (
-                          <Badge
-                            key={sid}
-                            style={{
-                              backgroundColor: `${s.color}20`,
-                              color: s.color,
-                              borderColor: `${s.color}40`,
-                            }}
-                            className="text-[10px] py-0.5"
-                          >
-                            {s.name}
-                          </Badge>
-                        ) : null;
+                        return s ? <EntityChip key={sid} color={s.color} label={s.name} /> : null;
                       })}
                       {t.specialtyIds.length > 3 && (
-                        <Badge className="text-[10px] py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+                        <Badge className="text-2xs py-0.5 bg-slate-100 dark:bg-slate-800 text-content-muted">
                           +{t.specialtyIds.length - 3}
                         </Badge>
                       )}
                       {t.specialtyIds.length === 0 && (
-                        <span className="text-[10px] text-slate-400 italic">No specialties</span>
+                        <span className="text-2xs text-content-muted italic">No specialties</span>
                       )}
                     </div>
                     {/* Workload mini-bar */}
@@ -215,8 +203,8 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                           : "text-emerald-600";
                       return (
                         <div className="mt-2.5 space-y-1">
-                          <div className="flex justify-between text-[10px] font-medium">
-                            <span className="text-slate-400">
+                          <div className="flex justify-between text-2xs font-medium">
+                            <span className="text-content-muted">
                               {stat.assignedPeriods} periods/wk
                             </span>
                             <span className={textColor}>{Math.round(stat.utilizationPct)}%</span>
@@ -233,7 +221,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                   </div>
                 </div>
                 <div className="pt-4 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center">
-                  <div className="text-xs text-slate-400 font-medium">
+                  <div className="text-xs text-content-muted font-medium">
                     {t.constraints && t.constraints.flat().filter(Boolean).length > 0 ? (
                       <span className="flex items-center text-amber-600">
                         <Ban size={12} className="mr-1" /> Restrictions Active
@@ -250,7 +238,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                         e.stopPropagation();
                         duplicateTeacher(t);
                       }}
-                      className="p-2 hover:bg-slate-100 rounded-md text-slate-400 hover:text-blue-600 transition-colors"
+                      className="p-2 hover:bg-slate-100 rounded-md text-content-muted hover:text-blue-600 transition-colors"
                       title="Duplicate"
                     >
                       <Copy size={14} />
@@ -260,7 +248,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                         e.stopPropagation();
                         openModal(t);
                       }}
-                      className="p-2 hover:bg-slate-100 rounded-md text-slate-400 hover:text-amber-600 transition-colors"
+                      className="p-2 hover:bg-slate-100 rounded-md text-content-muted hover:text-amber-600 transition-colors"
                       title="Edit"
                     >
                       <Edit2 size={14} />
@@ -270,7 +258,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                         e.stopPropagation();
                         initiateDelete(t);
                       }}
-                      className="p-2 hover:bg-red-50 rounded-md text-slate-400 hover:text-red-600 transition-colors"
+                      className="p-2 hover:bg-red-50 rounded-md text-content-muted hover:text-red-600 transition-colors"
                       title="Delete"
                     >
                       <Trash2 size={14} />
@@ -284,10 +272,10 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
               onClick={() => openModal()}
               className="rounded-xl border-2 border-dashed border-slate-300 hover:border-amber-400 hover:bg-amber-50/50 transition-all flex flex-col items-center justify-center p-6 min-h-[160px] group"
             >
-              <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-amber-100 text-slate-400 group-hover:text-amber-500 flex items-center justify-center mb-3 transition-colors">
+              <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-amber-100 text-content-muted group-hover:text-amber-500 flex items-center justify-center mb-3 transition-colors">
                 <Plus size={24} />
               </div>
-              <span className="font-bold text-sm text-slate-500 dark:text-slate-400 group-hover:text-amber-600">
+              <span className="font-bold text-sm text-content-muted group-hover:text-amber-600">
                 Add New Teacher
               </span>
             </button>
@@ -320,13 +308,13 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                       <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm">
                         {subject.name}
                       </h3>
-                      <p className="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                      <p className="text-2xs text-content-muted uppercase tracking-wide">
                         {facultyMembers.length} Staff
                       </p>
                     </div>
                     <button
                       onClick={() => handleQuickAdd(subject.id)}
-                      className="p-1 rounded-full hover:bg-white text-slate-400 hover:text-amber-600 transition-colors mt-2 hidden sm:block"
+                      className="p-1 rounded-full hover:bg-white text-content-muted hover:text-amber-600 transition-colors mt-2 hidden sm:block"
                       title="Quick Add Teacher"
                     >
                       <Plus size={16} />
@@ -348,7 +336,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                           }}
                           className="flex items-center gap-2 p-1.5 bg-white dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700 hover:border-amber-200 transition-all shadow-sm group cursor-pointer"
                         >
-                          <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                          <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-2xs font-bold text-content-muted">
                             {t.name
                               .split(" ")
                               .map((n) => n[0])
@@ -361,7 +349,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                         </div>
                       ))
                     ) : (
-                      <div className="w-full py-2 text-center text-[10px] text-slate-400 italic">
+                      <div className="w-full py-2 text-center text-2xs text-content-muted italic">
                         No teachers assigned.
                       </div>
                     )}
@@ -404,7 +392,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
             <p className="font-bold text-slate-800 dark:text-slate-100 text-lg">
               Delete "{teacherToDelete?.name}"?
             </p>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+            <p className="text-sm text-content-muted mt-2">
               Are you sure? This removes them from all classes.
             </p>
           </div>

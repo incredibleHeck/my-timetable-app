@@ -152,10 +152,10 @@ export const DutyBulkAssignModal: React.FC<Props> = ({ isOpen, onClose, data, on
               <button
                 key={p.index}
                 onClick={() => handlePeriodToggle(p.index)}
-                className={`px-3 py-1.5 rounded-md text-[10px] font-bold transition-all border ${
+                className={`px-3 py-1.5 rounded-md text-2xs font-bold transition-all border ${
                   selectedPeriods.includes(p.index)
                     ? "bg-amber-500 border-amber-600 text-white shadow-sm"
-                    : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50"
+                    : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-content-muted hover:bg-slate-50"
                 }`}
               >
                 {p.label} ({p.type})
@@ -170,7 +170,7 @@ export const DutyBulkAssignModal: React.FC<Props> = ({ isOpen, onClose, data, on
             <h4 className="text-xs font-bold text-slate-400 uppercase flex items-center gap-2">
               <Users size={14} /> Assign Teachers
             </h4>
-            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+            <span className="text-2xs font-bold text-content-muted bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
               {selectedTeacherIds.length} Selected
             </span>
           </div>
@@ -178,7 +178,7 @@ export const DutyBulkAssignModal: React.FC<Props> = ({ isOpen, onClose, data, on
             {sortedTeachers.map((t) => (
               <label
                 key={t.id}
-                className={`flex items-center gap-2 px-2 py-1.5 rounded border text-[10px] cursor-pointer select-none transition-all ${
+                className={`flex items-center gap-2 px-2 py-1.5 rounded border text-2xs cursor-pointer select-none transition-all ${
                   selectedTeacherIds.includes(t.id)
                     ? "bg-white dark:bg-slate-800 border-amber-300 text-amber-900 shadow-sm ring-1 ring-amber-100"
                     : "border-transparent hover:bg-white hover:border-slate-200 text-slate-600 dark:text-slate-300"

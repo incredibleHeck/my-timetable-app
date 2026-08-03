@@ -67,9 +67,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <h1 className="font-bold text-white leading-none text-lg">
             Edu <span className="text-amber-400">Scheduler</span>
           </h1>
-          <p className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold mt-0.5">
-            Pro
-          </p>
+          <p className="text-2xs uppercase tracking-widest text-slate-400 font-bold mt-0.5">Pro</p>
         </div>
       </div>
 
@@ -190,7 +188,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               )}
               <span className="truncate">{p.name}</span>
               {activeProfile?.id === p.id && (
-                <span className="ml-auto text-[9px] font-black uppercase tracking-widest opacity-70">
+                <span className="ml-auto text-2xs font-black uppercase tracking-widest opacity-70">
                   {t("common.active")}
                 </span>
               )}
@@ -199,7 +197,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {onCreateProfile && (
             <button
               onClick={onCreateProfile}
-              className="w-full text-left px-3 py-2 text-xs rounded-lg transition-all text-slate-500 dark:text-slate-400 hover:text-amber-400 hover:bg-slate-800 flex items-center gap-2"
+              className="w-full text-left px-3 py-2 text-xs rounded-lg transition-all text-slate-400 hover:text-amber-400 hover:bg-slate-800 flex items-center gap-2"
             >
               <Plus size={12} />
               {t("nav.newProfile")}
@@ -222,7 +220,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             : t("common.saveToDevice")}
         </button>
         {hasUnsavedChanges && (
-          <p className="text-center text-[10px] text-amber-500 mt-2 font-bold animate-pulse">
+          <p className="text-center text-2xs text-amber-500 mt-2 font-bold animate-pulse">
             ● {t("common.unsavedChanges")}
           </p>
         )}

@@ -12,7 +12,7 @@ export const ConfigPageHeader: React.FC<ConfigPageHeaderProps> = ({ profileName 
         <Sliders className="text-amber-500" size={22} aria-hidden />
         Configuration
       </h2>
-      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+      <p className="text-xs text-content-muted mt-1">
         School-wide defaults for the generator, workload analysis, and exports.
       </p>
       {profileName && (

@@ -36,7 +36,7 @@ export const TimelineAutomationSection: React.FC<TimelineAutomationSectionProps>
         <div>
           <label
             htmlFor="school-start-time"
-            className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1"
+            className="block text-2xs font-bold text-content-muted uppercase mb-1"
           >
             Start of Day
           </label>
@@ -52,7 +52,7 @@ export const TimelineAutomationSection: React.FC<TimelineAutomationSectionProps>
           />
         </div>
         <div>
-          <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">
+          <label className="block text-2xs font-bold text-content-muted uppercase mb-1">
             Class (Mins)
           </label>
           <input
@@ -72,7 +72,7 @@ export const TimelineAutomationSection: React.FC<TimelineAutomationSectionProps>
           />
         </div>
         <div>
-          <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">
+          <label className="block text-2xs font-bold text-content-muted uppercase mb-1">
             Break (Mins)
           </label>
           <input
@@ -92,7 +92,7 @@ export const TimelineAutomationSection: React.FC<TimelineAutomationSectionProps>
           />
         </div>
         <div>
-          <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">
+          <label className="block text-2xs font-bold text-content-muted uppercase mb-1">
             Lunch (Mins)
           </label>
           <input
@@ -124,7 +124,7 @@ export const TimelineAutomationSection: React.FC<TimelineAutomationSectionProps>
           </button>
         </div>
       </div>
-      <p className="text-[10px] text-slate-400 mt-3 italic">
+      <p className="text-2xs text-slate-400 mt-3 italic">
         <span className="font-bold text-amber-600">Tip:</span> Changing these numbers automatically
         recalculates all slot times below. You can still manually edit specific slots if needed.
       </p>

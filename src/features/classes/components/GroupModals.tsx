@@ -137,7 +137,7 @@ export const ElectiveBlockModal: React.FC<ElectiveBlockModalProps> = ({
           placeholder="e.g. Arts Options"
         />
 
-        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
+        <label className="block text-xs font-bold text-content-muted uppercase">
           Select Classes
         </label>
         <div className="border p-2 rounded max-h-40 overflow-y-auto grid grid-cols-2 gap-2">
@@ -156,7 +156,7 @@ export const ElectiveBlockModal: React.FC<ElectiveBlockModalProps> = ({
           ))}
         </div>
 
-        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
+        <label className="block text-xs font-bold text-content-muted uppercase">
           Select Subjects in Block
         </label>
         <div className="border p-2 rounded max-h-40 overflow-y-auto grid grid-cols-2 gap-2">

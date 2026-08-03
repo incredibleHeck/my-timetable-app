@@ -23,7 +23,7 @@ const StatTile: React.FC<StatTileProps> = ({ label, value, icon, color, hint }) 
     <div className={`inline-flex p-2.5 rounded-xl mb-3 ${TILE_COLORS[color]}`}>{icon}</div>
     <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tabular-nums">{value}</h3>
     <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-1">{label}</p>
-    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">{hint}</p>
+    <p className="text-[11px] text-content-muted mt-1">{hint}</p>
   </Card>
 );
 
@@ -50,7 +50,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
         <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200">
           No schedule to analyse yet
         </h3>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-sm text-content-muted mt-1">
           Generate a timetable in the Scheduler to see room occupancy, teacher gaps, and subject
           spread.
         </p>
@@ -99,7 +99,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
         {/* Room utilisation */}
         <Card className="p-6 border-slate-100 dark:border-slate-700">
           <div className="flex items-center gap-2 mb-4">
-            <DoorOpen size={16} className="text-slate-500 dark:text-slate-400" />
+            <DoorOpen size={16} className="text-content-muted" />
             <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
               Room Utilisation
             </h3>
@@ -114,12 +114,12 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
                     <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">
                       {room.roomName}
                       {room.isHomeRoom && (
-                        <span className="ml-1.5 text-[9px] font-bold uppercase text-slate-400">
+                        <span className="ml-1.5 text-2xs font-bold uppercase text-slate-400">
                           home
                         </span>
                       )}
                     </span>
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap">
+                    <span className="text-[11px] text-content-muted tabular-nums whitespace-nowrap">
                       {room.occupiedSlots}/{room.capacitySlots} · {room.occupancyPct}%
                     </span>
                   </div>
@@ -140,7 +140,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
         {/* Teacher gaps */}
         <Card className="p-6 border-slate-100 dark:border-slate-700">
           <div className="flex items-center gap-2 mb-4">
-            <Clock size={16} className="text-slate-500 dark:text-slate-400" />
+            <Clock size={16} className="text-content-muted" />
             <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
               Teacher Idle / Gap Periods
             </h3>
@@ -167,7 +167,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
                           ? "bg-red-50 text-red-600"
                           : t.gapPeriods >= 2
                             ? "bg-amber-50 text-amber-600"
-                            : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
+                            : "bg-slate-100 dark:bg-slate-800 text-content-muted"
                       }`}
                     >
                       {t.gapPeriods} gap{t.gapPeriods !== 1 ? "s" : ""}
@@ -183,7 +183,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
       {/* Subject distribution */}
       <Card className="p-6 border-slate-100 dark:border-slate-700">
         <div className="flex items-center gap-2 mb-4">
-          <BookOpen size={16} className="text-slate-500 dark:text-slate-400" />
+          <BookOpen size={16} className="text-content-muted" />
           <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
             Subject Distribution
           </h3>
@@ -206,7 +206,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
                     }}
                   />
                 </div>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap w-20 text-right">
+                <span className="text-[11px] text-content-muted tabular-nums whitespace-nowrap w-20 text-right">
                   {s.periods} · {s.pct}%
                 </span>
               </li>

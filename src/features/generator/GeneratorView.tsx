@@ -386,7 +386,7 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
           {/* Sidebar */}
           <div className="w-44 border-r border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 overflow-y-auto shrink-0 flex flex-col">
             <div className="p-3 border-b border-slate-100 dark:border-slate-700 sticky top-0 bg-slate-50 dark:bg-slate-900 z-10 space-y-2">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+              <span className="text-2xs font-bold text-slate-400 uppercase tracking-wider block">
                 Select {mode === "CLASS" ? "Group" : "Teacher"}
               </span>
               <div className="relative">
@@ -409,9 +409,7 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
                 <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center mb-2">
                   <Zap size={20} />
                 </div>
-                <p className="text-[10px] text-slate-400 font-medium leading-tight">
-                  No schedule yet
-                </p>
+                <p className="text-2xs text-slate-400 font-medium leading-tight">No schedule yet</p>
               </div>
             )}
             {mode === "CLASS"
@@ -422,7 +420,7 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
                     className={`w-full text-left px-4 py-3 border-b border-slate-100 dark:border-slate-700 text-xs font-medium truncate flex items-center gap-3 ${
                       activeId === c.id
                         ? "bg-white dark:bg-slate-800 border-l-4 border-l-amber-500"
-                        : "text-slate-500 dark:text-slate-400"
+                        : "text-content-muted"
                     }`}
                   >
                     <div
@@ -440,7 +438,7 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
                     className={`w-full text-left px-4 py-3 border-b border-slate-100 dark:border-slate-700 text-xs font-medium truncate flex items-center gap-3 ${
                       activeId === t.id
                         ? "bg-white dark:bg-slate-800 border-l-4 border-l-amber-500"
-                        : "text-slate-500 dark:text-slate-400"
+                        : "text-content-muted"
                     }`}
                   >
                     <div
@@ -465,7 +463,7 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
                   <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">
                     No Schedule Generated Yet
                   </h3>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
+                  <p className="text-sm text-content-muted mb-6 leading-relaxed">
                     Run the auto-scheduler to build a complete timetable for all classes based on
                     your curriculum and constraints.
                   </p>
@@ -526,7 +524,7 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
                       {hoverConflict.reason}
                     </p>
                     <div className="mt-2 pt-2 border-t border-red-100 flex flex-col gap-1">
-                      <span className="text-[10px] text-red-400">
+                      <span className="text-2xs text-red-400">
                         Target: {hoverConflict.className || "Unknown"}
                       </span>
                     </div>

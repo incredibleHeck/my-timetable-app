@@ -39,11 +39,11 @@ export const InvigilatorRoster: React.FC<Props> = ({ data, exams }) => {
             <Users size={18} className="text-amber-500" />
             Master Invigilation Roster
           </h3>
-          <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider mt-0.5">
+          <p className="text-2xs text-content-muted uppercase font-bold tracking-wider mt-0.5">
             Invigilation team per stream per day (all sessions)
           </p>
         </div>
-        <div className="text-[10px] bg-amber-100 text-amber-700 px-2 py-1 rounded font-bold uppercase">
+        <div className="text-2xs bg-amber-100 text-amber-700 px-2 py-1 rounded font-bold uppercase">
           {uniqueDates.length} Exam Days
         </div>
       </div>
@@ -52,7 +52,7 @@ export const InvigilatorRoster: React.FC<Props> = ({ data, exams }) => {
         <table className="w-full border-collapse">
           <thead className="sticky top-0 z-20 bg-slate-50 dark:bg-slate-900 shadow-sm">
             <tr>
-              <th className="p-3 border-b border-r border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest min-w-[120px] sticky left-0 z-30">
+              <th className="p-3 border-b border-r border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-left text-2xs font-bold text-content-muted uppercase tracking-widest min-w-[120px] sticky left-0 z-30">
                 Class / Date
               </th>
               {uniqueDates.map((date) => (
@@ -61,7 +61,7 @@ export const InvigilatorRoster: React.FC<Props> = ({ data, exams }) => {
                   className="p-3 border-b border-r border-slate-200 dark:border-slate-700 text-center bg-slate-50 dark:bg-slate-900 min-w-[140px]"
                 >
                   <div className="flex flex-col items-center">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
+                    <span className="text-2xs font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
                       {new Date(date).toLocaleDateString("en-GB", { weekday: "short" })}
                     </span>
                     <span className="text-sm font-black text-slate-800 dark:text-slate-100 leading-none">
@@ -95,14 +95,14 @@ export const InvigilatorRoster: React.FC<Props> = ({ data, exams }) => {
                           {names.map((name, idx) => (
                             <span
                               key={idx}
-                              className="px-2 py-1 bg-amber-50 text-amber-700 border border-amber-100 rounded text-[10px] font-bold shadow-sm w-full"
+                              className="px-2 py-1 bg-amber-50 text-amber-700 border border-amber-100 rounded text-2xs font-bold shadow-sm w-full"
                             >
                               {name}
                             </span>
                           ))}
                         </div>
                       ) : (
-                        <span className="text-[9px] text-slate-300 italic">No Exams</span>
+                        <span className="text-2xs text-slate-300 italic">No Exams</span>
                       )}
                     </td>
                   );

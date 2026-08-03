@@ -148,12 +148,12 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
             className={`flex flex-col items-center p-3 rounded-md transition-all ${
               mode === "UNIFORM"
                 ? "bg-white dark:bg-slate-800 text-amber-600 shadow-sm ring-1 ring-amber-200"
-                : "text-slate-500 dark:text-slate-400 hover:bg-slate-200"
+                : "text-content-muted hover:bg-slate-200"
             }`}
           >
             <Users size={20} className="mb-2" />
             <span className="text-xs font-bold">Uniform (Cohorts)</span>
-            <span className="text-[10px] opacity-70">All classes write together</span>
+            <span className="text-2xs opacity-70">All classes write together</span>
           </button>
 
           <button
@@ -161,12 +161,12 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
             className={`flex flex-col items-center p-3 rounded-md transition-all ${
               mode === "RANDOM"
                 ? "bg-white dark:bg-slate-800 text-amber-600 shadow-sm ring-1 ring-amber-200"
-                : "text-slate-500 dark:text-slate-400 hover:bg-slate-200"
+                : "text-content-muted hover:bg-slate-200"
             }`}
           >
             <Shuffle size={20} className="mb-2" />
             <span className="text-xs font-bold">Random / Staggered</span>
-            <span className="text-[10px] opacity-70">Optimized slot filling</span>
+            <span className="text-2xs opacity-70">Optimized slot filling</span>
           </button>
         </div>
 
@@ -193,7 +193,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
               <p className="text-sm font-bold text-slate-800 dark:text-slate-100">
                 Sync Parallel Streams
               </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-content-muted">
                 Ensure classes in the same level (e.g. 10A & 10B) always write the same exam at the
                 same time.
               </p>
@@ -214,7 +214,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
             <p className="text-sm font-bold text-slate-800 dark:text-slate-100">
               Fixed generation order
             </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-content-muted">
               Use a deterministic shuffle so the same inputs produce the same timetable.
             </p>
           </div>
@@ -224,7 +224,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
         {/* Sessions per day (grid columns) */}
         <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
           <h4 className="text-xs font-bold text-slate-400 uppercase mb-3">Exam sessions per day</h4>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+          <p className="text-xs text-content-muted mb-3">
             Choose how many session columns the timetable uses. Exams are placed into the matching
             session column (Session 1 or Session 2).
           </p>
@@ -242,7 +242,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
                 className={`flex-1 py-2.5 rounded-lg border text-sm font-bold transition-all ${
                   sessionsPerDay === n
                     ? "bg-amber-50 border-amber-300 text-amber-700 shadow-sm"
-                    : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300"
+                    : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-content-muted hover:border-slate-300"
                 }`}
               >
                 {n} session{n > 1 ? "s" : ""}
@@ -290,14 +290,14 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
             <div className="flex gap-2">
               <button
                 onClick={() => setSelectedClassIds(data.classes.map((c) => c.id))}
-                className="text-[10px] font-bold text-amber-600 hover:underline"
+                className="text-2xs font-bold text-amber-600 hover:underline"
               >
                 Select All
               </button>
               <span className="text-slate-300">|</span>
               <button
                 onClick={() => setSelectedClassIds([])}
-                className="text-[10px] font-bold text-slate-400 hover:underline"
+                className="text-2xs font-bold text-slate-400 hover:underline"
               >
                 Clear
               </button>

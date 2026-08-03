@@ -99,11 +99,11 @@ function Badge({
     red: "bg-red-50 text-red-700 border border-red-100",
     amber: "bg-amber-50 text-amber-800 border border-amber-100",
     slate:
-      "bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-700",
+      "bg-slate-50 dark:bg-slate-900 text-content-muted border border-slate-100 dark:border-slate-700",
   };
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${tones[tone]}`}
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-semibold ${tones[tone]}`}
     >
       {children}
     </span>
@@ -157,7 +157,7 @@ function ConflictCard({
           <p className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
             {conflict.subjectName || "Unresolved lesson"}
           </p>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+          <p className="text-[11px] text-content-muted truncate mt-0.5">
             {isCollision ? getCollisionLabel(conflict) : "Curriculum shortfall"}
           </p>
         </div>
@@ -201,7 +201,7 @@ function ConflictCard({
               className={`shrink-0 mt-0.5 ${isCollision ? "text-red-500" : "text-amber-500"}`}
             />
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-1">
+              <p className="text-2xs font-bold uppercase tracking-wide text-content-muted mb-1">
                 How to fix
               </p>
               <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">
@@ -213,7 +213,7 @@ function ConflictCard({
       )}
 
       {!isSelected && (
-        <div className="mt-2 flex items-center gap-1 text-[10px] text-slate-400">
+        <div className="mt-2 flex items-center gap-1 text-2xs text-slate-400">
           <ChevronRight size={10} />
           <span>Click to highlight on grid</span>
         </div>
@@ -254,7 +254,7 @@ function ResolutionSection({
           {icon}
           {title}
         </h3>
-        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${badgeBg}`}>{count}</span>
+        <span className={`text-2xs font-bold px-2 py-0.5 rounded-full ${badgeBg}`}>{count}</span>
       </header>
       <div className="overflow-y-auto p-3 space-y-2 custom-scrollbar max-h-[280px]">
         {items.length === 0 ? (
@@ -339,7 +339,7 @@ export const ConflictPanel: React.FC<Props> = ({
         <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
           Resolution Center
         </h2>
-        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+        <p className="text-[11px] text-content-muted mt-0.5">
           {blockingCount} issue{blockingCount === 1 ? "" : "s"} in final timetable
         </p>
       </div>

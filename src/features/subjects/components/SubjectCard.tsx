@@ -40,17 +40,18 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
     </div>
 
     <div className="p-4 flex-1 flex flex-col items-center text-center">
+      {/* Colour-as-identity: the subject colour is the ring (plus the strip
+          above); the initials use a neutral token so they stay readable. */}
       <div
-        className="w-12 h-12 rounded-full mb-3 flex items-center justify-center text-lg font-bold shadow-sm relative"
+        className="w-12 h-12 rounded-full mb-3 flex items-center justify-center text-lg font-bold shadow-sm relative text-content"
         style={{
           backgroundColor: `${subj.color}15`,
-          color: subj.color,
-          border: `1px solid ${subj.color}30`,
+          border: `2px solid ${subj.color}`,
         }}
       >
         {subj.name.substring(0, 2).toUpperCase()}
         {subj.isSingleResource && (
-          <div className="absolute -bottom-1 -right-1 bg-purple-100 border border-purple-200 text-purple-700 text-[8px] font-bold px-1 rounded-full">
+          <div className="absolute -bottom-1 -right-1 bg-purple-100 border border-purple-200 text-purple-700 text-2xs font-bold px-1 rounded-full">
             1x
           </div>
         )}
@@ -62,14 +63,14 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
         {subj.name}
       </h3>
       {subj.isSingleResource && (
-        <span className="text-[9px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full mb-2">
+        <span className="text-2xs font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full mb-2">
           Single Resource
         </span>
       )}
 
       <div className="flex flex-col gap-1 w-full mt-auto">
         <div
-          className={`text-[10px] py-1 px-2 rounded flex items-center justify-center gap-1 ${
+          className={`text-2xs py-1 px-2 rounded flex items-center justify-center gap-1 ${
             classCount > 0
               ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
               : "bg-slate-50 dark:bg-slate-900 text-slate-300"
@@ -82,7 +83,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
           onClick={() => {
             if (teacherCount > 0) onShowTeachers();
           }}
-          className={`text-[10px] py-1 px-2 rounded flex items-center justify-center gap-1 ${
+          className={`text-2xs py-1 px-2 rounded flex items-center justify-center gap-1 ${
             teacherCount > 0
               ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 cursor-pointer hover:bg-slate-200 transition-colors"
               : "bg-slate-50 dark:bg-slate-900 text-slate-300"

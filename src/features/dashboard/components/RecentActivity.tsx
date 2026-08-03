@@ -30,9 +30,9 @@ export const RecentActivity: React.FC = () => {
       case "ACADEMIC":
         return "text-blue-500 bg-blue-50";
       case "SYSTEM":
-        return "text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900";
+        return "text-content-muted bg-slate-50 dark:bg-slate-900";
       default:
-        return "text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900";
+        return "text-content-muted bg-slate-50 dark:bg-slate-900";
     }
   };
 
@@ -58,7 +58,7 @@ export const RecentActivity: React.FC = () => {
                 <p className="text-sm font-medium text-slate-700 dark:text-slate-200 leading-snug">
                   {activity.message}
                 </p>
-                <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wider">
+                <p className="text-2xs font-bold text-slate-400 mt-1 uppercase tracking-wider">
                   {formatRelativeTime(activity.timestamp)}
                 </p>
               </div>
@@ -72,7 +72,7 @@ export const RecentActivity: React.FC = () => {
             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
               No recent activity
             </p>
-            <p className="text-[10px] text-slate-400 mt-1 max-w-[180px]">
+            <p className="text-2xs text-slate-400 mt-1 max-w-[180px]">
               Your scheduling actions and data changes will appear here.
             </p>
           </div>

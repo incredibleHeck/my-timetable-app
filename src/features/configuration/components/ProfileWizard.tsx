@@ -44,7 +44,7 @@ export const ProfileWizard: React.FC<ProfileWizardProps> = ({ isOpen, onClose, o
       }
     >
       <div className="space-y-4">
-        <p className="text-sm text-slate-500 dark:text-slate-400">
+        <p className="text-sm text-content-muted">
           Create a clean slate for a new semester or academic year.
         </p>
         <Input

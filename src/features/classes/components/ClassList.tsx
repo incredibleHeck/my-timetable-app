@@ -43,7 +43,7 @@ export const ClassList: React.FC<ClassListProps> = ({
                     <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
                       {c.name}
                     </h3>
-                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    <div className="flex items-center gap-2 text-xs text-content-muted mt-1">
                       <Clock size={12} /> {c.duration} mins
                     </div>
                   </div>
@@ -54,7 +54,7 @@ export const ClassList: React.FC<ClassListProps> = ({
 
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-xs">
-                    <span className="text-slate-500 dark:text-slate-400">Home Room</span>
+                    <span className="text-content-muted">Home Room</span>
                     <span
                       className="font-bold text-amber-600 truncate max-w-[100px]"
                       title={data.rooms.find((r) => r.id === c.defaultRoomId)?.name || "Unassigned"}
@@ -63,19 +63,19 @@ export const ClassList: React.FC<ClassListProps> = ({
                     </span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-slate-500 dark:text-slate-400">Periods/Day</span>
+                    <span className="text-content-muted">Periods/Day</span>
                     <span className="font-bold text-slate-700 dark:text-slate-200">
                       {c.periodCount}
                     </span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-slate-500 dark:text-slate-400">Subjects</span>
+                    <span className="text-content-muted">Subjects</span>
                     <span className="font-bold text-slate-700 dark:text-slate-200">
                       {c.curriculum.length}
                     </span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-slate-500 dark:text-slate-400">Weekly Load</span>
+                    <span className="text-content-muted">Weekly Load</span>
                     <div className="flex items-center gap-2">
                       <div className="w-16 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                         <div

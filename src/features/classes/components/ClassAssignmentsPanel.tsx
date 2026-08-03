@@ -129,14 +129,14 @@ export const ClassAssignmentsPanel: React.FC<Props> = ({ data, onUpdate }) => {
           <Plus size={20} className="text-amber-500" />
           Quick Assign Teacher
         </h3>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+        <p className="text-sm text-content-muted mb-6">
           Select a class and a teacher. The system will automatically link the teacher to the class
           for any subjects they are qualified to teach (based on their Faculty/Specialty).
         </p>
 
         <div className="flex flex-col md:flex-row gap-4 items-end">
           <div className="flex-1 w-full">
-            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">
+            <label className="block text-xs font-bold text-content-muted uppercase mb-1">
               1. Select Class
             </label>
             <Select
@@ -149,7 +149,7 @@ export const ClassAssignmentsPanel: React.FC<Props> = ({ data, onUpdate }) => {
             />
           </div>
           <div className="flex-1 w-full">
-            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">
+            <label className="block text-xs font-bold text-content-muted uppercase mb-1">
               2. Select Teacher
             </label>
             <Select
@@ -220,11 +220,11 @@ export const ClassAssignmentsPanel: React.FC<Props> = ({ data, onUpdate }) => {
                     <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm">
                       {cls.name}
                     </h3>
-                    <p className="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                    <p className="text-2xs text-content-muted uppercase tracking-wide">
                       {assignments.length} Staff
                     </p>
                   </div>
-                  <div className="w-7 h-7 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-slate-400 text-[10px] mt-2 hidden sm:flex">
+                  <div className="w-7 h-7 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-slate-400 text-2xs mt-2 hidden sm:flex">
                     {cls.name.substring(0, 2).toUpperCase()}
                   </div>
                 </div>
@@ -240,20 +240,20 @@ export const ClassAssignmentsPanel: React.FC<Props> = ({ data, onUpdate }) => {
                           style={{ backgroundColor: item.subject?.color }}
                         ></div>
                         <div>
-                          <p className="text-[10px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">
+                          <p className="text-2xs font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">
                             {item.teacher?.name}
                           </p>
-                          <p className="text-[9px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                          <p className="text-2xs text-content-muted whitespace-nowrap">
                             {item.subject?.name}
                           </p>
                         </div>
-                        <span className="text-[9px] font-medium text-slate-400 bg-slate-50 dark:bg-slate-900 px-1 rounded ml-1">
+                        <span className="text-2xs font-medium text-slate-400 bg-slate-50 dark:bg-slate-900 px-1 rounded ml-1">
                           {item.periods}p
                         </span>
                       </div>
                     ))
                   ) : (
-                    <div className="w-full py-2 text-center text-[10px] text-slate-400 italic">
+                    <div className="w-full py-2 text-center text-2xs text-slate-400 italic">
                       No teachers assigned.
                     </div>
                   )}
