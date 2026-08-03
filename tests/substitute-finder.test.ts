@@ -135,6 +135,58 @@ describe("substitute finder", () => {
     expect(bo.atDailyCap).toBe(true);
   });
 
+  // Regression: a class may override the school-wide day structure. Deriving the
+  // period label from settings.dayStructure labelled a real lesson "Recess".
+  describe("per-class structure overrides", () => {
+    const makeOverrideData = (): AppData => {
+      const data = makeData();
+      // School-wide: index 2 is a break.
+      data.settings.dayStructure = [
+        { type: "CLASS", label: "1" },
+        { type: "CLASS", label: "2" },
+        { type: "BREAK", label: "Recess" },
+      ];
+      data.settings.schoolStartTime = "08:00";
+      data.settings.defaultClassDuration = 40;
+      data.settings.defaultBreakDuration = 20;
+      // 7A overrides index 2 to be a teaching period.
+      const cls = data.classes.find((c) => c.id === "7A")!;
+      cls.structure = [
+        { type: "CLASS", label: "1" },
+        { type: "CLASS", label: "2" },
+        { type: "CLASS", label: "3" },
+      ];
+      // Absent teacher teaches 7A at that overridden index.
+      data.schedule["7A"] = {
+        0: { 2: { subjectId: "math", teacherId: "t1", classId: "7A", roomId: "r1" } },
+      } as unknown as AppData["schedule"];
+      delete (data.schedule as Record<string, unknown>)["7B"];
+      delete (data.schedule as Record<string, unknown>)["8A"];
+      return data;
+    };
+
+    it("labels the lesson as a teaching period, not the global break", () => {
+      const [lesson] = findAffectedLessons(makeOverrideData(), "t1", 0);
+      expect(lesson.periodLabel).toBe("P3");
+      expect(lesson.periodLabel).not.toBe("Recess");
+    });
+
+    it("derives the time range from the class's own structure", () => {
+      const [lesson] = findAffectedLessons(makeOverrideData(), "t1", 0);
+      // 3 x 40min teaching periods from 08:00 => third runs 09:20-10:00.
+      // The global structure would place a 20min break there instead.
+      expect(lesson.timeRange).toBe("09:20 - 10:00");
+    });
+
+    it("still uses the global structure for classes without an override", () => {
+      const data = makeOverrideData();
+      const cls = data.classes.find((c) => c.id === "7A")!;
+      delete cls.structure;
+      const [lesson] = findAffectedLessons(data, "t1", 0);
+      expect(lesson.periodLabel).toBe("Recess");
+    });
+  });
+
   it("buildCoverPlan pairs every affected lesson with candidates", () => {
     const plan = buildCoverPlan(makeData(), "t1", 0);
     expect(plan).toHaveLength(2);

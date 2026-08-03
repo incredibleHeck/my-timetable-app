@@ -1,4 +1,10 @@
 import { AppData } from "../../../types";
+import {
+  calculateClassSchedule,
+  getEffectiveStructure,
+  getFormattedTimeRange,
+  getPeriodLabel,
+} from "../../../utils/timeUtils";
 
 export interface AffectedLesson {
   day: number;
@@ -8,6 +14,13 @@ export interface AffectedLesson {
   subjectId: string;
   subjectName: string;
   roomName?: string;
+  /**
+   * Label and time resolved against the *class's own* day structure, which may
+   * override the school-wide one. Using the global structure here mislabels any
+   * class with an override (e.g. showing a lesson as "Recess").
+   */
+  periodLabel: string;
+  timeRange: string;
 }
 
 export interface SubstituteCandidate {
@@ -58,6 +71,23 @@ export const findAffectedLessons = (
   const subjectName = new Map(data.subjects.map((s) => [s.id, s.name]));
   const className = new Map(data.classes.map((c) => [c.id, c.name]));
   const roomName = new Map(data.rooms.map((r) => [r.id, r.name]));
+  const classById = new Map(data.classes.map((c) => [c.id, c]));
+
+  // Period label/time depend on the class's structure, so resolve per class.
+  // Cached because a class contributes many lessons on the same day.
+  const timesCache = new Map<string, ReturnType<typeof calculateClassSchedule>>();
+  const resolveDisplay = (classId: string, period: number) => {
+    const cls = classById.get(classId);
+    const structure = getEffectiveStructure(cls, data.settings);
+    if (!timesCache.has(classId)) {
+      timesCache.set(classId, cls ? calculateClassSchedule(cls, data.settings, structure) : []);
+    }
+    const times = timesCache.get(classId)!;
+    return {
+      periodLabel: getPeriodLabel(structure, period),
+      timeRange: getFormattedTimeRange(times[period] ?? data.settings.timeSlots?.[period]),
+    };
+  };
 
   const byPeriod = new Map<number, AffectedLesson>();
 
@@ -85,6 +115,9 @@ export const findAffectedLessons = (
           subjectId: slot.subjectId,
           subjectName: subjectName.get(slot.subjectId) ?? slot.subjectId,
           roomName: slot.roomId ? roomName.get(slot.roomId) : undefined,
+          // Joint lessons run simultaneously, so the first class's structure is
+          // representative for the shared slot.
+          ...resolveDisplay(classId, period),
         });
       }
     }

@@ -80,6 +80,47 @@ export function generateDefaultTimeSlots(structure: (PeriodType | PeriodConfig)[
 }
 
 /**
+ * Resolves the day structure that actually applies to a class: its own override
+ * when present, otherwise the school-wide default.
+ *
+ * Anything deriving period labels or times for a specific class MUST go through
+ * this — reading `settings.dayStructure` directly mislabels every class that
+ * overrides its structure.
+ */
+export function getEffectiveStructure(
+  classGroup: Pick<ClassGroup, "structure"> | undefined,
+  globalSettings: Settings,
+): (PeriodType | PeriodConfig)[] {
+  return classGroup?.structure?.length ? classGroup.structure : globalSettings.dayStructure;
+}
+
+/**
+ * Human label for a period index within a structure: sequential "P1, P2, …" for
+ * teaching periods (breaks are skipped, not numbered), or the break's own label.
+ */
+export function getPeriodLabel(
+  structure: (PeriodType | PeriodConfig)[] | undefined,
+  periodIndex: number,
+): string {
+  const item = structure?.[periodIndex];
+  const type = typeof item === "string" ? item : item?.type;
+  const effectiveType = type || "CLASS";
+
+  if (effectiveType !== "CLASS") {
+    const label = typeof item === "string" ? item : item?.label || item?.type;
+    return label || "Break";
+  }
+
+  let classCount = 0;
+  for (let i = 0; i <= periodIndex; i++) {
+    const current = structure?.[i];
+    const currentType = typeof current === "string" ? current : current?.type;
+    if ((currentType || "CLASS") === "CLASS") classCount++;
+  }
+  return `P${classCount}`;
+}
+
+/**
  * Interval Arithmetic: Overlap Detection
  * Uses the logic: (StartA < EndB) AND (StartB < EndA).
  * This correctly treats back-to-back classes (EndA === StartB) as NOT overlapping.

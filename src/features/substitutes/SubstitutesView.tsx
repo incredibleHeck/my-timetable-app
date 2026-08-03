@@ -3,7 +3,6 @@ import { AppData } from "../../types";
 import { Card } from "../../components/ui";
 import { UserX, CalendarDays, Check, AlertTriangle, ArrowRight, Info } from "lucide-react";
 import { buildCoverPlan } from "./logic/substituteFinder";
-import { getFormattedTimeRange } from "../../utils/timeUtils";
 
 interface ViewProps {
   data: AppData;
@@ -11,21 +10,6 @@ interface ViewProps {
 }
 
 const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-
-/** Map a raw period index to a teaching-period label like "P3" (breaks skipped). */
-const buildPeriodLabels = (data: AppData): Map<number, string> => {
-  const labels = new Map<number, string>();
-  let classCount = 0;
-  data.settings.dayStructure.forEach((p, idx) => {
-    if (p.type === "CLASS") {
-      classCount++;
-      labels.set(idx, `P${classCount}`);
-    } else {
-      labels.set(idx, p.label || p.type);
-    }
-  });
-  return labels;
-};
 
 export const SubstitutesView: React.FC<ViewProps> = ({ data }) => {
   const teachers = useMemo(
@@ -37,8 +21,6 @@ export const SubstitutesView: React.FC<ViewProps> = ({ data }) => {
   const [absentTeacherId, setAbsentTeacherId] = useState("");
   const [day, setDay] = useState(0);
   const [assignments, setAssignments] = useState<Record<number, string>>({});
-
-  const periodLabels = useMemo(() => buildPeriodLabels(data), [data]);
 
   const plan = useMemo(() => {
     if (!absentTeacherId) return [];
@@ -144,7 +126,6 @@ export const SubstitutesView: React.FC<ViewProps> = ({ data }) => {
         <div className="space-y-3">
           {plan.map(({ lesson, candidates }) => {
             const chosenId = assignments[lesson.period];
-            const timeLabel = getFormattedTimeRange(data.settings.timeSlots?.[lesson.period]);
             const qualifiedCount = candidates.filter((c) => c.qualified && !c.atDailyCap).length;
 
             return (
@@ -153,8 +134,10 @@ export const SubstitutesView: React.FC<ViewProps> = ({ data }) => {
                   {/* Lesson info */}
                   <div className="flex items-center gap-3 md:w-72 shrink-0">
                     <div className="flex flex-col items-center justify-center w-14 h-14 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0">
-                      <span className="text-sm font-black">{periodLabels.get(lesson.period)}</span>
-                      {timeLabel && <span className="text-[8px] text-slate-400">{timeLabel}</span>}
+                      <span className="text-sm font-black">{lesson.periodLabel}</span>
+                      {lesson.timeRange && (
+                        <span className="text-[8px] text-slate-400">{lesson.timeRange}</span>
+                      )}
                     </div>
                     <div className="min-w-0">
                       <p className="font-bold text-slate-800 dark:text-slate-100 text-sm truncate">
