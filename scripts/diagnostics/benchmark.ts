@@ -33,7 +33,11 @@ import { auditFinalSchedule } from "../../src/features/generator/scheduler/valid
 import { detectCurriculumGaps } from "../../src/features/generator/scheduler/validation/final-conflicts";
 import { getDaysPerWeek } from "../../src/features/generator/scheduler/utils/utils";
 import { isOccasionBlocked } from "../../src/utils/utils";
-import type { PeriodConfig, PeriodType } from "../../src/types";
+import {
+  scoreSchedule,
+  teachingIndicesOf,
+  classSchedulablePeriods,
+} from "../../src/features/generator/scheduler/logic/objective";
 
 // ---------------------------------------------------------------- CLI parsing
 
@@ -47,6 +51,8 @@ const hasFlag = (name: string) => process.argv.includes(`--${name}`);
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURE = arg("fixture") ?? path.join(HERE, "fixtures", "school-data.json");
 const BUDGET_MS = Number(arg("budget") ?? 60000);
+/** `--runs N` swaps the time budget for a fixed restart count (reproducible A/B). */
+const FIXED_RUNS = arg("runs") ? Number(arg("runs")) : 0;
 const REPEATS = Number(arg("repeat") ?? 1);
 const BASE_SEED = Number(arg("seed") ?? 12345);
 const JSON_OUT = arg("json");
@@ -68,8 +74,16 @@ export interface BenchmarkMetrics {
   severityHigh: number;
   severityMedium: number;
   severityLow: number;
+  /** Weighted soft cost from logic/objective.ts — what run selection now ranks on. */
+  softCost: number;
   /** Idle teaching periods between a teacher's first and last lesson of a day. */
   teacherGapPeriods: number;
+  /** Of those, the isolated singles — the only shape the objective penalises. */
+  fragmentedTeacherGaps: number;
+  /** Free runs of 2+ periods. Usable prep time; reported but deliberately unpenalised. */
+  consolidatedTeacherBlocks: number;
+  /** Teaching periods scheduled beyond settings.maxTeachingPeriodsPerWeek. */
+  weeklyCapExcess: number;
   /** Idle periods inside a class's day. */
   classGapPeriods: number;
   /** Spread of weekly teaching load across teachers who teach at all. */
@@ -114,16 +128,6 @@ function countGapPeriods(
   return gaps;
 }
 
-/** Indices that are CLASS periods in this structure. */
-function teachingIndicesOf(structure: (PeriodType | PeriodConfig)[] | undefined): Set<number> {
-  const out = new Set<number>();
-  (structure ?? []).forEach((item, i) => {
-    const type = typeof item === "string" ? item : item?.type;
-    if ((type || "CLASS") === "CLASS") out.add(i);
-  });
-  return out;
-}
-
 function computeMetrics(
   data: AppData,
   schedule: AppData["schedule"],
@@ -137,9 +141,14 @@ function computeMetrics(
   // from — using it here would report 0 quality issues by construction.
   const conflicts = auditFinalSchedule(scheduleData, { mode: "full" });
   const gaps = detectCurriculumGaps(scheduleData, state);
+  const objective = scoreSchedule(data, schedule, solve.unplacedGangs);
 
-  const classById = new Map(data.classes.map((c) => [c.id, c]));
   const teacherById = new Map(data.teachers.map((t) => [t.id, t]));
+
+  // The gap/schedulability rules live in logic/objective.ts. Importing them
+  // keeps the benchmark measuring exactly what the solver now optimises for —
+  // a second implementation here would drift and quietly invalidate the numbers.
+  const structureCache = new Map<string, Set<number>>();
 
   // Each class keeps its own break/lunch positions; never assume the global one.
   const classTeaching = new Map<string, Set<number>>();
@@ -151,17 +160,8 @@ function computeMetrics(
   const occasionBlocked = (day: number, period: number): boolean =>
     isOccasionBlocked(data.settings.fixedOccasions?.[day]?.[period]);
 
-  const classSchedulable = (classId: string) => (day: number) => {
-    const cls = classById.get(classId);
-    const base = classTeaching.get(classId) ?? new Set<number>();
-    const out = new Set<number>();
-    for (const p of base) {
-      if (occasionBlocked(day, p)) continue;
-      if (isOccasionBlocked(cls?.fixedSessions?.[day]?.[p])) continue;
-      out.add(p);
-    }
-    return out;
-  };
+  const classSchedulable = (classId: string) => (day: number) =>
+    classSchedulablePeriods(data, classId, day, structureCache);
 
   const teacherDays = new Map<string, Map<number, Set<number>>>();
   const classDays = new Map<string, Map<number, Set<number>>>();
@@ -237,7 +237,11 @@ function computeMetrics(
     severityHigh: conflicts.filter((c) => c.severity === "HIGH").length,
     severityMedium: conflicts.filter((c) => c.severity === "MEDIUM").length,
     severityLow: conflicts.filter((c) => !c.severity || c.severity === "LOW").length,
+    softCost: objective.softCost,
     teacherGapPeriods,
+    fragmentedTeacherGaps: objective.breakdown.fragmentedTeacherGaps,
+    consolidatedTeacherBlocks: objective.breakdown.consolidatedTeacherBlocks,
+    weeklyCapExcess: objective.breakdown.weeklyCapExcess,
     classGapPeriods,
     loadMin: loads.length ? Math.min(...loads) : 0,
     loadMax: loads.length ? Math.max(...loads) : 0,
@@ -277,15 +281,26 @@ function runOnce(data: AppData, seed: number): BenchmarkMetrics {
       }
       return true;
     },
-    {
-      // Production configuration — the path the worker actually ships.
-      runs: 3,
-      timeBudgetMs: BUDGET_MS,
-      clockStartMs: started,
-      calibrate: true,
-      shuffleConstruction: true,
-      seed,
-    },
+    FIXED_RUNS
+      ? {
+          // Fixed-work mode: every arm of a comparison does exactly the same
+          // number of restarts. Under a time budget the restart count swings
+          // with machine load (observed 10 vs 18 restarts for the same 30s),
+          // which is far larger than most effects worth measuring.
+          runs: FIXED_RUNS,
+          calibrate: true,
+          shuffleConstruction: true,
+          seed,
+        }
+      : {
+          // Production configuration — the path the worker actually ships.
+          runs: 3,
+          timeBudgetMs: BUDGET_MS,
+          clockStartMs: started,
+          calibrate: true,
+          shuffleConstruction: true,
+          seed,
+        },
   );
   const durationMs = Date.now() - started;
   if (!QUIET) process.stdout.write("\r".padEnd(48) + "\r");
@@ -352,7 +367,11 @@ function main() {
     "severityHigh",
     "severityMedium",
     "severityLow",
+    "softCost",
     "teacherGapPeriods",
+    "fragmentedTeacherGaps",
+    "consolidatedTeacherBlocks",
+    "weeklyCapExcess",
     "classGapPeriods",
     "loadMax",
     "loadStdev",

@@ -13,6 +13,7 @@ import {
 } from "./repair-controller";
 import { executeRepairAction } from "./repair-executor";
 import { findBestRepairMove } from "./search";
+import { scoreSchedule } from "../logic/objective";
 import { runConstructionQueue, PlacementRecord, ConstructionMaps } from "./construction";
 import {
   PRIORITY_CRITICAL,
@@ -73,13 +74,42 @@ export type SolverResult = {
   unplacedGangs: number;
   /** Completed runs that placed every lesson gang. */
   perfectRuns: number;
+  /** Weighted soft quality cost of this run's schedule; lower is better. */
+  softCost?: number;
 };
 
-function compareSolverResults(a: SolverResult, b: SolverResult): number {
+/** Soft cost of a run, computed at most once and cached on the result. */
+function softCostOf(result: SolverResult, data: AppData): number {
+  result.softCost ??= scoreSchedule(data, result.schedule).softCost;
+  return result.softCost;
+}
+
+/**
+ * Rank two completed runs. Lower is better.
+ *
+ * Feasibility dominates: a schedule that teaches more of the curriculum beats a
+ * prettier one that teaches less.
+ *
+ * `unitPlacements.size` used to be the only tiebreak, but it is an exact
+ * restatement of `unplacedGangs` — measured across 15 restarts on a 361-unit
+ * school, the two always summed to the unit total — so it could never separate
+ * anything the first test had not already decided. `softCost` replaces it with a
+ * question about quality (see `logic/objective.ts`).
+ *
+ * Measured honestly, this changes nothing on a hard instance: holding restart
+ * count fixed at 6 runs × 3 seeds on a 361-unit school, output was identical
+ * with and without the quality term, because the best run's unplaced count is
+ * unique and the comparison never reaches here. It is kept because it is free
+ * (scoring is lazy, so no tie costs nothing) and because it is live exactly
+ * where the dead placement test never was: on schools the solver can satisfy,
+ * where many restarts reach zero unplaced and tie, and the winner would
+ * otherwise be whichever finished first.
+ */
+function compareSolverResults(a: SolverResult, b: SolverResult, data: AppData): number {
   if (a.unplacedGangs !== b.unplacedGangs) {
     return a.unplacedGangs - b.unplacedGangs;
   }
-  return b.state.unitPlacements.size - a.state.unitPlacements.size;
+  return softCostOf(a, data) - softCostOf(b, data);
 }
 
 /**
@@ -445,7 +475,9 @@ export const solveSmart = (
     if (isPerfectGeneratedSchedule(data, result.schedule)) {
       perfectRunsFound++;
     }
-    if (!bestResult || compareSolverResults(result, bestResult) < 0) {
+    // Scored against the school's real settings, never the perturbed `runData`:
+    // calibration may distort what construction chases, but not what "good" means.
+    if (!bestResult || compareSolverResults(result, bestResult, data) < 0) {
       bestResult = result;
     }
 
