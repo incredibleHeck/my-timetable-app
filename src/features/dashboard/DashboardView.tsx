@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from "react";
+import React, { useRef } from "react";
 import {
   Users,
   BookOpen,
@@ -6,7 +6,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   Activity,
-  Layers,
+  Clock,
   FolderOpen,
   Plus,
   Download,
@@ -50,20 +50,6 @@ export const DashboardView: React.FC<ViewProps> = ({ data, profileName, onNaviga
   } = useDashboard(data, onUpdate);
 
   const { issues, conflicts } = healthIssues;
-
-  // Setup gaps worth surfacing on the tiles: the raw counts already appear as
-  // badges in the sidebar, so the tiles should say what still needs attention.
-  const classesNeedingCurriculum = useMemo(
-    () => data.classes.filter((c) => c.curriculum.length === 0).length,
-    [data.classes],
-  );
-  const unusedSubjects = useMemo(
-    () =>
-      data.subjects.filter(
-        (s) => !data.classes.some((c) => c.curriculum.some((ci) => ci.subjectId === s.id)),
-      ).length,
-    [data.subjects, data.classes],
-  );
 
   // --- FILE SYSTEM HANDLERS ---
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -170,48 +156,21 @@ export const DashboardView: React.FC<ViewProps> = ({ data, profileName, onNaviga
       {/* SETUP STEPPER */}
       <SetupStepper data={data} onNavigate={onNavigate ?? (() => {})} />
 
-      {/* METRICS GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <MetricCard
-          label="Total Staff"
-          value={metrics.teacherCount}
-          icon={<Users size={20} />}
-          color="blue"
-          subtext={
-            metrics.overloadedCount > 0
-              ? `${metrics.overloadedCount} overloaded`
-              : `${metrics.teacherCount} active`
-          }
-          onClick={() => onNavigate && onNavigate("TEACHERS")}
-        />
-        <MetricCard
-          label="Class Groups"
-          value={metrics.classCount}
-          icon={<BookOpen size={20} />}
-          color="emerald"
-          // Previously "{n} classes" — a verbatim restatement of the value.
-          // Surface the gap that needs action instead.
-          subtext={
-            classesNeedingCurriculum > 0
-              ? `${classesNeedingCurriculum} need curriculum`
-              : "All have curriculum"
-          }
-          onClick={() => onNavigate && onNavigate("CLASSES")}
-        />
-        <MetricCard
-          label="Subjects"
-          value={metrics.subjectCount}
-          icon={<Layers size={20} />}
-          color="violet"
-          subtext={unusedSubjects > 0 ? `${unusedSubjects} unused` : "All in use"}
-          onClick={() => onNavigate && onNavigate("SUBJECTS")}
-        />
+      {/* SCHEDULE STATUS
+          Previously a five-tile row. Total Staff / Class Groups / Subjects were
+          removed: their counts already sit in the sidebar badges — on screen at
+          the same time — and their "needs attention" subtexts duplicated the
+          System Health panel below, which names the actual classes and teachers
+          and offers a Fix action. What remains are the two metrics derived from
+          the generated timetable, which appear nowhere else, paired with when
+          the schedule was last produced. */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <MetricCard
           label="Unplaced"
           value={conflicts}
           icon={<AlertTriangle size={20} />}
           color="red"
-          subtext="Conflicts found"
+          subtext={conflicts === 0 ? "No conflicts" : "Conflicts found"}
           onClick={() => onNavigate && onNavigate("GENERATOR")}
         />
         <MetricCard
@@ -219,9 +178,27 @@ export const DashboardView: React.FC<ViewProps> = ({ data, profileName, onNaviga
           value={`${metrics.saturation}%`}
           icon={<Activity size={20} />}
           color="amber"
-          subtext={`Avg. Load: ${metrics.avgUtilization}%`}
+          subtext={`Avg. load ${metrics.avgUtilization}%`}
           onClick={() => onNavigate && onNavigate("GENERATOR")}
         />
+        <Card className="flex flex-col justify-between p-5">
+          <div className="mb-4 inline-flex w-fit rounded-xl border border-slate-100 bg-slate-50 p-3 text-content-muted dark:border-slate-700 dark:bg-slate-900">
+            <Clock size={20} />
+          </div>
+          <div>
+            <h3 className="truncate text-lg font-bold text-slate-800 dark:text-slate-100">
+              {data.lastGenerated ? new Date(data.lastGenerated).toLocaleDateString() : "Never run"}
+            </h3>
+            <p className="mt-1 text-xs font-bold uppercase tracking-wider text-content-muted">
+              Last generated
+            </p>
+            <p className="mt-2 text-xs text-content-muted">
+              {data.lastGenerated
+                ? new Date(data.lastGenerated).toLocaleTimeString()
+                : "Run the scheduler to build a timetable"}
+            </p>
+          </div>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -373,29 +350,6 @@ export const DashboardView: React.FC<ViewProps> = ({ data, profileName, onNaviga
               onClick={() => onNavigate && onNavigate("DUTY")}
             />
           </div>
-
-          {/* Deliberately dark in both themes. The `!` modifiers are required:
-              Card's own `bg-white` is emitted after `bg-slate-900` in Tailwind's
-              output, so without them the card rendered white in light mode with
-              near-invisible slate-200 text (measured 1.23:1). */}
-          <Card className="p-5 mt-4 !bg-slate-900 text-white !border-slate-800">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h4 className="font-bold text-sm text-slate-200">Last Optimization</h4>
-                <p className="text-xs text-slate-400 mt-1">
-                  {data.lastGenerated ? new Date(data.lastGenerated).toLocaleString() : "Never run"}
-                </p>
-              </div>
-              {data.lastGenerated && (
-                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
-                  Completed
-                </Badge>
-              )}
-            </div>
-            <div className="text-xs text-slate-400">
-              Algorithm: <span className="text-slate-300">Constructive Heuristic v10 (Worker)</span>
-            </div>
-          </Card>
         </div>
       </div>
 
