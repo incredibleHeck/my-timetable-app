@@ -44,7 +44,6 @@ export const InvigilatorExclusionModal: React.FC<Props> = ({
       isOpen={isOpen}
       onClose={onClose}
       title="Manage Staff Availability"
-      aria-label="Manage Staff Availability"
       footer={
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>

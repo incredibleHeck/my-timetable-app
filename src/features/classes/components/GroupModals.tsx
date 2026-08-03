@@ -43,7 +43,7 @@ export const ClassGroupModal: React.FC<JointClassModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="New Class Group" aria-label="New Class Group">
+    <Modal isOpen={isOpen} onClose={onClose} title="New Class Group">
       <div className="space-y-4">
         <Input
           label="Group Name"
@@ -128,12 +128,7 @@ export const ElectiveBlockModal: React.FC<ElectiveBlockModalProps> = ({
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="New Elective Block"
-      aria-label="New Elective Block"
-    >
+    <Modal isOpen={isOpen} onClose={onClose} title="New Elective Block">
       <div className="space-y-4">
         <Input
           label="Block Name"

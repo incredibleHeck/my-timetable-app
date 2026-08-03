@@ -90,7 +90,6 @@ export const DutyBulkAssignModal: React.FC<Props> = ({ isOpen, onClose, data, on
       isOpen={isOpen}
       onClose={onClose}
       title="Bulk Duty Assignment"
-      aria-label="Bulk Duty Assignment"
       footer={
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>

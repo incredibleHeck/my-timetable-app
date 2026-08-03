@@ -139,12 +139,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Auto-Generate Timetable"
-      aria-label="Auto-Generate Timetable"
-    >
+    <Modal isOpen={isOpen} onClose={onClose} title="Auto-Generate Timetable">
       <div className="space-y-6 max-h-[75vh] overflow-y-auto pr-2">
         {/* 1. STRATEGY SELECTOR */}
         <div className="grid grid-cols-2 gap-4 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg">

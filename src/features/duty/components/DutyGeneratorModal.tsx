@@ -61,7 +61,6 @@ export const DutyGeneratorModal: React.FC<Props> = ({
       isOpen={isOpen}
       onClose={onClose}
       title="Configure Roster Generation"
-      aria-label="Configure Roster Generation"
       footer={
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>

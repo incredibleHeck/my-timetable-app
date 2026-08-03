@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from "react";
-import { Plus, Trash2, Edit2, AlertTriangle, Building2, Users } from "lucide-react";
+import { Plus, Trash2, Edit2, AlertTriangle, Building2 } from "lucide-react";
 import { AppData } from "../../types";
 import { Room } from "./types";
-import { Button, Modal, Input, Select } from "../../components/ui";
+import { Button, Modal, Input, Select, DataTable } from "../../components/ui";
 import { generateId } from "../../utils/utils";
 import { useProfile } from "../../contexts/ProfileContext";
 
@@ -117,79 +117,77 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate }) =>
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-        {sortedRooms.map((room) => {
-          return (
-            <div
-              key={room.id}
-              className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm hover:shadow-md transition-all group flex flex-col"
-            >
-              <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700"></div>
-
-              <div className="p-4 flex-1 flex flex-col items-center text-center">
-                <div className="w-12 h-12 rounded-full mb-3 flex items-center justify-center text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
-                  <Building2 size={24} />
-                </div>
-                <h3
-                  className="font-bold text-slate-800 dark:text-slate-100 mb-1 truncate w-full px-2"
-                  title={room.name}
-                >
+      {/* Rooms are a uniform record set (name/type/capacity), so a table reads
+          faster and denser than a card grid of near-identical badges. */}
+      <DataTable
+        caption="Rooms with their type and capacity"
+        rows={sortedRooms}
+        rowKey={(room) => room.id}
+        empty={
+          <div className="rounded-xl border border-dashed border-edge-strong bg-surface-muted p-12 text-center">
+            <Building2 size={24} className="mx-auto mb-2 text-content-muted" />
+            <p className="text-sm font-semibold text-content">No rooms yet</p>
+            <p className="mt-1 text-xs text-content-muted">
+              Add a room to assign lessons to physical spaces.
+            </p>
+          </div>
+        }
+        columns={[
+          {
+            header: "Room",
+            className: "w-[40%]",
+            cell: (room) => (
+              <div className="flex items-center gap-2 min-w-0">
+                <Building2 size={14} className="shrink-0 text-content-muted" aria-hidden="true" />
+                <span className="font-semibold truncate" title={room.name}>
                   {room.name}
-                </h3>
-
-                <div className="flex gap-1 mb-3">
-                  <span className="text-2xs font-bold text-content-muted bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
-                    {room.type}
+                </span>
+                {room.isHomeRoom && (
+                  <span className="shrink-0 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-2xs font-bold text-amber-800 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
+                    Home
                   </span>
-                  {room.isHomeRoom && (
-                    <span className="text-2xs font-bold text-accent-ink bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded-full border border-amber-200">
-                      Home Room
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex flex-col gap-1 w-full mt-auto">
-                  <div className="text-2xs py-1 px-2 rounded flex items-center justify-center gap-1 bg-slate-50 dark:bg-slate-900 text-content-muted">
-                    <Users size={12} />
-                    Capacity: <b>{room.capacity}</b>
-                  </div>
-                </div>
+                )}
               </div>
-
-              <div className="flex border-t border-slate-100 dark:border-slate-700">
+            ),
+          },
+          {
+            header: "Type",
+            cell: (room) => <span className="text-content-muted">{room.type}</span>,
+          },
+          {
+            header: "Capacity",
+            numeric: true,
+            cell: (room) => room.capacity,
+          },
+          {
+            header: "Actions",
+            className: "w-[1%] whitespace-nowrap",
+            cell: (room) => (
+              <div className="flex items-center justify-end gap-1">
                 <button
                   onClick={() => openModal(room)}
-                  className="flex-1 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-50 text-xs font-semibold flex items-center justify-center transition-colors"
+                  aria-label={`Edit ${room.name}`}
+                  className="rounded-md p-2 text-content-muted transition-colors hover:bg-surface-muted hover:text-accent-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 >
-                  <Edit2 size={14} className="mr-1" /> Edit
+                  <Edit2 size={14} />
                 </button>
-                <div className="w-px bg-slate-100 dark:bg-slate-800"></div>
                 <button
                   onClick={() => initiateDelete(room)}
                   disabled={room.isHomeRoom}
-                  className={`flex-1 py-3 text-xs font-semibold flex items-center justify-center transition-colors ${
+                  aria-label={
                     room.isHomeRoom
-                      ? "text-slate-300 cursor-not-allowed opacity-50"
-                      : "text-content-muted hover:text-danger-ink hover:bg-red-50 dark:hover:bg-red-900/30"
-                  }`}
+                      ? `${room.name} is a home room and cannot be deleted`
+                      : `Delete ${room.name}`
+                  }
+                  className="rounded-md p-2 text-content-muted transition-colors hover:bg-red-50 hover:text-danger-ink disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-content-muted dark:hover:bg-red-900/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 >
-                  <Trash2 size={14} className="mr-1" /> Del
+                  <Trash2 size={14} />
                 </button>
               </div>
-            </div>
-          );
-        })}
-
-        <button
-          onClick={() => openModal()}
-          className="bg-slate-50 dark:bg-slate-900 rounded-xl border-2 border-dashed border-slate-300 hover:border-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-all flex flex-col items-center justify-center p-6 group h-full min-h-[200px]"
-        >
-          <div className="w-14 h-14 rounded-full bg-slate-200 dark:bg-slate-700 group-hover:bg-amber-100 dark:group-hover:bg-amber-900/40 text-content-muted group-hover:text-accent-ink flex items-center justify-center mb-3 transition-colors shadow-inner">
-            <Plus size={28} />
-          </div>
-          <span className="font-bold text-content-muted group-hover:text-accent-ink">Add Room</span>
-        </button>
-      </div>
+            ),
+          },
+        ]}
+      />
 
       <Modal
         isOpen={modalOpen}

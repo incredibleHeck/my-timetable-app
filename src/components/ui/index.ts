@@ -5,6 +5,7 @@ export * from "./Modal";
 export * from "./Card";
 export * from "./Badge";
 export * from "./EntityChip";
+export * from "./DataTable";
 export * from "./Toast";
 export * from "./NumberStepper";
 export * from "./ConfirmDialog";

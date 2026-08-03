@@ -356,7 +356,6 @@ export const ConflictPanel: React.FC<Props> = ({
 
       <ResolutionSection
         title="Hard Collisions"
-        aria-label="Hard Collisions"
         icon={<AlertCircle size={16} />}
         count={hardCollisions.length}
         tone="red"
@@ -369,7 +368,6 @@ export const ConflictPanel: React.FC<Props> = ({
 
       <ResolutionSection
         title="Unplaced Lessons"
-        aria-label="Unplaced Lessons"
         icon={<AlertTriangle size={16} />}
         count={unplacedLessons.length}
         tone="amber"
@@ -383,7 +381,6 @@ export const ConflictPanel: React.FC<Props> = ({
       {qualityWarnings.length > 0 && (
         <ResolutionSection
           title="Layout Preferences"
-          aria-label="Layout Preferences"
           icon={<AlertTriangle size={16} className="text-yellow-600" />}
           count={qualityWarnings.length}
           tone="amber"
