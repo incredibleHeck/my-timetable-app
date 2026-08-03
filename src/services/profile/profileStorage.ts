@@ -1,4 +1,5 @@
 import * as NativeAdapter from "../fileSystem/nativeAdapter";
+import * as WebDb from "./webDb";
 import { Profile, ProfileManifest } from "../../types/profile";
 import { parseProfile } from "../../schemas/profile";
 import { isTauriEnv, getTauriPath } from "../../utils/platform";
@@ -6,6 +7,72 @@ import { isTauriEnv, getTauriPath } from "../../utils/platform";
 const MANIFEST_FILE = "manifest.json";
 const WEB_MANIFEST_KEY = "profile_manifest";
 const WEB_PROFILE_PREFIX = "profile_data_";
+const WEB_PENDING_FLUSH_KEY = "pending_flush";
+const WEB_ACTIVE_META = "activeProfileId";
+const WEB_MIGRATED_META = "lsMigrated";
+
+/** One-time migration of the old localStorage backend into IndexedDB. */
+const migrateLocalStorageToIdb = async (): Promise<void> => {
+  if (typeof localStorage === "undefined") return;
+  if (await WebDb.getMeta<boolean>(WEB_MIGRATED_META)) return;
+
+  try {
+    const raw = localStorage.getItem(WEB_MANIFEST_KEY);
+    if (raw) {
+      const manifest = JSON.parse(raw) as ProfileManifest;
+      for (const entry of manifest.profiles) {
+        const profileRaw = localStorage.getItem(`${WEB_PROFILE_PREFIX}${entry.id}`);
+        if (!profileRaw) continue;
+        try {
+          await WebDb.putProfile(parseProfile(JSON.parse(profileRaw)));
+        } catch (err) {
+          console.error(`Skipped migrating profile ${entry.id}:`, err);
+        }
+      }
+
+      if (!(await WebDb.getMeta(WEB_ACTIVE_META))) {
+        await WebDb.setMeta(WEB_ACTIVE_META, manifest.activeProfileId ?? null);
+      }
+
+      // Free the localStorage space now that data lives in IndexedDB.
+      for (const entry of manifest.profiles) {
+        localStorage.removeItem(`${WEB_PROFILE_PREFIX}${entry.id}`);
+      }
+      localStorage.removeItem(WEB_MANIFEST_KEY);
+    }
+    await WebDb.setMeta(WEB_MIGRATED_META, true);
+  } catch (err) {
+    console.error("localStorage -> IndexedDB migration failed:", err);
+  }
+};
+
+/** Apply an emergency snapshot written synchronously on tab close. */
+const reconcilePendingFlush = async (): Promise<void> => {
+  if (typeof localStorage === "undefined") return;
+  const raw = localStorage.getItem(WEB_PENDING_FLUSH_KEY);
+  if (!raw) return;
+  try {
+    await WebDb.putProfile(parseProfile(JSON.parse(raw)));
+  } catch (err) {
+    console.error("Failed to reconcile pending profile flush:", err);
+  } finally {
+    localStorage.removeItem(WEB_PENDING_FLUSH_KEY);
+  }
+};
+
+/**
+ * Best-effort synchronous save used from the tab-close handler, where async
+ * IndexedDB writes cannot be guaranteed to finish. The snapshot is applied to
+ * IndexedDB on the next init via {@link reconcilePendingFlush}.
+ */
+export const flushProfileEmergency = (profile: Profile): void => {
+  if (isTauriEnv() || typeof localStorage === "undefined") return;
+  try {
+    localStorage.setItem(WEB_PENDING_FLUSH_KEY, JSON.stringify(profile));
+  } catch (err) {
+    console.error("Emergency profile flush failed:", err);
+  }
+};
 
 const getManifestPath = async () => {
   const pathApi = await getTauriPath();
@@ -34,14 +101,10 @@ export const init = async (): Promise<void> => {
         await NativeAdapter.writeFile(path, JSON.stringify(initialManifest));
       }
     } else {
-      // Web Init
-      if (!localStorage.getItem(WEB_MANIFEST_KEY)) {
-        const initialManifest: ProfileManifest = {
-          profiles: [],
-          activeProfileId: null,
-        };
-        localStorage.setItem(WEB_MANIFEST_KEY, JSON.stringify(initialManifest));
-      }
+      // Web Init (IndexedDB)
+      await WebDb.ensureDb();
+      await migrateLocalStorageToIdb();
+      await reconcilePendingFlush();
     }
   } catch (error) {
     console.error("Failed to init profile storage:", error);
@@ -57,10 +120,8 @@ export const listProfiles = async (): Promise<ProfileManifest["profiles"]> => {
       const manifest: ProfileManifest = JSON.parse(content);
       return manifest.profiles;
     } else {
-      const content = localStorage.getItem(WEB_MANIFEST_KEY);
-      if (!content) return [];
-      const manifest: ProfileManifest = JSON.parse(content);
-      return manifest.profiles;
+      const profiles = await WebDb.getAllProfiles();
+      return profiles.map((p) => ({ id: p.id, name: p.name, lastModified: p.lastModified }));
     }
   } catch (error) {
     console.error("Failed to list profiles:", error);
@@ -99,32 +160,11 @@ export const saveProfile = async (profile: Profile): Promise<void> => {
 
       await NativeAdapter.writeFile(manifestPath, JSON.stringify(manifest));
     } else {
-      // Web Save
-      localStorage.setItem(`${WEB_PROFILE_PREFIX}${profile.id}`, JSON.stringify(profile));
-
-      const content = localStorage.getItem(WEB_MANIFEST_KEY);
-      const manifest: ProfileManifest = content
-        ? JSON.parse(content)
-        : { profiles: [], activeProfileId: null };
-
-      const existingIndex = manifest.profiles.findIndex((p) => p.id === profile.id);
-      const entry = {
-        id: profile.id,
-        name: profile.name,
-        lastModified: profile.lastModified,
-      };
-
-      if (existingIndex >= 0) {
-        manifest.profiles[existingIndex] = entry;
-      } else {
-        manifest.profiles.push(entry);
+      // Web Save (IndexedDB) — manifest is derived from the profiles store.
+      await WebDb.putProfile(profile);
+      if (!(await WebDb.getMeta<string | null>(WEB_ACTIVE_META))) {
+        await WebDb.setMeta(WEB_ACTIVE_META, profile.id);
       }
-
-      if (!manifest.activeProfileId) {
-        manifest.activeProfileId = profile.id;
-      }
-
-      localStorage.setItem(WEB_MANIFEST_KEY, JSON.stringify(manifest));
     }
   } catch (error) {
     console.error(`Failed to save profile ${profile.id}:`, error);
@@ -153,8 +193,8 @@ export const loadProfile = async (id: string): Promise<Profile | null> => {
       const content = await NativeAdapter.readFile(path);
       return parseProfile(JSON.parse(content));
     } else {
-      const content = localStorage.getItem(`${WEB_PROFILE_PREFIX}${id}`);
-      return content ? parseProfile(JSON.parse(content)) : null;
+      const profile = await WebDb.getProfile(id);
+      return profile ? parseProfile(profile) : null;
     }
   } catch (error) {
     console.error(`Failed to load profile ${id}:`, error);
@@ -179,16 +219,10 @@ export const deleteProfile = async (id: string): Promise<void> => {
 
       await NativeAdapter.writeFile(manifestPath, JSON.stringify(manifest));
     } else {
-      localStorage.removeItem(`${WEB_PROFILE_PREFIX}${id}`);
-
-      const content = localStorage.getItem(WEB_MANIFEST_KEY);
-      if (content) {
-        const manifest: ProfileManifest = JSON.parse(content);
-        manifest.profiles = manifest.profiles.filter((p) => p.id !== id);
-        if (manifest.activeProfileId === id) {
-          manifest.activeProfileId = manifest.profiles.length > 0 ? manifest.profiles[0].id : null;
-        }
-        localStorage.setItem(WEB_MANIFEST_KEY, JSON.stringify(manifest));
+      await WebDb.removeProfile(id);
+      if ((await WebDb.getMeta<string | null>(WEB_ACTIVE_META)) === id) {
+        const remaining = await WebDb.getAllProfiles();
+        await WebDb.setMeta(WEB_ACTIVE_META, remaining.length > 0 ? remaining[0].id : null);
       }
     }
   } catch (error) {
@@ -206,12 +240,7 @@ export const setActiveProfile = async (id: string): Promise<void> => {
       manifest.activeProfileId = id;
       await NativeAdapter.writeFile(manifestPath, JSON.stringify(manifest));
     } else {
-      const content = localStorage.getItem(WEB_MANIFEST_KEY);
-      if (content) {
-        const manifest: ProfileManifest = JSON.parse(content);
-        manifest.activeProfileId = id;
-        localStorage.setItem(WEB_MANIFEST_KEY, JSON.stringify(manifest));
-      }
+      await WebDb.setMeta(WEB_ACTIVE_META, id);
     }
   } catch (error) {
     console.error(`Failed to set active profile ${id}:`, error);
@@ -227,10 +256,7 @@ export const getActiveProfileId = async (): Promise<string | null> => {
       const manifest: ProfileManifest = JSON.parse(content);
       return manifest.activeProfileId;
     } else {
-      const content = localStorage.getItem(WEB_MANIFEST_KEY);
-      if (!content) return null;
-      const manifest: ProfileManifest = JSON.parse(content);
-      return manifest.activeProfileId;
+      return (await WebDb.getMeta<string | null>(WEB_ACTIVE_META)) ?? null;
     }
   } catch {
     return null;

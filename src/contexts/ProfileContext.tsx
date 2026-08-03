@@ -55,27 +55,10 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isDirty) {
-        // Sync flush to localStorage for Web
+        // Web: IndexedDB writes can't complete synchronously on unload, so drop
+        // a synchronous localStorage snapshot that init() reconciles next load.
         if (!isTauriEnv() && activeProfileRef.current) {
-          const profile = activeProfileRef.current;
-          try {
-            localStorage.setItem(`profile_data_${profile.id}`, JSON.stringify(profile));
-            const manifestContent = localStorage.getItem("profile_manifest");
-            if (manifestContent) {
-              const manifest = JSON.parse(manifestContent) as ProfileManifest;
-              const idx = manifest.profiles.findIndex((p) => p.id === profile.id);
-              const entry = {
-                id: profile.id,
-                name: profile.name,
-                lastModified: profile.lastModified,
-              };
-              if (idx >= 0) manifest.profiles[idx] = entry;
-              else manifest.profiles.push(entry);
-              localStorage.setItem("profile_manifest", JSON.stringify(manifest));
-            }
-          } catch (err) {
-            console.error("Failed to flush profile save on unload:", err);
-          }
+          ProfileStorage.flushProfileEmergency(activeProfileRef.current);
         }
 
         e.preventDefault();
