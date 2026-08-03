@@ -52,10 +52,14 @@ export const TimelineAutomationSection: React.FC<TimelineAutomationSectionProps>
           />
         </div>
         <div>
-          <label className="block text-2xs font-bold text-content-muted uppercase mb-1">
+          <label
+            className="block text-2xs font-bold text-content-muted uppercase mb-1"
+            htmlFor="duration-class"
+          >
             Class (Mins)
           </label>
           <input
+            id="duration-class"
             type="number"
             min="10"
             max="120"
@@ -72,10 +76,14 @@ export const TimelineAutomationSection: React.FC<TimelineAutomationSectionProps>
           />
         </div>
         <div>
-          <label className="block text-2xs font-bold text-content-muted uppercase mb-1">
+          <label
+            className="block text-2xs font-bold text-content-muted uppercase mb-1"
+            htmlFor="duration-break"
+          >
             Break (Mins)
           </label>
           <input
+            id="duration-break"
             type="number"
             min="5"
             max="60"
@@ -92,10 +100,14 @@ export const TimelineAutomationSection: React.FC<TimelineAutomationSectionProps>
           />
         </div>
         <div>
-          <label className="block text-2xs font-bold text-content-muted uppercase mb-1">
+          <label
+            className="block text-2xs font-bold text-content-muted uppercase mb-1"
+            htmlFor="duration-lunch"
+          >
             Lunch (Mins)
           </label>
           <input
+            id="duration-lunch"
             type="number"
             min="20"
             max="120"
@@ -119,6 +131,7 @@ export const TimelineAutomationSection: React.FC<TimelineAutomationSectionProps>
             }
             className="flex items-center justify-center gap-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-600 dark:text-slate-300 text-xs font-bold py-2.5 rounded-lg transition-colors"
             title="Recalculate every period start/end from start time and class, break, and lunch durations"
+            aria-label="Recalculate every period start/end from start time and class, break, and lunch durations"
           >
             <RotateCcw size={14} aria-hidden /> Recalculate all slot times
           </button>

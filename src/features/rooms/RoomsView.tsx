@@ -235,6 +235,7 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate }) =>
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         title="Delete Room?"
+        aria-label="Delete Room?"
         footer={
           <div className="flex justify-end gap-2 w-full">
             <Button variant="secondary" onClick={() => setDeleteModalOpen(false)}>

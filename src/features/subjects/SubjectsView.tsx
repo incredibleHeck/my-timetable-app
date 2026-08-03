@@ -116,6 +116,7 @@ export const SubjectsView: React.FC<ViewProps> = ({ data }) => {
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         title="Delete Subject?"
+        aria-label="Delete Subject?"
         footer={
           <div className="flex justify-end gap-2 w-full">
             <Button variant="secondary" onClick={() => setDeleteModalOpen(false)}>

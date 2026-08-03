@@ -32,6 +32,7 @@ export const ProfileWizard: React.FC<ProfileWizardProps> = ({ isOpen, onClose, o
       isOpen={isOpen}
       onClose={onClose}
       title="Create New Profile"
+      aria-label="Create New Profile"
       footer={
         <div className="flex justify-end gap-2 w-full">
           <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>

@@ -150,7 +150,7 @@ const DeleteClassModal: React.FC<{
   if (!classGroup) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Confirm Deletion">
+    <Modal isOpen={isOpen} onClose={onClose} title="Confirm Deletion" aria-label="Confirm Deletion">
       <div className="space-y-6">
         <div className="flex items-start gap-4">
           <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center text-danger-ink shrink-0">

@@ -102,6 +102,7 @@ export const ExamCard: React.FC<Props> = ({
             onClick={onEdit}
             className="p-1.5 hover:bg-slate-100 text-content-muted hover:text-accent-ink rounded transition-colors"
             title="Edit Exam"
+            aria-label="Edit Exam"
           >
             <Edit2 size={14} />
           </button>
@@ -109,6 +110,7 @@ export const ExamCard: React.FC<Props> = ({
             onClick={onDelete}
             className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/30 text-content-muted hover:text-danger-ink rounded transition-colors"
             title="Delete Exam"
+            aria-label="Delete Exam"
           >
             <Trash2 size={14} />
           </button>

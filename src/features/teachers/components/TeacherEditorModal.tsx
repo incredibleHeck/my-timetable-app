@@ -275,6 +275,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
                     onClick={() => toggleDay(dIdx)}
                     className="text-right text-xs font-bold text-slate-600 dark:text-slate-300 pr-3 hover:text-accent-ink transition-colors uppercase tracking-wider h-9 flex items-center justify-end"
                     title="Toggle Entire Day"
+                    aria-label="Toggle Entire Day"
                   >
                     {d.substring(0, 3)}
                   </button>

@@ -27,6 +27,7 @@ export const SlotEditModal: React.FC<SlotEditModalProps> = ({
       isOpen={!!editingSlot}
       onClose={() => setEditingSlot(null)}
       title="Configure Global Event"
+      aria-label="Configure Global Event"
       footer={
         <div className="flex justify-between w-full">
           <Button variant="danger" onClick={() => saveSlot("")}>

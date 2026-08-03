@@ -21,7 +21,12 @@ export const Button: React.FC<ButtonProps> = ({
 }) => {
   const isIconOnly = !children;
 
-  const baseStyles = `inline-flex items-center justify-center ${isIconOnly ? "" : "gap-2"} font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`;
+  // focus-visible (not focus) so the ring appears for keyboard users without
+  // firing on mouse clicks. Offset uses the canvas token so it reads in both themes.
+  const focusStyles =
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas";
+
+  const baseStyles = `inline-flex items-center justify-center ${isIconOnly ? "" : "gap-2"} font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${focusStyles}`;
 
   const variantStyles = {
     primary:

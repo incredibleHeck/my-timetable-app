@@ -195,6 +195,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
             onClick={() => onNavigate && onNavigate("DASHBOARD")}
             className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-content-muted mr-2"
             title="Back to Dashboard"
+            aria-label="Back to Dashboard"
           >
             <ArrowLeft size={20} />
           </button>
@@ -204,6 +205,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
               <input
                 value={activeRoster.name}
                 onChange={(e) => updateActiveRoster({ name: e.target.value })}
+                aria-label="Duty roster name"
                 className="text-xl font-bold text-slate-800 dark:text-slate-100 bg-transparent border-none p-0 focus:ring-0 w-auto min-w-[200px] hover:bg-slate-50 rounded px-1 transition-colors"
               />
               <Pencil
@@ -267,6 +269,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
                     : "text-content-muted hover:text-slate-600"
                 }`}
                 title="Grid View"
+                aria-label="Grid View"
               >
                 Grid
               </button>
@@ -278,6 +281,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
                     : "text-content-muted hover:text-slate-600"
                 }`}
                 title="Info & Stats"
+                aria-label="Info & Stats"
               >
                 Info
               </button>
@@ -299,11 +303,13 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
             onClick={() => exportDutyToExcel(data, activeRoster)}
             icon={<FileSpreadsheet size={16} />}
             title="Export to Excel"
+            aria-label="Export to Excel"
           />
           <Button
             onClick={() => printDutyRoster(data, activeRoster)}
             icon={<Printer size={16} />}
             title="Print PDF"
+            aria-label="Print PDF"
           />
         </div>
       </div>
@@ -322,6 +328,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
               onClick={createNewRoster}
               className="p-1 bg-white dark:bg-slate-800 text-accent-ink rounded border border-slate-200 dark:border-slate-700 hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-all shadow-sm"
               title="New Roster"
+              aria-label="New Roster"
             >
               <Plus size={14} />
             </button>
@@ -362,6 +369,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
                     e.stopPropagation();
                     deleteRoster(r.id);
                   }}
+                  aria-label="Delete duty roster"
                   className="absolute top-3 right-2 text-slate-300 hover:text-danger-ink opacity-0 group-hover:opacity-100 transition-all"
                 >
                   <Trash2 size={12} />
@@ -497,6 +505,11 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
                                   ) : (
                                     <div className="relative w-full h-full">
                                       <button
+                                        aria-label={
+                                          isSwapMode
+                                            ? `Swap into ${label}, slot ${slotIdx + 1}`
+                                            : `Assign staff to ${label}, slot ${slotIdx + 1}`
+                                        }
                                         onClick={() =>
                                           isSwapMode
                                             ? handleSwap(rIdx, slotIdx, "")

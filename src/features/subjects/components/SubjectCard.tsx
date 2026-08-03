@@ -25,6 +25,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
         <div
           className="absolute top-1 right-1 bg-white/90 rounded-full p-0.5 shadow-sm"
           title="Single Resource"
+          aria-label="Single Resource"
         >
           <Gem size={10} className="text-purple-600" />
         </div>
@@ -33,6 +34,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
         <div
           className={`absolute top-1 ${subj.isSingleResource ? "right-6" : "right-1"} bg-white/90 rounded-full p-0.5 shadow-sm`}
           title="Examinable"
+          aria-label="Examinable"
         >
           <FileText size={10} className="text-accent-ink" />
         </div>

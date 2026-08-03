@@ -254,6 +254,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
             onClick={() => onNavigate && onNavigate("DASHBOARD")}
             className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-content-muted mr-2"
             title="Back to Dashboard"
+            aria-label="Back to Dashboard"
           >
             <ArrowLeft size={20} />
           </button>
@@ -263,6 +264,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
               <input
                 value={activeRoster.name}
                 onChange={(e) => renameRoster(e.target.value)}
+                aria-label="Exam roster name"
                 className="text-xl font-bold text-slate-800 dark:text-slate-100 bg-transparent border-none p-0 focus:ring-0 w-auto hover:bg-slate-50 rounded px-1 transition-colors"
               />
               <Pencil
@@ -285,6 +287,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
                   : "text-content-muted hover:text-slate-600"
               }`}
               title="Master Table View"
+              aria-label="Master Table View"
             >
               <LayoutGrid size={16} />
             </button>
@@ -296,6 +299,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
                   : "text-content-muted hover:text-slate-600"
               }`}
               title="Invigilator Roster"
+              aria-label="Invigilator Roster"
             >
               <Table size={16} />
             </button>
@@ -307,6 +311,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
                   : "text-content-muted hover:text-slate-600"
               }`}
               title="Card List View"
+              aria-label="Card List View"
             >
               <List size={16} />
             </button>
@@ -357,6 +362,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
                 min={1}
                 max={8}
                 title="Minimum invigilators per stream per exam day"
+                aria-label="Minimum invigilators per stream per exam day"
               />
               <span className="text-content-muted text-xs">–</span>
               <input
@@ -377,6 +383,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
               className="h-7 text-2xs px-2 bg-white dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-amber-900/30 text-amber-800 dark:text-amber-200 font-bold"
               onClick={handleAutoAssignInvigilators}
               title="Assign min–max staff per stream; same team covers all sessions that day"
+              aria-label="Assign min–max staff per stream; same team covers all sessions that day"
             >
               Assign Staff
             </Button>
@@ -390,7 +397,12 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
             icon={<FileSpreadsheet size={16} />}
             title="Export to Excel"
           />
-          <Button onClick={handlePrint} icon={<Printer size={16} />} title="Print PDF" />
+          <Button
+            onClick={handlePrint}
+            icon={<Printer size={16} />}
+            title="Print PDF"
+            aria-label="Print PDF"
+          />
         </div>
       </div>
 
@@ -409,6 +421,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
               onClick={createNewRoster}
               className="p-1 bg-white dark:bg-slate-800 text-accent-ink rounded border border-slate-200 dark:border-slate-700 hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-all shadow-sm"
               title="New Timetable"
+              aria-label="New Timetable"
             >
               <Plus size={14} />
             </button>
@@ -440,6 +453,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
                     e.stopPropagation();
                     deleteRoster(r.id);
                   }}
+                  aria-label="Delete exam roster"
                   className="absolute top-3 right-2 text-slate-300 hover:text-danger-ink opacity-0 group-hover:opacity-100 transition-all"
                 >
                   <Trash2 size={12} />

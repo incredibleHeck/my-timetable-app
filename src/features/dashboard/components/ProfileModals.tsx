@@ -34,6 +34,7 @@ export const ProfileModals: React.FC<ProfileModalsProps> = ({
         isOpen={createOpen}
         onClose={() => setCreateOpen(false)}
         title="Save New Profile (Local)"
+        aria-label="Save New Profile (Local)"
         footer={
           <div className="flex justify-end gap-2 w-full">
             <Button variant="secondary" onClick={() => setCreateOpen(false)}>
@@ -64,6 +65,7 @@ export const ProfileModals: React.FC<ProfileModalsProps> = ({
         isOpen={loadOpen}
         onClose={() => setLoadOpen(false)}
         title="Switch Profile"
+        aria-label="Switch Profile"
         footer={
           <div className="flex justify-end w-full">
             <Button variant="secondary" onClick={() => setLoadOpen(false)}>
@@ -98,6 +100,7 @@ export const ProfileModals: React.FC<ProfileModalsProps> = ({
                         onClick={() => onDelete(p.id)}
                         className="p-2 text-content-muted hover:text-danger-ink hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors"
                         title="Delete Profile"
+                        aria-label="Delete Profile"
                       >
                         <Trash2 size={16} />
                       </button>

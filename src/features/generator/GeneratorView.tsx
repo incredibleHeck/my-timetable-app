@@ -501,6 +501,7 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
               <button
                 onClick={() => setIsConflictPanelOpen(!isConflictPanelOpen)}
                 className="absolute -left-8 top-1/2 -translate-y-1/2 w-8 h-16 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 border-r-0 rounded-l-lg shadow-sm flex items-center justify-center text-content-muted hover:text-accent-ink hover:bg-amber-50 dark:hover:bg-amber-900/30 z-10 transition-colors"
+                aria-label={isConflictPanelOpen ? "Hide validation panel" : "Show validation panel"}
                 title={isConflictPanelOpen ? "Hide validation panel" : "Show validation panel"}
               >
                 {isConflictPanelOpen ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}

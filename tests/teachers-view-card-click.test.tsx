@@ -25,10 +25,24 @@ describe("TeachersView card interactions", () => {
     ],
   };
 
+  // The card is a plain container, not role="button": it holds its own
+  // Duplicate/Edit/Delete buttons, and nesting interactive elements inside an
+  // interactive ancestor is invalid. Mouse users still get the click shortcut.
   it("opens Edit Teacher modal when clicking the teacher card", () => {
     render(<TeachersView data={mockData} onUpdate={vi.fn()} />);
 
-    fireEvent.click(screen.getByRole("button", { name: /Alice Smith/i }));
+    fireEvent.click(screen.getByRole("heading", { name: /Alice Smith/i }));
+
+    expect(screen.getByText("Edit Teacher")).toBeDefined();
+    expect((screen.getByLabelText(/Full Name/i) as HTMLInputElement).value).toBe("Alice Smith");
+  });
+
+  // Keyboard users reach the same action through the card's Edit button, which
+  // is what makes dropping the card-level role="button" safe.
+  it("exposes an accessible Edit button as the keyboard path", () => {
+    render(<TeachersView data={mockData} onUpdate={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /^Edit$/i }));
 
     expect(screen.getByText("Edit Teacher")).toBeDefined();
     expect((screen.getByLabelText(/Full Name/i) as HTMLInputElement).value).toBe("Alice Smith");

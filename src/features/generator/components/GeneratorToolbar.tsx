@@ -176,6 +176,7 @@ export const GeneratorToolbar: React.FC<GeneratorToolbarProps> = ({
           onClick={onRestore}
           className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-content-muted border border-slate-200 dark:border-slate-700 rounded-lg hover:border-amber-400 hover:text-accent-ink hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-all"
           title="Restore the schedule from before the last regeneration"
+          aria-label="Restore the schedule from before the last regeneration"
         >
           <History size={14} />
           Restore Previous

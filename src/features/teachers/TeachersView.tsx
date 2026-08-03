@@ -142,17 +142,14 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredTeachers.map((t) => (
+              // Not role="button"/tabIndex: the card contains its own
+              // Duplicate/Edit/Delete buttons, and nesting interactive elements
+              // inside an interactive container is invalid and makes keyboard
+              // and screen-reader semantics ambiguous. The click shortcut stays
+              // for mouse users; keyboard users reach the same action via Edit.
               <div
                 key={t.id}
-                role="button"
-                tabIndex={0}
                 onClick={() => openModal(t)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    openModal(t);
-                  }
-                }}
                 className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between hover:shadow-md transition-all group cursor-pointer"
               >
                 <div className="flex items-start space-x-3 mb-4">
@@ -240,6 +237,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                       }}
                       className="p-2 hover:bg-slate-100 rounded-md text-content-muted hover:text-blue-600 transition-colors"
                       title="Duplicate"
+                      aria-label="Duplicate"
                     >
                       <Copy size={14} />
                     </button>
@@ -250,6 +248,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                       }}
                       className="p-2 hover:bg-slate-100 rounded-md text-content-muted hover:text-accent-ink transition-colors"
                       title="Edit"
+                      aria-label="Edit"
                     >
                       <Edit2 size={14} />
                     </button>
@@ -260,6 +259,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                       }}
                       className="p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-md text-content-muted hover:text-danger-ink transition-colors"
                       title="Delete"
+                      aria-label="Delete"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -316,6 +316,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                       onClick={() => handleQuickAdd(subject.id)}
                       className="p-1 rounded-full hover:bg-white text-content-muted hover:text-accent-ink transition-colors mt-2 hidden sm:block"
                       title="Quick Add Teacher"
+                      aria-label="Quick Add Teacher"
                     >
                       <Plus size={16} />
                     </button>
@@ -334,7 +335,8 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                               openModal(t);
                             }
                           }}
-                          className="flex items-center gap-2 p-1.5 bg-white dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700 hover:border-amber-200 transition-all shadow-sm group cursor-pointer"
+                          aria-label={`Edit ${t.name}`}
+                          className="flex items-center gap-2 p-1.5 bg-white dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700 hover:border-amber-200 transition-all shadow-sm group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
                         >
                           <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-2xs font-bold text-content-muted">
                             {t.name
@@ -373,6 +375,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         title="Confirm Deletion"
+        aria-label="Confirm Deletion"
         footer={
           <div className="flex justify-end gap-2 w-full">
             <Button variant="secondary" onClick={() => setDeleteModalOpen(false)}>
@@ -403,6 +406,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
         isOpen={quickAddSubjectId !== null}
         onClose={() => setQuickAddSubjectId(null)}
         title="Add teacher to faculty"
+        aria-label="Add teacher to faculty"
         footer={
           <div className="flex justify-end gap-2 w-full">
             <Button variant="secondary" onClick={() => setQuickAddSubjectId(null)}>

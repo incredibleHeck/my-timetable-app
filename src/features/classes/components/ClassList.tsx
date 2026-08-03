@@ -113,6 +113,7 @@ export const ClassList: React.FC<ClassListProps> = ({
                     onClick={() => onDuplicate(c)}
                     className="p-2 text-content-muted hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition-colors"
                     title="Duplicate Class"
+                    aria-label="Duplicate Class"
                   >
                     <Copy size={16} />
                   </button>
@@ -120,6 +121,7 @@ export const ClassList: React.FC<ClassListProps> = ({
                     onClick={() => onDelete(c)}
                     className="p-2 text-content-muted hover:text-danger-ink hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors"
                     title="Delete Class"
+                    aria-label="Delete Class"
                   >
                     <Trash2 size={16} />
                   </button>
