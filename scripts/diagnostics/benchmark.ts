@@ -24,6 +24,7 @@
  */
 import * as fs from "fs";
 import * as path from "path";
+import { fileURLToPath } from "url";
 import { AppData } from "../../src/types";
 import { prepareAllocationUnits } from "../../src/features/generator/scheduler/logic/preparation";
 import { resolveSubjectIsCore } from "../../src/features/generator/scheduler/logic/subject-core";
@@ -31,6 +32,8 @@ import { solveSmart } from "../../src/features/generator/scheduler/solver/solver
 import { auditFinalSchedule } from "../../src/features/generator/scheduler/validation";
 import { detectCurriculumGaps } from "../../src/features/generator/scheduler/validation/final-conflicts";
 import { getDaysPerWeek } from "../../src/features/generator/scheduler/utils/utils";
+import { isOccasionBlocked } from "../../src/utils/utils";
+import type { PeriodConfig, PeriodType } from "../../src/types";
 
 // ---------------------------------------------------------------- CLI parsing
 
@@ -40,7 +43,9 @@ function arg(name: string): string | undefined {
 }
 const hasFlag = (name: string) => process.argv.includes(`--${name}`);
 
-const FIXTURE = arg("fixture") ?? path.join(__dirname, "fixtures", "school-data.json");
+// ESM: __dirname is not defined, mirror the pattern used by test-real-world.ts
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const FIXTURE = arg("fixture") ?? path.join(HERE, "fixtures", "school-data.json");
 const BUDGET_MS = Number(arg("budget") ?? 60000);
 const REPEATS = Number(arg("repeat") ?? 1);
 const BASE_SEED = Number(arg("seed") ?? 12345);
@@ -78,22 +83,45 @@ export interface BenchmarkMetrics {
   durationMs: number;
 }
 
-/** Idle periods between first and last lesson, per day, summed. */
+/**
+ * Idle periods between the first and last lesson of a day.
+ *
+ * A slot only counts as a gap if it is genuinely schedulable. Break, lunch and
+ * assembly are NOT free time, and neither are reserved occasions such as
+ * Worship or Clubs. Critically, break/lunch positions are per class: in the
+ * DANSOMAN data the global structure breaks at index 3 and lunches at 7, while
+ * Year 4B breaks at 4 and lunches at 8, and Year 7A lunches at 9. Using the
+ * global structure for every class counts real breaks as idle time and misses
+ * real teaching periods.
+ *
+ * `schedulableFor(day)` supplies the per-entity, per-day set of indices that
+ * could legitimately hold a lesson.
+ */
 function countGapPeriods(
   occupiedByDay: Map<number, Set<number>>,
-  teachingIndices: number[],
+  schedulableFor: (day: number) => Set<number>,
 ): number {
   let gaps = 0;
-  for (const periods of occupiedByDay.values()) {
+  for (const [day, periods] of occupiedByDay) {
     if (periods.size < 2) continue;
     const sorted = [...periods].sort((a, b) => a - b);
     const first = sorted[0];
     const last = sorted[sorted.length - 1];
-    for (const idx of teachingIndices) {
+    for (const idx of schedulableFor(day)) {
       if (idx > first && idx < last && !periods.has(idx)) gaps++;
     }
   }
   return gaps;
+}
+
+/** Indices that are CLASS periods in this structure. */
+function teachingIndicesOf(structure: (PeriodType | PeriodConfig)[] | undefined): Set<number> {
+  const out = new Set<number>();
+  (structure ?? []).forEach((item, i) => {
+    const type = typeof item === "string" ? item : item?.type;
+    if ((type || "CLASS") === "CLASS") out.add(i);
+  });
+  return out;
 }
 
 function computeMetrics(
@@ -110,13 +138,36 @@ function computeMetrics(
   const conflicts = auditFinalSchedule(scheduleData, { mode: "full" });
   const gaps = detectCurriculumGaps(scheduleData, state);
 
-  const teachingIndices = data.settings.dayStructure
-    .map((p, i) => (p.type === "CLASS" ? i : -1))
-    .filter((i) => i >= 0);
+  const classById = new Map(data.classes.map((c) => [c.id, c]));
+  const teacherById = new Map(data.teachers.map((t) => [t.id, t]));
+
+  // Each class keeps its own break/lunch positions; never assume the global one.
+  const classTeaching = new Map<string, Set<number>>();
+  for (const c of data.classes) {
+    classTeaching.set(c.id, teachingIndicesOf(c.structure ?? data.settings.dayStructure));
+  }
+
+  /** Reserved school-wide (Worship, Clubs …) — real commitments, not free time. */
+  const occasionBlocked = (day: number, period: number): boolean =>
+    isOccasionBlocked(data.settings.fixedOccasions?.[day]?.[period]);
+
+  const classSchedulable = (classId: string) => (day: number) => {
+    const cls = classById.get(classId);
+    const base = classTeaching.get(classId) ?? new Set<number>();
+    const out = new Set<number>();
+    for (const p of base) {
+      if (occasionBlocked(day, p)) continue;
+      if (isOccasionBlocked(cls?.fixedSessions?.[day]?.[p])) continue;
+      out.add(p);
+    }
+    return out;
+  };
 
   const teacherDays = new Map<string, Map<number, Set<number>>>();
   const classDays = new Map<string, Map<number, Set<number>>>();
   const teacherTotals = new Map<string, number>();
+  /** Classes each teacher actually teaches — defines when they could be busy. */
+  const teacherClasses = new Map<string, Set<string>>();
 
   for (const classId of Object.keys(schedule)) {
     for (const dayKey of Object.keys(schedule[classId] ?? {})) {
@@ -133,6 +184,9 @@ function computeMetrics(
 
         const tid = slot.teacherId;
         if (!tid) continue;
+        if (!teacherClasses.has(tid)) teacherClasses.set(tid, new Set());
+        teacherClasses.get(tid)!.add(classId);
+
         if (!teacherDays.has(tid)) teacherDays.set(tid, new Map());
         const td = teacherDays.get(tid)!;
         if (!td.has(day)) td.set(day, new Set());
@@ -145,13 +199,31 @@ function computeMetrics(
     }
   }
 
+  /**
+   * A teacher moves between classes whose breaks differ, so a period counts as
+   * schedulable only if at least one class they teach is in session then, the
+   * slot is not school-wide reserved, and the teacher is not marked unavailable.
+   */
+  const teacherSchedulable = (teacherId: string) => (day: number) => {
+    const out = new Set<number>();
+    const teacher = teacherById.get(teacherId);
+    for (const classId of teacherClasses.get(teacherId) ?? []) {
+      for (const p of classTeaching.get(classId) ?? []) {
+        if (occasionBlocked(day, p)) continue;
+        if (teacher?.constraints?.[day]?.[p]) continue;
+        out.add(p);
+      }
+    }
+    return out;
+  };
+
   let teacherGapPeriods = 0;
-  for (const byDay of teacherDays.values()) {
-    teacherGapPeriods += countGapPeriods(byDay, teachingIndices);
+  for (const [tid, byDay] of teacherDays) {
+    teacherGapPeriods += countGapPeriods(byDay, teacherSchedulable(tid));
   }
   let classGapPeriods = 0;
-  for (const byDay of classDays.values()) {
-    classGapPeriods += countGapPeriods(byDay, teachingIndices);
+  for (const [cid, byDay] of classDays) {
+    classGapPeriods += countGapPeriods(byDay, classSchedulable(cid));
   }
 
   const loads = [...teacherTotals.values()];
