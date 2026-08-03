@@ -34,7 +34,12 @@ export interface AnalyticsSummary {
   roomsCount: number;
   teachersCount: number;
   scheduledSubjects: number;
+  /** Rooms sitting below UNDERUSED_ROOM_PCT of their weekly teaching capacity. */
+  underusedRooms: number;
 }
+
+/** A room used for less than this share of teaching slots is worth reviewing. */
+export const UNDERUSED_ROOM_PCT = 25;
 
 export interface Analytics {
   summary: AnalyticsSummary;
@@ -197,6 +202,7 @@ export const useAnalytics = (data: AppData): Analytics => {
       roomsCount: rooms.length,
       teachersCount: teachers.length,
       scheduledSubjects: subjectStats.length,
+      underusedRooms: roomStats.filter((r) => r.occupancyPct < UNDERUSED_ROOM_PCT).length,
     };
 
     return {

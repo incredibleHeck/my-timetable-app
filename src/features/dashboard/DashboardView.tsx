@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useMemo } from "react";
 import {
   Users,
   BookOpen,
@@ -51,6 +51,20 @@ export const DashboardView: React.FC<ViewProps> = ({ data, profileName, onNaviga
 
   const { issues, conflicts } = healthIssues;
 
+  // Setup gaps worth surfacing on the tiles: the raw counts already appear as
+  // badges in the sidebar, so the tiles should say what still needs attention.
+  const classesNeedingCurriculum = useMemo(
+    () => data.classes.filter((c) => c.curriculum.length === 0).length,
+    [data.classes],
+  );
+  const unusedSubjects = useMemo(
+    () =>
+      data.subjects.filter(
+        (s) => !data.classes.some((c) => c.curriculum.some((ci) => ci.subjectId === s.id)),
+      ).length,
+    [data.subjects, data.classes],
+  );
+
   // --- FILE SYSTEM HANDLERS ---
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -77,82 +91,75 @@ export const DashboardView: React.FC<ViewProps> = ({ data, profileName, onNaviga
         className="hidden"
       />
 
-      {/* HEADER SECTION */}
-      <div className="relative overflow-hidden rounded-3xl bg-slate-900 shadow-2xl border border-slate-800">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900 to-amber-900/40" />
-        <div className="absolute -right-20 -top-20 h-96 w-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute right-0 bottom-0 h-full w-1/3 bg-gradient-to-l from-amber-500/5 to-transparent transform skew-x-12 pointer-events-none" />
+      {/* PROFILE BAR
+          Was a full-bleed hero whose largest element was a "Welcome back"
+          greeting — the least informative thing on screen, occupying roughly a
+          third of the first viewport. It now leads with the active profile and
+          system status, keeping the brand panel but at about half the height. */}
+      <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 shadow-lg">
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900 to-amber-900/30" />
 
-        <div className="relative p-8 md:p-12 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="space-y-6">
-            <div className="flex items-center gap-4">
-              {/* App Icon */}
-              <div className="w-14 h-14 rounded-2xl overflow-hidden shadow-xl shadow-amber-500/20 shrink-0 ring-2 ring-amber-500/30">
-                <img
-                  src="/icon.png"
-                  alt="EduScheduler Pro"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Badge className="bg-amber-500 text-slate-900 border-none px-3 py-1 font-black shadow-[0_0_15px_rgba(245,158,11,0.4)] tracking-wide">
+        <div className="relative flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between md:p-6">
+          <div className="flex min-w-0 items-center gap-4">
+            <div className="h-11 w-11 shrink-0 overflow-hidden rounded-xl ring-1 ring-amber-500/30">
+              <img src="/icon.png" alt="EduScheduler Pro" className="h-full w-full object-cover" />
+            </div>
+
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge className="border-none bg-amber-500 px-2 py-0.5 text-2xs font-black tracking-wide text-slate-900">
                   PRO SUITE 10.0
                 </Badge>
-                <span className="text-amber-500/60 text-xs font-mono font-bold uppercase tracking-widest">
+                <span className="font-mono text-2xs font-bold uppercase tracking-widest text-amber-300">
                   {new Date().toLocaleDateString()}
                 </span>
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight">
-                Welcome back, <span className="text-amber-500">Admin.</span>
-              </h1>
-              <div className="flex flex-col gap-1 text-slate-300 text-sm md:text-base font-medium">
-                <p>
-                  Active Profile:{" "}
-                  <strong className="text-white border-b-2 border-amber-500/50 pb-0.5 ml-1">
-                    {profileName}
-                  </strong>
-                </p>
-                <div className="mt-2">
-                  <SystemStatus
-                    isSaving={isSaving}
-                    isGenerating={false}
-                    hasConflicts={conflicts > 0}
-                  />
-                </div>
+              <p className="mt-1 truncate text-lg font-bold text-white md:text-xl">
+                <strong>{profileName}</strong>
+              </p>
+
+              <div className="mt-2">
+                <SystemStatus
+                  isSaving={isSaving}
+                  isGenerating={false}
+                  hasConflicts={conflicts > 0}
+                />
               </div>
             </div>
           </div>
 
-          {/* Header Action Buttons (Profile Management) */}
-          <div className="grid grid-cols-2 gap-3 w-full md:w-auto min-w-[360px]">
+          {/* Profile management actions */}
+          <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 md:w-auto">
             <Button
-              icon={<Plus size={16} />}
+              icon={<Plus size={14} />}
               onClick={() => setCreateModalOpen(true)}
-              className="bg-white/10 text-white border-white/10 hover:bg-white/20 transition-all font-bold text-xs py-3"
+              size="sm"
+              className="border-white/10 bg-white/10 text-white transition-all hover:bg-white/20"
             >
               New Profile
             </Button>
             <Button
-              icon={<FolderOpen size={16} />}
+              icon={<FolderOpen size={14} />}
               onClick={() => setLoadModalOpen(true)}
-              className="bg-white/10 text-white border-white/10 hover:bg-white/20 transition-all font-bold text-xs py-3"
+              size="sm"
+              className="border-white/10 bg-white/10 text-white transition-all hover:bg-white/20"
             >
               Switch Profile
             </Button>
             <Button
-              icon={<Upload size={16} />}
+              icon={<Upload size={14} />}
               onClick={handleExportBackup}
-              className="bg-white/10 text-white border-white/10 hover:bg-white/20 transition-all font-bold text-xs py-3"
+              size="sm"
+              className="border-white/10 bg-white/10 text-white transition-all hover:bg-white/20"
             >
               Export JSON
             </Button>
             <Button
-              icon={<Download size={16} />}
+              icon={<Download size={14} />}
               onClick={handleImportClick}
-              className="bg-white/10 text-white border-white/10 hover:bg-white/20 transition-all font-bold text-xs py-3"
+              size="sm"
+              className="border-white/10 bg-white/10 text-white transition-all hover:bg-white/20"
             >
               Import JSON
             </Button>
@@ -182,7 +189,13 @@ export const DashboardView: React.FC<ViewProps> = ({ data, profileName, onNaviga
           value={metrics.classCount}
           icon={<BookOpen size={20} />}
           color="emerald"
-          subtext={`${metrics.classCount} classes`}
+          // Previously "{n} classes" — a verbatim restatement of the value.
+          // Surface the gap that needs action instead.
+          subtext={
+            classesNeedingCurriculum > 0
+              ? `${classesNeedingCurriculum} need curriculum`
+              : "All have curriculum"
+          }
           onClick={() => onNavigate && onNavigate("CLASSES")}
         />
         <MetricCard
@@ -190,7 +203,7 @@ export const DashboardView: React.FC<ViewProps> = ({ data, profileName, onNaviga
           value={metrics.subjectCount}
           icon={<Layers size={20} />}
           color="violet"
-          subtext="Active in curriculum"
+          subtext={unusedSubjects > 0 ? `${unusedSubjects} unused` : "All in use"}
           onClick={() => onNavigate && onNavigate("SUBJECTS")}
         />
         <MetricCard

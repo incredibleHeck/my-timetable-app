@@ -1,7 +1,7 @@
 import React from "react";
 import { Card } from "../../../components/ui";
 import { DoorOpen, Clock, BookOpen, CalendarCheck, Building2, Coffee } from "lucide-react";
-import { Analytics } from "../hooks/useAnalytics";
+import { Analytics, UNDERUSED_ROOM_PCT } from "../hooks/useAnalytics";
 
 interface StatTileProps {
   label: string;
@@ -88,12 +88,14 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
           color="amber"
           hint={`${teachersWithGaps.length} teacher${teachersWithGaps.length !== 1 ? "s" : ""} affected`}
         />
+        {/* Was "Subjects Timetabled" — a count with nothing to act on.
+            Under-used rooms points at capacity that can be reclaimed. */}
         <StatTile
-          label="Subjects Timetabled"
-          value={summary.scheduledSubjects}
-          icon={<BookOpen size={18} />}
+          label="Under-used Rooms"
+          value={summary.underusedRooms}
+          icon={<DoorOpen size={18} />}
           color="violet"
-          hint="Distinct subjects in the grid"
+          hint={`Below ${UNDERUSED_ROOM_PCT}% of weekly slots`}
         />
       </div>
 

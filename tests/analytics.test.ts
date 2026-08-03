@@ -97,6 +97,28 @@ describe("useAnalytics", () => {
     expect(subjects.find((s) => s.subjectId === "s2")?.periods).toBe(1);
   });
 
+  it("counts rooms below the under-used threshold", () => {
+    const { result } = renderHook(() => useAnalytics(makeData()));
+    // Both rooms sit at ~13.3% of 15 weekly teaching slots, under the 25% mark.
+    expect(result.current.summary.underusedRooms).toBe(2);
+  });
+
+  it("does not count a well-used room as under-used", () => {
+    const data = makeData();
+    // Fill r1 across 5 teaching slots (>25% of 15) on separate days.
+    data.schedule.c1 = {
+      0: { 0: { subjectId: "s1", teacherId: "t1", classId: "c1", roomId: "r1" } },
+      1: { 0: { subjectId: "s1", teacherId: "t1", classId: "c1", roomId: "r1" } },
+      2: { 0: { subjectId: "s1", teacherId: "t1", classId: "c1", roomId: "r1" } },
+      3: { 0: { subjectId: "s1", teacherId: "t1", classId: "c1", roomId: "r1" } },
+      4: { 0: { subjectId: "s1", teacherId: "t1", classId: "c1", roomId: "r1" } },
+    } as unknown as AppData["schedule"];
+    const { result } = renderHook(() => useAnalytics(data));
+    const r1 = result.current.rooms.find((r) => r.roomId === "r1")!;
+    expect(r1.occupancyPct).toBeGreaterThan(25);
+    expect(result.current.summary.underusedRooms).toBe(1); // only r2 remains under-used
+  });
+
   it("handles an empty schedule without dividing by zero", () => {
     const data = makeData();
     data.schedule = {};
