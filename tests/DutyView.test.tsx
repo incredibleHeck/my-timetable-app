@@ -13,9 +13,7 @@ describe("DutyView", () => {
     id: "r1",
     name: "Test Roster",
     type: "DAILY",
-    dailyAssignments: [
-      { id: "a1", day: 0, period: 0, locationId: "general", teacherId: "t1" },
-    ],
+    dailyAssignments: [{ id: "a1", day: 0, period: 0, locationId: "general", teacherId: "t1" }],
     weeklyAssignments: [],
     dailyParams: { min: 4, max: 6 },
     weeklyParams: { min: 4, max: 6, weeks: 4 },
@@ -49,10 +47,8 @@ describe("DutyView", () => {
     fireEvent.click(weeklyBtn);
     expect(mockOnUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
-        dutyRosters: expect.arrayContaining([
-          expect.objectContaining({ type: "WEEKLY" }),
-        ]),
-      })
+        dutyRosters: expect.arrayContaining([expect.objectContaining({ type: "WEEKLY" })]),
+      }),
     );
   });
 

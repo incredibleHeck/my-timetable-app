@@ -546,13 +546,9 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate })
                         {teacher.name.charAt(0)}
                       </div>
                       <div>
-                        <div className="font-semibold text-slate-800 text-sm">
-                          {teacher.name}
-                        </div>
+                        <div className="font-semibold text-slate-800 text-sm">{teacher.name}</div>
                         {teacher.email && (
-                          <div className="text-xs text-slate-500">
-                            {teacher.email}
-                          </div>
+                          <div className="text-xs text-slate-500">{teacher.email}</div>
                         )}
                       </div>
                     </div>

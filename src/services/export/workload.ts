@@ -1,9 +1,11 @@
 import { FileService } from "../fileSystem";
 import { loadExcelJS } from "./excelLoader";
+import { WorkloadStat } from "../../features/workload/hooks/useWorkloadStats";
+import { ToastVariant } from "../../components/ui/Toast";
 
 export const exportWorkloadToExcel = async (
-  workloadStats: any[],
-  notify: (msg: string, type?: any) => void
+  workloadStats: WorkloadStat[],
+  notify: (msg: string, type?: ToastVariant) => void,
 ) => {
   try {
     const ExcelJS = await loadExcelJS();
@@ -32,7 +34,7 @@ export const exportWorkloadToExcel = async (
       fgColor: { argb: "FF334155" }, // slate-700
     };
     headerRow.alignment = { vertical: "middle", horizontal: "center" };
-    
+
     // Add Rows
     workloadStats.forEach((s) => {
       const row = worksheet.addRow({
@@ -47,7 +49,7 @@ export const exportWorkloadToExcel = async (
       // Format Utilization column as percentage
       const utilCell = row.getCell("utilization");
       utilCell.numFmt = "0.0%";
-      
+
       // Conditional formatting based on utilization
       if (s.utilizationPct > 100) {
         utilCell.font = { color: { argb: "FFDC2626" }, bold: true }; // Red
@@ -56,7 +58,7 @@ export const exportWorkloadToExcel = async (
       } else {
         utilCell.font = { color: { argb: "FF059669" } }; // Emerald
       }
-      
+
       // Basic alignment for numbers
       row.getCell("requested").alignment = { horizontal: "center" };
       row.getCell("scheduled").alignment = { horizontal: "center" };

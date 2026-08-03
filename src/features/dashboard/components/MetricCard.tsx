@@ -29,8 +29,10 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
   // Count-up animation for numeric values
   const numericValue = typeof value === "number" ? value : parseFloat(String(value));
-  const isNumeric = typeof value === "number" || (!isNaN(numericValue) && String(value) === String(numericValue));
-  const suffix = typeof value === "string" ? String(value).replace(String(Math.floor(numericValue)), "") : "";
+  const isNumeric =
+    typeof value === "number" || (!isNaN(numericValue) && String(value) === String(numericValue));
+  const suffix =
+    typeof value === "string" ? String(value).replace(String(Math.floor(numericValue)), "") : "";
 
   const animatedValue = useCountUp(isNumeric ? numericValue : 0);
 

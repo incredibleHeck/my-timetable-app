@@ -6,7 +6,8 @@ import { ConflictPanel } from "./components/ConflictPanel";
 import { SolverProgressOverlay, SolverLiveProgress } from "./components/SolverProgressOverlay";
 import { GeneratorToolbar, GeneratorStats } from "./components/GeneratorToolbar";
 import { exportScheduleToExcel } from "../../services/export/excel";
-import { printAllSchedules } from "../../services/export/print";
+import { printAllSchedules, PrintMode } from "../../services/export/print";
+import { exportClassICal, exportTeacherICal } from "../../services/export/ical";
 import { useToast } from "../../components/ui/Toast";
 import { auditFinalSchedule, runPreflightCheck } from "./scheduler/validation";
 import { SOLVER_TARGET_MS } from "./scheduler/constants";
@@ -334,8 +335,21 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
     }
   };
 
-  const handlePrint = () => {
-    printAllSchedules(data, mode);
+  const handlePrint = (target: PrintMode, entityId?: string) => {
+    printAllSchedules(data, target, entityId);
+  };
+
+  const handleExportICal = async (target: "CLASS" | "TEACHER", entityId: string) => {
+    try {
+      if (target === "CLASS") {
+        await exportClassICal(data, entityId);
+      } else {
+        await exportTeacherICal(data, entityId);
+      }
+    } catch (err) {
+      console.error("iCal export failed:", err);
+      showToast("Calendar export failed. Check the console for details.", "error");
+    }
   };
 
   return (
@@ -355,6 +369,7 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
         onStop={handleStop}
         onExcelExport={handleExcelExport}
         onPrint={handlePrint}
+        onExportICal={handleExportICal}
         canRestore={canRestore && !!previousScheduleRef.current}
         onRestore={handleRestore}
       />
@@ -375,7 +390,10 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
                 Select {mode === "CLASS" ? "Group" : "Teacher"}
               </span>
               <div className="relative">
-                <Search size={11} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Search
+                  size={11}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400"
+                />
                 <input
                   type="text"
                   value={sidebarFilter}
@@ -444,9 +462,12 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
                   <div className="w-20 h-20 rounded-2xl bg-amber-100 text-amber-500 flex items-center justify-center mx-auto mb-5 shadow-inner">
                     <Zap size={40} />
                   </div>
-                  <h3 className="text-xl font-bold text-slate-800 mb-2">No Schedule Generated Yet</h3>
+                  <h3 className="text-xl font-bold text-slate-800 mb-2">
+                    No Schedule Generated Yet
+                  </h3>
                   <p className="text-sm text-slate-500 mb-6 leading-relaxed">
-                    Run the auto-scheduler to build a complete timetable for all classes based on your curriculum and constraints.
+                    Run the auto-scheduler to build a complete timetable for all classes based on
+                    your curriculum and constraints.
                   </p>
                   <button
                     onClick={handleGenerate}
@@ -472,7 +493,8 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
         </div>
 
         {/* Conflict Panel & Toggle */}
-        {(hoverConflict || (!isGenerating && (data.lastGenerated || data.conflicts.length > 0))) && (
+        {(hoverConflict ||
+          (!isGenerating && (data.lastGenerated || data.conflicts.length > 0))) && (
           <div className="relative flex">
             {/* Toggle Button */}
             {!isGenerating && data.lastGenerated && (

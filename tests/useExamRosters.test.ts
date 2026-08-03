@@ -21,7 +21,21 @@ describe("useExamRosters", () => {
 
   it("should migrate legacy exams array to an imported roster", () => {
     const mockOnUpdate = vi.fn();
-    const data: AppData = { ...DEFAULT_DATA, examRosters: [], exams: [{ id: "e1", classId: "c1", subjectId: "s1", date: "2024-01-01", duration: 120, mode: "WRITTEN", invigilators: [] }] };
+    const data: AppData = {
+      ...DEFAULT_DATA,
+      examRosters: [],
+      exams: [
+        {
+          id: "e1",
+          classId: "c1",
+          subjectId: "s1",
+          date: "2024-01-01",
+          duration: 120,
+          mode: "WRITTEN",
+          invigilators: [],
+        },
+      ],
+    };
 
     const { result } = renderHook(() => useExamRosters(data, mockOnUpdate));
 
@@ -47,7 +61,7 @@ describe("useExamRosters", () => {
 
     expect(result.current.activeRosterId).toBe("r1");
     expect(result.current.activeRoster).toEqual(existingRoster);
-    expect(mockOnUpdate).not.toHaveBeenCalled(); 
+    expect(mockOnUpdate).not.toHaveBeenCalled();
   });
 
   it("should create a new roster", () => {
@@ -78,13 +92,26 @@ describe("useExamRosters", () => {
     const { result } = renderHook(() => useExamRosters(data, mockOnUpdate));
 
     act(() => {
-      result.current.handleUpdateActiveRoster({ ...data, exams: [{ id: "e1", classId: "c1", subjectId: "s1", date: "2024-01-01", duration: 120, mode: "WRITTEN", invigilators: [] }] });
+      result.current.handleUpdateActiveRoster({
+        ...data,
+        exams: [
+          {
+            id: "e1",
+            classId: "c1",
+            subjectId: "s1",
+            date: "2024-01-01",
+            duration: 120,
+            mode: "WRITTEN",
+            invigilators: [],
+          },
+        ],
+      });
     });
 
     expect(mockOnUpdate).toHaveBeenCalledTimes(1);
     const updateCall = mockOnUpdate.mock.calls[0][0] as AppData;
     expect(updateCall.examRosters?.[0].exams.length).toBe(1);
-    expect(updateCall.exams.length).toBe(0); 
+    expect(updateCall.exams.length).toBe(0);
   });
 
   it("should rename a roster", () => {

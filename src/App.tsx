@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useProfile } from "./contexts/ProfileContext";
 import { useActivation } from "./hooks/useActivation";
 import { FileService } from "./services/fileSystem";
@@ -35,6 +35,36 @@ function App() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
 
+  const handleExport = useCallback(async () => {
+    if (!activeProfile) return;
+    const result = await FileService.saveProject(activeProfile.data, activeProfile.name);
+    if (result.success && result.path) {
+      setActiveFilePath(result.path);
+    }
+  }, [activeProfile]);
+
+  // Global keyboard shortcuts.
+  // Declared before any early return so hook order stays stable across renders
+  // (activation/loading states below return early).
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMod = e.ctrlKey || e.metaKey;
+      const tag = (e.target as HTMLElement)?.tagName;
+      const isInput =
+        tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable;
+      if (isMod && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setCommandPaletteOpen((o) => !o);
+      }
+      if (isMod && e.key.toLowerCase() === "s" && !isInput) {
+        e.preventDefault();
+        handleExport();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleExport]);
+
   if (isActivationLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-slate-900 text-slate-400">
@@ -51,33 +81,6 @@ function App() {
   }
 
   const autoSaveStatus = isSaving ? "SAVING" : "SAVED";
-
-  const handleExport = async () => {
-    if (!activeProfile) return;
-    const result = await FileService.saveProject(activeProfile.data, activeProfile.name);
-    if (result.success && result.path) {
-      setActiveFilePath(result.path);
-    }
-  };
-
-  // Global keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const isMod = e.ctrlKey || e.metaKey;
-      const tag = (e.target as HTMLElement)?.tagName;
-      const isInput = tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable;
-      if (isMod && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        setCommandPaletteOpen((o) => !o);
-      }
-      if (isMod && e.key.toLowerCase() === "s" && !isInput) {
-        e.preventDefault();
-        handleExport();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [activeProfile]);
 
   if (isLoading) {
     return (
@@ -155,7 +158,10 @@ function App() {
       {commandPaletteOpen && activeProfile && (
         <CommandPalette
           data={activeProfile.data}
-          onNavigate={(v) => { setView(v); setCommandPaletteOpen(false); }}
+          onNavigate={(v) => {
+            setView(v);
+            setCommandPaletteOpen(false);
+          }}
           onClose={() => setCommandPaletteOpen(false)}
         />
       )}

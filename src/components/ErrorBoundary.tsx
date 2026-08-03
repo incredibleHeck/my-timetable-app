@@ -3,6 +3,13 @@ import { errorReporter } from "../services/errorReporter";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
+  /**
+   * Optional custom fallback UI. When provided it replaces the default
+   * full-screen error screen — used for scoped (per-view) boundaries so a
+   * crash in one feature doesn't blank the whole app. The fallback receives
+   * the caught error and a reset callback.
+   */
+  fallback?: (error: Error, reset: () => void) => ReactNode;
 }
 
 interface ErrorBoundaryState {
@@ -41,6 +48,12 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
   render() {
     if (this.state.hasError) {
+      if (this.props.fallback) {
+        return this.props.fallback(
+          this.state.error ?? new Error("Unknown error"),
+          this.handleReset,
+        );
+      }
       return (
         <div className="flex items-center justify-center h-screen bg-red-50">
           <div className="bg-white rounded-lg shadow-lg p-8 max-w-md">

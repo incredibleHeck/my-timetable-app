@@ -13,7 +13,17 @@ describe("ExamsView", () => {
     id: "r1",
     name: "Test Timetable",
     exams: [
-      { id: "e1", classIds: ["c1"], subjectId: "s1", date: "2024-01-01", startTime: "09:00", duration: 120, mode: "WRITTEN", invigilatorIds: ["t1"], status: "DRAFT" }
+      {
+        id: "e1",
+        classIds: ["c1"],
+        subjectId: "s1",
+        date: "2024-01-01",
+        startTime: "09:00",
+        duration: 120,
+        mode: "WRITTEN",
+        invigilatorIds: ["t1"],
+        status: "DRAFT",
+      },
     ],
     createdAt: new Date().toISOString(),
   };
@@ -21,7 +31,9 @@ describe("ExamsView", () => {
   const testData: AppData = {
     ...DEFAULT_DATA,
     examRosters: [mockRoster],
-    classes: [{ id: "c1", name: "10A", periodCount: 6, duration: 40, curriculum: [], defaultRoomId: "" }],
+    classes: [
+      { id: "c1", name: "10A", periodCount: 6, duration: 40, curriculum: [], defaultRoomId: "" },
+    ],
     subjects: [{ id: "s1", name: "Math", isDoublePeriod: false, isLab: false }],
     teachers: [{ id: "t1", name: "Alice", isPartTime: false, requiredRooms: [] }],
   };
@@ -44,7 +56,7 @@ describe("ExamsView", () => {
     // Switch to card view to easily see the exam cards
     const cardViewBtn = screen.getByTitle("Card List View");
     fireEvent.click(cardViewBtn);
-    
+
     expect(screen.getByText("Math")).toBeInTheDocument();
 
     const searchInput = screen.getByPlaceholderText("Search exams...");

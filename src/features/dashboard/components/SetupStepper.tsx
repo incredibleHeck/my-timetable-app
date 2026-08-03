@@ -108,18 +108,15 @@ export const SetupStepper: React.FC<SetupStepperProps> = ({ data, onNavigate }) 
                 done
                   ? "bg-emerald-50 border-emerald-200 opacity-80"
                   : isNext
-                  ? "bg-white border-amber-300 shadow-sm hover:shadow-md hover:border-amber-400"
-                  : "bg-white border-slate-200 opacity-60 hover:opacity-80"
+                    ? "bg-white border-amber-300 shadow-sm hover:shadow-md hover:border-amber-400"
+                    : "bg-white border-slate-200 opacity-60 hover:opacity-80"
               }`}
             >
               <div className="flex items-center justify-between w-full mb-2">
                 {done ? (
                   <CheckCircle2 size={16} className="text-emerald-500" />
                 ) : (
-                  <Circle
-                    size={16}
-                    className={isNext ? "text-amber-400" : "text-slate-300"}
-                  />
+                  <Circle size={16} className={isNext ? "text-amber-400" : "text-slate-300"} />
                 )}
                 {isNext && (
                   <ChevronRight

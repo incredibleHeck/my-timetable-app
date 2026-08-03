@@ -13,9 +13,11 @@ const getDuration = (data: AppData, classId: string, d: number, p: number): numb
   return 1;
 };
 
+export type PrintMode = "CLASS" | "TEACHER" | "ROOM";
+
 // --- MAIN EXPORT FUNCTION ---
-export const printAllSchedules = (data: AppData, mode: "CLASS" | "TEACHER") => {
-  const { settings, schedule, classes, teachers, subjects } = data;
+export const printAllSchedules = (data: AppData, mode: PrintMode, entityId?: string) => {
+  const { settings, schedule, classes, teachers, rooms, subjects } = data;
   const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
   // --- 1. OPTIMIZATION: Create Maps (Fast Lookups) ---
@@ -24,10 +26,18 @@ export const printAllSchedules = (data: AppData, mode: "CLASS" | "TEACHER") => {
   const classMap = new Map<string, ClassGroup>(classes.map((c: ClassGroup) => [c.id, c]));
 
   // --- 2. PREPARATION: Sort Entities ---
-  const entities =
+  // Classes, teachers and rooms all share id/name — that's all the layout needs.
+  let entities: { id: string; name: string }[] =
     mode === "CLASS"
       ? [...classes].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
-      : [...teachers].sort((a, b) => a.name.localeCompare(b.name));
+      : mode === "TEACHER"
+        ? [...teachers].sort((a, b) => a.name.localeCompare(b.name))
+        : [...rooms].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+
+  // Optional single-entity print (one class / teacher / room instead of all).
+  if (entityId) {
+    entities = entities.filter((e) => e.id === entityId);
+  }
 
   // --- 3. BUILD HTML ---
   let htmlContent = `
@@ -153,7 +163,7 @@ export const printAllSchedules = (data: AppData, mode: "CLASS" | "TEACHER") => {
             <h1>${settings.schoolName || "SCHOOL TIMETABLE"}</h1>
           </div>
           <div class="header-right">
-            <h2>${mode === "CLASS" ? "Class" : "Teacher"}: ${entity.name}</h2>
+            <h2>${mode === "CLASS" ? "Class" : mode === "TEACHER" ? "Teacher" : "Room"}: ${entity.name}</h2>
           </div>
         </div>
         
@@ -236,7 +246,9 @@ export const printAllSchedules = (data: AppData, mode: "CLASS" | "TEACHER") => {
         } else {
           for (const c of classes) {
             const s = schedule[c.id]?.[dIdx]?.[pIdx];
-            if (s && s.teacherId === entity.id) {
+            const matches =
+              mode === "TEACHER" ? s?.teacherId === entity.id : s?.roomId === entity.id;
+            if (s && matches) {
               slot = s;
               classId = c.id;
               break;

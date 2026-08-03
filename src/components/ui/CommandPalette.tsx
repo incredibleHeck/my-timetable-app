@@ -1,5 +1,19 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { Search, LayoutDashboard, Users, BookOpen, Library, Zap, BarChart3, FileText, Shield, Sliders, Building2, User, GraduationCap } from "lucide-react";
+import {
+  Search,
+  LayoutDashboard,
+  Users,
+  BookOpen,
+  Library,
+  Zap,
+  BarChart3,
+  FileText,
+  Shield,
+  Sliders,
+  Building2,
+  User,
+  GraduationCap,
+} from "lucide-react";
 import { AppData, ViewState } from "../../types";
 
 interface CommandPaletteProps {
@@ -72,12 +86,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ data, onNavigate
       id: `subject-${s.id}`,
       label: s.name,
       sublabel: "Subject",
-      icon: (
-        <span
-          className="w-4 h-4 rounded-full shrink-0"
-          style={{ backgroundColor: s.color }}
-        />
-      ),
+      icon: <span className="w-4 h-4 rounded-full shrink-0" style={{ backgroundColor: s.color }} />,
       action: () => onNavigate("SUBJECTS"),
       category: "Subjects",
     }));
@@ -89,7 +98,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ data, onNavigate
     if (!query.trim()) return allItems.slice(0, 12);
     const q = query.toLowerCase();
     return allItems
-      .filter((item) => item.label.toLowerCase().includes(q) || item.category.toLowerCase().includes(q))
+      .filter(
+        (item) => item.label.toLowerCase().includes(q) || item.category.toLowerCase().includes(q),
+      )
       .slice(0, 12);
   }, [query, allItems]);
 
@@ -179,7 +190,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ data, onNavigate
                         isActive ? "bg-amber-50 text-amber-900" : "text-slate-700 hover:bg-slate-50"
                       }`}
                     >
-                      <span className={`shrink-0 ${isActive ? "text-amber-600" : "text-slate-400"}`}>
+                      <span
+                        className={`shrink-0 ${isActive ? "text-amber-600" : "text-slate-400"}`}
+                      >
                         {item.icon}
                       </span>
                       <span className="flex-1 min-w-0">
@@ -203,9 +216,15 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ data, onNavigate
 
         {/* Footer hint */}
         <div className="px-4 py-2.5 border-t border-slate-100 flex items-center gap-4 text-[10px] text-slate-400 font-medium">
-          <span><kbd className="bg-slate-100 px-1 rounded border border-slate-200">↑↓</kbd> Navigate</span>
-          <span><kbd className="bg-slate-100 px-1 rounded border border-slate-200">↵</kbd> Open</span>
-          <span><kbd className="bg-slate-100 px-1 rounded border border-slate-200">Esc</kbd> Close</span>
+          <span>
+            <kbd className="bg-slate-100 px-1 rounded border border-slate-200">↑↓</kbd> Navigate
+          </span>
+          <span>
+            <kbd className="bg-slate-100 px-1 rounded border border-slate-200">↵</kbd> Open
+          </span>
+          <span>
+            <kbd className="bg-slate-100 px-1 rounded border border-slate-200">Esc</kbd> Close
+          </span>
           <span className="ml-auto opacity-60">Ctrl+K to toggle</span>
         </div>
       </div>

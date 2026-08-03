@@ -392,5 +392,41 @@ describe("Consolidated Export Services Suite", () => {
       vi.runAllTimers();
       expect(mockPrint).toHaveBeenCalledTimes(1);
     });
+
+    it("should render a ROOM timetable matching slots by roomId", () => {
+      vi.useFakeTimers();
+      printAllSchedules(baseTestData, "ROOM");
+
+      expect(mockDocumentWrite).toHaveBeenCalledTimes(1);
+      const htmlContent = mockDocumentWrite.mock.calls[0][0];
+      expect(htmlContent).toContain("Room: Room 101");
+      expect(htmlContent).toContain("Math");
+      // Detail line for a room cell shows the class occupying it
+      expect(htmlContent).toContain("Class 10A");
+
+      vi.runAllTimers();
+      expect(mockPrint).toHaveBeenCalledTimes(1);
+    });
+
+    it("should print a single entity when entityId is provided", () => {
+      const multiClassData: AppData = {
+        ...baseTestData,
+        classes: [
+          ...baseTestData.classes,
+          { id: "c2", name: "Class 10B", defaultRoomId: "r1", curriculum: [] },
+        ],
+      };
+
+      vi.useFakeTimers();
+      printAllSchedules(multiClassData, "CLASS", "c1");
+
+      const htmlContent = mockDocumentWrite.mock.calls[0][0];
+      expect(htmlContent).toContain("Class 10A");
+      // The non-selected class must not appear in a single-entity print
+      expect(htmlContent).not.toContain("Class 10B");
+      expect(htmlContent).toContain("Page 1 of 1");
+
+      vi.runAllTimers();
+    });
   });
 });

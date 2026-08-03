@@ -1,14 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { AppData, ExamSession } from "../../../types";
 import { ExamConflict } from "../logic/examValidation";
-import {
-  AlertTriangle,
-  Clock,
-  GripVertical,
-  CalendarDays,
-  Users,
-  Lock,
-} from "lucide-react";
+import { AlertTriangle, Clock, GripVertical, CalendarDays, Users, Lock } from "lucide-react";
 import { getExamGridDefaults, getSessionIndexForStartTime } from "../logic/examUtils";
 import {
   DndContext,

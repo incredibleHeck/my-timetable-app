@@ -125,7 +125,8 @@ export const useDndLogic = (
     const targetDuration = targetSlot ? getDuration(classId, targetDay, targetPeriod) : 1;
 
     const sourceSubject = subjects.find((s) => s.id === activeDragItem.slot.subjectId);
-    const sourceEffectiveRoomId = activeDragItem.slot.roomId || sourceSubject?.requiredRoomId || undefined;
+    const sourceEffectiveRoomId =
+      activeDragItem.slot.roomId || sourceSubject?.requiredRoomId || undefined;
 
     // --- 3. CHECK DURATION / BOUNDS ---
     if (targetSlot) {

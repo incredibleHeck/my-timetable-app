@@ -49,9 +49,7 @@ export const useClassForm = ({
       const defaultStruct = data.settings.dayStructure.map((s) => s.type || "CLASS");
       let initialStruct =
         editingClass?.structure && editingClass.structure.length > 0
-          ? editingClass.structure.map(
-              (s) => (typeof s === "object" ? s.type : s) || "CLASS",
-            )
+          ? editingClass.structure.map((s) => (typeof s === "object" ? s.type : s) || "CLASS")
           : [...defaultStruct];
 
       // Resize Structure

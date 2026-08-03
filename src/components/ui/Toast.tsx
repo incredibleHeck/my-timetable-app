@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import { CheckCircle2, AlertCircle, Info, X } from "lucide-react";
 
-type ToastVariant = "success" | "error" | "info";
+export type ToastVariant = "success" | "error" | "info";
 
 interface ToastAction {
   label: string;
@@ -134,4 +134,3 @@ export const notify = (message: string, variant: ToastVariant = "info", options?
     console.warn(`[${variant}] ${message}`);
   }
 };
-

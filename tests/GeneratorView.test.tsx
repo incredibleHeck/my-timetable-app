@@ -13,11 +13,11 @@ describe("GeneratorView", () => {
     ...DEFAULT_DATA,
     classes: [
       { id: "c1", name: "10A", periodCount: 6, duration: 40, curriculum: [], defaultRoomId: "" },
-      { id: "c2", name: "10B", periodCount: 6, duration: 40, curriculum: [], defaultRoomId: "" }
+      { id: "c2", name: "10B", periodCount: 6, duration: 40, curriculum: [], defaultRoomId: "" },
     ],
     teachers: [
       { id: "t1", name: "Alice", isPartTime: false, requiredRooms: [] },
-      { id: "t2", name: "Bob", isPartTime: false, requiredRooms: [] }
+      { id: "t2", name: "Bob", isPartTime: false, requiredRooms: [] },
     ],
   };
 
@@ -30,7 +30,7 @@ describe("GeneratorView", () => {
 
   it("should toggle to teacher view", () => {
     render(<GeneratorView data={testData} onUpdate={mockOnUpdate} />);
-    
+
     // Switch to teacher view
     const teacherBtn = screen.getByText("Teachers");
     fireEvent.click(teacherBtn);
@@ -42,7 +42,7 @@ describe("GeneratorView", () => {
 
   it("should enable edit mode", () => {
     render(<GeneratorView data={testData} onUpdate={mockOnUpdate} />);
-    
+
     const editBtn = screen.getByText("Enable Edit");
     fireEvent.click(editBtn);
 
@@ -51,7 +51,7 @@ describe("GeneratorView", () => {
 
   it("should enable manual placement mode", () => {
     render(<GeneratorView data={testData} onUpdate={mockOnUpdate} />);
-    
+
     // Manual placement is only visible when edit mode is on
     const editBtn = screen.getByText("Enable Edit");
     fireEvent.click(editBtn);

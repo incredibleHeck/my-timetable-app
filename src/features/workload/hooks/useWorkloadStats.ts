@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { AppData } from "../../../types";
+import { AppData, Teacher } from "../../../types";
 
 export interface ClassWorkloadBreakdown {
   classId: string;
@@ -7,6 +7,17 @@ export interface ClassWorkloadBreakdown {
   subjectId: string;
   subjectName: string;
   periods: number;
+}
+
+export interface WorkloadStat {
+  t: Teacher;
+  assignedPeriods: number;
+  scheduledPeriods: number;
+  availableSlots: number;
+  maxWeeklyCapacity: number;
+  blockedSlots: number;
+  utilizationPct: number;
+  classBreakdown: ClassWorkloadBreakdown[];
 }
 
 export const useWorkloadStats = (data: AppData) => {
@@ -67,13 +78,23 @@ export const useWorkloadStats = (data: AppData) => {
                 if (!countedJointClassIds.has(joint.id)) {
                   assignedPeriods += curr.periodsPerWeek;
                   countedJointClassIds.add(joint.id);
-                  addToBreakdown(`joint-${joint.id}`, `Joint: ${joint.name}`, curr.subjectId, curr.periodsPerWeek);
+                  addToBreakdown(
+                    `joint-${joint.id}`,
+                    `Joint: ${joint.name}`,
+                    curr.subjectId,
+                    curr.periodsPerWeek,
+                  );
                 }
               } else if (elective) {
                 if (!countedElectiveIds.has(elective.id)) {
                   assignedPeriods += curr.periodsPerWeek;
                   countedElectiveIds.add(elective.id);
-                  addToBreakdown(`elective-${elective.id}`, `Elective: ${elective.name}`, curr.subjectId, curr.periodsPerWeek);
+                  addToBreakdown(
+                    `elective-${elective.id}`,
+                    `Elective: ${elective.name}`,
+                    curr.subjectId,
+                    curr.periodsPerWeek,
+                  );
                 }
               } else {
                 assignedPeriods += curr.periodsPerWeek;

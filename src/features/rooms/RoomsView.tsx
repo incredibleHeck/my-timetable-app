@@ -52,9 +52,7 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate }) =>
     };
 
     let newRooms = [...data.rooms];
-    const msg = editingRoom
-      ? `Updated Room: ${newRoom.name}`
-      : `Added Room: ${newRoom.name}`;
+    const msg = editingRoom ? `Updated Room: ${newRoom.name}` : `Added Room: ${newRoom.name}`;
     if (editingRoom) {
       newRooms = newRooms.map((r) => (r.id === editingRoom.id ? newRoom : r));
     } else {

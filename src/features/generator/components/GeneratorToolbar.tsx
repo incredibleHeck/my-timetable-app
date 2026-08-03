@@ -3,7 +3,6 @@ import {
   Play,
   Users,
   BookOpen,
-  Printer,
   Recycle,
   Lock,
   Unlock,
@@ -15,6 +14,8 @@ import {
 } from "lucide-react";
 import { AppData } from "../../../types";
 import { Button } from "../../../components/ui";
+import { ExportMenu } from "./ExportMenu";
+import { PrintMode } from "../../../services/export/print";
 
 export interface GeneratorStats {
   iterations: number;
@@ -39,7 +40,8 @@ interface GeneratorToolbarProps {
   onGenerate: () => void;
   onStop: () => void;
   onExcelExport: () => void;
-  onPrint: () => void;
+  onPrint: (target: PrintMode, entityId?: string) => void;
+  onExportICal: (target: "CLASS" | "TEACHER", entityId: string) => void;
   canRestore?: boolean;
   onRestore?: () => void;
 }
@@ -59,6 +61,7 @@ export const GeneratorToolbar: React.FC<GeneratorToolbarProps> = ({
   onStop,
   onExcelExport,
   onPrint,
+  onExportICal,
   canRestore,
   onRestore,
 }) => (
@@ -200,11 +203,11 @@ export const GeneratorToolbar: React.FC<GeneratorToolbarProps> = ({
         }
       />
 
-      <Button
-        onClick={onPrint}
+      <ExportMenu
+        data={data}
         disabled={isGenerating}
-        icon={<Printer size={16} />}
-        aria-label="Print all schedules"
+        onPrint={onPrint}
+        onExportICal={onExportICal}
       />
     </div>
   </div>
