@@ -59,7 +59,7 @@ export const SlotEditModal: React.FC<SlotEditModalProps> = ({
                 key={preset}
                 type="button"
                 onClick={() => setLabel(preset)}
-                className="px-3 py-1.5 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-amber-400 hover:bg-amber-50 dark:bg-amber-900/30 text-slate-600 dark:text-slate-300 transition-colors"
+                className="px-3 py-1.5 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30 text-slate-600 dark:text-slate-300 transition-colors"
               >
                 {preset}
               </button>

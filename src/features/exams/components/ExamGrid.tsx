@@ -187,7 +187,7 @@ const DraggableExamCard = ({
         <div
           {...listeners}
           {...attributes}
-          className="absolute -top-3 -right-3 cursor-grab active:cursor-grabbing text-accent-ink hover:text-amber-800 dark:text-amber-200 z-30 p-2 bg-white dark:bg-slate-800 border-2 border-amber-100 rounded-full shadow-xl opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
+          className="absolute -top-3 -right-3 cursor-grab active:cursor-grabbing text-accent-ink hover:text-amber-800 dark:hover:text-amber-200 z-30 p-2 bg-white dark:bg-slate-800 border-2 border-amber-100 rounded-full shadow-xl opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
         >
           <GripVertical size={16} />
         </div>

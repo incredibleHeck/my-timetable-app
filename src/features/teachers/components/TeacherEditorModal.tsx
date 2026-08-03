@@ -208,7 +208,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
             <div className="flex gap-1">
               <button
                 onClick={() => applyTemplate("MORNINGS")}
-                className="text-2xs px-2 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded hover:bg-blue-100 dark:bg-blue-900/40 font-bold flex items-center gap-1"
+                className="text-2xs px-2 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded hover:bg-blue-100 dark:hover:bg-blue-900/40 font-bold flex items-center gap-1"
               >
                 <Sun size={10} /> Mornings Only
               </button>
@@ -220,7 +220,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
               </button>
               <button
                 onClick={() => applyTemplate("FRIDAYS")}
-                className="text-2xs px-2 py-1 bg-red-50 dark:bg-red-900/30 text-danger-ink rounded hover:bg-red-100 dark:bg-red-900/40 font-bold flex items-center gap-1"
+                className="text-2xs px-2 py-1 bg-red-50 dark:bg-red-900/30 text-danger-ink rounded hover:bg-red-100 dark:hover:bg-red-900/40 font-bold flex items-center gap-1"
               >
                 <Calendar size={10} /> No Fridays
               </button>

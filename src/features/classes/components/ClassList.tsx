@@ -111,14 +111,14 @@ export const ClassList: React.FC<ClassListProps> = ({
                   </Button>
                   <button
                     onClick={() => onDuplicate(c)}
-                    className="p-2 text-content-muted hover:text-blue-600 hover:bg-blue-50 dark:bg-blue-900/30 rounded transition-colors"
+                    className="p-2 text-content-muted hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition-colors"
                     title="Duplicate Class"
                   >
                     <Copy size={16} />
                   </button>
                   <button
                     onClick={() => onDelete(c)}
-                    className="p-2 text-content-muted hover:text-danger-ink hover:bg-red-50 dark:bg-red-900/30 rounded transition-colors"
+                    className="p-2 text-content-muted hover:text-danger-ink hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors"
                     title="Delete Class"
                   >
                     <Trash2 size={16} />
@@ -130,7 +130,7 @@ export const ClassList: React.FC<ClassListProps> = ({
         })}
       <button
         onClick={onAdd}
-        className="min-h-[200px] rounded-xl border-2 border-dashed border-slate-300 hover:border-amber-400 hover:bg-amber-50 dark:bg-amber-900/30 transition-all flex flex-col items-center justify-center p-6 text-content-muted hover:text-accent-ink"
+        className="min-h-[200px] rounded-xl border-2 border-dashed border-slate-300 hover:border-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-all flex flex-col items-center justify-center p-6 text-content-muted hover:text-accent-ink"
       >
         <Plus size={32} className="mb-2" /> <span className="font-bold">Add Class</span>
       </button>

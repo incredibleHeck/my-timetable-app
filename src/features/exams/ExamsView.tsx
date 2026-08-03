@@ -374,7 +374,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
             <Button
               variant="secondary"
               size="sm"
-              className="h-7 text-2xs px-2 bg-white dark:bg-slate-800 hover:bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 font-bold"
+              className="h-7 text-2xs px-2 bg-white dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-amber-900/30 text-amber-800 dark:text-amber-200 font-bold"
               onClick={handleAutoAssignInvigilators}
               title="Assign min–max staff per stream; same team covers all sessions that day"
             >
@@ -407,7 +407,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
             </div>
             <button
               onClick={createNewRoster}
-              className="p-1 bg-white dark:bg-slate-800 text-accent-ink rounded border border-slate-200 dark:border-slate-700 hover:bg-amber-50 dark:bg-amber-900/30 transition-all shadow-sm"
+              className="p-1 bg-white dark:bg-slate-800 text-accent-ink rounded border border-slate-200 dark:border-slate-700 hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-all shadow-sm"
               title="New Timetable"
             >
               <Plus size={14} />

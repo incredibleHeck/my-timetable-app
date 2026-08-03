@@ -34,7 +34,7 @@ export const ConfigImpactBanner: React.FC<ConfigImpactBannerProps> = ({
       {onNavigate && (
         <Button
           variant="secondary"
-          className="shrink-0 border-amber-300 text-amber-800 dark:text-amber-200 hover:bg-amber-100 dark:bg-amber-900/40"
+          className="shrink-0 border-amber-300 text-amber-800 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/40"
           onClick={() => onNavigate("GENERATOR")}
         >
           Review in Generator

@@ -500,7 +500,7 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
             {!isGenerating && data.lastGenerated && (
               <button
                 onClick={() => setIsConflictPanelOpen(!isConflictPanelOpen)}
-                className="absolute -left-8 top-1/2 -translate-y-1/2 w-8 h-16 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 border-r-0 rounded-l-lg shadow-sm flex items-center justify-center text-content-muted hover:text-accent-ink hover:bg-amber-50 dark:bg-amber-900/30 z-10 transition-colors"
+                className="absolute -left-8 top-1/2 -translate-y-1/2 w-8 h-16 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 border-r-0 rounded-l-lg shadow-sm flex items-center justify-center text-content-muted hover:text-accent-ink hover:bg-amber-50 dark:hover:bg-amber-900/30 z-10 transition-colors"
                 title={isConflictPanelOpen ? "Hide validation panel" : "Show validation panel"}
               >
                 {isConflictPanelOpen ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
@@ -516,7 +516,7 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
                 {/* LIVE VALIDATION ERROR */}
                 {hoverConflict && (
                   <div
-                    className="w-full mb-4 border border-red-200 bg-red-50 dark:bg-red-900/30 rounded-xl shadow-sm p-4 animate-pulse cursor-pointer hover:bg-red-100 dark:bg-red-900/40 transition-colors"
+                    className="w-full mb-4 border border-red-200 bg-red-50 dark:bg-red-900/30 rounded-xl shadow-sm p-4 animate-pulse cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
                     onClick={() => setHighlightedConflict(hoverConflict)}
                   >
                     <h4 className="font-bold text-red-800 dark:text-red-200 mb-1 text-sm flex items-center gap-2">

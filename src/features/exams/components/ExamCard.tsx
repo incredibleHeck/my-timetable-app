@@ -90,7 +90,7 @@ export const ExamCard: React.FC<Props> = ({
               }}
               className={`p-1.5 rounded transition-colors ${
                 isLocked
-                  ? "bg-amber-50 dark:bg-amber-900/30 text-accent-ink hover:bg-amber-100 dark:bg-amber-900/40"
+                  ? "bg-amber-50 dark:bg-amber-900/30 text-accent-ink hover:bg-amber-100 dark:hover:bg-amber-900/40"
                   : "hover:bg-slate-100 text-content-muted hover:text-slate-600"
               }`}
               title={isLocked ? "Unlock invigilator assignments" : "Lock invigilator assignments"}
@@ -107,7 +107,7 @@ export const ExamCard: React.FC<Props> = ({
           </button>
           <button
             onClick={onDelete}
-            className="p-1.5 hover:bg-red-50 dark:bg-red-900/30 text-content-muted hover:text-danger-ink rounded transition-colors"
+            className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/30 text-content-muted hover:text-danger-ink rounded transition-colors"
             title="Delete Exam"
           >
             <Trash2 size={14} />

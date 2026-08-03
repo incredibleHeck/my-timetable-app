@@ -258,7 +258,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
                         e.stopPropagation();
                         initiateDelete(t);
                       }}
-                      className="p-2 hover:bg-red-50 dark:bg-red-900/30 rounded-md text-content-muted hover:text-danger-ink transition-colors"
+                      className="p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-md text-content-muted hover:text-danger-ink transition-colors"
                       title="Delete"
                     >
                       <Trash2 size={14} />
@@ -272,7 +272,7 @@ export const TeachersView: React.FC<ViewProps> = ({ data, onUpdate }) => {
               onClick={() => openModal()}
               className="rounded-xl border-2 border-dashed border-slate-300 hover:border-amber-400 hover:bg-amber-50/50 transition-all flex flex-col items-center justify-center p-6 min-h-[160px] group"
             >
-              <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-amber-100 dark:bg-amber-900/40 text-content-muted group-hover:text-accent-ink flex items-center justify-center mb-3 transition-colors">
+              <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-amber-100 dark:group-hover:bg-amber-900/40 text-content-muted group-hover:text-accent-ink flex items-center justify-center mb-3 transition-colors">
                 <Plus size={24} />
               </div>
               <span className="font-bold text-sm text-content-muted group-hover:text-accent-ink">

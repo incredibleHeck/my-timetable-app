@@ -320,7 +320,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
             </div>
             <button
               onClick={createNewRoster}
-              className="p-1 bg-white dark:bg-slate-800 text-accent-ink rounded border border-slate-200 dark:border-slate-700 hover:bg-amber-50 dark:bg-amber-900/30 transition-all shadow-sm"
+              className="p-1 bg-white dark:bg-slate-800 text-accent-ink rounded border border-slate-200 dark:border-slate-700 hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-all shadow-sm"
               title="New Roster"
             >
               <Plus size={14} />
@@ -543,7 +543,7 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
                                                       className={`w-full text-left px-3 py-3 text-[11px] font-bold flex justify-between items-center rounded-xl transition-all ${
                                                         isAssignedThisCycle
                                                           ? "bg-slate-50 dark:bg-slate-900 text-slate-300 opacity-60"
-                                                          : "text-slate-600 dark:text-slate-300 hover:bg-amber-50 dark:bg-amber-900/30 hover:text-amber-800 dark:text-amber-200"
+                                                          : "text-slate-600 dark:text-slate-300 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:text-amber-800 dark:hover:text-amber-200"
                                                       }`}
                                                     >
                                                       <span className="truncate">{t.name}</span>

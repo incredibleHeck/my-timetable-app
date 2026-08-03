@@ -99,9 +99,9 @@ export const SubjectsView: React.FC<ViewProps> = ({ data }) => {
 
         <button
           onClick={() => form.openModal()}
-          className="bg-slate-50 dark:bg-slate-900 rounded-xl border-2 border-dashed border-slate-300 hover:border-amber-400 hover:bg-amber-50 dark:bg-amber-900/30 transition-all flex flex-col items-center justify-center p-6 group h-full min-h-[200px]"
+          className="bg-slate-50 dark:bg-slate-900 rounded-xl border-2 border-dashed border-slate-300 hover:border-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-all flex flex-col items-center justify-center p-6 group h-full min-h-[200px]"
         >
-          <div className="w-14 h-14 rounded-full bg-slate-200 dark:bg-slate-700 group-hover:bg-amber-100 dark:bg-amber-900/40 text-content-muted group-hover:text-accent-ink flex items-center justify-center mb-3 transition-colors shadow-inner">
+          <div className="w-14 h-14 rounded-full bg-slate-200 dark:bg-slate-700 group-hover:bg-amber-100 dark:group-hover:bg-amber-900/40 text-content-muted group-hover:text-accent-ink flex items-center justify-center mb-3 transition-colors shadow-inner">
             <Plus size={28} />
           </div>
           <span className="font-bold text-content-muted group-hover:text-accent-ink">
