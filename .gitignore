@@ -16,3 +16,6 @@ dev_server_err.log
 /coverage
 /test-results
 /playwright-report
+
+# Private/real school fixtures (never commit real staff data)
+scripts/diagnostics/fixtures/local/

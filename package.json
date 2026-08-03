@@ -19,6 +19,7 @@
     "format": "prettier --write \"src/**/*.{ts,tsx}\" \"tests/**/*.{ts,tsx}\" \"e2e/**/*.{ts,tsx}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx}\" \"tests/**/*.{ts,tsx}\" \"e2e/**/*.{ts,tsx}\"",
     "diagnostics:smoke": "tsx scripts/diagnostics/smoke-test.ts",
+    "diagnostics:bench": "tsx scripts/diagnostics/benchmark.ts",
     "postinstall": "node scripts/verify-esbuild.mjs",
     "tauri": "tauri"
   },
