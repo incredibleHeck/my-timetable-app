@@ -106,7 +106,10 @@
       }
     </style>
   </head>
-  <body class="bg-gray-50 text-gray-900 h-screen overflow-hidden">
+  <!-- Colours come from the token layer (body rule in src/index.css); keep only
+       layout here. Hardcoded bg-gray-50/text-gray-900 outranked the themed rule
+       and were never dark-mode aware. -->
+  <body class="h-screen overflow-hidden">
     <div id="root" class="h-full"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

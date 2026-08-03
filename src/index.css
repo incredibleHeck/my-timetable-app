@@ -2,10 +2,67 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Global canvas — safety net so inherited backgrounds/text respect the theme */
+/* ---------------------------------------------------------------------------
+ * DESIGN TOKENS
+ *
+ * Semantic colours as raw RGB channels so Tailwind can apply opacity modifiers
+ * (e.g. `bg-surface/50`). Theming happens here once, instead of via a `dark:`
+ * variant on every element — components should reference the semantic name and
+ * stay theme-agnostic.
+ *
+ * Muted text values are chosen to clear WCAG AA (4.5:1) on their own surfaces:
+ * slate-600 on white is ~7.5:1, slate-400 on slate-800 is ~5.9:1. The previous
+ * ad-hoc slate-400-on-white (~2.8:1) is deliberately not representable.
+ * ------------------------------------------------------------------------- */
+@layer base {
+  :root {
+    --canvas: 248 250 252; /* slate-50  */
+    --surface: 255 255 255; /* white     */
+    --surface-muted: 241 245 249; /* slate-100 */
+    --surface-inset: 226 232 240; /* slate-200 */
+
+    --border: 226 232 240; /* slate-200 */
+    --border-subtle: 241 245 249; /* slate-100 */
+    --border-strong: 203 213 225; /* slate-300 */
+
+    --content: 15 23 42; /* slate-900 */
+    --content-secondary: 51 65 85; /* slate-700 */
+    --content-muted: 71 85 105; /* slate-600 — AA on canvas/surface */
+
+    --accent: 245 158 11; /* amber-500 */
+    --accent-strong: 217 119 6; /* amber-600 */
+    --danger: 220 38 38; /* red-600   */
+    --success: 5 150 105; /* emerald-600 */
+  }
+
+  .dark {
+    --canvas: 15 23 42; /* slate-900 */
+    --surface: 30 41 59; /* slate-800 */
+    --surface-muted: 30 41 59; /* slate-800 */
+    --surface-inset: 51 65 85; /* slate-700 */
+
+    --border: 51 65 85; /* slate-700 */
+    --border-subtle: 51 65 85; /* slate-700 */
+    --border-strong: 71 85 105; /* slate-600 */
+
+    --content: 241 245 249; /* slate-100 */
+    --content-secondary: 203 213 225; /* slate-300 */
+    --content-muted: 148 163 184; /* slate-400 — AA on dark surfaces */
+
+    --accent: 251 191 36; /* amber-400 — lifted for dark backgrounds */
+    --accent-strong: 245 158 11; /* amber-500 */
+    --danger: 248 113 113; /* red-400   */
+    --success: 52 211 153; /* emerald-400 */
+  }
+}
+
+/* Global canvas — safety net so inherited backgrounds/text respect the theme.
+ * `bg-canvas` is the first consumer of the token layer and resolves to exactly
+ * the previous slate-50 / slate-900 pair, so this is a no-op visually.
+ * Text colours migrate to tokens in the contrast pass. */
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-200;
+    @apply bg-canvas text-slate-800 dark:text-slate-200;
   }
 }
 
@@ -53,16 +110,16 @@
 /* Firefox Support */
 * {
   scrollbar-width: thin;
-  scrollbar-color: theme('colors.slate.300') transparent;
+  scrollbar-color: theme("colors.slate.300") transparent;
 }
 
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: theme('colors.slate.700/0.5') transparent;
+  scrollbar-color: theme("colors.slate.700/0.5") transparent;
 }
 
 .custom-scrollbar:hover {
-  scrollbar-color: theme('colors.amber.500/0.4') transparent;
+  scrollbar-color: theme("colors.amber.500/0.4") transparent;
 }
 
 @keyframes shimmer {
@@ -81,6 +138,27 @@
     margin: 1cm;
   }
 
+  /* Paper is always light. Re-point the tokens instead of overriding each
+   * utility, so printing stays correct when dark mode is active and as
+   * components migrate from literal colours (bg-white) to tokens (bg-surface). */
+  :root,
+  .dark {
+    --canvas: 255 255 255;
+    --surface: 255 255 255;
+    --surface-muted: 241 245 249;
+    --surface-inset: 226 232 240;
+    --border: 226 232 240;
+    --border-subtle: 241 245 249;
+    --border-strong: 203 213 225;
+    --content: 15 23 42;
+    --content-secondary: 51 65 85;
+    --content-muted: 71 85 105;
+    --accent: 245 158 11;
+    --accent-strong: 217 119 6;
+    --danger: 220 38 38;
+    --success: 5 150 105;
+  }
+
   body {
     background: white !important;
     print-color-adjust: exact;
@@ -88,7 +166,10 @@
   }
 
   /* Hide sidebar and headers not relevant for printing */
-  nav, .sidebar, header, .no-print {
+  nav,
+  .sidebar,
+  header,
+  .no-print {
     display: none !important;
   }
 
@@ -99,11 +180,21 @@
   }
 
   /* Force background colors and borders */
-  .bg-white { background-color: white !important; }
-  .bg-slate-50 { background-color: #f8fafc !important; }
-  .border { border-width: 1px !important; }
-  
+  .bg-white {
+    background-color: white !important;
+  }
+  .bg-slate-50 {
+    background-color: #f8fafc !important;
+  }
+  .border {
+    border-width: 1px !important;
+  }
+
   /* Ensure time labels are visible */
-  .text-slate-400 { color: #94a3b8 !important; }
-  .font-bold { font-weight: 700 !important; }
+  .text-slate-400 {
+    color: #94a3b8 !important;
+  }
+  .font-bold {
+    font-weight: 700 !important;
+  }
 }
