@@ -31,7 +31,7 @@ export const ClassStructureSection: React.FC<ClassStructureSectionProps> = ({
   setCStructure,
 }) => {
   const renderStructureTimingInputs = () => (
-    <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-slate-100">
+    <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-slate-100 dark:border-slate-700">
       <Input
         label="Periods/Day"
         type="number"
@@ -61,7 +61,7 @@ export const ClassStructureSection: React.FC<ClassStructureSectionProps> = ({
 
   return (
     <div className="space-y-4 animate-in fade-in">
-      <p className="text-xs text-slate-500 bg-blue-50 p-3 rounded border border-blue-100">
+      <p className="text-xs text-slate-500 dark:text-slate-400 bg-blue-50 p-3 rounded border border-blue-100">
         <span className="font-bold">Instructions:</span> Click any block below to toggle it between{" "}
         <b>Class</b>, <b>Break</b>, or <b>Lunch</b>. This overrides the global schedule for this
         specific class only.
@@ -94,7 +94,7 @@ export const ClassStructureSection: React.FC<ClassStructureSectionProps> = ({
                       p-3 rounded-lg border text-center text-xs font-bold transition-all relative overflow-hidden group
                       ${
                         type === "CLASS"
-                          ? "bg-white border-slate-300 text-slate-700 hover:border-blue-400"
+                          ? "bg-white dark:bg-slate-800 border-slate-300 text-slate-700 dark:text-slate-200 hover:border-blue-400"
                           : ""
                       }
                       ${type === "BREAK" ? "bg-amber-50 border-amber-300 text-amber-700" : ""}

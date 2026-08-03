@@ -81,7 +81,9 @@ export const SetupStepper: React.FC<SetupStepperProps> = ({ data, onNavigate }) 
             Getting Started
           </span>
         </div>
-        <h3 className="text-lg font-bold text-slate-800">Set up your profile</h3>
+        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
+          Set up your profile
+        </h3>
         <div className="flex items-center gap-3 mt-2">
           <div className="flex-1 h-1.5 bg-amber-100 rounded-full overflow-hidden">
             <div
@@ -108,8 +110,8 @@ export const SetupStepper: React.FC<SetupStepperProps> = ({ data, onNavigate }) 
                 done
                   ? "bg-emerald-50 border-emerald-200 opacity-80"
                   : isNext
-                    ? "bg-white border-amber-300 shadow-sm hover:shadow-md hover:border-amber-400"
-                    : "bg-white border-slate-200 opacity-60 hover:opacity-80"
+                    ? "bg-white dark:bg-slate-800 border-amber-300 shadow-sm hover:shadow-md hover:border-amber-400"
+                    : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 opacity-60 hover:opacity-80"
               }`}
             >
               <div className="flex items-center justify-between w-full mb-2">
@@ -127,7 +129,11 @@ export const SetupStepper: React.FC<SetupStepperProps> = ({ data, onNavigate }) 
               </div>
               <span
                 className={`text-xs font-bold leading-tight ${
-                  done ? "text-emerald-700" : isNext ? "text-slate-800" : "text-slate-400"
+                  done
+                    ? "text-emerald-700"
+                    : isNext
+                      ? "text-slate-800 dark:text-slate-100"
+                      : "text-slate-400"
                 }`}
               >
                 {step.label}

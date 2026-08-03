@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global canvas — safety net so inherited backgrounds/text respect the theme */
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-200;
+  }
+}
+
 /* Custom Scrollbar Styles */
 @layer base {
   ::-webkit-scrollbar {
@@ -14,11 +21,11 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-slate-300 rounded-full transition-colors;
+    @apply bg-slate-300 dark:bg-slate-600 rounded-full transition-colors;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-slate-400;
+    @apply bg-slate-400 dark:bg-slate-500;
   }
 }
 

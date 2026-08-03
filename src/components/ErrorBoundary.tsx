@@ -56,18 +56,22 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
       }
       return (
         <div className="flex items-center justify-center h-screen bg-red-50">
-          <div className="bg-white rounded-lg shadow-lg p-8 max-w-md">
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-8 max-w-md">
             <div className="mb-4">
               <div className="text-5xl mb-3">⚠️</div>
               <h1 className="text-2xl font-bold text-red-900">Something went wrong</h1>
             </div>
 
-            <p className="text-slate-600 mb-4">An unexpected error occurred. Please try again.</p>
+            <p className="text-slate-600 dark:text-slate-300 mb-4">
+              An unexpected error occurred. Please try again.
+            </p>
 
             {this.state.error && (
-              <details className="mb-6 p-3 bg-slate-100 rounded text-sm">
-                <summary className="font-mono text-slate-700 cursor-pointer">Error details</summary>
-                <pre className="mt-2 text-xs overflow-auto max-h-40 text-slate-600">
+              <details className="mb-6 p-3 bg-slate-100 dark:bg-slate-800 rounded text-sm">
+                <summary className="font-mono text-slate-700 dark:text-slate-200 cursor-pointer">
+                  Error details
+                </summary>
+                <pre className="mt-2 text-xs overflow-auto max-h-40 text-slate-600 dark:text-slate-300">
                   {this.state.error.toString()}
                 </pre>
               </details>
@@ -82,7 +86,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
               </button>
               <button
                 onClick={() => window.location.reload()}
-                className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded hover:bg-slate-50 transition"
+                className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 dark:text-slate-200 rounded hover:bg-slate-50 transition"
               >
                 Reload App
               </button>

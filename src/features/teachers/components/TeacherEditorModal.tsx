@@ -166,10 +166,10 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-500 uppercase mb-2">
+          <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">
             Subject Specialties
           </label>
-          <div className="flex flex-wrap gap-2 p-3 bg-slate-50 rounded-lg border border-slate-200 max-h-32 overflow-y-auto custom-scrollbar">
+          <div className="flex flex-wrap gap-2 p-3 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 max-h-32 overflow-y-auto custom-scrollbar">
             {sortedSubjects.map((s) => (
               <button
                 key={s.id}
@@ -181,7 +181,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
                 className={`px-3 py-1.5 rounded-md text-xs font-bold border transition-all ${
                   tSpecialties.includes(s.id)
                     ? "bg-slate-800 text-white border-slate-800 shadow-sm"
-                    : "bg-white text-slate-600 border-slate-200 hover:border-slate-400"
+                    : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-400"
                 }`}
               >
                 {s.name}
@@ -202,7 +202,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
 
         <div>
           <div className="flex justify-between items-end mb-2">
-            <label className="block text-xs font-bold text-slate-500 uppercase">
+            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
               Availability Constraints
             </label>
             <div className="flex gap-1">
@@ -226,14 +226,14 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
               </button>
               <button
                 onClick={() => applyTemplate("CLEAR")}
-                className="text-[10px] px-2 py-1 bg-slate-100 text-slate-600 rounded hover:bg-slate-200 font-bold flex items-center gap-1"
+                className="text-[10px] px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded hover:bg-slate-200 font-bold flex items-center gap-1"
               >
                 <XSquare size={10} /> Reset
               </button>
             </div>
           </div>
 
-          <div className="overflow-x-auto border border-slate-200 rounded-lg p-4 bg-slate-50 shadow-inner">
+          <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50 dark:bg-slate-900 shadow-inner">
             <div
               className="grid gap-1 min-w-[700px]"
               style={{
@@ -258,7 +258,9 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
                   <div
                     key={i}
                     className={`text-center text-[9px] font-bold rounded py-1 flex flex-col items-center justify-center h-8 leading-tight ${
-                      isBreak ? "bg-orange-100 text-orange-700" : "bg-slate-200 text-slate-600"
+                      isBreak
+                        ? "bg-orange-100 text-orange-700"
+                        : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
                     }`}
                   >
                     {icon}
@@ -271,7 +273,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
                 <React.Fragment key={d}>
                   <button
                     onClick={() => toggleDay(dIdx)}
-                    className="text-right text-xs font-bold text-slate-600 pr-3 hover:text-amber-600 transition-colors uppercase tracking-wider h-9 flex items-center justify-end"
+                    className="text-right text-xs font-bold text-slate-600 dark:text-slate-300 pr-3 hover:text-amber-600 transition-colors uppercase tracking-wider h-9 flex items-center justify-end"
                     title="Toggle Entire Day"
                   >
                     {d.substring(0, 3)}
@@ -291,7 +293,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
                                     ? "bg-red-500 border-red-600 shadow-inner"
                                     : isGlobalBreak
                                       ? "bg-amber-50 border-dashed border-amber-300"
-                                      : "bg-white border-slate-200 hover:border-amber-400 hover:shadow-sm"
+                                      : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-amber-400 hover:shadow-sm"
                                 }`}
                         title={
                           isBlocked
@@ -315,14 +317,15 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
             </div>
           </div>
           <div className="flex gap-4 mt-2 justify-end">
-            <div className="flex items-center gap-1 text-[10px] text-slate-500">
-              <div className="w-3 h-3 bg-white border border-slate-200 rounded"></div> Available
+            <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400">
+              <div className="w-3 h-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded"></div>{" "}
+              Available
             </div>
-            <div className="flex items-center gap-1 text-[10px] text-slate-500">
+            <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400">
               <div className="w-3 h-3 bg-amber-50 border border-dashed border-amber-300 rounded"></div>{" "}
               Teaching during Break
             </div>
-            <div className="flex items-center gap-1 text-[10px] text-slate-500">
+            <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400">
               <div className="w-3 h-3 bg-red-500 border border-red-600 rounded"></div> Blocked
             </div>
           </div>

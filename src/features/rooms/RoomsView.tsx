@@ -109,8 +109,10 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate }) =>
     <div className="max-w-7xl mx-auto p-8 space-y-6 animate-in fade-in duration-500 pb-12">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-bold text-slate-800">Room Management</h2>
-          <p className="text-xs text-slate-500">Define physical spaces and their capacities.</p>
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Room Management</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Define physical spaces and their capacities.
+          </p>
         </div>
         <Button onClick={() => openModal()} icon={<Plus size={16} />}>
           Add Room
@@ -122,23 +124,23 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate }) =>
           return (
             <div
               key={room.id}
-              className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-all group flex flex-col"
+              className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm hover:shadow-md transition-all group flex flex-col"
             >
-              <div className="h-2 w-full bg-slate-100 border-b border-slate-200"></div>
+              <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700"></div>
 
               <div className="p-4 flex-1 flex flex-col items-center text-center">
-                <div className="w-12 h-12 rounded-full mb-3 flex items-center justify-center text-slate-600 bg-slate-100 border border-slate-200 shadow-sm">
+                <div className="w-12 h-12 rounded-full mb-3 flex items-center justify-center text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
                   <Building2 size={24} />
                 </div>
                 <h3
-                  className="font-bold text-slate-800 mb-1 truncate w-full px-2"
+                  className="font-bold text-slate-800 dark:text-slate-100 mb-1 truncate w-full px-2"
                   title={room.name}
                 >
                   {room.name}
                 </h3>
 
                 <div className="flex gap-1 mb-3">
-                  <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
+                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
                     {room.type}
                   </span>
                   {room.isHomeRoom && (
@@ -149,21 +151,21 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate }) =>
                 </div>
 
                 <div className="flex flex-col gap-1 w-full mt-auto">
-                  <div className="text-[10px] py-1 px-2 rounded flex items-center justify-center gap-1 bg-slate-50 text-slate-500">
+                  <div className="text-[10px] py-1 px-2 rounded flex items-center justify-center gap-1 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400">
                     <Users size={12} />
                     Capacity: <b>{room.capacity}</b>
                   </div>
                 </div>
               </div>
 
-              <div className="flex border-t border-slate-100">
+              <div className="flex border-t border-slate-100 dark:border-slate-700">
                 <button
                   onClick={() => openModal(room)}
-                  className="flex-1 py-3 text-slate-600 hover:bg-slate-50 text-xs font-semibold flex items-center justify-center transition-colors"
+                  className="flex-1 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-50 text-xs font-semibold flex items-center justify-center transition-colors"
                 >
                   <Edit2 size={14} className="mr-1" /> Edit
                 </button>
-                <div className="w-px bg-slate-100"></div>
+                <div className="w-px bg-slate-100 dark:bg-slate-800"></div>
                 <button
                   onClick={() => initiateDelete(room)}
                   disabled={room.isHomeRoom}
@@ -182,12 +184,14 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate }) =>
 
         <button
           onClick={() => openModal()}
-          className="bg-slate-50 rounded-xl border-2 border-dashed border-slate-300 hover:border-amber-400 hover:bg-amber-50 transition-all flex flex-col items-center justify-center p-6 group h-full min-h-[200px]"
+          className="bg-slate-50 dark:bg-slate-900 rounded-xl border-2 border-dashed border-slate-300 hover:border-amber-400 hover:bg-amber-50 transition-all flex flex-col items-center justify-center p-6 group h-full min-h-[200px]"
         >
-          <div className="w-14 h-14 rounded-full bg-slate-200 group-hover:bg-amber-100 text-slate-400 group-hover:text-amber-500 flex items-center justify-center mb-3 transition-colors shadow-inner">
+          <div className="w-14 h-14 rounded-full bg-slate-200 dark:bg-slate-700 group-hover:bg-amber-100 text-slate-400 group-hover:text-amber-500 flex items-center justify-center mb-3 transition-colors shadow-inner">
             <Plus size={28} />
           </div>
-          <span className="font-bold text-slate-500 group-hover:text-amber-600">Add Room</span>
+          <span className="font-bold text-slate-500 dark:text-slate-400 group-hover:text-amber-600">
+            Add Room
+          </span>
         </button>
       </div>
 
@@ -251,8 +255,10 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate }) =>
             <AlertTriangle size={24} />
           </div>
           <div>
-            <p className="font-bold text-slate-800 text-lg">Delete "{roomToDelete?.name}"?</p>
-            <p className="text-sm text-slate-500 mt-2">
+            <p className="font-bold text-slate-800 dark:text-slate-100 text-lg">
+              Delete "{roomToDelete?.name}"?
+            </p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
               This will remove the room from your facility list.
             </p>
           </div>

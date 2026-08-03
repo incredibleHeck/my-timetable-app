@@ -64,11 +64,11 @@ export const ExamCard: React.FC<Props> = ({
       {/* Header: Subject Name & Paper Label */}
       <div className="flex justify-between items-start pl-2">
         <div className="space-y-1">
-          <h3 className="font-bold text-slate-800 text-sm leading-tight">
+          <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-tight">
             {subject?.name || "Unknown Subject"}
           </h3>
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
               {exam.paperLabel || `Paper ${exam.paperNumber}`}
             </span>
             {isLocked && <Lock size={12} className="text-slate-400" />}
@@ -118,13 +118,13 @@ export const ExamCard: React.FC<Props> = ({
       {/* Meta Information Grid */}
       <div className="grid grid-cols-2 gap-y-2 text-xs pl-2">
         {/* Date */}
-        <div className="flex items-center gap-2 text-slate-600">
+        <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
           <Calendar size={14} className="text-slate-400" />
           <span className="font-medium">{new Date(exam.date).toLocaleDateString()}</span>
         </div>
 
         {/* Time & Duration */}
-        <div className="flex items-center gap-2 text-slate-600">
+        <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
           <Clock size={14} className="text-slate-400" />
           <span className="font-medium">
             {exam.startTime} <span className="text-slate-400">({exam.duration}m)</span>
@@ -139,7 +139,9 @@ export const ExamCard: React.FC<Props> = ({
           />
           <span
             className={`text-[11px] leading-tight ${
-              !invigilatorNames ? "text-amber-600 italic" : "text-slate-600 font-medium"
+              !invigilatorNames
+                ? "text-amber-600 italic"
+                : "text-slate-600 dark:text-slate-300 font-medium"
             }`}
           >
             {invigilatorNames || "Unassigned Invigilators"}
@@ -148,7 +150,7 @@ export const ExamCard: React.FC<Props> = ({
 
         {/* Participating Classes */}
         {classNames && (
-          <div className="col-span-2 mt-1 pt-2 border-t border-slate-100 flex items-start gap-2">
+          <div className="col-span-2 mt-1 pt-2 border-t border-slate-100 dark:border-slate-700 flex items-start gap-2">
             <FileText size={14} className="text-slate-300 mt-0.5 shrink-0" />
             <span className="text-slate-400 leading-tight line-clamp-1" title={classNames}>
               {classNames}

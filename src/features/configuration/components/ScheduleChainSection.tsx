@@ -45,7 +45,7 @@ export const ScheduleChainSection: React.FC<ScheduleChainSectionProps> = ({
   return (
     <div className="w-full">
       <div className="flex justify-between items-end mb-3">
-        <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
           Interactive Schedule Chain
         </p>
       </div>
@@ -54,7 +54,7 @@ export const ScheduleChainSection: React.FC<ScheduleChainSectionProps> = ({
         {dayStructure.map((period, idx) => (
           <div
             key={idx}
-            className="flex items-center gap-3 bg-white border border-slate-200 p-3 rounded-lg hover:border-amber-400 transition-colors group min-w-[220px]"
+            className="flex items-center gap-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 rounded-lg hover:border-amber-400 transition-colors group min-w-[220px]"
           >
             <div
               className="flex flex-col gap-0.5 shrink-0"
@@ -76,13 +76,13 @@ export const ScheduleChainSection: React.FC<ScheduleChainSectionProps> = ({
                     ${
                       period.type === type
                         ? type === "CLASS"
-                          ? "bg-white border-slate-400 text-slate-800"
+                          ? "bg-white dark:bg-slate-800 border-slate-400 text-slate-800 dark:text-slate-100"
                           : type === "BREAK"
                             ? "bg-amber-50 border-amber-400 text-amber-800"
                             : type === "LUNCH"
                               ? "bg-orange-50 border-orange-400 text-orange-800"
                               : "bg-violet-50 border-violet-400 text-violet-800"
-                        : "bg-slate-50 border-slate-200 text-slate-400 hover:border-slate-300"
+                        : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-400 hover:border-slate-300"
                     }
                   `}
                 >
@@ -96,7 +96,7 @@ export const ScheduleChainSection: React.FC<ScheduleChainSectionProps> = ({
               <div className="flex items-center mb-1">
                 {editingLabelIdx === idx ? (
                   <input
-                    className="text-sm font-bold text-slate-700 bg-slate-100 border border-amber-300 rounded-lg px-2 py-1 w-full focus:outline-none focus:border-amber-500"
+                    className="text-sm font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 border border-amber-300 rounded-lg px-2 py-1 w-full focus:outline-none focus:border-amber-500"
                     value={tempLabel}
                     onChange={(e) => setTempLabel(e.target.value)}
                     autoFocus
@@ -110,7 +110,7 @@ export const ScheduleChainSection: React.FC<ScheduleChainSectionProps> = ({
                       setEditingLabelIdx(idx);
                       setTempLabel(period.label);
                     }}
-                    className="text-sm font-bold text-slate-500 uppercase text-left cursor-pointer hover:text-amber-600 truncate"
+                    className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase text-left cursor-pointer hover:text-amber-600 truncate"
                   >
                     {period.label}
                   </button>
@@ -121,7 +121,7 @@ export const ScheduleChainSection: React.FC<ScheduleChainSectionProps> = ({
                 <input
                   type="time"
                   aria-label={`Period ${idx + 1} start`}
-                  className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-sm font-bold text-slate-700 focus:border-amber-500 outline-none w-[5.5rem]"
+                  className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-sm font-bold text-slate-700 dark:text-slate-200 focus:border-amber-500 outline-none w-[5.5rem]"
                   value={timeSlots[idx]?.start || "00:00"}
                   onChange={(e) => {
                     const nextData = updateTimeSlot(idx, "start", e.target.value);
@@ -132,7 +132,7 @@ export const ScheduleChainSection: React.FC<ScheduleChainSectionProps> = ({
                 <input
                   type="time"
                   aria-label={`Period ${idx + 1} end`}
-                  className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-sm font-bold text-slate-700 focus:border-amber-500 outline-none w-[5.5rem]"
+                  className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-sm font-bold text-slate-700 dark:text-slate-200 focus:border-amber-500 outline-none w-[5.5rem]"
                   value={timeSlots[idx]?.end || "00:00"}
                   onChange={(e) => {
                     const nextData = updateTimeSlot(idx, "end", e.target.value);

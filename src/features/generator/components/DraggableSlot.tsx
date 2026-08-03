@@ -40,10 +40,10 @@ export const DraggableSlot: React.FC<Props> = memo(
           ...style,
           borderLeftColor: subject?.color || "#cbd5e1",
         }}
-        className={`relative group border-l-4 shadow-sm rounded-r-md p-2 flex flex-col justify-center w-full h-full transition-shadow bg-white overflow-hidden print:border print:border-slate-300 touch-none
+        className={`relative group border-l-4 shadow-sm rounded-r-md p-2 flex flex-col justify-center w-full h-full transition-shadow bg-white dark:bg-slate-800 overflow-hidden print:border print:border-slate-300 touch-none
          ${
            slot.isFixed
-             ? "opacity-90 cursor-not-allowed bg-slate-50"
+             ? "opacity-90 cursor-not-allowed bg-slate-50 dark:bg-slate-900"
              : "cursor-grab active:cursor-grabbing hover:shadow-md"
          } 
          ${
@@ -59,11 +59,11 @@ export const DraggableSlot: React.FC<Props> = memo(
           style={{ backgroundColor: subject?.color || "#cbd5e1" }}
         ></div>
 
-        <div className="font-bold text-xs text-slate-800 leading-tight truncate relative z-10">
+        <div className="font-bold text-xs text-slate-800 dark:text-slate-100 leading-tight truncate relative z-10">
           {subject?.name}
         </div>
 
-        <div className="text-[10px] text-slate-500 truncate mt-1 flex items-center gap-1 relative z-10">
+        <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-1 flex items-center gap-1 relative z-10">
           {mode === "CLASS" ? (
             <>
               <Users size={10} /> {teacher?.name || "Unassigned"}

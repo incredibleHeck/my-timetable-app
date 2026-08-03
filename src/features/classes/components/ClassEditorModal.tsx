@@ -39,13 +39,15 @@ export const ClassEditorModal: React.FC<ClassEditorModalProps> = (props) => {
       <div className="flex flex-col h-[70vh]">
         {/* Modal Body with Scroll */}
         <div className="flex-1 flex flex-col lg:flex-row gap-8 overflow-hidden min-h-0">
-          <div className="w-full lg:w-1/3 space-y-4 border-r border-slate-100 pr-4 overflow-y-auto custom-scrollbar">
+          <div className="w-full lg:w-1/3 space-y-4 border-r border-slate-100 dark:border-slate-700 pr-4 overflow-y-auto custom-scrollbar">
             {/* Internal Tabs for Modal */}
-            <div className="flex gap-2 mb-4 bg-slate-100 p-1 rounded-lg sticky top-0 z-10">
+            <div className="flex gap-2 mb-4 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg sticky top-0 z-10">
               <button
                 onClick={() => setModalSubTab("BASICS")}
                 className={`flex-1 py-1 text-xs font-bold rounded transition-colors ${
-                  modalSubTab === "BASICS" ? "bg-white shadow text-slate-800" : "text-slate-500"
+                  modalSubTab === "BASICS"
+                    ? "bg-white dark:bg-slate-800 shadow text-slate-800 dark:text-slate-100"
+                    : "text-slate-500 dark:text-slate-400"
                 }`}
               >
                 Basics
@@ -53,7 +55,9 @@ export const ClassEditorModal: React.FC<ClassEditorModalProps> = (props) => {
               <button
                 onClick={() => setModalSubTab("STRUCTURE")}
                 className={`flex-1 py-1 text-xs font-bold rounded transition-colors ${
-                  modalSubTab === "STRUCTURE" ? "bg-white shadow text-slate-800" : "text-slate-500"
+                  modalSubTab === "STRUCTURE"
+                    ? "bg-white dark:bg-slate-800 shadow text-slate-800 dark:text-slate-100"
+                    : "text-slate-500 dark:text-slate-400"
                 }`}
               >
                 Structure
@@ -95,7 +99,7 @@ export const ClassEditorModal: React.FC<ClassEditorModalProps> = (props) => {
           />
         </div>
 
-        <div className="pt-4 mt-4 border-t border-slate-100 flex justify-end gap-2 shrink-0">
+        <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-2 shrink-0">
           <Button variant="secondary" onClick={onClose}>
             Cancel
           </Button>
@@ -106,8 +110,8 @@ export const ClassEditorModal: React.FC<ClassEditorModalProps> = (props) => {
       {/* Mini Modal for Slot Label */}
       {activeSlot && (
         <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50 rounded-2xl">
-          <div className="bg-white p-4 rounded-xl shadow-xl w-64 space-y-3 animate-in zoom-in-95">
-            <h4 className="font-bold text-sm text-slate-800">Reserve Slot</h4>
+          <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-xl w-64 space-y-3 animate-in zoom-in-95">
+            <h4 className="font-bold text-sm text-slate-800 dark:text-slate-100">Reserve Slot</h4>
             <Input
               autoFocus
               placeholder="e.g. Worship"

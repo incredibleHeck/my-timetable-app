@@ -38,8 +38,10 @@ export const ClassBasicsSection: React.FC<ClassBasicsSectionProps> = ({
       />
 
       <div className="space-y-2">
-        <label className="block text-xs font-bold text-slate-500 uppercase">Home Classroom</label>
-        <div className="w-full rounded-md border border-slate-200 bg-slate-50 text-sm p-2 text-slate-600 font-medium flex items-center gap-2 italic">
+        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
+          Home Classroom
+        </label>
+        <div className="w-full rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm p-2 text-slate-600 dark:text-slate-300 font-medium flex items-center gap-2 italic">
           <School size={14} className="text-amber-500" />
           {editingClass
             ? data.rooms.find((r) => r.id === editingClass.defaultRoomId)?.name ||
@@ -54,12 +56,12 @@ export const ClassBasicsSection: React.FC<ClassBasicsSectionProps> = ({
       {/* RESERVATIONS GRID */}
       <div>
         <div className="flex justify-between items-end mb-2">
-          <label className="block text-xs font-bold text-slate-500 uppercase">
+          <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
             Class-Specific Events
           </label>
         </div>
 
-        <div className="overflow-x-auto border border-slate-200 rounded-lg p-2 bg-slate-50 shadow-inner">
+        <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-lg p-2 bg-slate-50 dark:bg-slate-900 shadow-inner">
           <div
             className="grid gap-1 min-w-max"
             style={{
@@ -79,7 +81,7 @@ export const ClassBasicsSection: React.FC<ClassBasicsSectionProps> = ({
             {/* Body */}
             {DAYS.map((d, dIdx) => (
               <React.Fragment key={d}>
-                <div className="text-right text-[10px] font-bold text-slate-600 pr-2 uppercase self-center">
+                <div className="text-right text-[10px] font-bold text-slate-600 dark:text-slate-300 pr-2 uppercase self-center">
                   {d.substring(0, 3)}
                 </div>
                 {Array.from({ length: cPeriodCount }).map((_, pIdx) => {
@@ -105,10 +107,10 @@ export const ClassBasicsSection: React.FC<ClassBasicsSectionProps> = ({
                                               h-6 rounded border text-[8px] font-bold truncate px-0.5 transition-all
                                               ${
                                                 isGlobal
-                                                  ? "bg-slate-200 text-slate-500 border-slate-300 cursor-not-allowed"
+                                                  ? "bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 border-slate-300 cursor-not-allowed"
                                                   : localLabel
                                                     ? "bg-amber-100 text-amber-700 border-amber-300"
-                                                    : "bg-white border-slate-200 hover:border-amber-400"
+                                                    : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-amber-400"
                                               }
                                           `}
                     >

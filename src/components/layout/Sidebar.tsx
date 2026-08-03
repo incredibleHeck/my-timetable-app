@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { AppData, ViewState } from "../../types";
 import { FileService } from "../../services/fileSystem";
+import { useI18n } from "../../contexts/I18nContext";
 import { SidebarSection } from "./sidebar/SidebarSection";
 import { NavItem } from "./sidebar/NavItem";
 
@@ -44,6 +45,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onCreateProfile,
   data,
 }) => {
+  const { t } = useI18n();
   const teacherCount = data?.teachers.length ?? 0;
   const classCount = data?.classes.length ?? 0;
   const subjectCount = data?.subjects.length ?? 0;
@@ -65,7 +67,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <h1 className="font-bold text-white leading-none text-lg">
             Edu <span className="text-amber-400">Scheduler</span>
           </h1>
-          <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-0.5">
+          <p className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold mt-0.5">
             Pro
           </p>
         </div>
@@ -76,29 +78,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
         className="flex-1 overflow-y-auto custom-scrollbar py-4"
         aria-label="Application sections"
       >
-        <SidebarSection label="General" isFirst />
+        <SidebarSection label={t("section.general")} isFirst />
         <NavItem
           id="DASHBOARD"
           icon={<LayoutDashboard size={18} />}
-          label="Dashboard"
+          label={t("nav.dashboard")}
           currentView={view}
           onClick={setView}
         />
 
-        <SidebarSection label="System" />
+        <SidebarSection label={t("section.system")} />
         <NavItem
           id="CONFIG"
           icon={<Sliders size={18} />}
-          label="Configuration"
+          label={t("nav.configuration")}
           currentView={view}
           onClick={setView}
         />
 
-        <SidebarSection label="Academic Data" />
+        <SidebarSection label={t("section.academicData")} />
         <NavItem
           id="TEACHERS"
           icon={<Users size={18} />}
-          label="Teachers"
+          label={t("nav.teachers")}
           currentView={view}
           onClick={setView}
           badge={teacherCount || undefined}
@@ -106,7 +108,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <NavItem
           id="ROOMS"
           icon={<Building2 size={18} />}
-          label="Rooms"
+          label={t("nav.rooms")}
           currentView={view}
           onClick={setView}
           badge={roomCount || undefined}
@@ -114,7 +116,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <NavItem
           id="SUBJECTS"
           icon={<Library size={18} />}
-          label="Subjects"
+          label={t("nav.subjects")}
           currentView={view}
           onClick={setView}
           badge={subjectCount || undefined}
@@ -122,17 +124,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <NavItem
           id="CLASSES"
           icon={<BookOpen size={18} />}
-          label="Classes"
+          label={t("nav.classes")}
           currentView={view}
           onClick={setView}
           badge={classCount || undefined}
         />
 
-        <SidebarSection label="Scheduling" />
+        <SidebarSection label={t("section.scheduling")} />
         <NavItem
           id="GENERATOR"
           icon={<Zap size={18} />}
-          label="Auto-Generator"
+          label={t("nav.generator")}
           currentView={view}
           onClick={setView}
           badge={conflictCount || undefined}
@@ -141,16 +143,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <NavItem
           id="WORKLOAD"
           icon={<BarChart3 size={18} />}
-          label="Workload Analysis"
+          label={t("nav.workload")}
           currentView={view}
           onClick={setView}
         />
 
-        <SidebarSection label="Operations" />
+        <SidebarSection label={t("section.operations")} />
         <NavItem
           id="EXAMS"
           icon={<FileText size={18} />}
-          label="Exam Timetable"
+          label={t("nav.exams")}
           currentView={view}
           onClick={setView}
           badge={examCount || undefined}
@@ -158,20 +160,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <NavItem
           id="DUTY"
           icon={<Shield size={18} />}
-          label="Duty Roster"
+          label={t("nav.duty")}
           currentView={view}
           onClick={setView}
         />
         <NavItem
           id="SUBSTITUTES"
           icon={<UserX size={18} />}
-          label="Cover Planner"
+          label={t("nav.substitutes")}
           currentView={view}
           onClick={setView}
         />
 
         {/* Profiles Section */}
-        <SidebarSection label="Profiles" />
+        <SidebarSection label={t("section.profiles")} />
         <div className="px-4 mb-2 space-y-1">
           {profiles.map((p) => (
             <button
@@ -189,7 +191,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <span className="truncate">{p.name}</span>
               {activeProfile?.id === p.id && (
                 <span className="ml-auto text-[9px] font-black uppercase tracking-widest opacity-70">
-                  Active
+                  {t("common.active")}
                 </span>
               )}
             </button>
@@ -197,10 +199,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {onCreateProfile && (
             <button
               onClick={onCreateProfile}
-              className="w-full text-left px-3 py-2 text-xs rounded-lg transition-all text-slate-500 hover:text-amber-400 hover:bg-slate-800 flex items-center gap-2"
+              className="w-full text-left px-3 py-2 text-xs rounded-lg transition-all text-slate-500 dark:text-slate-400 hover:text-amber-400 hover:bg-slate-800 flex items-center gap-2"
             >
               <Plus size={12} />
-              New Profile
+              {t("nav.newProfile")}
             </button>
           )}
         </div>
@@ -213,11 +215,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
           className="w-full flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-amber-400 py-3 rounded-xl transition-all shadow-lg text-sm font-bold active:scale-95 group"
         >
           <HardDrive size={18} className="mr-2 group-hover:animate-bounce" />
-          {FileService.isTauri ? (activeFilePath ? "Save" : "Save As...") : "Save to Device"}
+          {FileService.isTauri
+            ? activeFilePath
+              ? t("common.save")
+              : t("common.saveAs")
+            : t("common.saveToDevice")}
         </button>
         {hasUnsavedChanges && (
           <p className="text-center text-[10px] text-amber-500 mt-2 font-bold animate-pulse">
-            ● Unsaved Changes
+            ● {t("common.unsavedChanges")}
           </p>
         )}
       </div>

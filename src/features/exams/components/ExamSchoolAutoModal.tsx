@@ -142,13 +142,13 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
     <Modal isOpen={isOpen} onClose={onClose} title="Auto-Generate Timetable">
       <div className="space-y-6 max-h-[75vh] overflow-y-auto pr-2">
         {/* 1. STRATEGY SELECTOR */}
-        <div className="grid grid-cols-2 gap-4 p-1 bg-slate-100 rounded-lg">
+        <div className="grid grid-cols-2 gap-4 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
           <button
             onClick={() => setMode("UNIFORM")}
             className={`flex flex-col items-center p-3 rounded-md transition-all ${
               mode === "UNIFORM"
-                ? "bg-white text-amber-600 shadow-sm ring-1 ring-amber-200"
-                : "text-slate-500 hover:bg-slate-200"
+                ? "bg-white dark:bg-slate-800 text-amber-600 shadow-sm ring-1 ring-amber-200"
+                : "text-slate-500 dark:text-slate-400 hover:bg-slate-200"
             }`}
           >
             <Users size={20} className="mb-2" />
@@ -160,8 +160,8 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
             onClick={() => setMode("RANDOM")}
             className={`flex flex-col items-center p-3 rounded-md transition-all ${
               mode === "RANDOM"
-                ? "bg-white text-amber-600 shadow-sm ring-1 ring-amber-200"
-                : "text-slate-500 hover:bg-slate-200"
+                ? "bg-white dark:bg-slate-800 text-amber-600 shadow-sm ring-1 ring-amber-200"
+                : "text-slate-500 dark:text-slate-400 hover:bg-slate-200"
             }`}
           >
             <Shuffle size={20} className="mb-2" />
@@ -175,19 +175,25 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
           <div
             onClick={() => setSyncStreams(!syncStreams)}
             className={`flex items-center gap-3 p-3 rounded border cursor-pointer transition-colors ${
-              syncStreams ? "bg-amber-50 border-amber-200" : "bg-white border-slate-200"
+              syncStreams
+                ? "bg-amber-50 border-amber-200"
+                : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
             }`}
           >
             <div
               className={`p-1.5 rounded-full ${
-                syncStreams ? "bg-amber-500 text-white" : "bg-slate-200 text-slate-400"
+                syncStreams
+                  ? "bg-amber-500 text-white"
+                  : "bg-slate-200 dark:bg-slate-700 text-slate-400"
               }`}
             >
               <LinkIcon size={14} />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-bold text-slate-800">Sync Parallel Streams</p>
-              <p className="text-xs text-slate-500">
+              <p className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                Sync Parallel Streams
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Ensure classes in the same level (e.g. 10A & 10B) always write the same exam at the
                 same time.
               </p>
@@ -199,12 +205,16 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
         <div
           onClick={() => setDeterministic(!deterministic)}
           className={`flex items-center gap-3 p-3 rounded border cursor-pointer transition-colors ${
-            deterministic ? "bg-amber-50 border-amber-200" : "bg-white border-slate-200"
+            deterministic
+              ? "bg-amber-50 border-amber-200"
+              : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
           }`}
         >
           <div className="flex-1">
-            <p className="text-sm font-bold text-slate-800">Fixed generation order</p>
-            <p className="text-xs text-slate-500">
+            <p className="text-sm font-bold text-slate-800 dark:text-slate-100">
+              Fixed generation order
+            </p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Use a deterministic shuffle so the same inputs produce the same timetable.
             </p>
           </div>
@@ -212,9 +222,9 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
         </div>
 
         {/* Sessions per day (grid columns) */}
-        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+        <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
           <h4 className="text-xs font-bold text-slate-400 uppercase mb-3">Exam sessions per day</h4>
-          <p className="text-xs text-slate-500 mb-3">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
             Choose how many session columns the timetable uses. Exams are placed into the matching
             session column (Session 1 or Session 2).
           </p>
@@ -232,7 +242,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
                 className={`flex-1 py-2.5 rounded-lg border text-sm font-bold transition-all ${
                   sessionsPerDay === n
                     ? "bg-amber-50 border-amber-300 text-amber-700 shadow-sm"
-                    : "bg-white border-slate-200 text-slate-500 hover:border-slate-300"
+                    : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300"
                 }`}
               >
                 {n} session{n > 1 ? "s" : ""}
@@ -242,7 +252,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
         </div>
 
         {/* 3. SETTINGS GRID */}
-        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-4">
+        <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-700 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <Input
               label="Start Date"
@@ -301,7 +311,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
                 className={`px-3 py-1.5 rounded-md text-[11px] font-bold border transition-all ${
                   selectedClassIds.includes(c.id)
                     ? "bg-amber-50 border-amber-300 text-amber-700 shadow-sm"
-                    : "bg-white border-slate-100 text-slate-400 hover:border-slate-200"
+                    : "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 hover:border-slate-200"
                 }`}
               >
                 {c.name}
@@ -320,7 +330,9 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
                 <div
                   key={s.id}
                   className={`flex justify-between items-center p-2 rounded border ${
-                    config ? "bg-amber-50 border-amber-300" : "bg-white border-slate-100"
+                    config
+                      ? "bg-amber-50 border-amber-300"
+                      : "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700"
                   }`}
                 >
                   <button
@@ -335,10 +347,10 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
                       {config && <Check size={10} className="text-white" />}
                     </div>
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: s.color }} />
-                    <span className="text-sm text-slate-700">{s.name}</span>
+                    <span className="text-sm text-slate-700 dark:text-slate-200">{s.name}</span>
                   </button>
                   {config && (
-                    <div className="flex items-center border rounded bg-white h-7">
+                    <div className="flex items-center border rounded bg-white dark:bg-slate-800 h-7">
                       <button
                         onClick={() => updatePaper(s.id, -1)}
                         className="px-2 border-r hover:bg-slate-50"
@@ -361,7 +373,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
         </div>
 
         {/* FOOTER */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+        <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
           <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>

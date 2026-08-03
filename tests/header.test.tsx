@@ -2,12 +2,20 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { Header } from "../src/components/layout/Header";
+import { ThemeProvider } from "../src/contexts/ThemeContext";
+import { I18nProvider } from "../src/contexts/I18nContext";
 import { ViewState } from "../src/types";
 
 // Mock UndoRedoControls as it depends on ProfileContext
 vi.mock("../src/components/layout/UndoRedoControls", () => ({
   UndoRedoControls: () => <div data-testid="undo-redo">UndoRedo</div>,
 }));
+
+const Providers = ({ children }: { children: React.ReactNode }) => (
+  <ThemeProvider>
+    <I18nProvider>{children}</I18nProvider>
+  </ThemeProvider>
+);
 
 describe("Header", () => {
   const defaultProps = {
@@ -22,22 +30,22 @@ describe("Header", () => {
   };
 
   it("renders the correct title based on view", () => {
-    render(<Header {...defaultProps} />);
+    render(<Header {...defaultProps} />, { wrapper: Providers });
     expect(screen.getByText("Dashboard")).toBeInTheDocument();
   });
 
   it("renders the active profile name", () => {
-    render(<Header {...defaultProps} />);
+    render(<Header {...defaultProps} />, { wrapper: Providers });
     expect(screen.getByText("Profile 1")).toBeInTheDocument();
   });
 
   it("displays saving status when autoSaveStatus is SAVING", () => {
-    render(<Header {...defaultProps} autoSaveStatus="SAVING" />);
+    render(<Header {...defaultProps} autoSaveStatus="SAVING" />, { wrapper: Providers });
     expect(screen.getByText("Saving...")).toBeInTheDocument();
   });
 
   it("opens profile menu and calls onSwitchProfile when a profile is selected", () => {
-    render(<Header {...defaultProps} />);
+    render(<Header {...defaultProps} />, { wrapper: Providers });
 
     // Click to open menu
     fireEvent.click(screen.getByText("Profile 1"));

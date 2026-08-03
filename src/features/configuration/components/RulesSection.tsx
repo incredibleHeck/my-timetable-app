@@ -34,14 +34,14 @@ export const RulesSection: React.FC<RulesSectionProps> = ({
   return (
     <div className="w-full">
       <div className="flex justify-between items-end mb-3">
-        <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
           Rules & Constraints
         </p>
       </div>
-      <p className="text-xs text-slate-500 mb-4">
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
         Used by Auto-Generator and Workload Analysis when validating timetables.
       </p>
-      <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="flex items-start gap-2">
           <ShieldAlert size={18} className="text-amber-600 shrink-0 mt-1" aria-hidden />
           <NumberStepper

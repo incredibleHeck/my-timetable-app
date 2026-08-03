@@ -73,7 +73,7 @@ export const ExportMenu: React.FC<ExportMenuProps> = ({
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Export and print options"
-        className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
       >
         <Download size={16} />
         <span className="text-xs font-bold">Export</span>
@@ -82,13 +82,13 @@ export const ExportMenu: React.FC<ExportMenuProps> = ({
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-full z-30 mt-2 w-72 rounded-xl border border-slate-200 bg-white p-4 shadow-lg"
+          className="absolute right-0 top-full z-30 mt-2 w-72 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-lg"
         >
           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
             Target
           </p>
           <div
-            className="flex bg-slate-100 p-1 rounded-lg mb-3"
+            className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg mb-3"
             role="group"
             aria-label="Export target"
           >
@@ -98,7 +98,9 @@ export const ExportMenu: React.FC<ExportMenuProps> = ({
                 onClick={() => handleTargetChange(t.value)}
                 aria-pressed={target === t.value}
                 className={`flex-1 px-2 py-1.5 text-xs font-bold rounded-md transition-all ${
-                  target === t.value ? "bg-white text-slate-800 shadow-sm" : "text-slate-500"
+                  target === t.value
+                    ? "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm"
+                    : "text-slate-500 dark:text-slate-400"
                 }`}
               >
                 {t.label}
@@ -112,7 +114,7 @@ export const ExportMenu: React.FC<ExportMenuProps> = ({
           <select
             value={entityId}
             onChange={(e) => setEntityId(e.target.value)}
-            className="w-full mb-3 px-3 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-amber-400 text-slate-700 bg-white"
+            className="w-full mb-3 px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-amber-400 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800"
           >
             <option value="">All {target.toLowerCase()}s</option>
             {entities.map((e) => (
@@ -137,7 +139,7 @@ export const ExportMenu: React.FC<ExportMenuProps> = ({
                   ? "Pick a single class or teacher to export a calendar"
                   : "Export a subscribable .ics calendar"
               }
-              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
             >
               <CalendarDays size={14} /> .ics
             </button>

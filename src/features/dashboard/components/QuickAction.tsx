@@ -11,13 +11,13 @@ interface QuickActionProps {
 export const QuickAction: React.FC<QuickActionProps> = ({ icon, label, desc, onClick }) => (
   <button
     onClick={onClick}
-    className="flex items-center gap-4 p-4 bg-white border border-slate-200 rounded-xl hover:border-amber-400 hover:shadow-md transition-all text-left group w-full"
+    className="flex items-center gap-4 p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-amber-400 hover:shadow-md transition-all text-left group w-full"
   >
-    <div className="p-3 bg-slate-50 text-slate-600 rounded-lg group-hover:bg-amber-50 group-hover:text-amber-600 transition-colors">
+    <div className="p-3 bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 rounded-lg group-hover:bg-amber-50 group-hover:text-amber-600 transition-colors">
       {icon}
     </div>
     <div className="flex-1">
-      <h4 className="font-bold text-slate-700 text-sm group-hover:text-amber-700 transition-colors">
+      <h4 className="font-bold text-slate-700 dark:text-slate-200 text-sm group-hover:text-amber-700 transition-colors">
         {label}
       </h4>
       <p className="text-xs text-slate-400">{desc}</p>

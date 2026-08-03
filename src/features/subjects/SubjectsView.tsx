@@ -133,8 +133,8 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate })
     <div className="max-w-7xl mx-auto p-8 space-y-6 animate-in fade-in duration-500 pb-12">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-bold text-slate-800">Subject Library</h2>
-          <p className="text-xs text-slate-500">
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Subject Library</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Manage academic disciplines and track their usage.
           </p>
         </div>
@@ -149,7 +149,7 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate })
           return (
             <div
               key={subj.id}
-              className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-all group flex flex-col"
+              className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm hover:shadow-md transition-all group flex flex-col"
             >
               <div className="h-3 w-full relative" style={{ backgroundColor: subj.color }}>
                 {subj.isSingleResource && (
@@ -187,7 +187,7 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate })
                   )}
                 </div>
                 <h3
-                  className="font-bold text-slate-800 mb-1 truncate w-full px-2"
+                  className="font-bold text-slate-800 dark:text-slate-100 mb-1 truncate w-full px-2"
                   title={subj.name}
                 >
                   {subj.name}
@@ -202,8 +202,8 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate })
                   <div
                     className={`text-[10px] py-1 px-2 rounded flex items-center justify-center gap-1 ${
                       stats.classCount > 0
-                        ? "bg-slate-100 text-slate-600"
-                        : "bg-slate-50 text-slate-300"
+                        ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                        : "bg-slate-50 dark:bg-slate-900 text-slate-300"
                     }`}
                   >
                     <BookOpen size={10} />
@@ -215,8 +215,8 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate })
                     }}
                     className={`text-[10px] py-1 px-2 rounded flex items-center justify-center gap-1 ${
                       stats.teacherCount > 0
-                        ? "bg-slate-100 text-slate-600 cursor-pointer hover:bg-slate-200 transition-colors"
-                        : "bg-slate-50 text-slate-300"
+                        ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 cursor-pointer hover:bg-slate-200 transition-colors"
+                        : "bg-slate-50 dark:bg-slate-900 text-slate-300"
                     }`}
                   >
                     <Users size={10} />
@@ -225,14 +225,14 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate })
                 </div>
               </div>
 
-              <div className="flex border-t border-slate-100">
+              <div className="flex border-t border-slate-100 dark:border-slate-700">
                 <button
                   onClick={() => openModal(subj)}
-                  className="flex-1 py-3 text-slate-600 hover:bg-slate-50 text-xs font-semibold flex items-center justify-center transition-colors"
+                  className="flex-1 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-50 text-xs font-semibold flex items-center justify-center transition-colors"
                 >
                   <Edit2 size={14} className="mr-1" /> Edit
                 </button>
-                <div className="w-px bg-slate-100"></div>
+                <div className="w-px bg-slate-100 dark:bg-slate-800"></div>
                 <button
                   onClick={() => initiateDelete(subj)}
                   className="flex-1 py-3 text-slate-400 hover:text-red-600 hover:bg-red-50 text-xs font-semibold flex items-center justify-center transition-colors"
@@ -246,12 +246,14 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate })
 
         <button
           onClick={() => openModal()}
-          className="bg-slate-50 rounded-xl border-2 border-dashed border-slate-300 hover:border-amber-400 hover:bg-amber-50 transition-all flex flex-col items-center justify-center p-6 group h-full min-h-[200px]"
+          className="bg-slate-50 dark:bg-slate-900 rounded-xl border-2 border-dashed border-slate-300 hover:border-amber-400 hover:bg-amber-50 transition-all flex flex-col items-center justify-center p-6 group h-full min-h-[200px]"
         >
-          <div className="w-14 h-14 rounded-full bg-slate-200 group-hover:bg-amber-100 text-slate-400 group-hover:text-amber-500 flex items-center justify-center mb-3 transition-colors shadow-inner">
+          <div className="w-14 h-14 rounded-full bg-slate-200 dark:bg-slate-700 group-hover:bg-amber-100 text-slate-400 group-hover:text-amber-500 flex items-center justify-center mb-3 transition-colors shadow-inner">
             <Plus size={28} />
           </div>
-          <span className="font-bold text-slate-500 group-hover:text-amber-600">Add Subject</span>
+          <span className="font-bold text-slate-500 dark:text-slate-400 group-hover:text-amber-600">
+            Add Subject
+          </span>
         </button>
       </div>
 
@@ -283,13 +285,15 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate })
             className={`flex items-start gap-3 p-4 rounded-xl border transition-colors cursor-pointer ${
               isSingleResource
                 ? "bg-purple-50 border-purple-200"
-                : "bg-white border-slate-200 hover:border-slate-300"
+                : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300"
             }`}
             onClick={() => setIsSingleResource(!isSingleResource)}
           >
             <div
               className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors ${
-                isSingleResource ? "bg-purple-600 border-purple-600" : "bg-white border-slate-300"
+                isSingleResource
+                  ? "bg-purple-600 border-purple-600"
+                  : "bg-white dark:bg-slate-800 border-slate-300"
               }`}
             >
               {isSingleResource && <Check size={14} className="text-white" />}
@@ -298,7 +302,7 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate })
               <div className="flex items-center gap-2">
                 <h4
                   className={`text-sm font-bold ${
-                    isSingleResource ? "text-purple-800" : "text-slate-700"
+                    isSingleResource ? "text-purple-800" : "text-slate-700 dark:text-slate-200"
                   }`}
                 >
                   Single Resource Facility
@@ -308,7 +312,7 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate })
                   className={isSingleResource ? "text-purple-600" : "text-slate-400"}
                 />
               </div>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                 Enable this for subjects that require a unique room (e.g. ICT Lab, Science Lab). The
                 scheduler will ensure <strong>only one class</strong> in the entire school is
                 scheduled for this subject at any given time.
@@ -321,13 +325,15 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate })
             className={`flex items-start gap-3 p-4 rounded-xl border transition-colors cursor-pointer ${
               isExaminable
                 ? "bg-amber-50 border-amber-200"
-                : "bg-white border-slate-200 hover:border-slate-300"
+                : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300"
             }`}
             onClick={() => setIsExaminable(!isExaminable)}
           >
             <div
               className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors ${
-                isExaminable ? "bg-amber-600 border-amber-600" : "bg-white border-slate-300"
+                isExaminable
+                  ? "bg-amber-600 border-amber-600"
+                  : "bg-white dark:bg-slate-800 border-slate-300"
               }`}
             >
               {isExaminable && <Check size={14} className="text-white" />}
@@ -336,7 +342,7 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate })
               <div className="flex items-center gap-2">
                 <h4
                   className={`text-sm font-bold ${
-                    isExaminable ? "text-amber-800" : "text-slate-700"
+                    isExaminable ? "text-amber-800" : "text-slate-700 dark:text-slate-200"
                   }`}
                 >
                   Examinable Subject
@@ -346,7 +352,7 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate })
                   className={isExaminable ? "text-amber-600" : "text-slate-400"}
                 />
               </div>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                 If enabled, this subject will be automatically selected for inclusion when
                 auto-generating the exam timetable.
               </p>
@@ -358,25 +364,29 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate })
             className={`flex items-start gap-3 p-4 rounded-xl border transition-colors cursor-pointer ${
               isCore
                 ? "bg-blue-50 border-blue-200"
-                : "bg-white border-slate-200 hover:border-slate-300"
+                : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300"
             }`}
             onClick={() => setIsCore(!isCore)}
           >
             <div
               className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors ${
-                isCore ? "bg-blue-600 border-blue-600" : "bg-white border-slate-300"
+                isCore
+                  ? "bg-blue-600 border-blue-600"
+                  : "bg-white dark:bg-slate-800 border-slate-300"
               }`}
             >
               {isCore && <Check size={14} className="text-white" />}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h4 className={`text-sm font-bold ${isCore ? "text-blue-800" : "text-slate-700"}`}>
+                <h4
+                  className={`text-sm font-bold ${isCore ? "text-blue-800" : "text-slate-700 dark:text-slate-200"}`}
+                >
                   Core Subject
                 </h4>
                 <BookOpen size={14} className={isCore ? "text-blue-600" : "text-slate-400"} />
               </div>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                 Marks this as a core discipline for morning bias, weekly balance, and spread
                 heuristics. When unset, the scheduler falls back to English name matching.
               </p>
@@ -384,13 +394,13 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate })
           </div>
 
           {/* Room Requirements */}
-          <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-4">
-            <h4 className="text-sm font-bold text-slate-700 flex items-center gap-2">
+          <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 space-y-4">
+            <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
               <Users size={16} /> Facility Mapping
             </h4>
 
             <div className="space-y-2">
-              <label className="block text-xs font-bold text-slate-500 uppercase">
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
                 Fixed Facility / Room
               </label>
               <select
@@ -413,10 +423,10 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate })
 
           <div>
             <div className="flex justify-between items-center mb-3">
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide">
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
                 Select Identifier Color
               </label>
-              <div className="flex items-center text-[10px] text-slate-400 gap-1 bg-slate-100 px-2 py-1 rounded">
+              <div className="flex items-center text-[10px] text-slate-400 gap-1 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
                 <Palette size={10} /> {COLOR_PALETTE.length} Distinct Shades
               </div>
             </div>
@@ -482,7 +492,7 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate })
             <AlertTriangle size={24} />
           </div>
           <div>
-            <p className="font-bold text-slate-800 text-lg">
+            <p className="font-bold text-slate-800 dark:text-slate-100 text-lg">
               Are you sure you want to delete "{subjectToDelete?.name}"?
             </p>
 
@@ -504,7 +514,7 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate })
                 <p className="mt-2 text-xs opacity-80">This action cannot be undone.</p>
               </div>
             ) : (
-              <p className="text-sm text-slate-500 mt-2">
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
                 This subject is not currently in use. It is safe to delete.
               </p>
             )}
@@ -515,14 +525,14 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate })
       {/* Teacher List Modal */}
       {subjectForTeacherList && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="p-6">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="text-lg font-bold text-slate-800">
+                  <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
                     Teachers for {subjectForTeacherList.name}
                   </h3>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     Staff members specializing in this subject
                   </p>
                 </div>
@@ -540,22 +550,26 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate })
                   .map((teacher) => (
                     <div
                       key={teacher.id}
-                      className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100"
+                      className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-100 dark:border-slate-700"
                     >
                       <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
                         {teacher.name.charAt(0)}
                       </div>
                       <div>
-                        <div className="font-semibold text-slate-800 text-sm">{teacher.name}</div>
+                        <div className="font-semibold text-slate-800 dark:text-slate-100 text-sm">
+                          {teacher.name}
+                        </div>
                         {teacher.email && (
-                          <div className="text-xs text-slate-500">{teacher.email}</div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400">
+                            {teacher.email}
+                          </div>
                         )}
                       </div>
                     </div>
                   ))}
               </div>
             </div>
-            <div className="bg-slate-50 px-6 py-4 border-t border-slate-100 flex justify-end">
+            <div className="bg-slate-50 dark:bg-slate-900 px-6 py-4 border-t border-slate-100 dark:border-slate-700 flex justify-end">
               <Button variant="secondary" onClick={() => setSubjectForTeacherList(null)}>
                 Close
               </Button>

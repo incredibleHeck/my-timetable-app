@@ -35,24 +35,26 @@ export const ClassList: React.FC<ClassListProps> = ({
           return (
             <div
               key={c.id}
-              className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-all group relative"
+              className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm hover:shadow-md transition-all group relative"
             >
               <div className="p-5">
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h3 className="text-lg font-bold text-slate-800">{c.name}</h3>
-                    <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
+                      {c.name}
+                    </h3>
+                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-1">
                       <Clock size={12} /> {c.duration} mins
                     </div>
                   </div>
-                  <div className="w-8 h-8 rounded bg-slate-100 flex items-center justify-center font-bold text-slate-600 text-xs">
+                  <div className="w-8 h-8 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-600 dark:text-slate-300 text-xs">
                     {c.name.substring(0, 2).toUpperCase()}
                   </div>
                 </div>
 
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-xs">
-                    <span className="text-slate-500">Home Room</span>
+                    <span className="text-slate-500 dark:text-slate-400">Home Room</span>
                     <span
                       className="font-bold text-amber-600 truncate max-w-[100px]"
                       title={data.rooms.find((r) => r.id === c.defaultRoomId)?.name || "Unassigned"}
@@ -61,17 +63,21 @@ export const ClassList: React.FC<ClassListProps> = ({
                     </span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-slate-500">Periods/Day</span>
-                    <span className="font-bold text-slate-700">{c.periodCount}</span>
+                    <span className="text-slate-500 dark:text-slate-400">Periods/Day</span>
+                    <span className="font-bold text-slate-700 dark:text-slate-200">
+                      {c.periodCount}
+                    </span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-slate-500">Subjects</span>
-                    <span className="font-bold text-slate-700">{c.curriculum.length}</span>
+                    <span className="text-slate-500 dark:text-slate-400">Subjects</span>
+                    <span className="font-bold text-slate-700 dark:text-slate-200">
+                      {c.curriculum.length}
+                    </span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-slate-500">Weekly Load</span>
+                    <span className="text-slate-500 dark:text-slate-400">Weekly Load</span>
                     <div className="flex items-center gap-2">
-                      <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="w-16 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full ${
                             isOverloaded ? "bg-red-500" : isFull ? "bg-amber-500" : "bg-emerald-500"
@@ -85,7 +91,7 @@ export const ClassList: React.FC<ClassListProps> = ({
                             ? "text-red-600"
                             : isFull
                               ? "text-amber-600"
-                              : "text-slate-700"
+                              : "text-slate-700 dark:text-slate-200"
                         }`}
                       >
                         {assigned}/{capacity}
@@ -94,7 +100,7 @@ export const ClassList: React.FC<ClassListProps> = ({
                   </div>
                 </div>
 
-                <div className="flex gap-2 pt-4 border-t border-slate-100">
+                <div className="flex gap-2 pt-4 border-t border-slate-100 dark:border-slate-700">
                   <Button
                     onClick={() => onEdit(c)}
                     variant="secondary"

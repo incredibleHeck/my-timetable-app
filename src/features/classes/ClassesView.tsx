@@ -56,8 +56,8 @@ export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-800">Class Management</h2>
-          <p className="text-xs text-slate-500">
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Class Management</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Configure classes, curriculum, and advanced grouping.
           </p>
         </div>
@@ -67,7 +67,7 @@ export const ClassesView: React.FC<ViewProps> = ({ data, onUpdate }) => {
       </div>
 
       {/* TABS */}
-      <div className="flex border-b border-slate-200 overflow-x-auto">
+      <div className="flex border-b border-slate-200 dark:border-slate-700 overflow-x-auto">
         <TabButton
           label="Class List"
           active={activeTab === "LIST"}
@@ -134,7 +134,7 @@ const TabButton: React.FC<{
     className={`px-4 py-2 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${
       active
         ? "border-amber-500 text-amber-600"
-        : "border-transparent text-slate-500 hover:text-slate-700"
+        : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700"
     }`}
   >
     {label}
@@ -157,8 +157,10 @@ const DeleteClassModal: React.FC<{
             <AlertTriangle size={24} />
           </div>
           <div>
-            <p className="font-bold text-slate-800 text-lg">Delete "{classGroup.name}"?</p>
-            <p className="text-sm text-slate-500 mt-2">
+            <p className="font-bold text-slate-800 dark:text-slate-100 text-lg">
+              Delete "{classGroup.name}"?
+            </p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
               This will remove the class, its curriculum assignments, and its associated
               system-managed Home Room.
             </p>

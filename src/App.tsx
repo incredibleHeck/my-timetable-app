@@ -84,7 +84,7 @@ function App() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-slate-50 text-slate-400">
+      <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-slate-900 text-slate-400">
         <div className="flex flex-col items-center gap-2">
           <span className="animate-spin text-2xl">⟳</span>
           <p>Loading Profiles...</p>
@@ -95,9 +95,11 @@ function App() {
 
   if (!activeProfile) {
     return (
-      <div className="flex items-center justify-center h-screen bg-slate-50">
+      <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-slate-900">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-slate-800 mb-4">Welcome to EduScheduler Pro</h1>
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-4">
+            Welcome to EduScheduler Pro
+          </h1>
           <Button onClick={() => setIsCreateModalOpen(true)}>Create First Profile</Button>
         </div>
 
@@ -111,7 +113,7 @@ function App() {
   }
 
   return (
-    <div className="flex h-screen bg-slate-50 font-sans text-slate-600 overflow-hidden">
+    <div className="flex h-screen bg-slate-50 dark:bg-slate-900 font-sans text-slate-600 dark:text-slate-300 overflow-hidden">
       {!isFullScreenView(view) && (
         <Sidebar
           view={view}

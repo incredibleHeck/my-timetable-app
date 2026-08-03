@@ -37,13 +37,13 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined);
 const VARIANT_STYLES: Record<ToastVariant, string> = {
   success: "bg-emerald-50 border-emerald-200 text-emerald-800",
   error: "bg-red-50 border-red-200 text-red-800",
-  info: "bg-slate-50 border-slate-200 text-slate-800",
+  info: "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100",
 };
 
 const VARIANT_ICONS: Record<ToastVariant, React.ReactNode> = {
   success: <CheckCircle2 size={18} className="text-emerald-500 shrink-0" />,
   error: <AlertCircle size={18} className="text-red-500 shrink-0" />,
-  info: <Info size={18} className="text-slate-500 shrink-0" />,
+  info: <Info size={18} className="text-slate-500 dark:text-slate-400 shrink-0" />,
 };
 
 export const ToastProvider = ({ children }: { children: ReactNode }) => {

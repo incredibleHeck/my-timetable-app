@@ -263,12 +263,12 @@ export const ExamManualModal: React.FC<Props> = ({
         </div>
 
         {/* SECTION 2: PAPER CONFIGURATION */}
-        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+        <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
           <div className="flex items-center justify-between mb-4">
-            <h4 className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
+            <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center gap-2">
               <Layers size={14} /> Session Configuration
             </h4>
-            <label className="flex items-center gap-2 text-sm font-medium cursor-pointer text-slate-700">
+            <label className="flex items-center gap-2 text-sm font-medium cursor-pointer text-slate-700 dark:text-slate-200">
               <input
                 type="checkbox"
                 checked={hasTwoPapers}
@@ -289,7 +289,7 @@ export const ExamManualModal: React.FC<Props> = ({
                   type="time"
                   value={examStartTime}
                   onChange={(e) => setExamStartTime(e.target.value)}
-                  className="flex-1 text-sm border-slate-200 rounded-md shadow-sm"
+                  className="flex-1 text-sm border-slate-200 dark:border-slate-700 rounded-md shadow-sm"
                 />
               </div>
             </div>
@@ -317,7 +317,7 @@ export const ExamManualModal: React.FC<Props> = ({
           <h4 className="text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-2">
             <BookOpen size={14} /> Participating Classes
           </h4>
-          <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-3 border border-slate-200 rounded-lg bg-white shadow-sm">
+          <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 shadow-sm">
             {sortedClasses.map((cls) => (
               <label
                 key={cls.id}
@@ -326,7 +326,7 @@ export const ExamManualModal: React.FC<Props> = ({
                   ${
                     examClassIds.includes(cls.id)
                       ? "bg-amber-50 border-amber-300 text-amber-800 shadow-sm"
-                      : "bg-slate-50 border-slate-100 text-slate-500 hover:bg-slate-100"
+                      : "bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-100"
                   }
                 `}
               >
@@ -351,7 +351,7 @@ export const ExamManualModal: React.FC<Props> = ({
         </div>
 
         {/* SECTION 4: RESOURCES (Invigilators & Room) */}
-        <div className="grid grid-cols-1 gap-4 pt-2 border-t border-slate-100">
+        <div className="grid grid-cols-1 gap-4 pt-2 border-t border-slate-100 dark:border-slate-700">
           {/* Room Select */}
           <Select
             label="Location / Room"
@@ -369,12 +369,12 @@ export const ExamManualModal: React.FC<Props> = ({
               <h4 className="text-xs font-bold text-slate-400 uppercase flex items-center gap-2">
                 <Users size={14} /> Invigilators
               </h4>
-              <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+              <span className="text-[10px] text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
                 {examInvigilatorIds.length} Selected
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-2 border border-slate-200 rounded-lg bg-slate-50/50">
+            <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50/50">
               {sortedTeachers.map((t) => {
                 const isSelected = examInvigilatorIds.includes(t.id);
                 return (
@@ -384,8 +384,8 @@ export const ExamManualModal: React.FC<Props> = ({
                         flex items-center gap-2 px-2 py-1.5 rounded border text-xs cursor-pointer select-none transition-all
                         ${
                           isSelected
-                            ? "bg-white border-amber-300 text-amber-900 shadow-sm ring-1 ring-amber-100"
-                            : "border-transparent hover:bg-white hover:border-slate-200 text-slate-600"
+                            ? "bg-white dark:bg-slate-800 border-amber-300 text-amber-900 shadow-sm ring-1 ring-amber-100"
+                            : "border-transparent hover:bg-white hover:border-slate-200 text-slate-600 dark:text-slate-300"
                         }
                       `}
                   >
@@ -414,7 +414,7 @@ export const ExamManualModal: React.FC<Props> = ({
               onChange={(e) => setExamLocked(e.target.checked)}
               className="rounded border-slate-300 text-amber-600 focus:ring-amber-500"
             />
-            <span className="text-xs font-bold text-slate-600">
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
               Lock invigilator assignments (skipped when re-running Assign Staff)
             </span>
           </label>

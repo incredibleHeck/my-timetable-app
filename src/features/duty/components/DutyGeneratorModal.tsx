@@ -84,7 +84,7 @@ export const DutyGeneratorModal: React.FC<Props> = ({
     >
       <div className="space-y-6 max-h-[70vh] overflow-y-auto px-1 custom-scrollbar">
         {/* CONFIG SECTION */}
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-4">
+        <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-4">
           <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
             <Settings2 size={14} /> Basic Parameters
           </h4>
@@ -119,7 +119,7 @@ export const DutyGeneratorModal: React.FC<Props> = ({
               <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                 <Users size={14} /> Staff Availability
               </h4>
-              <p className="text-[10px] text-slate-500 mt-1">
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
                 Select teachers to EXCLUDE from this rotation.
               </p>
             </div>
@@ -132,7 +132,7 @@ export const DutyGeneratorModal: React.FC<Props> = ({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
             <input
               placeholder="Search staff..."
-              className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+              className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -147,18 +147,20 @@ export const DutyGeneratorModal: React.FC<Props> = ({
                   onClick={() => toggleTeacher(t.id)}
                   className={`flex items-center justify-between p-3 rounded-xl border transition-all text-left ${
                     isExcluded
-                      ? "bg-slate-50 border-slate-200 opacity-60"
-                      : "bg-white border-transparent hover:border-amber-200 shadow-sm"
+                      ? "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 opacity-60"
+                      : "bg-white dark:bg-slate-800 border-transparent hover:border-amber-200 shadow-sm"
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${isExcluded ? "bg-slate-200 text-slate-400" : "bg-amber-100 text-amber-700"}`}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${isExcluded ? "bg-slate-200 dark:bg-slate-700 text-slate-400" : "bg-amber-100 text-amber-700"}`}
                     >
                       {t.name.charAt(0)}
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-slate-700">{t.name}</p>
+                      <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                        {t.name}
+                      </p>
                       <p className="text-[10px] text-slate-400">
                         {isExcluded ? "Excluded" : "Available"}
                       </p>

@@ -117,19 +117,19 @@ export const SolverProgressOverlay: React.FC<Props> = ({ progress, elapsedMs }) 
                   </span>
                   <Sparkles size={12} className="text-amber-500 animate-pulse" />
                 </div>
-                <h3 className="text-lg font-bold text-slate-800 leading-tight">
+                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 leading-tight">
                   {phase === "RUN_COMPLETE" && conflicts === 0
                     ? "Perfect timetable found!"
                     : phase === "RUN_COMPLETE"
                       ? "Run finished"
                       : meta.headline}
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">{meta.detail}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{meta.detail}</p>
               </div>
             </div>
 
             <div className="text-right shrink-0">
-              <div className="text-2xl font-mono font-bold tabular-nums text-slate-800">
+              <div className="text-2xl font-mono font-bold tabular-nums text-slate-800 dark:text-slate-100">
                 {formatSeconds(elapsedMs)}
               </div>
               <div className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">
@@ -163,7 +163,7 @@ export const SolverProgressOverlay: React.FC<Props> = ({ progress, elapsedMs }) 
                 className={`flex h-9 w-9 items-center justify-center rounded-lg ${
                   perfectRuns > 0
                     ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/30"
-                    : "bg-white text-slate-400 border border-slate-200"
+                    : "bg-white dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700"
                 }`}
               >
                 <CheckCircle2 size={18} />
@@ -172,7 +172,9 @@ export const SolverProgressOverlay: React.FC<Props> = ({ progress, elapsedMs }) 
                 <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-800/70">
                   Perfect timetables
                 </div>
-                <div className="text-xs text-slate-500">Runs with zero audit conflicts</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">
+                  Runs with zero audit conflicts
+                </div>
               </div>
             </div>
             <div
@@ -206,12 +208,12 @@ export const SolverProgressOverlay: React.FC<Props> = ({ progress, elapsedMs }) 
           </div>
         </div>
 
-        <div className="px-6 py-3 bg-slate-50/80 border-t border-slate-100 flex items-center justify-center gap-2">
+        <div className="px-6 py-3 bg-slate-50/80 border-t border-slate-100 dark:border-slate-700 flex items-center justify-center gap-2">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-60" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
           </span>
-          <p className="text-[11px] text-slate-500 font-medium">
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
             Exploring combinations in the background — you can stop anytime
           </p>
         </div>
@@ -234,7 +236,8 @@ function StatTile({
   const tones = {
     amber: "text-amber-700 bg-amber-50 border-amber-100",
     emerald: "text-emerald-700 bg-emerald-50 border-emerald-100",
-    slate: "text-slate-700 bg-slate-50 border-slate-100",
+    slate:
+      "text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-700",
   };
 
   return (

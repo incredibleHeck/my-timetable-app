@@ -32,14 +32,14 @@ export const InvigilatorRoster: React.FC<Props> = ({ data, exams }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full">
-      <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col h-full">
+      <div className="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 flex justify-between items-center">
         <div>
-          <h3 className="font-bold text-slate-800 flex items-center gap-2">
+          <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
             <Users size={18} className="text-amber-500" />
             Master Invigilation Roster
           </h3>
-          <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mt-0.5">
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider mt-0.5">
             Invigilation team per stream per day (all sessions)
           </p>
         </div>
@@ -50,21 +50,21 @@ export const InvigilatorRoster: React.FC<Props> = ({ data, exams }) => {
 
       <div className="flex-1 overflow-auto custom-scrollbar">
         <table className="w-full border-collapse">
-          <thead className="sticky top-0 z-20 bg-slate-50 shadow-sm">
+          <thead className="sticky top-0 z-20 bg-slate-50 dark:bg-slate-900 shadow-sm">
             <tr>
-              <th className="p-3 border-b border-r border-slate-200 bg-slate-100 text-left text-[10px] font-bold text-slate-500 uppercase tracking-widest min-w-[120px] sticky left-0 z-30">
+              <th className="p-3 border-b border-r border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest min-w-[120px] sticky left-0 z-30">
                 Class / Date
               </th>
               {uniqueDates.map((date) => (
                 <th
                   key={date}
-                  className="p-3 border-b border-r border-slate-200 text-center bg-slate-50 min-w-[140px]"
+                  className="p-3 border-b border-r border-slate-200 dark:border-slate-700 text-center bg-slate-50 dark:bg-slate-900 min-w-[140px]"
                 >
                   <div className="flex flex-col items-center">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
                       {new Date(date).toLocaleDateString("en-GB", { weekday: "short" })}
                     </span>
-                    <span className="text-sm font-black text-slate-800 leading-none">
+                    <span className="text-sm font-black text-slate-800 dark:text-slate-100 leading-none">
                       {new Date(date).toLocaleDateString("en-GB", {
                         day: "numeric",
                         month: "short",
@@ -78,7 +78,7 @@ export const InvigilatorRoster: React.FC<Props> = ({ data, exams }) => {
           <tbody>
             {sortedClasses.map((cls) => (
               <tr key={cls.id} className="group hover:bg-slate-50/50 transition-colors">
-                <td className="p-3 border-b border-r border-slate-200 font-bold text-xs text-slate-700 bg-white sticky left-0 z-10 group-hover:bg-slate-50">
+                <td className="p-3 border-b border-r border-slate-200 dark:border-slate-700 font-bold text-xs text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 sticky left-0 z-10 group-hover:bg-slate-50">
                   {cls.name}
                 </td>
                 {uniqueDates.map((date) => {
@@ -86,8 +86,8 @@ export const InvigilatorRoster: React.FC<Props> = ({ data, exams }) => {
                   return (
                     <td
                       key={date}
-                      className={`p-2 border-b border-r border-slate-200 text-center align-middle h-20 ${
-                        !names ? "bg-slate-50/30" : "bg-white"
+                      className={`p-2 border-b border-r border-slate-200 dark:border-slate-700 text-center align-middle h-20 ${
+                        !names ? "bg-slate-50/30" : "bg-white dark:bg-slate-800"
                       }`}
                     >
                       {names ? (

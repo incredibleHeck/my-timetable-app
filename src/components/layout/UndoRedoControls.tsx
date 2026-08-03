@@ -26,13 +26,13 @@ export const UndoRedoControls: React.FC = () => {
   }, [undo, redo]);
 
   return (
-    <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
+    <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700">
       <button
         onClick={undo}
         disabled={!canUndo}
         className={`p-1.5 rounded-md transition-all ${
           canUndo
-            ? "text-slate-700 hover:bg-white hover:shadow-sm active:scale-95"
+            ? "text-slate-700 dark:text-slate-200 hover:bg-white hover:shadow-sm active:scale-95"
             : "text-slate-300 cursor-not-allowed opacity-50"
         }`}
         aria-label="Undo"
@@ -45,7 +45,7 @@ export const UndoRedoControls: React.FC = () => {
         disabled={!canRedo}
         className={`p-1.5 rounded-md transition-all ${
           canRedo
-            ? "text-slate-700 hover:bg-white hover:shadow-sm active:scale-95"
+            ? "text-slate-700 dark:text-slate-200 hover:bg-white hover:shadow-sm active:scale-95"
             : "text-slate-300 cursor-not-allowed opacity-50"
         }`}
         aria-label="Redo"

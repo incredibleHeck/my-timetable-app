@@ -30,19 +30,19 @@ export const RecentActivity: React.FC = () => {
       case "ACADEMIC":
         return "text-blue-500 bg-blue-50";
       case "SYSTEM":
-        return "text-slate-500 bg-slate-50";
+        return "text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900";
       default:
-        return "text-slate-500 bg-slate-50";
+        return "text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900";
     }
   };
 
   return (
     <Card className="p-6">
-      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
-        <div className="p-2 bg-slate-100 text-slate-600 rounded-lg">
+      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-700">
+        <div className="p-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg">
           <History size={20} />
         </div>
-        <h3 className="font-bold text-slate-800">Recent Activity</h3>
+        <h3 className="font-bold text-slate-800 dark:text-slate-100">Recent Activity</h3>
       </div>
 
       <div className="space-y-4">
@@ -55,7 +55,7 @@ export const RecentActivity: React.FC = () => {
                 {getIcon(activity.type)}
               </div>
               <div className="flex-1 border-b border-slate-50 pb-3 group-last:border-none group-last:pb-0">
-                <p className="text-sm font-medium text-slate-700 leading-snug">
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-200 leading-snug">
                   {activity.message}
                 </p>
                 <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wider">
@@ -66,7 +66,7 @@ export const RecentActivity: React.FC = () => {
           ))
         ) : (
           <div className="flex flex-col items-center justify-center py-8 text-center">
-            <div className="p-3 bg-slate-50 text-slate-300 rounded-full mb-3">
+            <div className="p-3 bg-slate-50 dark:bg-slate-900 text-slate-300 rounded-full mb-3">
               <AlertCircle size={24} />
             </div>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">

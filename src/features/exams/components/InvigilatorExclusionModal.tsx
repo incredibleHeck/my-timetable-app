@@ -71,7 +71,7 @@ export const InvigilatorExclusionModal: React.FC<Props> = ({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
             <input
               placeholder="Search teachers..."
-              className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-amber-500 focus:border-amber-500 outline-none"
+              className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-amber-500 focus:border-amber-500 outline-none"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -81,7 +81,7 @@ export const InvigilatorExclusionModal: React.FC<Props> = ({
           </Button>
         </div>
 
-        <div className="flex-1 overflow-y-auto border border-slate-100 rounded-xl custom-scrollbar p-1">
+        <div className="flex-1 overflow-y-auto border border-slate-100 dark:border-slate-700 rounded-xl custom-scrollbar p-1">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
             {filteredTeachers.map((t) => {
               const isExcluded = excludedIds.includes(t.id);
@@ -91,20 +91,24 @@ export const InvigilatorExclusionModal: React.FC<Props> = ({
                   onClick={() => toggleTeacher(t.id)}
                   className={`flex items-center justify-between p-3 rounded-lg border transition-all text-left ${
                     isExcluded
-                      ? "bg-slate-50 border-slate-200 opacity-60"
-                      : "bg-white border-transparent hover:border-amber-200 hover:shadow-sm"
+                      ? "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 opacity-60"
+                      : "bg-white dark:bg-slate-800 border-transparent hover:border-amber-200 hover:shadow-sm"
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <div
                       className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
-                        isExcluded ? "bg-slate-200 text-slate-400" : "bg-amber-100 text-amber-700"
+                        isExcluded
+                          ? "bg-slate-200 dark:bg-slate-700 text-slate-400"
+                          : "bg-amber-100 text-amber-700"
                       }`}
                     >
                       {t.name.charAt(0)}
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-slate-700">{t.name}</p>
+                      <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                        {t.name}
+                      </p>
                       <p className="text-[10px] text-slate-400">
                         {isExcluded ? "Excluded" : "Available"}
                       </p>

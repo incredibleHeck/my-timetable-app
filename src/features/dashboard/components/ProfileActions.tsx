@@ -19,13 +19,13 @@ export const ProfileActions: React.FC<ProfileActionsProps> = ({
 }) => {
   return (
     <Card className="p-6">
-      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-700">
         <div className="p-2 bg-amber-100 text-amber-600 rounded-lg">
           <UserCircle size={20} />
         </div>
         <div>
-          <h3 className="font-bold text-slate-800">Profile Management</h3>
-          <p className="text-xs text-slate-500">Current: {activeProfileName}</p>
+          <h3 className="font-bold text-slate-800 dark:text-slate-100">Profile Management</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Current: {activeProfileName}</p>
         </div>
       </div>
 

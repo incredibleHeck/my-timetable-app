@@ -203,9 +203,9 @@ export const ScheduleGrid: React.FC<Props> = ({
     >
       <div className="flex flex-col h-full min-w-full w-fit print:min-w-0">
         {/* STATUS BAR */}
-        <div className="mb-3 p-3 rounded-lg text-xs font-bold flex items-center gap-3 transition-all shadow-sm border bg-white text-slate-500 border-slate-200">
+        <div className="mb-3 p-3 rounded-lg text-xs font-bold flex items-center gap-3 transition-all shadow-sm border bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700">
           <div
-            className={`p-1 rounded ${editMode ? "bg-amber-100 text-amber-600" : "bg-slate-100"}`}
+            className={`p-1 rounded ${editMode ? "bg-amber-100 text-amber-600" : "bg-slate-100 dark:bg-slate-800"}`}
           >
             {editMode ? <ArrowRightLeft size={14} /> : <Lock size={14} />}
           </div>
@@ -229,7 +229,7 @@ export const ScheduleGrid: React.FC<Props> = ({
           {Array.from({ length: periodsToRender }).map((_, i) => (
             <div
               key={i}
-              className="text-center bg-slate-100 rounded py-2 text-xs font-bold text-slate-600 uppercase tracking-wider"
+              className="text-center bg-slate-100 dark:bg-slate-800 rounded py-2 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider"
             >
               {getPeriodLabel(i)}
             </div>
@@ -246,8 +246,8 @@ export const ScheduleGrid: React.FC<Props> = ({
                 gridTemplateColumns: `60px repeat(${periodsToRender}, minmax(120px, 1fr))`,
               }}
             >
-              <div className="h-16 flex items-center justify-end pr-3 border-r border-slate-200">
-                <span className="text-xs font-bold text-slate-700 uppercase -rotate-90">
+              <div className="h-16 flex items-center justify-end pr-3 border-r border-slate-200 dark:border-slate-700">
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase -rotate-90">
                   {dayName.substring(0, 3)}
                 </span>
               </div>
@@ -284,13 +284,15 @@ export const ScheduleGrid: React.FC<Props> = ({
 
                     content = (
                       <div
-                        className={`flex flex-col h-full w-full bg-white border border-slate-200 p-0 overflow-hidden hover:shadow-md transition-shadow ${opacityClass}`}
+                        className={`flex flex-col h-full w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-0 overflow-hidden hover:shadow-md transition-shadow ${opacityClass}`}
                       >
                         {blockSubjects.map((subj, idx) => (
                           <div
                             key={subj?.id || idx}
                             className={`flex-1 flex items-center px-2 text-[9px] font-bold truncate relative ${
-                              idx < blockSubjects.length - 1 ? "border-b border-slate-200" : ""
+                              idx < blockSubjects.length - 1
+                                ? "border-b border-slate-200 dark:border-slate-700"
+                                : ""
                             }`}
                             style={{ backgroundColor: `${subj?.color}15`, color: subj?.color }}
                           >
@@ -387,7 +389,7 @@ export const ScheduleGrid: React.FC<Props> = ({
                     data={{ day: dIdx, period: pIdx }}
                     isValidTarget={isValidTarget}
                     isActiveDrag={!!activeDragItem}
-                    className={`h-16 my-1 rounded-md border border-slate-100 flex transition-all relative bg-slate-50/50 ${!content && !isValidTarget ? "bg-slate-100" : ""} ${highlightClass}`}
+                    className={`h-16 my-1 rounded-md border border-slate-100 dark:border-slate-700 flex transition-all relative bg-slate-50/50 ${!content && !isValidTarget ? "bg-slate-100 dark:bg-slate-800" : ""} ${highlightClass}`}
                   >
                     {content}
                   </DroppableCell>

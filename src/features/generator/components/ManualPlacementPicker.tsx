@@ -34,7 +34,7 @@ export const ManualPlacementPicker: React.FC<Props> = ({
       title={`Place lesson — ${className}`}
       maxWidth="max-w-md"
     >
-      <p className="text-xs text-slate-500 mb-4">
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
         {dayLabel}, {periodLabel}. Choose an unplaced lesson that fits this slot.
       </p>
 
@@ -56,7 +56,7 @@ export const ManualPlacementPicker: React.FC<Props> = ({
                 <button
                   type="button"
                   onClick={() => onSelect(pending)}
-                  className="w-full text-left rounded-xl border border-slate-200 bg-white px-4 py-3 hover:border-amber-300 hover:bg-amber-50/50 transition-colors group"
+                  className="w-full text-left rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 hover:border-amber-300 hover:bg-amber-50/50 transition-colors group"
                 >
                   <div className="flex items-center gap-3">
                     <div
@@ -64,11 +64,11 @@ export const ManualPlacementPicker: React.FC<Props> = ({
                       style={{ backgroundColor: subject?.color || "#cbd5e1" }}
                     />
                     <div className="min-w-0 flex-1">
-                      <div className="font-bold text-sm text-slate-800 truncate flex items-center gap-2">
+                      <div className="font-bold text-sm text-slate-800 dark:text-slate-100 truncate flex items-center gap-2">
                         <BookOpen size={14} className="text-slate-400 shrink-0" />
                         {pending.subjectName}
                       </div>
-                      <div className="text-[11px] text-slate-500 mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
                         <span className="inline-flex items-center gap-1">
                           <Users size={11} />
                           {pending.teacherName}

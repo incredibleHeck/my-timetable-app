@@ -101,7 +101,7 @@ export const GlobalConfigView: React.FC<ViewProps> = ({
       <ConfigImpactBanner conflictCount={data.conflicts?.length ?? 0} onNavigate={onNavigate} />
 
       <div
-        className="flex border-b border-slate-200 overflow-x-auto"
+        className="flex border-b border-slate-200 dark:border-slate-700 overflow-x-auto"
         role="tablist"
         aria-label="Configuration sections"
       >
@@ -117,7 +117,7 @@ export const GlobalConfigView: React.FC<ViewProps> = ({
             className={`px-4 py-3 text-sm font-bold whitespace-nowrap border-b-2 transition-colors ${
               activeTab === tab.id
                 ? "border-amber-500 text-amber-700"
-                : "border-transparent text-slate-500 hover:text-slate-800"
+                : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800"
             }`}
           >
             {tab.label}
@@ -138,7 +138,7 @@ export const GlobalConfigView: React.FC<ViewProps> = ({
       {activeTab === "structure" && (
         <div role="tabpanel" id="config-panel-structure" aria-labelledby="config-tab-structure">
           <Card className="p-8 border-t-4 border-t-amber-500">
-            <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center">
               <SettingsIcon className="mr-3 text-amber-500" size={24} aria-hidden />
               Timetable Structure
             </h3>
@@ -162,16 +162,16 @@ export const GlobalConfigView: React.FC<ViewProps> = ({
               <TimelineVisualizer data={data} />
             </div>
 
-            <div className="mb-10 bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+            <div className="mb-10 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-sm">
               <div className="flex justify-between items-center mb-4">
                 <div>
                   <label
                     htmlFor="periods-per-day"
-                    className="block text-sm font-bold text-slate-700"
+                    className="block text-sm font-bold text-slate-700 dark:text-slate-200"
                   >
                     Total Daily Periods
                   </label>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Adjusting this will add or remove slots from the daily structure.
                   </p>
                 </div>
@@ -186,7 +186,7 @@ export const GlobalConfigView: React.FC<ViewProps> = ({
                 max="15"
                 value={data.settings.periodsPerDay}
                 onChange={(e) => handlePeriodSliderChange(parseInt(e.target.value, 10))}
-                className="w-full accent-amber-500 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-amber-500 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer"
               />
             </div>
 

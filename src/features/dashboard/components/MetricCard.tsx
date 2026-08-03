@@ -38,17 +38,19 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
   return (
     <Card
-      className={`p-5 hover:shadow-lg transition-all border-slate-100 active:scale-95 ${onClick ? "cursor-pointer hover:-translate-y-1" : ""}`}
+      className={`p-5 hover:shadow-lg transition-all border-slate-100 dark:border-slate-700 active:scale-95 ${onClick ? "cursor-pointer hover:-translate-y-1" : ""}`}
       onClick={onClick}
     >
       <div className="flex justify-between items-start mb-4">
         <div className={`p-3 rounded-xl ${colors[color]}`}>{icon}</div>
       </div>
-      <h3 className="text-3xl font-bold text-slate-800 mb-1 tabular-nums">
+      <h3 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-1 tabular-nums">
         {isNumeric ? `${animatedValue}${suffix}` : value}
       </h3>
       <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{label}</p>
-      <p className="text-xs text-slate-500 font-medium flex items-center gap-1">{subtext}</p>
+      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+        {subtext}
+      </p>
     </Card>
   );
 };

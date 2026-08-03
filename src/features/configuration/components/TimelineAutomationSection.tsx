@@ -24,17 +24,19 @@ export const TimelineAutomationSection: React.FC<TimelineAutomationSectionProps>
   } = data.settings;
 
   return (
-    <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 mb-8">
+    <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 mb-8">
       <div className="flex items-center gap-2 mb-4">
         <Calculator size={18} className="text-amber-600" aria-hidden />
-        <h4 className="font-bold text-slate-700 text-sm">Smart Timeline Automation</h4>
+        <h4 className="font-bold text-slate-700 dark:text-slate-200 text-sm">
+          Smart Timeline Automation
+        </h4>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
         <div>
           <label
             htmlFor="school-start-time"
-            className="block text-[10px] font-bold text-slate-500 uppercase mb-1"
+            className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1"
           >
             Start of Day
           </label>
@@ -46,11 +48,11 @@ export const TimelineAutomationSection: React.FC<TimelineAutomationSectionProps>
               const val = e.target.value;
               commit(`Updated Start time: ${val}`, handleDurationChange("schoolStartTime", val));
             }}
-            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 focus:border-amber-500 outline-none"
+            className="w-full bg-white dark:bg-slate-800 border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 dark:text-slate-100 focus:border-amber-500 outline-none"
           />
         </div>
         <div>
-          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+          <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">
             Class (Mins)
           </label>
           <input
@@ -66,11 +68,11 @@ export const TimelineAutomationSection: React.FC<TimelineAutomationSectionProps>
                   handleDurationChange("defaultClassDuration", val),
                 );
             }}
-            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 focus:border-amber-500 outline-none"
+            className="w-full bg-white dark:bg-slate-800 border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 dark:text-slate-100 focus:border-amber-500 outline-none"
           />
         </div>
         <div>
-          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+          <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">
             Break (Mins)
           </label>
           <input
@@ -86,11 +88,11 @@ export const TimelineAutomationSection: React.FC<TimelineAutomationSectionProps>
                   handleDurationChange("defaultBreakDuration", val),
                 );
             }}
-            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 focus:border-amber-500 outline-none"
+            className="w-full bg-white dark:bg-slate-800 border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 dark:text-slate-100 focus:border-amber-500 outline-none"
           />
         </div>
         <div>
-          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+          <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">
             Lunch (Mins)
           </label>
           <input
@@ -106,7 +108,7 @@ export const TimelineAutomationSection: React.FC<TimelineAutomationSectionProps>
                   handleDurationChange("defaultLunchDuration", val),
                 );
             }}
-            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 focus:border-amber-500 outline-none"
+            className="w-full bg-white dark:bg-slate-800 border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 dark:text-slate-100 focus:border-amber-500 outline-none"
           />
         </div>
         <div className="flex flex-col justify-end">
@@ -115,7 +117,7 @@ export const TimelineAutomationSection: React.FC<TimelineAutomationSectionProps>
             onClick={() =>
               commit("Recalculated all slot times from defaults", recalculateAllSlotTimes())
             }
-            className="flex items-center justify-center gap-2 bg-slate-200 hover:bg-slate-300 text-slate-600 text-xs font-bold py-2.5 rounded-lg transition-colors"
+            className="flex items-center justify-center gap-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-600 dark:text-slate-300 text-xs font-bold py-2.5 rounded-lg transition-colors"
             title="Recalculate every period start/end from start time and class, break, and lunch durations"
           >
             <RotateCcw size={14} aria-hidden /> Recalculate all slot times

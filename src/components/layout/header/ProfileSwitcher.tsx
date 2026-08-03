@@ -24,7 +24,9 @@ export const ProfileSwitcher: React.FC<ProfileSwitcherProps> = ({
           <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">
             Current Profile
           </p>
-          <p className="text-sm font-bold text-slate-700">{activeProfile.name}</p>
+          <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+            {activeProfile.name}
+          </p>
         </div>
         <ChevronDown size={16} className="text-slate-400" />
       </button>
@@ -33,7 +35,7 @@ export const ProfileSwitcher: React.FC<ProfileSwitcherProps> = ({
       {isMenuOpen && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setIsMenuOpen(false)} />
-          <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-100 p-2 z-20 animate-in fade-in zoom-in-95 duration-200">
+          <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 p-2 z-20 animate-in fade-in zoom-in-95 duration-200">
             <div className="max-h-60 overflow-y-auto custom-scrollbar mb-2">
               {profiles.map((p) => (
                 <button
@@ -45,7 +47,7 @@ export const ProfileSwitcher: React.FC<ProfileSwitcherProps> = ({
                   className={`w-full text-left px-4 py-3 text-sm rounded-lg mb-1 font-medium transition-colors ${
                     activeProfile.id === p.id
                       ? "bg-slate-900 text-white"
-                      : "text-slate-600 hover:bg-slate-50"
+                      : "text-slate-600 dark:text-slate-300 hover:bg-slate-50"
                   }`}
                 >
                   {p.name}

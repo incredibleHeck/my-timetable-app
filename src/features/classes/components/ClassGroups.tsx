@@ -35,7 +35,7 @@ export const ClassGroups: React.FC<ClassGroupsProps> = ({ data, onUpdate }) => {
           {data.jointClasses.map((joint) => (
             <div
               key={joint.id}
-              className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm relative group"
+              className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm relative group"
             >
               <button
                 onClick={() => handleRemoveGroup(joint.id)}
@@ -43,10 +43,10 @@ export const ClassGroups: React.FC<ClassGroupsProps> = ({ data, onUpdate }) => {
               >
                 <X size={16} />
               </button>
-              <h4 className="font-bold text-slate-800 mb-2 flex items-center gap-2">
+              <h4 className="font-bold text-slate-800 dark:text-slate-100 mb-2 flex items-center gap-2">
                 <Link2 size={16} className="text-blue-500" /> {joint.name}
               </h4>
-              <div className="text-xs font-bold text-slate-600 mb-2 px-2 py-1 bg-slate-100 rounded inline-block">
+              <div className="text-xs font-bold text-slate-600 dark:text-slate-300 mb-2 px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded inline-block">
                 {data.subjects.find((s) => s.id === joint.subjectId)?.name}
               </div>
               <div className="flex flex-wrap gap-1">
@@ -77,7 +77,7 @@ export const ClassGroups: React.FC<ClassGroupsProps> = ({ data, onUpdate }) => {
           {(data.electives || []).map((elec) => (
             <div
               key={elec.id}
-              className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm relative group"
+              className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm relative group"
             >
               <button
                 onClick={() => handleRemoveBlock(elec.id)}
@@ -85,12 +85,12 @@ export const ClassGroups: React.FC<ClassGroupsProps> = ({ data, onUpdate }) => {
               >
                 <X size={16} />
               </button>
-              <h4 className="font-bold text-slate-800 mb-2 flex items-center gap-2">
+              <h4 className="font-bold text-slate-800 dark:text-slate-100 mb-2 flex items-center gap-2">
                 <Layers size={16} className="text-purple-500" /> {elec.name}
               </h4>
-              <div className="text-xs font-bold text-slate-500 mb-3">
+              <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-3">
                 Classes:{" "}
-                <span className="text-slate-800">
+                <span className="text-slate-800 dark:text-slate-100">
                   {elec.classIds
                     .map((cid) => data.classes.find((c) => c.id === cid)?.name)
                     .filter(Boolean)

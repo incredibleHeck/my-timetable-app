@@ -95,10 +95,11 @@ function Badge({
   tone?: "neutral" | "red" | "amber" | "slate";
 }) {
   const tones = {
-    neutral: "bg-slate-100 text-slate-600",
+    neutral: "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300",
     red: "bg-red-50 text-red-700 border border-red-100",
     amber: "bg-amber-50 text-amber-800 border border-amber-100",
-    slate: "bg-slate-50 text-slate-500 border border-slate-100",
+    slate:
+      "bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-700",
   };
   return (
     <span
@@ -135,7 +136,7 @@ function ConflictCard({
     ? isCollision
       ? "ring-2 ring-red-200 bg-red-50/30"
       : "ring-2 ring-amber-200 bg-amber-50/30"
-    : "bg-white";
+    : "bg-white dark:bg-slate-800";
 
   const unitBadge = conflict.missingPeriods
     ? `${conflict.missingPeriods} missing`
@@ -149,14 +150,14 @@ function ConflictCard({
     <button
       type="button"
       onClick={() => onSelect?.(conflict)}
-      className={`w-full text-left rounded-lg border border-slate-200 border-l-4 ${borderAccent} ${selectedRing} shadow-sm p-3 transition-colors hover:bg-slate-50 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400`}
+      className={`w-full text-left rounded-lg border border-slate-200 dark:border-slate-700 border-l-4 ${borderAccent} ${selectedRing} shadow-sm p-3 transition-colors hover:bg-slate-50 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400`}
     >
       <div className="flex items-start justify-between gap-2 mb-2">
         <div className="min-w-0">
-          <p className="text-sm font-bold text-slate-800 truncate">
+          <p className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
             {conflict.subjectName || "Unresolved lesson"}
           </p>
-          <p className="text-[11px] text-slate-500 truncate mt-0.5">
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
             {isCollision ? getCollisionLabel(conflict) : "Curriculum shortfall"}
           </p>
         </div>
@@ -164,13 +165,13 @@ function ConflictCard({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <div className="flex items-center gap-1.5 text-xs text-slate-600">
+        <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
           <BookOpen size={12} className="shrink-0 text-slate-400" />
           <span className="truncate font-medium">{conflict.className}</span>
         </div>
 
         {conflict.teacherName && (
-          <div className="flex items-center gap-1.5 text-xs text-slate-600">
+          <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
             <Users size={12} className="shrink-0 text-slate-400" />
             <span className="truncate">{conflict.teacherName}</span>
           </div>
@@ -200,10 +201,10 @@ function ConflictCard({
               className={`shrink-0 mt-0.5 ${isCollision ? "text-red-500" : "text-amber-500"}`}
             />
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-1">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-1">
                 How to fix
               </p>
-              <p className="text-xs text-slate-700 leading-relaxed">
+              <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">
                 {getResolutionHint(conflict)}
               </p>
             </div>
@@ -247,7 +248,7 @@ function ResolutionSection({
   const badgeBg = tone === "red" ? "bg-red-200 text-red-800" : "bg-amber-200 text-amber-900";
 
   return (
-    <section className="flex flex-col border border-slate-200 bg-white rounded-xl shadow-lg overflow-hidden">
+    <section className="flex flex-col border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl shadow-lg overflow-hidden">
       <header className={`p-3 border-b flex justify-between items-center ${headerBg}`}>
         <h3 className={`font-bold flex items-center gap-2 text-sm ${headerText}`}>
           {icon}
@@ -338,7 +339,7 @@ export const ConflictPanel: React.FC<Props> = ({
         <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
           Resolution Center
         </h2>
-        <p className="text-[11px] text-slate-500 mt-0.5">
+        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
           {blockingCount} issue{blockingCount === 1 ? "" : "s"} in final timetable
         </p>
       </div>

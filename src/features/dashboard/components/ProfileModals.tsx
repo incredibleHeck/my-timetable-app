@@ -46,7 +46,7 @@ export const ProfileModals: React.FC<ProfileModalsProps> = ({
         }
       >
         <div className="space-y-4">
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             Create a new profile based on your current data. This will be saved to local storage.
           </p>
           <Input
@@ -73,12 +73,12 @@ export const ProfileModals: React.FC<ProfileModalsProps> = ({
         }
       >
         <div className="space-y-4">
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             Select a saved profile to load. Unsaved changes in your current session will be lost if
             auto-save is off.
           </p>
           {savedProfiles.length === 0 ? (
-            <div className="p-8 text-center text-slate-400 italic bg-slate-50 rounded-lg border border-slate-200 border-dashed">
+            <div className="p-8 text-center text-slate-400 italic bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 border-dashed">
               No saved profiles found.
             </div>
           ) : (
@@ -86,9 +86,9 @@ export const ProfileModals: React.FC<ProfileModalsProps> = ({
               {savedProfiles.map((p) => (
                 <div
                   key={p.id}
-                  className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-lg hover:border-amber-400 transition-colors group"
+                  className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-amber-400 transition-colors group"
                 >
-                  <span className="font-bold text-slate-700">{p.name}</span>
+                  <span className="font-bold text-slate-700 dark:text-slate-200">{p.name}</span>
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Button size="sm" onClick={() => onLoad(p.id)}>
                       Switch

@@ -126,7 +126,7 @@ export const DutyBulkAssignModal: React.FC<Props> = ({ isOpen, onClose, data, on
           <h4 className="text-xs font-bold text-slate-400 uppercase flex items-center gap-2">
             <Calendar size={14} /> Day Range
           </h4>
-          <div className="grid grid-cols-2 gap-4 bg-slate-50 p-3 rounded-lg border border-slate-100">
+          <div className="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
             <Select
               label="Start Day"
               value={startDay.toString()}
@@ -155,7 +155,7 @@ export const DutyBulkAssignModal: React.FC<Props> = ({ isOpen, onClose, data, on
                 className={`px-3 py-1.5 rounded-md text-[10px] font-bold transition-all border ${
                   selectedPeriods.includes(p.index)
                     ? "bg-amber-500 border-amber-600 text-white shadow-sm"
-                    : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
+                    : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50"
                 }`}
               >
                 {p.label} ({p.type})
@@ -170,18 +170,18 @@ export const DutyBulkAssignModal: React.FC<Props> = ({ isOpen, onClose, data, on
             <h4 className="text-xs font-bold text-slate-400 uppercase flex items-center gap-2">
               <Users size={14} /> Assign Teachers
             </h4>
-            <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
               {selectedTeacherIds.length} Selected
             </span>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 border border-slate-200 rounded-lg bg-slate-50/30 max-h-48 overflow-y-auto custom-scrollbar">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50/30 max-h-48 overflow-y-auto custom-scrollbar">
             {sortedTeachers.map((t) => (
               <label
                 key={t.id}
                 className={`flex items-center gap-2 px-2 py-1.5 rounded border text-[10px] cursor-pointer select-none transition-all ${
                   selectedTeacherIds.includes(t.id)
-                    ? "bg-white border-amber-300 text-amber-900 shadow-sm ring-1 ring-amber-100"
-                    : "border-transparent hover:bg-white hover:border-slate-200 text-slate-600"
+                    ? "bg-white dark:bg-slate-800 border-amber-300 text-amber-900 shadow-sm ring-1 ring-amber-100"
+                    : "border-transparent hover:bg-white hover:border-slate-200 text-slate-600 dark:text-slate-300"
                 }`}
               >
                 <input

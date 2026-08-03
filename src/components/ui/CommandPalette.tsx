@@ -151,11 +151,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ data, onNavigate
 
       {/* Palette Panel */}
       <div
-        className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        className="relative w-full max-w-xl bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Input */}
-        <div className="flex items-center gap-3 px-4 py-4 border-b border-slate-100">
+        <div className="flex items-center gap-3 px-4 py-4 border-b border-slate-100 dark:border-slate-700">
           <Search size={18} className="text-slate-400 shrink-0" />
           <input
             ref={inputRef}
@@ -163,9 +163,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ data, onNavigate
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Search views, teachers, classes, subjects..."
-            className="flex-1 text-slate-800 placeholder:text-slate-400 text-sm font-medium bg-transparent outline-none"
+            className="flex-1 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 text-sm font-medium bg-transparent outline-none"
           />
-          <kbd className="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+          <kbd className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
             ESC
           </kbd>
         </div>
@@ -189,7 +189,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ data, onNavigate
                       onClick={item.action}
                       onMouseEnter={() => setSelectedIndex(idx)}
                       className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
-                        isActive ? "bg-amber-50 text-amber-900" : "text-slate-700 hover:bg-slate-50"
+                        isActive
+                          ? "bg-amber-50 text-amber-900"
+                          : "text-slate-700 dark:text-slate-200 hover:bg-slate-50"
                       }`}
                     >
                       <span
@@ -217,15 +219,24 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ data, onNavigate
         </div>
 
         {/* Footer hint */}
-        <div className="px-4 py-2.5 border-t border-slate-100 flex items-center gap-4 text-[10px] text-slate-400 font-medium">
+        <div className="px-4 py-2.5 border-t border-slate-100 dark:border-slate-700 flex items-center gap-4 text-[10px] text-slate-400 font-medium">
           <span>
-            <kbd className="bg-slate-100 px-1 rounded border border-slate-200">↑↓</kbd> Navigate
+            <kbd className="bg-slate-100 dark:bg-slate-800 px-1 rounded border border-slate-200 dark:border-slate-700">
+              ↑↓
+            </kbd>{" "}
+            Navigate
           </span>
           <span>
-            <kbd className="bg-slate-100 px-1 rounded border border-slate-200">↵</kbd> Open
+            <kbd className="bg-slate-100 dark:bg-slate-800 px-1 rounded border border-slate-200 dark:border-slate-700">
+              ↵
+            </kbd>{" "}
+            Open
           </span>
           <span>
-            <kbd className="bg-slate-100 px-1 rounded border border-slate-200">Esc</kbd> Close
+            <kbd className="bg-slate-100 dark:bg-slate-800 px-1 rounded border border-slate-200 dark:border-slate-700">
+              Esc
+            </kbd>{" "}
+            Close
           </span>
           <span className="ml-auto opacity-60">Ctrl+K to toggle</span>
         </div>

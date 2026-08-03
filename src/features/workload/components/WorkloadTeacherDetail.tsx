@@ -108,11 +108,11 @@ export const WorkloadTeacherDetail: React.FC<WorkloadTeacherDetailProps> = ({
           id={panelId}
           role="dialog"
           aria-label={`Workload breakdown for ${teacherName}`}
-          className="absolute left-0 right-0 top-full z-20 mt-2 rounded-xl border border-slate-200 bg-white p-4 shadow-lg"
+          className="absolute left-0 right-0 top-full z-20 mt-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-lg"
           onClick={(e) => e.stopPropagation()}
         >
-          <p className="text-xs font-bold text-slate-800 mb-1">{teacherName}</p>
-          <p className="text-[11px] text-slate-500 mb-3">
+          <p className="text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">{teacherName}</p>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-3">
             <strong>{assignedPeriods}</strong> requested / <strong>{maxWeeklyCapacity}</strong>{" "}
             weekly max
             {targetLoad != null && targetLoad > 0 && (
@@ -143,11 +143,13 @@ export const WorkloadTeacherDetail: React.FC<WorkloadTeacherDetailProps> = ({
                   className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 text-[11px] border-b border-slate-50 pb-1.5 last:border-0"
                   title={`${row.className} — ${row.subjectName}`}
                 >
-                  <span className="font-medium text-slate-800 whitespace-nowrap">
+                  <span className="font-medium text-slate-800 dark:text-slate-100 whitespace-nowrap">
                     {row.className}
                   </span>
-                  <span className="text-slate-500 truncate">{row.subjectName}</span>
-                  <span className="font-bold text-slate-800 whitespace-nowrap text-right">
+                  <span className="text-slate-500 dark:text-slate-400 truncate">
+                    {row.subjectName}
+                  </span>
+                  <span className="font-bold text-slate-800 dark:text-slate-100 whitespace-nowrap text-right">
                     {row.periods} {row.periods === 1 ? "period" : "periods"}
                   </span>
                 </li>

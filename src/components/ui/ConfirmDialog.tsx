@@ -42,7 +42,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         </div>
       }
     >
-      <p id={messageId} className="text-slate-600">
+      <p id={messageId} className="text-slate-600 dark:text-slate-300">
         {message}
       </p>
     </Modal>

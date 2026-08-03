@@ -72,7 +72,7 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto p-8">
-      <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1 w-fit">
+      <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1 w-fit">
         {tabs.map((t) => (
           <button
             key={t.key}
@@ -80,8 +80,8 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
             aria-pressed={tab === t.key}
             className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-md transition-all ${
               tab === t.key
-                ? "bg-white text-slate-800 shadow-sm"
-                : "text-slate-500 hover:text-slate-700"
+                ? "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-700"
             }`}
           >
             {t.icon}
@@ -92,9 +92,11 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
 
       {tab === "ANALYTICS" ? (
         <>
-          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-            <h2 className="text-xl font-bold text-slate-800">Scheduling Analytics</h2>
-            <p className="text-xs text-slate-500 mt-1">
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
+              Scheduling Analytics
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Utilisation insights derived from the generated timetable — room occupancy, teacher
               idle windows, and how periods are spread across subjects.
             </p>
@@ -103,16 +105,18 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
         </>
       ) : (
         <>
-          <div className="flex justify-between items-center bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div className="flex justify-between items-center bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
             <div>
-              <h2 className="text-xl font-bold text-slate-800">Capacity Planning</h2>
-              <p className="text-xs text-slate-500 mt-1">
+              <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
+                Capacity Planning
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                 Utilization is based on requested curriculum load vs the school-wide max of{" "}
                 {maxWeeklyDefault} periods per week. Hover or click a card for class breakdown.
               </p>
             </div>
             <div className="flex gap-4 items-center">
-              <div className="flex gap-4 text-[10px] font-bold uppercase tracking-wider border-r border-slate-200 pr-4 mr-2">
+              <div className="flex gap-4 text-[10px] font-bold uppercase tracking-wider border-r border-slate-200 dark:border-slate-700 pr-4 mr-2">
                 <div className="flex items-center gap-1.5">
                   <div className="w-2 h-2 rounded-full bg-emerald-500"></div> Optimal
                 </div>
@@ -130,7 +134,7 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
           </div>
 
           {/* Filter / Sort Bar */}
-          <div className="flex flex-wrap items-center gap-3 bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-sm">
+          <div className="flex flex-wrap items-center gap-3 bg-white dark:bg-slate-800 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
             <div className="relative flex-1 min-w-[180px]">
               <Search
                 size={14}
@@ -141,11 +145,11 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
                 value={nameFilter}
                 onChange={(e) => setNameFilter(e.target.value)}
                 placeholder="Search by teacher name..."
-                className="w-full pl-8 pr-3 py-1.5 text-sm border border-slate-200 rounded-lg outline-none focus:border-amber-400 text-slate-700 placeholder:text-slate-400"
+                className="w-full pl-8 pr-3 py-1.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-amber-400 text-slate-700 dark:text-slate-200 placeholder:text-slate-400"
               />
             </div>
 
-            <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
               <ArrowUpDown size={12} className="text-slate-400 ml-1.5" />
               {(["load", "name", "periods"] as SortBy[]).map((s) => (
                 <button
@@ -153,8 +157,8 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
                   onClick={() => setSortBy(s)}
                   className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all capitalize ${
                     sortBy === s
-                      ? "bg-white text-slate-800 shadow-sm"
-                      : "text-slate-500 hover:text-slate-700"
+                      ? "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-700"
                   }`}
                 >
                   {s === "load" ? "Load %" : s === "periods" ? "Periods" : "Name"}
@@ -167,7 +171,7 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
               className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border transition-all ${
                 overloadedOnly
                   ? "bg-red-50 border-red-200 text-red-700"
-                  : "bg-white border-slate-200 text-slate-500 hover:border-red-200 hover:text-red-600"
+                  : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-red-200 hover:text-red-600"
               }`}
             >
               <AlertTriangle size={12} />
@@ -219,16 +223,16 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
                     <div className="flex justify-between items-start">
                       <div className="flex items-center space-x-3">
                         <div
-                          className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-slate-600 border ${
+                          className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-slate-600 dark:text-slate-300 border ${
                             utilizationPct > 100
                               ? "bg-red-100 border-red-300 text-red-700"
-                              : "bg-slate-100 border-slate-200"
+                              : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
                           }`}
                         >
                           {t.name.substring(0, 2).toUpperCase()}
                         </div>
                         <div>
-                          <span className="font-bold text-slate-800 block leading-tight">
+                          <span className="font-bold text-slate-800 dark:text-slate-100 block leading-tight">
                             {t.name}
                           </span>
                           <span className="text-[10px] text-slate-400 font-medium flex items-center gap-1">
@@ -249,7 +253,7 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
                               ? "text-red-600"
                               : utilizationPct > 85
                                 ? "text-amber-600"
-                                : "text-slate-700"
+                                : "text-slate-700 dark:text-slate-200"
                           }`}
                         >
                           {Math.round(utilizationPct)}%
@@ -260,7 +264,7 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
                       </div>
                     </div>
 
-                    <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden flex relative border border-slate-100">
+                    <div className="w-full h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex relative border border-slate-100 dark:border-slate-700">
                       <div
                         className={`h-full ${statusColor} transition-all duration-1000`}
                         style={{ width: `${Math.min(utilizationPct, 100)}%` }}
@@ -277,7 +281,7 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
 
                     <div className="flex justify-between items-center text-[11px] pt-2 border-t border-slate-50 mt-1">
                       <div className="flex flex-col gap-0.5">
-                        <span className="text-slate-500">
+                        <span className="text-slate-500 dark:text-slate-400">
                           <strong>{assignedPeriods}</strong> Requested
                         </span>
                         <span className="text-slate-400">

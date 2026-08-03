@@ -86,20 +86,21 @@ export const TimelineVisualizer: React.FC<TimelineVisualizerProps> = ({ data }) 
   const lastBlock = timelineBlocks[timelineBlocks.length - 1];
 
   return (
-    <div className="w-full space-y-3 bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+    <div className="w-full space-y-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 shadow-sm">
       <div className="flex justify-between items-center">
-        <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5">
+        <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide flex items-center gap-1.5">
           <Clock size={14} className="text-amber-500" />
           Proportional Day Timeline
         </h4>
         <div className="text-[10px] text-slate-400 font-medium">
-          Start: <strong className="text-slate-700">{firstBlock.start}</strong> &bull; End:{" "}
-          <strong className="text-slate-700">{lastBlock.end}</strong>
+          Start: <strong className="text-slate-700 dark:text-slate-200">{firstBlock.start}</strong>{" "}
+          &bull; End:{" "}
+          <strong className="text-slate-700 dark:text-slate-200">{lastBlock.end}</strong>
         </div>
       </div>
 
       {/* The Timeline Bar */}
-      <div className="flex w-full h-14 rounded-lg overflow-hidden border border-slate-100 bg-slate-50 p-1 gap-1">
+      <div className="flex w-full h-14 rounded-lg overflow-hidden border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-1 gap-1">
         {timelineBlocks.map((block) => {
           const style = TYPE_STYLES[block.type] || TYPE_STYLES.CLASS;
           const width = `${block.widthPercent}%`;
@@ -116,7 +117,7 @@ export const TimelineVisualizer: React.FC<TimelineVisualizerProps> = ({ data }) 
                   {block.label || `Block ${block.index + 1}`}
                 </span>
               </div>
-              <span className="text-[8px] opacity-70 font-semibold truncate leading-none mt-0.5 text-slate-500">
+              <span className="text-[8px] opacity-70 font-semibold truncate leading-none mt-0.5 text-slate-500 dark:text-slate-400">
                 {block.start} - {block.end}
               </span>
 
@@ -157,7 +158,7 @@ export const TimelineVisualizer: React.FC<TimelineVisualizerProps> = ({ data }) 
           return (
             <div
               key={type}
-              className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500"
+              className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 dark:text-slate-400"
             >
               <span className={`w-2.5 h-2.5 rounded-sm border ${style.bg} ${style.border}`} />
               <span className="capitalize">{type.toLowerCase()}</span>

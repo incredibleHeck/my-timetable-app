@@ -69,21 +69,21 @@ export const GeneratorToolbar: React.FC<GeneratorToolbarProps> = ({
     <div className="flex flex-col md:flex-row md:items-center gap-6">
       <button
         onClick={() => onNavigate && onNavigate("DASHBOARD")}
-        className="p-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-500"
+        className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-slate-500 dark:text-slate-400"
         aria-label="Back to dashboard"
       >
         <ArrowLeft size={20} />
       </button>
       <div>
-        <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
           Auto-Scheduler
           {data.lastGenerated && !isGenerating && (
-            <span className="text-[10px] font-normal text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+            <span className="text-[10px] font-normal text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
               Last run: {new Date(data.lastGenerated).toLocaleTimeString()}
             </span>
           )}
         </h2>
-        <p className="text-xs text-slate-500 mt-1 flex flex-wrap gap-x-2 gap-y-0.5">
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex flex-wrap gap-x-2 gap-y-0.5">
           <span>v10.0 (Worker-Enabled)</span>
           {stats && (
             <>
@@ -107,7 +107,7 @@ export const GeneratorToolbar: React.FC<GeneratorToolbarProps> = ({
         </p>
       </div>
       <div
-        className="flex bg-slate-200 p-1 rounded-lg"
+        className="flex bg-slate-200 dark:bg-slate-700 p-1 rounded-lg"
         role="group"
         aria-label="Schedule view mode"
       >
@@ -116,7 +116,9 @@ export const GeneratorToolbar: React.FC<GeneratorToolbarProps> = ({
           disabled={isGenerating}
           aria-pressed={mode === "CLASS"}
           className={`px-4 py-2 text-xs font-bold rounded-md flex items-center gap-2 transition-all ${
-            mode === "CLASS" ? "bg-white text-slate-800 shadow-sm" : "text-slate-500"
+            mode === "CLASS"
+              ? "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm"
+              : "text-slate-500 dark:text-slate-400"
           }`}
         >
           <BookOpen size={14} /> Classes
@@ -126,13 +128,15 @@ export const GeneratorToolbar: React.FC<GeneratorToolbarProps> = ({
           disabled={isGenerating}
           aria-pressed={mode === "TEACHER"}
           className={`px-4 py-2 text-xs font-bold rounded-md flex items-center gap-2 transition-all ${
-            mode === "TEACHER" ? "bg-white text-slate-800 shadow-sm" : "text-slate-500"
+            mode === "TEACHER"
+              ? "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm"
+              : "text-slate-500 dark:text-slate-400"
           }`}
         >
           <Users size={14} /> Teachers
         </button>
       </div>
-      <div className="flex items-center gap-2 pl-6 border-l border-slate-200">
+      <div className="flex items-center gap-2 pl-6 border-l border-slate-200 dark:border-slate-700">
         <button
           onClick={onToggleEditMode}
           disabled={isGenerating}
@@ -140,7 +144,7 @@ export const GeneratorToolbar: React.FC<GeneratorToolbarProps> = ({
           className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
             isEditMode
               ? "bg-amber-50 text-amber-700 border-amber-200"
-              : "bg-white text-slate-500 border-slate-200"
+              : "bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700"
           }`}
         >
           {isEditMode ? <Unlock size={14} /> : <Lock size={14} />}
@@ -154,7 +158,7 @@ export const GeneratorToolbar: React.FC<GeneratorToolbarProps> = ({
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
               isManualPlacementMode
                 ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                : "bg-white text-slate-500 border-slate-200"
+                : "bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700"
             }`}
           >
             <Plus size={14} />
@@ -168,7 +172,7 @@ export const GeneratorToolbar: React.FC<GeneratorToolbarProps> = ({
       {canRestore && onRestore && (
         <button
           onClick={onRestore}
-          className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-500 border border-slate-200 rounded-lg hover:border-amber-400 hover:text-amber-600 hover:bg-amber-50 transition-all"
+          className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-amber-400 hover:text-amber-600 hover:bg-amber-50 transition-all"
           title="Restore the schedule from before the last regeneration"
         >
           <History size={14} />

@@ -377,15 +377,15 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
       {/* --- MAIN INTERACTIVE GRID --- */}
       <div className="flex flex-1 overflow-hidden gap-4">
         <div
-          className={`flex flex-1 overflow-hidden border border-slate-200 rounded-xl bg-white shadow-sm relative transition-opacity ${
+          className={`flex flex-1 overflow-hidden border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 shadow-sm relative transition-opacity ${
             isGenerating ? "opacity-60 pointer-events-none" : ""
           }`}
         >
           {isGenerating && <SolverProgressOverlay progress={liveProgress} elapsedMs={elapsedMs} />}
 
           {/* Sidebar */}
-          <div className="w-44 border-r border-slate-200 bg-slate-50 overflow-y-auto shrink-0 flex flex-col">
-            <div className="p-3 border-b border-slate-100 sticky top-0 bg-slate-50 z-10 space-y-2">
+          <div className="w-44 border-r border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 overflow-y-auto shrink-0 flex flex-col">
+            <div className="p-3 border-b border-slate-100 dark:border-slate-700 sticky top-0 bg-slate-50 dark:bg-slate-900 z-10 space-y-2">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
                 Select {mode === "CLASS" ? "Group" : "Teacher"}
               </span>
@@ -399,7 +399,7 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
                   value={sidebarFilter}
                   onChange={(e) => setSidebarFilter(e.target.value)}
                   placeholder="Filter..."
-                  className="w-full pl-6 pr-2 py-1 text-[11px] bg-white border border-slate-200 rounded-md outline-none focus:border-amber-400 text-slate-700 placeholder:text-slate-300"
+                  className="w-full pl-6 pr-2 py-1 text-[11px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-amber-400 text-slate-700 dark:text-slate-200 placeholder:text-slate-300"
                 />
               </div>
             </div>
@@ -419,10 +419,10 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
                   <button
                     key={c.id}
                     onClick={() => setActiveId(c.id)}
-                    className={`w-full text-left px-4 py-3 border-b border-slate-100 text-xs font-medium truncate flex items-center gap-3 ${
+                    className={`w-full text-left px-4 py-3 border-b border-slate-100 dark:border-slate-700 text-xs font-medium truncate flex items-center gap-3 ${
                       activeId === c.id
-                        ? "bg-white border-l-4 border-l-amber-500"
-                        : "text-slate-500"
+                        ? "bg-white dark:bg-slate-800 border-l-4 border-l-amber-500"
+                        : "text-slate-500 dark:text-slate-400"
                     }`}
                   >
                     <div
@@ -437,10 +437,10 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
                   <button
                     key={t.id}
                     onClick={() => setActiveId(t.id)}
-                    className={`w-full text-left px-4 py-3 border-b border-slate-100 text-xs font-medium truncate flex items-center gap-3 ${
+                    className={`w-full text-left px-4 py-3 border-b border-slate-100 dark:border-slate-700 text-xs font-medium truncate flex items-center gap-3 ${
                       activeId === t.id
-                        ? "bg-white border-l-4 border-l-amber-500"
-                        : "text-slate-500"
+                        ? "bg-white dark:bg-slate-800 border-l-4 border-l-amber-500"
+                        : "text-slate-500 dark:text-slate-400"
                     }`}
                   >
                     <div
@@ -462,10 +462,10 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
                   <div className="w-20 h-20 rounded-2xl bg-amber-100 text-amber-500 flex items-center justify-center mx-auto mb-5 shadow-inner">
                     <Zap size={40} />
                   </div>
-                  <h3 className="text-xl font-bold text-slate-800 mb-2">
+                  <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">
                     No Schedule Generated Yet
                   </h3>
-                  <p className="text-sm text-slate-500 mb-6 leading-relaxed">
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
                     Run the auto-scheduler to build a complete timetable for all classes based on
                     your curriculum and constraints.
                   </p>
@@ -500,7 +500,7 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
             {!isGenerating && data.lastGenerated && (
               <button
                 onClick={() => setIsConflictPanelOpen(!isConflictPanelOpen)}
-                className="absolute -left-8 top-1/2 -translate-y-1/2 w-8 h-16 bg-white border border-slate-200 border-r-0 rounded-l-lg shadow-sm flex items-center justify-center text-slate-400 hover:text-amber-500 hover:bg-amber-50 z-10 transition-colors"
+                className="absolute -left-8 top-1/2 -translate-y-1/2 w-8 h-16 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 border-r-0 rounded-l-lg shadow-sm flex items-center justify-center text-slate-400 hover:text-amber-500 hover:bg-amber-50 z-10 transition-colors"
                 title={isConflictPanelOpen ? "Hide validation panel" : "Show validation panel"}
               >
                 {isConflictPanelOpen ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}

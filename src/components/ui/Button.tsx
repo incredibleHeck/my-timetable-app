@@ -27,10 +27,11 @@ export const Button: React.FC<ButtonProps> = ({
     primary:
       "bg-slate-800 text-amber-400 border border-slate-700 hover:bg-slate-700 hover:text-amber-300 shadow-sm hover:shadow-md active:scale-95",
     secondary:
-      "bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 hover:text-slate-800 active:scale-95",
+      "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 hover:text-slate-800 active:scale-95",
     danger:
       "bg-red-500 text-white border border-red-600 hover:bg-red-600 shadow-sm hover:shadow-md active:scale-95",
-    ghost: "bg-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-800",
+    ghost:
+      "bg-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-100 hover:text-slate-800",
   };
 
   const sizeStyles = {

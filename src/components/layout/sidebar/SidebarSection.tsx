@@ -8,7 +8,7 @@ export const SidebarSection = ({
   isFirst?: boolean;
 }) => (
   <div
-    className={`px-6 py-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest ${
+    className={`px-6 py-2 text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-widest ${
       !isFirst ? "mt-4" : ""
     }`}
   >

@@ -17,7 +17,7 @@ const headerClassByType = (type: PeriodType): string => {
     case "ASSEMBLY":
       return "bg-violet-50 border-violet-200";
     default:
-      return "bg-white border-slate-100";
+      return "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700";
   }
 };
 
@@ -30,18 +30,18 @@ export const ReservationsGridSection: React.FC<ReservationsGridSectionProps> = (
   return (
     <div className="mt-2">
       <div className="flex justify-between items-end mb-3">
-        <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
           Global Reservations (Fixed Slots)
         </p>
       </div>
-      <div className="overflow-x-auto border border-slate-200 rounded-xl p-6 bg-slate-50 shadow-inner custom-scrollbar">
+      <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-xl p-6 bg-slate-50 dark:bg-slate-900 shadow-inner custom-scrollbar">
         <div
           className="grid gap-2 min-w-[900px]"
           style={{
             gridTemplateColumns: `100px repeat(${periodsPerDay}, minmax(80px, 1fr))`,
           }}
         >
-          <div className="text-xs font-bold text-slate-400 uppercase text-right pr-4 py-2 self-end sticky left-0 z-20 bg-slate-50">
+          <div className="text-xs font-bold text-slate-400 uppercase text-right pr-4 py-2 self-end sticky left-0 z-20 bg-slate-50 dark:bg-slate-900">
             Day
           </div>
           {dayStructure.map((p, i) => (
@@ -50,7 +50,7 @@ export const ReservationsGridSection: React.FC<ReservationsGridSectionProps> = (
               className={`text-center p-2 rounded-t-lg border-x border-t shadow-sm ${headerClassByType(p.type)}`}
             >
               <div className="text-[10px] font-bold text-amber-600 mb-1">P{i + 1}</div>
-              <div className="text-[9px] font-bold text-slate-700 truncate px-1 uppercase tracking-tighter">
+              <div className="text-[9px] font-bold text-slate-700 dark:text-slate-200 truncate px-1 uppercase tracking-tighter">
                 {p.label}
               </div>
             </div>
@@ -58,7 +58,7 @@ export const ReservationsGridSection: React.FC<ReservationsGridSectionProps> = (
 
           {DAYS.map((day, dIdx) => (
             <React.Fragment key={day}>
-              <div className="text-xs font-black text-slate-800 text-right pr-6 py-4 self-center uppercase tracking-widest border-r-2 border-slate-200 sticky left-0 z-10 bg-slate-50">
+              <div className="text-xs font-black text-slate-800 dark:text-slate-100 text-right pr-6 py-4 self-center uppercase tracking-widest border-r-2 border-slate-200 dark:border-slate-700 sticky left-0 z-10 bg-slate-50 dark:bg-slate-900">
                 {day.substring(0, 3)}
               </div>
               {Array.from({ length: periodsPerDay }).map((_, pIdx) => {
@@ -78,7 +78,7 @@ export const ReservationsGridSection: React.FC<ReservationsGridSectionProps> = (
                       ${
                         occasionName
                           ? "bg-slate-800 border-slate-900 text-amber-400 font-bold scale-[1.02] z-10 shadow-md"
-                          : "bg-white border-slate-100 hover:border-amber-400 hover:shadow-md text-slate-400 hover:scale-[1.02] hover:z-10"
+                          : "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-amber-400 hover:shadow-md text-slate-400 hover:scale-[1.02] hover:z-10"
                       }
                     `}
                   >

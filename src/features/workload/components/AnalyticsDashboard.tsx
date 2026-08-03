@@ -19,11 +19,11 @@ const TILE_COLORS: Record<StatTileProps["color"], string> = {
 };
 
 const StatTile: React.FC<StatTileProps> = ({ label, value, icon, color, hint }) => (
-  <Card className="p-5 border-slate-100">
+  <Card className="p-5 border-slate-100 dark:border-slate-700">
     <div className={`inline-flex p-2.5 rounded-xl mb-3 ${TILE_COLORS[color]}`}>{icon}</div>
-    <h3 className="text-2xl font-bold text-slate-800 tabular-nums">{value}</h3>
+    <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tabular-nums">{value}</h3>
     <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-1">{label}</p>
-    <p className="text-[11px] text-slate-500 mt-1">{hint}</p>
+    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">{hint}</p>
   </Card>
 );
 
@@ -43,12 +43,14 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
 
   if (!hasSchedule) {
     return (
-      <Card className="p-12 text-center border-slate-100">
-        <div className="inline-flex p-3 rounded-xl bg-slate-100 text-slate-400 mb-3">
+      <Card className="p-12 text-center border-slate-100 dark:border-slate-700">
+        <div className="inline-flex p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 mb-3">
           <CalendarCheck size={24} />
         </div>
-        <h3 className="text-lg font-bold text-slate-700">No schedule to analyse yet</h3>
-        <p className="text-sm text-slate-500 mt-1">
+        <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200">
+          No schedule to analyse yet
+        </h3>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
           Generate a timetable in the Scheduler to see room occupancy, teacher gaps, and subject
           spread.
         </p>
@@ -95,10 +97,12 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Room utilisation */}
-        <Card className="p-6 border-slate-100">
+        <Card className="p-6 border-slate-100 dark:border-slate-700">
           <div className="flex items-center gap-2 mb-4">
-            <DoorOpen size={16} className="text-slate-500" />
-            <h3 className="text-sm font-bold text-slate-800">Room Utilisation</h3>
+            <DoorOpen size={16} className="text-slate-500 dark:text-slate-400" />
+            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+              Room Utilisation
+            </h3>
           </div>
           {rooms.length === 0 ? (
             <p className="text-xs text-slate-400 italic">No rooms defined.</p>
@@ -107,7 +111,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
               {rooms.map((room) => (
                 <li key={room.roomId}>
                   <div className="flex justify-between items-baseline mb-1">
-                    <span className="text-xs font-semibold text-slate-700 truncate">
+                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">
                       {room.roomName}
                       {room.isHomeRoom && (
                         <span className="ml-1.5 text-[9px] font-bold uppercase text-slate-400">
@@ -115,11 +119,11 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
                         </span>
                       )}
                     </span>
-                    <span className="text-[11px] text-slate-500 tabular-nums whitespace-nowrap">
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap">
                       {room.occupiedSlots}/{room.capacitySlots} · {room.occupancyPct}%
                     </span>
                   </div>
-                  <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all duration-700 ${occupancyColor(
                         room.occupancyPct,
@@ -134,10 +138,12 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
         </Card>
 
         {/* Teacher gaps */}
-        <Card className="p-6 border-slate-100">
+        <Card className="p-6 border-slate-100 dark:border-slate-700">
           <div className="flex items-center gap-2 mb-4">
-            <Clock size={16} className="text-slate-500" />
-            <h3 className="text-sm font-bold text-slate-800">Teacher Idle / Gap Periods</h3>
+            <Clock size={16} className="text-slate-500 dark:text-slate-400" />
+            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+              Teacher Idle / Gap Periods
+            </h3>
           </div>
           {teachersWithGaps.length === 0 ? (
             <p className="text-xs text-slate-400 italic">
@@ -150,7 +156,9 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
                   key={t.teacherId}
                   className="flex items-center justify-between text-xs border-b border-slate-50 pb-2 last:border-0"
                 >
-                  <span className="font-semibold text-slate-700 truncate">{t.teacherName}</span>
+                  <span className="font-semibold text-slate-700 dark:text-slate-200 truncate">
+                    {t.teacherName}
+                  </span>
                   <span className="flex items-center gap-3 whitespace-nowrap">
                     <span className="text-slate-400">{t.teachingPeriods} taught</span>
                     <span
@@ -159,7 +167,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
                           ? "bg-red-50 text-red-600"
                           : t.gapPeriods >= 2
                             ? "bg-amber-50 text-amber-600"
-                            : "bg-slate-100 text-slate-500"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
                       }`}
                     >
                       {t.gapPeriods} gap{t.gapPeriods !== 1 ? "s" : ""}
@@ -173,10 +181,12 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
       </div>
 
       {/* Subject distribution */}
-      <Card className="p-6 border-slate-100">
+      <Card className="p-6 border-slate-100 dark:border-slate-700">
         <div className="flex items-center gap-2 mb-4">
-          <BookOpen size={16} className="text-slate-500" />
-          <h3 className="text-sm font-bold text-slate-800">Subject Distribution</h3>
+          <BookOpen size={16} className="text-slate-500 dark:text-slate-400" />
+          <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+            Subject Distribution
+          </h3>
         </div>
         {subjects.length === 0 ? (
           <p className="text-xs text-slate-400 italic">No subjects scheduled.</p>
@@ -184,10 +194,10 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
           <ul className="space-y-3">
             {subjects.map((s) => (
               <li key={s.subjectId} className="flex items-center gap-3">
-                <span className="w-28 text-xs font-semibold text-slate-700 truncate">
+                <span className="w-28 text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">
                   {s.subjectName}
                 </span>
-                <div className="flex-1 h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                <div className="flex-1 h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-700"
                     style={{
@@ -196,7 +206,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
                     }}
                   />
                 </div>
-                <span className="text-[11px] text-slate-500 tabular-nums whitespace-nowrap w-20 text-right">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap w-20 text-right">
                   {s.periods} · {s.pct}%
                 </span>
               </li>

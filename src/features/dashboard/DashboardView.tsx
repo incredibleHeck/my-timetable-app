@@ -216,7 +216,7 @@ export const DashboardView: React.FC<ViewProps> = ({ data, profileName, onNaviga
           {/* SYSTEM HEALTH / ALERTS PANEL */}
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                 <Activity size={20} className="text-slate-400" /> System Health
               </h3>
             </div>
@@ -271,7 +271,7 @@ export const DashboardView: React.FC<ViewProps> = ({ data, profileName, onNaviga
                     className={`p-4 border rounded-xl flex items-center justify-between shadow-sm ${
                       issue.type === "error"
                         ? "bg-orange-50 border-orange-100"
-                        : "bg-slate-50 border-slate-200"
+                        : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700"
                     }`}
                   >
                     <div className="flex items-center gap-4">
@@ -279,7 +279,7 @@ export const DashboardView: React.FC<ViewProps> = ({ data, profileName, onNaviga
                         className={`p-2 rounded-lg ${
                           issue.type === "error"
                             ? "bg-orange-100 text-orange-600"
-                            : "bg-white text-slate-500 border border-slate-200"
+                            : "bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700"
                         }`}
                       >
                         <AlertTriangle size={20} />
@@ -287,14 +287,18 @@ export const DashboardView: React.FC<ViewProps> = ({ data, profileName, onNaviga
                       <div>
                         <h4
                           className={`font-bold ${
-                            issue.type === "error" ? "text-orange-900" : "text-slate-700"
+                            issue.type === "error"
+                              ? "text-orange-900"
+                              : "text-slate-700 dark:text-slate-200"
                           }`}
                         >
                           Data Attention Needed
                         </h4>
                         <p
                           className={`text-xs ${
-                            issue.type === "error" ? "text-orange-700" : "text-slate-500"
+                            issue.type === "error"
+                              ? "text-orange-700"
+                              : "text-slate-500 dark:text-slate-400"
                           }`}
                         >
                           {issue.message}
@@ -319,7 +323,7 @@ export const DashboardView: React.FC<ViewProps> = ({ data, profileName, onNaviga
 
         {/* QUICK ACTIONS & LAST RUN */}
         <div className="space-y-6">
-          <h3 className="text-lg font-bold text-slate-800">Quick Actions</h3>
+          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Quick Actions</h3>
           <div className="grid grid-cols-1 gap-3">
             <QuickAction
               icon={<Users size={18} />}
@@ -367,7 +371,7 @@ export const DashboardView: React.FC<ViewProps> = ({ data, profileName, onNaviga
                 </Badge>
               )}
             </div>
-            <div className="text-xs text-slate-500">
+            <div className="text-xs text-slate-500 dark:text-slate-400">
               Algorithm: <span className="text-slate-300">Constructive Heuristic v10 (Worker)</span>
             </div>
           </Card>

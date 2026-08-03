@@ -71,7 +71,7 @@ const DraggableExamCard = ({
     return (
       <div
         ref={setRefs}
-        className="opacity-30 bg-slate-200 border-2 border-dashed border-slate-400 rounded-xl min-h-[120px] w-full"
+        className="opacity-30 bg-slate-200 dark:bg-slate-700 border-2 border-dashed border-slate-400 rounded-xl min-h-[120px] w-full"
       />
     );
   }
@@ -100,7 +100,7 @@ const DraggableExamCard = ({
                 onEdit(exam);
               }}
               className={`
-                relative flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all p-4 cursor-pointer group/card
+                relative flex-1 flex flex-col bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all p-4 cursor-pointer group/card
                 ${conflicts.length > 0 ? "ring-2 ring-red-500 bg-red-50/10" : ""}
               `}
             >
@@ -120,7 +120,7 @@ const DraggableExamCard = ({
                         {subject?.name}
                       </div>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-1 border border-slate-200">
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded flex items-center gap-1 border border-slate-200 dark:border-slate-700">
                           <Clock size={10} /> {exam.startTime}
                         </span>
                         {exam.status && exam.status !== "DRAFT" && (
@@ -156,10 +156,10 @@ const DraggableExamCard = ({
                 )}
 
                 <div className="flex flex-col gap-2 flex-1 justify-center">
-                  <div className="text-xs font-black text-slate-700 bg-amber-50 border border-amber-100 px-2 py-1 rounded-md text-center">
+                  <div className="text-xs font-black text-slate-700 dark:text-slate-200 bg-amber-50 border border-amber-100 px-2 py-1 rounded-md text-center">
                     {classNames}
                   </div>
-                  <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 p-1 rounded-lg bg-slate-50/50 border border-transparent group-hover/card:border-slate-100 group-hover/card:bg-white transition-all">
+                  <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 p-1 rounded-lg bg-slate-50/50 border border-transparent group-hover/card:border-slate-100 group-hover/card:bg-white transition-all">
                     <Users size={11} className="text-slate-400" />
                     <span className="truncate">{invigilatorNames || "NO STAFF ASSIGNED"}</span>
                   </div>
@@ -187,7 +187,7 @@ const DraggableExamCard = ({
         <div
           {...listeners}
           {...attributes}
-          className="absolute -top-3 -right-3 cursor-grab active:cursor-grabbing text-amber-600 hover:text-amber-700 z-30 p-2 bg-white border-2 border-amber-100 rounded-full shadow-xl opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
+          className="absolute -top-3 -right-3 cursor-grab active:cursor-grabbing text-amber-600 hover:text-amber-700 z-30 p-2 bg-white dark:bg-slate-800 border-2 border-amber-100 rounded-full shadow-xl opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
         >
           <GripVertical size={16} />
         </div>
@@ -239,7 +239,7 @@ const DroppableGridCell = ({
     <td
       ref={setNodeRef}
       onClick={onClick}
-      className={`p-3 border-r border-slate-100 align-top min-h-[150px] transition-all duration-200
+      className={`p-3 border-r border-slate-100 dark:border-slate-700 align-top min-h-[150px] transition-all duration-200
         ${
           isOver && isEditMode
             ? hasCritical
@@ -247,14 +247,14 @@ const DroppableGridCell = ({
               : hasWarning
                 ? "bg-amber-50 ring-inset ring-2 ring-amber-300"
                 : "bg-emerald-50 ring-inset ring-2 ring-emerald-300"
-            : "bg-white hover:bg-slate-50/30"
+            : "bg-white dark:bg-slate-800 hover:bg-slate-50/30"
         }
         ${!children ? "cursor-pointer" : ""}
       `}
     >
       <div className="h-full w-full relative min-h-[100px]">
         {isOver && activeConflicts.length > 0 && (
-          <div className="absolute -top-1 -left-1 z-50 bg-white border border-slate-200 shadow-xl rounded-lg p-2 min-w-[200px] pointer-events-none animate-in fade-in zoom-in duration-200">
+          <div className="absolute -top-1 -left-1 z-50 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl rounded-lg p-2 min-w-[200px] pointer-events-none animate-in fade-in zoom-in duration-200">
             <div className="flex flex-col gap-1.5">
               {activeConflicts.map((c, i) => (
                 <div
@@ -422,7 +422,7 @@ export const ExamGrid: React.FC<Props> = ({
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="h-full border border-slate-200 rounded-2xl overflow-hidden shadow-lg bg-white">
+      <div className="h-full border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-slate-800">
         <table className="w-full border-collapse table-fixed">
           <thead>
             <tr className="bg-slate-900 text-white">
@@ -451,20 +451,23 @@ export const ExamGrid: React.FC<Props> = ({
               const examsOnDate = exams.filter((e) => e.date === date);
 
               return (
-                <tr key={date} className="group border-b border-slate-100 min-h-[220px]">
-                  <td className="p-4 border-r border-slate-200 text-center w-[140px] sticky left-0 z-30 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] bg-slate-50">
+                <tr
+                  key={date}
+                  className="group border-b border-slate-100 dark:border-slate-700 min-h-[220px]"
+                >
+                  <td className="p-4 border-r border-slate-200 dark:border-slate-700 text-center w-[140px] sticky left-0 z-30 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] bg-slate-50 dark:bg-slate-900">
                     <div className="flex flex-col items-center gap-0.5">
                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                         {new Date(date).toLocaleDateString("en-GB", {
                           weekday: "short",
                         })}
                       </span>
-                      <span className="text-2xl font-black text-slate-800">
+                      <span className="text-2xl font-black text-slate-800 dark:text-slate-100">
                         {new Date(date).toLocaleDateString("en-GB", {
                           day: "numeric",
                         })}
                       </span>
-                      <span className="text-[10px] font-bold text-slate-500 uppercase">
+                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">
                         {new Date(date).toLocaleDateString("en-GB", {
                           month: "short",
                         })}
@@ -516,14 +519,18 @@ export const ExamGrid: React.FC<Props> = ({
 
       <DragOverlay>
         {activeDragId ? (
-          <div className="bg-white p-4 rounded-xl shadow-2xl border-2 border-amber-400 w-72 rotate-3 cursor-grabbing opacity-90 scale-105 pointer-events-none ring-4 ring-black/5">
+          <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-2xl border-2 border-amber-400 w-72 rotate-3 cursor-grabbing opacity-90 scale-105 pointer-events-none ring-4 ring-black/5">
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 bg-amber-100 text-amber-600 rounded-lg">
                 <CalendarDays size={20} />
               </div>
               <div className="flex flex-col">
-                <div className="font-black text-slate-800 text-sm uppercase">Rescheduling...</div>
-                <div className="text-[10px] text-slate-500 font-bold">Release to drop</div>
+                <div className="font-black text-slate-800 dark:text-slate-100 text-sm uppercase">
+                  Rescheduling...
+                </div>
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">
+                  Release to drop
+                </div>
               </div>
             </div>
           </div>

@@ -31,13 +31,14 @@ export const SchoolIdentitySection: React.FC<SchoolIdentitySectionProps> = ({
   };
 
   return (
-    <Card className="p-6 border-l-4 border-l-slate-800 bg-white">
+    <Card className="p-6 border-l-4 border-l-slate-800 bg-white dark:bg-slate-800">
       <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
         <div>
-          <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-            <GraduationCap className="text-slate-800" size={24} aria-hidden /> School Identity
+          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <GraduationCap className="text-slate-800 dark:text-slate-100" size={24} aria-hidden />{" "}
+            School Identity
           </h3>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Appears on printed schedules and reports. Changes save when you leave each field.
           </p>
         </div>

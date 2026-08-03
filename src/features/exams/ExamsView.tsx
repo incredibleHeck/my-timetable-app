@@ -245,14 +245,14 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
   if (!activeRoster) return null;
 
   return (
-    <div className="flex flex-col h-full bg-slate-50 overflow-hidden">
+    <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-900 overflow-hidden">
       {/* HEADER TOOLBAR */}
-      <div className="bg-white border-b border-slate-200 p-4 flex items-center justify-between gap-4 z-10 shrink-0 shadow-sm">
+      <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-4 flex items-center justify-between gap-4 z-10 shrink-0 shadow-sm">
         <div className="flex items-center gap-2 flex-1">
           {/* Back Button */}
           <button
             onClick={() => onNavigate && onNavigate("DASHBOARD")}
-            className="p-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-500 mr-2"
+            className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-slate-500 dark:text-slate-400 mr-2"
             title="Back to Dashboard"
           >
             <ArrowLeft size={20} />
@@ -263,25 +263,25 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
               <input
                 value={activeRoster.name}
                 onChange={(e) => renameRoster(e.target.value)}
-                className="text-xl font-bold text-slate-800 bg-transparent border-none p-0 focus:ring-0 w-auto hover:bg-slate-50 rounded px-1 transition-colors"
+                className="text-xl font-bold text-slate-800 dark:text-slate-100 bg-transparent border-none p-0 focus:ring-0 w-auto hover:bg-slate-50 rounded px-1 transition-colors"
               />
               <Pencil
                 size={12}
                 className="text-slate-300 ml-1 opacity-0 group-hover/title:opacity-100 transition-opacity pointer-events-none"
               />
             </div>
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-tight">
               Exam Management History
             </p>
           </div>
 
           {/* View Toggles */}
-          <div className="flex bg-slate-100 p-1 rounded-lg ml-2">
+          <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg ml-2">
             <button
               onClick={() => setViewMode("GRID")}
               className={`p-1.5 rounded ${
                 viewMode === "GRID"
-                  ? "bg-white shadow-sm text-amber-600"
+                  ? "bg-white dark:bg-slate-800 shadow-sm text-amber-600"
                   : "text-slate-400 hover:text-slate-600"
               }`}
               title="Master Table View"
@@ -292,7 +292,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
               onClick={() => setViewMode("ROSTER")}
               className={`p-1.5 rounded ${
                 viewMode === "ROSTER"
-                  ? "bg-white shadow-sm text-amber-600"
+                  ? "bg-white dark:bg-slate-800 shadow-sm text-amber-600"
                   : "text-slate-400 hover:text-slate-600"
               }`}
               title="Invigilator Roster"
@@ -303,7 +303,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
               onClick={() => setViewMode("CARDS")}
               className={`p-1.5 rounded ${
                 viewMode === "CARDS"
-                  ? "bg-white shadow-sm text-amber-600"
+                  ? "bg-white dark:bg-slate-800 shadow-sm text-amber-600"
                   : "text-slate-400 hover:text-slate-600"
               }`}
               title="Card List View"
@@ -313,13 +313,13 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
           </div>
 
           {/* Edit Mode Toggles */}
-          <div className="flex items-center gap-2 pl-4 border-l border-slate-200 ml-4">
+          <div className="flex items-center gap-2 pl-4 border-l border-slate-200 dark:border-slate-700 ml-4">
             <button
               onClick={() => setIsEditMode(!isEditMode)}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
                 isEditMode
                   ? "bg-amber-50 text-amber-700 border-amber-200 shadow-sm"
-                  : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
+                  : "bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50"
               }`}
               title={isEditMode ? "Disable Drag & Drop" : "Enable Drag & Drop"}
             >
@@ -336,7 +336,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
             />
             <input
               placeholder="Search exams..."
-              className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+              className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -344,7 +344,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-lg border mr-2">
+          <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg border mr-2">
             <div className="px-2 py-1 text-[9px] font-bold text-slate-400 uppercase">
               Staff / stream
             </div>
@@ -353,7 +353,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
                 type="number"
                 value={minInv}
                 onChange={(e) => setMinInv(Math.max(1, Math.min(8, parseInt(e.target.value) || 1)))}
-                className="w-10 h-7 text-center text-xs font-bold rounded border border-slate-200"
+                className="w-10 h-7 text-center text-xs font-bold rounded border border-slate-200 dark:border-slate-700"
                 min={1}
                 max={8}
                 title="Minimum invigilators per stream per exam day"
@@ -365,7 +365,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
                 onChange={(e) =>
                   setMaxInv(Math.max(minInv, Math.min(8, parseInt(e.target.value) || minInv)))
                 }
-                className="w-10 h-7 text-center text-xs font-bold rounded border border-slate-200"
+                className="w-10 h-7 text-center text-xs font-bold rounded border border-slate-200 dark:border-slate-700"
                 min={minInv}
                 max={8}
                 title="Maximum invigilators per stream per exam day"
@@ -374,7 +374,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
             <Button
               variant="secondary"
               size="sm"
-              className="h-7 text-[10px] px-2 bg-white hover:bg-amber-50 text-amber-700 font-bold"
+              className="h-7 text-[10px] px-2 bg-white dark:bg-slate-800 hover:bg-amber-50 text-amber-700 font-bold"
               onClick={handleAutoAssignInvigilators}
               title="Assign min–max staff per stream; same team covers all sessions that day"
             >
@@ -397,8 +397,8 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
       {/* WORKSPACE AREA */}
       <div className="flex-1 flex overflow-hidden">
         {/* SIDEBAR 1: HISTORY (Timetables) */}
-        <div className="w-48 bg-slate-50 border-r border-slate-200 flex flex-col h-full shrink-0 shadow-[inset_-1px_0_0_rgba(0,0,0,0.05)]">
-          <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-100/50">
+        <div className="w-48 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 flex flex-col h-full shrink-0 shadow-[inset_-1px_0_0_rgba(0,0,0,0.05)]">
+          <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-100/50">
             <div className="flex items-center gap-2">
               <History size={16} className="text-slate-400" />
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
@@ -407,7 +407,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
             </div>
             <button
               onClick={createNewRoster}
-              className="p-1 bg-white text-amber-600 rounded border border-slate-200 hover:bg-amber-50 transition-all shadow-sm"
+              className="p-1 bg-white dark:bg-slate-800 text-amber-600 rounded border border-slate-200 dark:border-slate-700 hover:bg-amber-50 transition-all shadow-sm"
               title="New Timetable"
             >
               <Plus size={14} />
@@ -420,13 +420,13 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
                 onClick={() => setActiveRosterId(r.id)}
                 className={`group relative p-3 rounded-xl border transition-all cursor-pointer ${
                   activeRosterId === r.id
-                    ? "bg-white border-amber-200 shadow-md ring-1 ring-amber-100"
+                    ? "bg-white dark:bg-slate-800 border-amber-200 shadow-md ring-1 ring-amber-100"
                     : "bg-transparent border-transparent hover:bg-white hover:border-slate-200"
                 }`}
               >
                 <div className="flex flex-col gap-0.5 pr-6">
                   <span
-                    className={`text-[11px] font-black truncate ${activeRosterId === r.id ? "text-amber-700" : "text-slate-600"}`}
+                    className={`text-[11px] font-black truncate ${activeRosterId === r.id ? "text-amber-700" : "text-slate-600 dark:text-slate-300"}`}
                   >
                     {r.name}
                   </span>
@@ -450,8 +450,8 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
         </div>
 
         {/* SIDEBAR 2: CLASS FILTERS */}
-        <div className="w-48 bg-white border-r border-slate-200 flex flex-col h-full shrink-0 z-10">
-          <div className="p-4 border-b border-slate-100 bg-white sticky top-0 z-20">
+        <div className="w-48 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col h-full shrink-0 z-10">
+          <div className="p-4 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 sticky top-0 z-20">
             <div className="flex items-center gap-2">
               <Users size={16} className="text-slate-400" />
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
@@ -465,7 +465,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
               className={`w-full text-left px-3 py-2 rounded-lg text-[11px] font-black transition-all flex items-center gap-2 border ${
                 activeId === "ALL"
                   ? "bg-amber-50 border-amber-200 text-amber-700 shadow-sm"
-                  : "bg-white border-transparent text-slate-500 hover:bg-slate-50 hover:border-slate-100"
+                  : "bg-white dark:bg-slate-800 border-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-50 hover:border-slate-100"
               }`}
             >
               <div
@@ -473,7 +473,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
               />
               Show All Classes
             </button>
-            <div className="h-px bg-slate-100 my-2 mx-2" />
+            <div className="h-px bg-slate-100 dark:bg-slate-800 my-2 mx-2" />
             {sortedClasses.map((cls) => (
               <button
                 key={cls.id}
@@ -481,7 +481,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
                 className={`w-full text-left px-3 py-2 rounded-lg text-[11px] font-bold transition-all flex items-center gap-2 border ${
                   activeId === cls.id
                     ? "bg-slate-900 border-slate-900 text-white shadow-lg shadow-slate-200"
-                    : "bg-white border-transparent text-slate-600 hover:bg-slate-50 hover:border-slate-100"
+                    : "bg-white dark:bg-slate-800 border-transparent text-slate-600 dark:text-slate-300 hover:bg-slate-50 hover:border-slate-100"
                 }`}
               >
                 <div
@@ -496,7 +496,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
         </div>
 
         {/* CONTENT AREA */}
-        <div className="flex-1 overflow-auto bg-white relative custom-scrollbar shadow-inner">
+        <div className="flex-1 overflow-auto bg-white dark:bg-slate-800 relative custom-scrollbar shadow-inner">
           {/* GRID VIEW */}
           {viewMode === "GRID" && (
             <div className="p-6 h-full min-w-full inline-block">
@@ -543,10 +543,10 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
           {/* EMPTY STATE */}
           {filteredExams.length === 0 && (
             <div className="h-full flex flex-col items-center justify-center text-slate-400">
-              <div className="bg-slate-50 p-6 rounded-full mb-4 shadow-inner border border-slate-100">
+              <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-full mb-4 shadow-inner border border-slate-100 dark:border-slate-700">
                 <FileText size={64} className="text-slate-200" />
               </div>
-              <p className="font-bold text-xl text-slate-600">No exams found</p>
+              <p className="font-bold text-xl text-slate-600 dark:text-slate-300">No exams found</p>
               <p className="text-sm">Modify your filters or add a new exam to get started.</p>
             </div>
           )}
