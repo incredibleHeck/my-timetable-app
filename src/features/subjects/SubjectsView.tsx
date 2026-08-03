@@ -1,80 +1,32 @@
 import React, { useState, useMemo } from "react";
-import {
-  Plus,
-  Trash2,
-  Edit2,
-  Check,
-  AlertTriangle,
-  BookOpen,
-  Users,
-  Palette,
-  Gem,
-  FileText,
-  X,
-} from "lucide-react";
+import { Plus, AlertTriangle } from "lucide-react";
 import { AppData } from "../../types";
 import { Subject } from "./types";
-import { Button, Modal, Input } from "../../components/ui";
-import { generateId } from "../../utils/utils";
-import { COLOR_PALETTE } from "../../utils/constants";
+import { Button, Modal } from "../../components/ui";
 import { useSubjectUsage } from "./hooks/useSubjectUsage";
+import { useSubjectForm } from "./hooks/useSubjectForm";
 import { useProfile } from "../../contexts/ProfileContext";
+import { SubjectCard } from "./components/SubjectCard";
+import { SubjectEditorModal } from "./components/SubjectEditorModal";
+import { SubjectTeacherListModal } from "./components/SubjectTeacherListModal";
 
 interface ViewProps {
   data: AppData;
   onUpdate: (newData: AppData) => void;
 }
 
-export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate }) => {
+export const SubjectsView: React.FC<ViewProps> = ({ data }) => {
   const { addActivity } = useProfile();
   const { getSubjectUsage } = useSubjectUsage(data);
-  const [modalOpen, setModalOpen] = useState(false);
+  const form = useSubjectForm(data, addActivity);
+
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
   const [subjectToDelete, setSubjectToDelete] = useState<Subject | null>(null);
   const [subjectForTeacherList, setSubjectForTeacherList] = useState<Subject | null>(null);
-  const [subjName, setSubjName] = useState("");
 
-  // Default to first hex code in palette
-  const [subjColor, setSubjColor] = useState(COLOR_PALETTE[0].hex);
-
-  // Single Resource State
-  const [isSingleResource, setIsSingleResource] = useState(false);
-  const [isExaminable, setIsExaminable] = useState(true);
-  const [isCore, setIsCore] = useState(false);
-  const [requiredRoomId, setRequiredRoomId] = useState<string | null>(null);
-
-  // Smart Sort
   const sortedSubjects = useMemo(() => {
     return [...data.subjects].sort((a, b) => a.name.localeCompare(b.name));
   }, [data.subjects]);
-
-  const saveSubject = () => {
-    if (!subjName) return;
-    const newSubj: Subject = {
-      id: editingSubject ? editingSubject.id : generateId(),
-      name: subjName,
-      color: subjColor,
-      isSingleResource: isSingleResource,
-      isExaminable: isExaminable,
-      isCore: isCore,
-      requiredRoomId: requiredRoomId || undefined,
-    };
-
-    let newSubjects = [...data.subjects];
-    const msg = editingSubject
-      ? `Updated Subject: ${newSubj.name}`
-      : `Added Subject: ${newSubj.name}`;
-    if (editingSubject) {
-      newSubjects = newSubjects.map((s) => (s.id === editingSubject.id ? newSubj : s));
-    } else {
-      newSubjects.push(newSubj);
-    }
-    const nextData = { ...data, subjects: newSubjects };
-    addActivity("ACADEMIC", msg, nextData);
-
-    setModalOpen(false);
-  };
 
   const initiateDelete = (subj: Subject) => {
     setSubjectToDelete(subj);
@@ -111,20 +63,6 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate })
     setSubjectToDelete(null);
   };
 
-  const openModal = (subj?: Subject) => {
-    setEditingSubject(subj || null);
-    setSubjName(subj?.name || "");
-    const usedColors = data.subjects.filter((s) => s.id !== subj?.id).map((s) => s.color);
-    const defaultHex =
-      COLOR_PALETTE.find((c) => !usedColors.includes(c.hex))?.hex || COLOR_PALETTE[0].hex;
-    setSubjColor(subj?.color || defaultHex);
-    setIsSingleResource(subj?.isSingleResource || false);
-    setIsExaminable(subj?.isExaminable !== undefined ? subj.isExaminable : true);
-    setIsCore(subj?.isCore ?? false);
-    setRequiredRoomId(subj?.requiredRoomId || null);
-    setModalOpen(true);
-  };
-
   const usageToDelete = subjectToDelete
     ? getSubjectUsage(subjectToDelete.id)
     : { classCount: 0, teacherCount: 0 };
@@ -138,7 +76,7 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate })
             Manage academic disciplines and track their usage.
           </p>
         </div>
-        <Button onClick={() => openModal()} icon={<Plus size={16} />}>
+        <Button onClick={() => form.openModal()} icon={<Plus size={16} />}>
           New Subject
         </Button>
       </div>
@@ -147,105 +85,20 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate })
         {sortedSubjects.map((subj) => {
           const stats = getSubjectUsage(subj.id);
           return (
-            <div
+            <SubjectCard
               key={subj.id}
-              className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm hover:shadow-md transition-all group flex flex-col"
-            >
-              <div className="h-3 w-full relative" style={{ backgroundColor: subj.color }}>
-                {subj.isSingleResource && (
-                  <div
-                    className="absolute top-1 right-1 bg-white/90 rounded-full p-0.5 shadow-sm"
-                    title="Single Resource"
-                  >
-                    <Gem size={10} className="text-purple-600" />
-                  </div>
-                )}
-                {subj.isExaminable !== false && (
-                  <div
-                    className={`absolute top-1 ${subj.isSingleResource ? "right-6" : "right-1"} bg-white/90 rounded-full p-0.5 shadow-sm`}
-                    title="Examinable"
-                  >
-                    <FileText size={10} className="text-amber-600" />
-                  </div>
-                )}
-              </div>
-
-              <div className="p-4 flex-1 flex flex-col items-center text-center">
-                <div
-                  className="w-12 h-12 rounded-full mb-3 flex items-center justify-center text-lg font-bold shadow-sm relative"
-                  style={{
-                    backgroundColor: `${subj.color}15`,
-                    color: subj.color,
-                    border: `1px solid ${subj.color}30`,
-                  }}
-                >
-                  {subj.name.substring(0, 2).toUpperCase()}
-                  {subj.isSingleResource && (
-                    <div className="absolute -bottom-1 -right-1 bg-purple-100 border border-purple-200 text-purple-700 text-[8px] font-bold px-1 rounded-full">
-                      1x
-                    </div>
-                  )}
-                </div>
-                <h3
-                  className="font-bold text-slate-800 dark:text-slate-100 mb-1 truncate w-full px-2"
-                  title={subj.name}
-                >
-                  {subj.name}
-                </h3>
-                {subj.isSingleResource && (
-                  <span className="text-[9px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full mb-2">
-                    Single Resource
-                  </span>
-                )}
-
-                <div className="flex flex-col gap-1 w-full mt-auto">
-                  <div
-                    className={`text-[10px] py-1 px-2 rounded flex items-center justify-center gap-1 ${
-                      stats.classCount > 0
-                        ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
-                        : "bg-slate-50 dark:bg-slate-900 text-slate-300"
-                    }`}
-                  >
-                    <BookOpen size={10} />
-                    {stats.classCount > 0 ? `${stats.classCount} Classes` : "Unused"}
-                  </div>
-                  <div
-                    onClick={() => {
-                      if (stats.teacherCount > 0) setSubjectForTeacherList(subj);
-                    }}
-                    className={`text-[10px] py-1 px-2 rounded flex items-center justify-center gap-1 ${
-                      stats.teacherCount > 0
-                        ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 cursor-pointer hover:bg-slate-200 transition-colors"
-                        : "bg-slate-50 dark:bg-slate-900 text-slate-300"
-                    }`}
-                  >
-                    <Users size={10} />
-                    {stats.teacherCount > 0 ? `${stats.teacherCount} Teachers` : "No Specialists"}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex border-t border-slate-100 dark:border-slate-700">
-                <button
-                  onClick={() => openModal(subj)}
-                  className="flex-1 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-50 text-xs font-semibold flex items-center justify-center transition-colors"
-                >
-                  <Edit2 size={14} className="mr-1" /> Edit
-                </button>
-                <div className="w-px bg-slate-100 dark:bg-slate-800"></div>
-                <button
-                  onClick={() => initiateDelete(subj)}
-                  className="flex-1 py-3 text-slate-400 hover:text-red-600 hover:bg-red-50 text-xs font-semibold flex items-center justify-center transition-colors"
-                >
-                  <Trash2 size={14} className="mr-1" /> Del
-                </button>
-              </div>
-            </div>
+              subject={subj}
+              classCount={stats.classCount}
+              teacherCount={stats.teacherCount}
+              onEdit={() => form.openModal(subj)}
+              onDelete={() => initiateDelete(subj)}
+              onShowTeachers={() => setSubjectForTeacherList(subj)}
+            />
           );
         })}
 
         <button
-          onClick={() => openModal()}
+          onClick={() => form.openModal()}
           className="bg-slate-50 dark:bg-slate-900 rounded-xl border-2 border-dashed border-slate-300 hover:border-amber-400 hover:bg-amber-50 transition-all flex flex-col items-center justify-center p-6 group h-full min-h-[200px]"
         >
           <div className="w-14 h-14 rounded-full bg-slate-200 dark:bg-slate-700 group-hover:bg-amber-100 text-slate-400 group-hover:text-amber-500 flex items-center justify-center mb-3 transition-colors shadow-inner">
@@ -257,220 +110,7 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate })
         </button>
       </div>
 
-      <Modal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title={editingSubject ? "Edit Subject" : "New Subject"}
-        footer={
-          <div className="flex justify-end gap-2 w-full">
-            <Button variant="secondary" onClick={() => setModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={saveSubject}>Save Subject</Button>
-          </div>
-        }
-        maxWidth="max-w-3xl"
-      >
-        <div className="space-y-6">
-          <Input
-            label="Subject Name"
-            value={subjName}
-            onChange={(e) => setSubjName(e.target.value)}
-            autoFocus
-            placeholder="e.g. Mathematics"
-          />
-
-          {/* Single Resource Toggle */}
-          <div
-            className={`flex items-start gap-3 p-4 rounded-xl border transition-colors cursor-pointer ${
-              isSingleResource
-                ? "bg-purple-50 border-purple-200"
-                : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300"
-            }`}
-            onClick={() => setIsSingleResource(!isSingleResource)}
-          >
-            <div
-              className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors ${
-                isSingleResource
-                  ? "bg-purple-600 border-purple-600"
-                  : "bg-white dark:bg-slate-800 border-slate-300"
-              }`}
-            >
-              {isSingleResource && <Check size={14} className="text-white" />}
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h4
-                  className={`text-sm font-bold ${
-                    isSingleResource ? "text-purple-800" : "text-slate-700 dark:text-slate-200"
-                  }`}
-                >
-                  Single Resource Facility
-                </h4>
-                <Gem
-                  size={14}
-                  className={isSingleResource ? "text-purple-600" : "text-slate-400"}
-                />
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Enable this for subjects that require a unique room (e.g. ICT Lab, Science Lab). The
-                scheduler will ensure <strong>only one class</strong> in the entire school is
-                scheduled for this subject at any given time.
-              </p>
-            </div>
-          </div>
-
-          {/* Examinable Toggle */}
-          <div
-            className={`flex items-start gap-3 p-4 rounded-xl border transition-colors cursor-pointer ${
-              isExaminable
-                ? "bg-amber-50 border-amber-200"
-                : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300"
-            }`}
-            onClick={() => setIsExaminable(!isExaminable)}
-          >
-            <div
-              className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors ${
-                isExaminable
-                  ? "bg-amber-600 border-amber-600"
-                  : "bg-white dark:bg-slate-800 border-slate-300"
-              }`}
-            >
-              {isExaminable && <Check size={14} className="text-white" />}
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h4
-                  className={`text-sm font-bold ${
-                    isExaminable ? "text-amber-800" : "text-slate-700 dark:text-slate-200"
-                  }`}
-                >
-                  Examinable Subject
-                </h4>
-                <FileText
-                  size={14}
-                  className={isExaminable ? "text-amber-600" : "text-slate-400"}
-                />
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                If enabled, this subject will be automatically selected for inclusion when
-                auto-generating the exam timetable.
-              </p>
-            </div>
-          </div>
-
-          {/* Core Subject Toggle */}
-          <div
-            className={`flex items-start gap-3 p-4 rounded-xl border transition-colors cursor-pointer ${
-              isCore
-                ? "bg-blue-50 border-blue-200"
-                : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300"
-            }`}
-            onClick={() => setIsCore(!isCore)}
-          >
-            <div
-              className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors ${
-                isCore
-                  ? "bg-blue-600 border-blue-600"
-                  : "bg-white dark:bg-slate-800 border-slate-300"
-              }`}
-            >
-              {isCore && <Check size={14} className="text-white" />}
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h4
-                  className={`text-sm font-bold ${isCore ? "text-blue-800" : "text-slate-700 dark:text-slate-200"}`}
-                >
-                  Core Subject
-                </h4>
-                <BookOpen size={14} className={isCore ? "text-blue-600" : "text-slate-400"} />
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Marks this as a core discipline for morning bias, weekly balance, and spread
-                heuristics. When unset, the scheduler falls back to English name matching.
-              </p>
-            </div>
-          </div>
-
-          {/* Room Requirements */}
-          <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 space-y-4">
-            <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
-              <Users size={16} /> Facility Mapping
-            </h4>
-
-            <div className="space-y-2">
-              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
-                Fixed Facility / Room
-              </label>
-              <select
-                className="w-full rounded-md border-slate-300 text-sm p-2 focus:ring-amber-500 focus:border-amber-500"
-                value={requiredRoomId || ""}
-                onChange={(e) => setRequiredRoomId(e.target.value || null)}
-              >
-                <option value="">No Fixed Room (Use Home Classroom)</option>
-                {(data.rooms || []).map((room) => (
-                  <option key={room.id} value={room.id}>
-                    {room.name} ({room.type})
-                  </option>
-                ))}
-              </select>
-              <p className="text-[10px] text-slate-400 italic">
-                If selected, this subject will always be scheduled in this specific room.
-              </p>
-            </div>
-          </div>
-
-          <div>
-            <div className="flex justify-between items-center mb-3">
-              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
-                Select Identifier Color
-              </label>
-              <div className="flex items-center text-[10px] text-slate-400 gap-1 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
-                <Palette size={10} /> {COLOR_PALETTE.length} Distinct Shades
-              </div>
-            </div>
-
-            <div className="grid grid-cols-8 gap-3 p-1">
-              {COLOR_PALETTE.map((colorObj) => {
-                const usedColors = data.subjects
-                  .filter((s) => s.id !== editingSubject?.id)
-                  .map((s) => s.color);
-                const isUsed = usedColors.includes(colorObj.hex);
-                const isSelected = subjColor === colorObj.hex;
-
-                return (
-                  <button
-                    key={colorObj.hex}
-                    disabled={isUsed && !isSelected}
-                    onClick={() => setSubjColor(colorObj.hex)}
-                    className={`
-                      w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 relative group/btn hover:z-50
-                      ${
-                        isUsed && !isSelected
-                          ? "opacity-20 grayscale cursor-not-allowed scale-90"
-                          : "hover:scale-125 shadow-sm cursor-pointer"
-                      } 
-                      ${
-                        isSelected
-                          ? "ring-2 ring-offset-2 ring-slate-800 scale-125 z-10 shadow-md"
-                          : ""
-                      }
-                    `}
-                    style={{ backgroundColor: colorObj.hex }}
-                    title={isUsed && !isSelected ? `${colorObj.name} (Used)` : colorObj.name}
-                  >
-                    {isSelected && <Check size={12} className="text-white drop-shadow-md" />}
-                    <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover/btn:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-opacity shadow-lg">
-                      {colorObj.name}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </Modal>
+      <SubjectEditorModal form={form} data={data} />
 
       <Modal
         isOpen={deleteModalOpen}
@@ -522,60 +162,12 @@ export const SubjectsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate })
         </div>
       </Modal>
 
-      {/* Teacher List Modal */}
       {subjectForTeacherList && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
-                    Teachers for {subjectForTeacherList.name}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Staff members specializing in this subject
-                  </p>
-                </div>
-                <button
-                  onClick={() => setSubjectForTeacherList(null)}
-                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-
-              <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-                {data.teachers
-                  .filter((t) => t.specialtyIds.includes(subjectForTeacherList.id))
-                  .map((teacher) => (
-                    <div
-                      key={teacher.id}
-                      className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-100 dark:border-slate-700"
-                    >
-                      <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
-                        {teacher.name.charAt(0)}
-                      </div>
-                      <div>
-                        <div className="font-semibold text-slate-800 dark:text-slate-100 text-sm">
-                          {teacher.name}
-                        </div>
-                        {teacher.email && (
-                          <div className="text-xs text-slate-500 dark:text-slate-400">
-                            {teacher.email}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            </div>
-            <div className="bg-slate-50 dark:bg-slate-900 px-6 py-4 border-t border-slate-100 dark:border-slate-700 flex justify-end">
-              <Button variant="secondary" onClick={() => setSubjectForTeacherList(null)}>
-                Close
-              </Button>
-            </div>
-          </div>
-        </div>
+        <SubjectTeacherListModal
+          subject={subjectForTeacherList}
+          teachers={data.teachers}
+          onClose={() => setSubjectForTeacherList(null)}
+        />
       )}
     </div>
   );
