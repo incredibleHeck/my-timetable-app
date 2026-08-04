@@ -198,9 +198,24 @@ export function runConstructionQueue(
 ): ConstructionPhaseResult {
   leaderAvoidSlots.clear();
 
+  /**
+   * Stopping early does not make the queued lessons disappear.
+   *
+   * Both exits below used to return with the queue still populated, so those
+   * units were neither on the grid nor in `unplaced` — they simply stopped being
+   * counted. A run cut short by the clock reported 3 unplaced while the grid
+   * actually held 295, and `unplacedDuringConstruction` is what seeds the repair
+   * queue, so nothing downstream could see them either. Hand them back.
+   */
+  const abandonQueue = (): ConstructionPhaseResult => {
+    unplaced.push(...queue);
+    queue.length = 0;
+    return { steps, gangsPlaced, unplaced, backtrackAttempts };
+  };
+
   while (queue.length > 0) {
     if (shouldAbort?.()) {
-      return { steps, gangsPlaced, unplaced, backtrackAttempts };
+      return abandonQueue();
     }
 
     steps++;
@@ -208,7 +223,7 @@ export function runConstructionQueue(
     if (onProgress && steps % 10 === 0 && totalGangs !== undefined) {
       const unplacedGangs = unplaced.length + queue.length;
       if (!onProgress(gangsPlaced, totalGangs, unplacedGangs)) {
-        return { steps, gangsPlaced, unplaced, backtrackAttempts };
+        return abandonQueue();
       }
     }
 
