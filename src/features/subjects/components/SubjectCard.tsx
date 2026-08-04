@@ -1,6 +1,7 @@
 import React from "react";
 import { Trash2, Edit2, BookOpen, Users, Gem, FileText } from "lucide-react";
 import { Subject } from "../types";
+import { resolveSubjectIsCore } from "../../generator/scheduler/logic/subject-core";
 
 interface SubjectCardProps {
   subject: Subject;
@@ -64,11 +65,31 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
       >
         {subj.name}
       </h3>
-      {subj.isSingleResource && (
-        <span className="text-2xs font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full mb-2">
-          Single Resource
-        </span>
-      )}
+      <div className="flex flex-wrap justify-center gap-1 mb-2">
+        {subj.isSingleResource && (
+          <span className="text-2xs font-bold text-purple-600 bg-purple-50 dark:bg-purple-900/30 px-2 py-0.5 rounded-full">
+            Single Resource
+          </span>
+        )}
+        {/*
+          Core status decides morning priority, so it has to be visible from the
+          list. It is often inferred from the subject's name rather than stored,
+          which is why this reads the resolved value: a subject can be treated as
+          core without anything on it saying so.
+        */}
+        {resolveSubjectIsCore(subj) && (
+          <span
+            className="text-2xs font-bold text-blue-700 dark:text-blue-200 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full"
+            title={
+              subj.isCore === undefined
+                ? "Treated as core (inferred from the name) — scheduled earlier in the day"
+                : "Core subject — scheduled earlier in the day"
+            }
+          >
+            Core{subj.isCore === undefined ? "*" : ""}
+          </span>
+        )}
+      </div>
 
       <div className="flex flex-col gap-1 w-full mt-auto">
         <div

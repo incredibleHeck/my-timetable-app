@@ -3,6 +3,7 @@ import { AppData, ActivityType } from "../../../types";
 import { Subject } from "../types";
 import { generateId } from "../../../utils/utils";
 import { COLOR_PALETTE } from "../../../utils/constants";
+import { resolveSubjectIsCore } from "../../generator/scheduler/logic/subject-core";
 
 type AddActivity = (type: ActivityType, message: string, dataToUpdate?: AppData) => void;
 
@@ -29,7 +30,15 @@ export const useSubjectForm = (data: AppData, addActivity: AddActivity) => {
     setColor(subj?.color || defaultHex);
     setIsSingleResource(subj?.isSingleResource || false);
     setIsExaminable(subj?.isExaminable !== undefined ? subj.isExaminable : true);
-    setIsCore(subj?.isCore ?? false);
+    // Show what the scheduler will actually do, not just what was saved.
+    //
+    // `isCore` is often unset, and the solver then infers it from the subject's
+    // name — so English, Mathematics and Science were being given morning
+    // priority while this box sat unticked. Worse, `save` always writes the box's
+    // value, so editing a subject's colour silently demoted it. Seeding from the
+    // resolved value makes the box honest and the inference editable: untick it
+    // and `false` is stored explicitly, which the resolver then respects.
+    setIsCore(resolveSubjectIsCore(subj));
     setRequiredRoomId(subj?.requiredRoomId || null);
     setModalOpen(true);
   };
