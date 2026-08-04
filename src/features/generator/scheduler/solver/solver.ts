@@ -353,8 +353,6 @@ function runSingleSolve(
     }
   }
 
-  tabu.cleanup(repairSteps);
-
   const finalConflicts: Conflict[] = [];
   const reportedUnits = new Set<string>();
 
@@ -461,7 +459,15 @@ export const solveSmart = (
     return elapsed >= limit;
   };
 
-  const shouldAbort = (): boolean => isSolvePhaseOver();
+  /**
+   * Time allowed per attempt. Derived from the solve window and the guaranteed
+   * minimum number of runs, so at least `minRuns` independent attempts fit; a
+   * run that finishes early simply lets the next one start sooner.
+   */
+  const perRunSliceMs =
+    timeBudget !== undefined
+      ? Math.max(1000, Math.floor(((timeBudget - optimiseReserveMs) / minRuns) * 1.0))
+      : Number.POSITIVE_INFINITY;
 
   if (minRuns === 1 && !timeBudget) {
     return runSingleSolve(units, data, onProgress, options, 0);
@@ -481,6 +487,19 @@ export const solveSmart = (
   };
 
   while (shouldContinueRuns()) {
+    // Cap each attempt so one unlucky run cannot swallow the whole budget.
+    //
+    // A repair step costs roughly a third of a second on a 361-lesson school,
+    // and a run that is cycling — placing A by evicting B, then B by evicting C
+    // — burns the entire window making no net progress. Measured across three
+    // seeds: one reached a complete timetable in a single repair step, while the
+    // other two spent 39 seconds on 117 and 182 steps and still finished a
+    // lesson short. Restarting is cheap and frequently wins outright, so the
+    // budget is divided rather than gambled on the first attempt.
+    const runStartedMs = Date.now();
+    const runDeadlineMs = runStartedMs + perRunSliceMs;
+    const runShouldAbort = (): boolean => isSolvePhaseOver() || Date.now() >= runDeadlineMs;
+
     const runData =
       calibrate && run > 0
         ? withPerturbedWeights(
@@ -510,7 +529,7 @@ export const solveSmart = (
       return continueSolving;
     };
 
-    const result = runSingleSolve(units, runData, wrappedProgress, options, run, shouldAbort);
+    const result = runSingleSolve(units, runData, wrappedProgress, options, run, runShouldAbort);
     bestUnplacedGangsSeen = Math.min(bestUnplacedGangsSeen, result.unplacedGangs);
     if (isPerfectGeneratedSchedule(data, result.schedule)) {
       perfectRunsFound++;
