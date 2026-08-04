@@ -22,7 +22,8 @@
     "diagnostics:bench": "tsx scripts/diagnostics/benchmark.ts",
     "postinstall": "node scripts/verify-esbuild.mjs",
     "tauri": "tauri",
-    "diagnostics:why": "tsx scripts/diagnostics/why-unplaced.ts"
+    "diagnostics:why": "tsx scripts/diagnostics/why-unplaced.ts",
+    "diagnostics:clock": "tsx scripts/diagnostics/clock-overlaps.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

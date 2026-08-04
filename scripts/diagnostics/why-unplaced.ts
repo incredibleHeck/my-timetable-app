@@ -111,3 +111,15 @@ for (const c of high) {
 [...kinds.entries()]
   .sort((a, b) => b[1] - a[1])
   .forEach(([k, n]) => console.log(`  ${String(n).padStart(3)}  ${k}`));
+
+const med = audited.filter((c) => c.severity === "MEDIUM");
+console.log(`
+MEDIUM severity breakdown (${med.length} total):`);
+const mk = new Map<string, number>();
+for (const c of med) {
+  const label = c.reason.replace(/\d+/g, "N").slice(0, 95);
+  mk.set(label, (mk.get(label) ?? 0) + 1);
+}
+[...mk.entries()]
+  .sort((a, b) => b[1] - a[1])
+  .forEach(([k, n]) => console.log(`  ${String(n).padStart(3)}  ${k}`));
