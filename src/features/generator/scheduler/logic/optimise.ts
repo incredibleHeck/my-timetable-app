@@ -5,6 +5,7 @@ import { checkHardConstraints } from "./constraints";
 import { determineRoom } from "./rooms";
 import { getNextClassPeriod, getPeriodType, getDaysPerWeek } from "../utils/utils";
 import { ObjectiveScore, ObjectiveWeights, OBJECTIVE_WEIGHTS, scoreSchedule } from "./objective";
+import { snapshotPlacedGangs, restorePlacedGangs } from "../solver/repair-controller";
 
 /**
  * POST-FEASIBILITY OPTIMISATION
@@ -55,6 +56,9 @@ export interface OptimiseReport {
   probes: number;
   relocations: number;
   swaps: number;
+  /** Kicks out of a local optimum, and how many landed somewhere better. */
+  restarts: number;
+  restartsAccepted: number;
   /** Whole (class, subject) blocks moved to a different qualified teacher. */
   reassignments: number;
   /**
@@ -76,6 +80,9 @@ export interface OptimiseReport {
 
 /** Partners considered per lesson in the swap pass. */
 const SWAP_SAMPLE_SIZE = 12;
+
+/** Lessons displaced per kick when escaping a local optimum. */
+const PERTURB_LESSONS = 8;
 
 type Placement = { d: number; p: number; p2: number; rooms: Record<string, string> };
 
@@ -205,6 +212,8 @@ export function optimiseSchedule(
     probes: 0,
     relocations: 0,
     swaps: 0,
+    restarts: 0,
+    restartsAccepted: 0,
     reassignments: 0,
     reassigned: [],
     passes: 0,
@@ -227,135 +236,150 @@ export function optimiseSchedule(
   let cost = before.softCost;
   const maxPasses = options.maxPasses ?? Number.POSITIVE_INFINITY;
 
-  while (report.passes < maxPasses && Date.now() < options.deadlineMs) {
-    report.passes++;
-    let improvedThisPass = false;
+  const improvementPasses = () => {
+    while (report.passes < maxPasses && Date.now() < options.deadlineMs) {
+      report.passes++;
+      let improvedThisPass = false;
 
-    for (const leader of shuffled(placed, options.rng)) {
-      if (Date.now() >= options.deadlineMs) break;
+      for (const leader of shuffled(placed, options.rng)) {
+        if (Date.now() >= options.deadlineMs) break;
 
-      const gangId = leader.electiveBlockId || leader.id;
-      const gang = gangMap.get(gangId);
-      if (!gang) continue;
+        const gangId = leader.electiveBlockId || leader.id;
+        const gang = gangMap.get(gangId);
+        if (!gang) continue;
 
-      const saved = savePlacement(state, gang);
-      if (!saved) continue;
+        const saved = savePlacement(state, gang);
+        if (!saved) continue;
 
-      removeGangFromState(state, gang, data);
+        removeGangFromState(state, gang, data);
 
-      let committed = false;
+        let committed = false;
 
-      // --- RELOCATE into free space ---
-      for (const d of shuffled([...Array(days).keys()], options.rng)) {
-        if (committed || Date.now() >= options.deadlineMs) break;
+        // --- RELOCATE into free space ---
+        for (const d of shuffled([...Array(days).keys()], options.rng)) {
+          if (committed || Date.now() >= options.deadlineMs) break;
 
-        for (let p = 0; p < maxPeriods; p++) {
-          if (d === saved.d && p === saved.p) continue;
+          for (let p = 0; p < maxPeriods; p++) {
+            if (d === saved.d && p === saved.p) continue;
 
-          const candidate = placementAt(state, data, gang, d, p, maps);
-          if (!candidate) continue;
+            const candidate = placementAt(state, data, gang, d, p, maps);
+            if (!candidate) continue;
+
+            report.probes++;
+            applyGangToState(state, gang, candidate);
+            const next = currentCost();
+
+            if (next < cost) {
+              cost = next;
+              report.accepted++;
+              report.relocations++;
+              improvedThisPass = true;
+              committed = true;
+              break;
+            }
+            removeGangFromState(state, gang, data);
+          }
+        }
+
+        if (!committed) {
+          // Nothing better found: put it back exactly where it was.
+          applyGangToState(state, gang, saved);
+        }
+      }
+
+      if (!improvedThisPass) break;
+    }
+
+    // --- SWAP pass: exchange two lessons that each fit the other's slot ---
+    while (Date.now() < options.deadlineMs) {
+      let improvedThisPass = false;
+      report.passes++;
+
+      const order = shuffled(placed, options.rng);
+      for (let i = 0; i < order.length && Date.now() < options.deadlineMs; i++) {
+        const aId = order[i].electiveBlockId || order[i].id;
+        const gangA = gangMap.get(aId);
+        if (!gangA) continue;
+
+        // Sampling, not exhaustive pairing: every probe rescores the whole grid,
+        // so an O(n^2) sweep over 361 lessons would spend the budget on bookkeeping.
+        let sampled = 0;
+        for (let j = i + 1; j < order.length && Date.now() < options.deadlineMs; j++) {
+          if (sampled >= SWAP_SAMPLE_SIZE) break;
+
+          const bId = order[j].electiveBlockId || order[j].id;
+          const gangB = gangMap.get(bId);
+          if (!gangB || bId === aId) continue;
+
+          const savedA = savePlacement(state, gangA);
+          const savedB = savePlacement(state, gangB);
+          if (!savedA || !savedB) continue;
+          if (savedA.d === savedB.d && savedA.p === savedB.p) continue;
+
+          // Two lessons of the same class on the same day may always be exchanged.
+          // Permuting a day reorders it without changing what is in it: the class
+          // teaches the same subjects that day, and each teacher keeps the same
+          // number of periods on it, so no per-day cap can move. This is also the
+          // swap worth having — sliding a lesson along its own day is how a class
+          // gap closes, and how a split subject becomes continuous.
+          const sameClassSameDay =
+            savedA.d === savedB.d &&
+            gangA[0].classIds.length === 1 &&
+            gangB[0].classIds.length === 1 &&
+            gangA[0].classIds[0] === gangB[0].classIds[0];
+
+          // Otherwise require the pair to be disjoint. Teachers and classes carry
+          // the per-day caps, and a cap belongs to the day as a whole: judging each
+          // lesson against a grid the other has been lifted out of would miss a
+          // breach they only cause together. Disjoint lessons interact solely
+          // through slot occupancy, which the sequential check below does cover.
+          if (!sameClassSameDay && sharesTeacherOrClass(gangA, gangB)) continue;
+          sampled++;
+
+          removeGangFromState(state, gangA, data);
+          removeGangFromState(state, gangB, data);
+
+          const newA = placementAt(state, data, gangA, savedB.d, savedB.p, maps);
+          if (!newA) {
+            applyGangToState(state, gangA, savedA);
+            applyGangToState(state, gangB, savedB);
+            continue;
+          }
+
+          // Place A first so B is judged against the grid it will actually live in.
+          applyGangToState(state, gangA, newA);
+          const newB = placementAt(state, data, gangB, savedA.d, savedA.p, maps);
+          if (!newB) {
+            removeGangFromState(state, gangA, data);
+            applyGangToState(state, gangA, savedA);
+            applyGangToState(state, gangB, savedB);
+            continue;
+          }
 
           report.probes++;
-          applyGangToState(state, gang, candidate);
+          applyGangToState(state, gangB, newB);
           const next = currentCost();
 
           if (next < cost) {
             cost = next;
             report.accepted++;
-            report.relocations++;
+            report.swaps++;
             improvedThisPass = true;
-            committed = true;
             break;
           }
-          removeGangFromState(state, gang, data);
-        }
-      }
 
-      if (!committed) {
-        // Nothing better found: put it back exactly where it was.
-        applyGangToState(state, gang, saved);
-      }
-    }
-
-    if (!improvedThisPass) break;
-  }
-
-  // --- SWAP pass: exchange two lessons that each fit the other's slot ---
-  while (Date.now() < options.deadlineMs) {
-    let improvedThisPass = false;
-    report.passes++;
-
-    const order = shuffled(placed, options.rng);
-    for (let i = 0; i < order.length && Date.now() < options.deadlineMs; i++) {
-      const aId = order[i].electiveBlockId || order[i].id;
-      const gangA = gangMap.get(aId);
-      if (!gangA) continue;
-
-      // Sampling, not exhaustive pairing: every probe rescores the whole grid,
-      // so an O(n^2) sweep over 361 lessons would spend the budget on bookkeeping.
-      let sampled = 0;
-      for (let j = i + 1; j < order.length && Date.now() < options.deadlineMs; j++) {
-        if (sampled >= SWAP_SAMPLE_SIZE) break;
-
-        const bId = order[j].electiveBlockId || order[j].id;
-        const gangB = gangMap.get(bId);
-        if (!gangB || bId === aId) continue;
-
-        // Only swap lessons that share no teacher and no class. Those are the
-        // two entities carrying per-day caps (teacher load, subject-per-day,
-        // core-per-day), and a cap is a property of the day as a whole: checking
-        // each lesson against a grid the other has been lifted out of would miss
-        // a breach they only cause together. Disjoint lessons interact solely
-        // through slot occupancy, which the sequential check below does cover.
-        if (sharesTeacherOrClass(gangA, gangB)) continue;
-        sampled++;
-
-        const savedA = savePlacement(state, gangA);
-        const savedB = savePlacement(state, gangB);
-        if (!savedA || !savedB) continue;
-        if (savedA.d === savedB.d && savedA.p === savedB.p) continue;
-
-        removeGangFromState(state, gangA, data);
-        removeGangFromState(state, gangB, data);
-
-        const newA = placementAt(state, data, gangA, savedB.d, savedB.p, maps);
-        if (!newA) {
-          applyGangToState(state, gangA, savedA);
-          applyGangToState(state, gangB, savedB);
-          continue;
-        }
-
-        // Place A first so B is judged against the grid it will actually live in.
-        applyGangToState(state, gangA, newA);
-        const newB = placementAt(state, data, gangB, savedA.d, savedA.p, maps);
-        if (!newB) {
           removeGangFromState(state, gangA, data);
+          removeGangFromState(state, gangB, data);
           applyGangToState(state, gangA, savedA);
           applyGangToState(state, gangB, savedB);
-          continue;
         }
-
-        report.probes++;
-        applyGangToState(state, gangB, newB);
-        const next = currentCost();
-
-        if (next < cost) {
-          cost = next;
-          report.accepted++;
-          report.swaps++;
-          improvedThisPass = true;
-          break;
-        }
-
-        removeGangFromState(state, gangA, data);
-        removeGangFromState(state, gangB, data);
-        applyGangToState(state, gangA, savedA);
-        applyGangToState(state, gangB, savedB);
       }
-    }
 
-    if (!improvedThisPass) break;
-  }
+      if (!improvedThisPass) break;
+    }
+  };
+
+  improvementPasses();
 
   if (data.settings.allowTeacherReassignment) {
     reassignTeachers(state, data, placed, gangMap, maps, options, report, weights, (next) => {
@@ -365,8 +389,83 @@ export function optimiseSchedule(
     });
   }
 
+  // --- Escape the local optimum while budget remains -------------------------
+  //
+  // Hill climbing stops when no single move improves anything, which on the
+  // reference school happened after roughly 3 of the 21 seconds available: the
+  // phase was not short of time, it was out of ideas. The rest of the window is
+  // spent kicking the schedule out of that optimum and climbing again, keeping
+  // the best arrangement seen. Every kick is undone unless it leads somewhere
+  // better, so this can only improve on what hill climbing alone produced.
+  let bestCost = cost;
+  let bestSnapshot = snapshotPlacedGangs(state, gangMap);
+
+  while (Date.now() < options.deadlineMs) {
+    report.restarts++;
+
+    perturb(state, data, placed, gangMap, maps, options.rng, days, maxPeriods, PERTURB_LESSONS);
+    cost = currentCost();
+    improvementPasses();
+    cost = currentCost();
+
+    if (cost < bestCost) {
+      bestCost = cost;
+      bestSnapshot = snapshotPlacedGangs(state, gangMap);
+      report.restartsAccepted++;
+    } else {
+      restorePlacedGangs(state, data, gangMap, bestSnapshot);
+      cost = bestCost;
+    }
+  }
+
   report.after = scoreSchedule(data, state.schedule, 0, weights);
   return report;
+}
+
+/**
+ * Displace a handful of lessons into other legal slots, ignoring cost.
+ *
+ * Deliberately not an improvement step: its job is to move the schedule far
+ * enough that the next climb starts somewhere new. Only legal, non-evicting
+ * slots are used, so the schedule stays feasible throughout and a lesson that
+ * has nowhere else to go simply stays put.
+ */
+function perturb(
+  state: SchedulerState,
+  data: AppData,
+  placed: AllocationUnit[],
+  gangMap: Map<string, AllocationUnit[]>,
+  maps: OptimiseMaps,
+  rng: () => number,
+  days: number,
+  maxPeriods: number,
+  count: number,
+): void {
+  for (const leader of shuffled(placed, rng).slice(0, count)) {
+    const gang = gangMap.get(leader.electiveBlockId || leader.id);
+    if (!gang) continue;
+
+    const saved = savePlacement(state, gang);
+    if (!saved) continue;
+
+    removeGangFromState(state, gang, data);
+
+    let moved = false;
+    for (const d of shuffled([...Array(days).keys()], rng)) {
+      for (const p of shuffled([...Array(maxPeriods).keys()], rng)) {
+        if (d === saved.d && p === saved.p) continue;
+        const candidate = placementAt(state, data, gang, d, p, maps);
+        if (candidate) {
+          applyGangToState(state, gang, candidate);
+          moved = true;
+          break;
+        }
+      }
+      if (moved) break;
+    }
+
+    if (!moved) applyGangToState(state, gang, saved);
+  }
 }
 
 /**

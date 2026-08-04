@@ -30,7 +30,13 @@ const SEED = Number(arg("seed") ?? 12345);
 
 const raw = JSON.parse(fs.readFileSync(FIXTURE, "utf-8"));
 const loaded: AppData = raw.data ?? raw;
-const data: AppData = { ...loaded, schedule: {}, conflicts: [] };
+const REASSIGN = process.argv.includes("--reassign");
+const data: AppData = {
+  ...loaded,
+  settings: REASSIGN ? { ...loaded.settings, allowTeacherReassignment: true } : loaded.settings,
+  schedule: {},
+  conflicts: [],
+};
 
 const units = prepareAllocationUnits(data);
 const subjectMap = new Map(data.subjects.map((s) => [s.id, s]));
