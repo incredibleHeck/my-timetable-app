@@ -17,6 +17,56 @@ import { getDaysPerWeek } from "../utils/utils";
 
 export const isGlobalSlotBlocked = isOccasionBlocked;
 
+/**
+ * Which predicate rejected a slot.
+ *
+ * The solver only ever needed a boolean, so that is all it returned — and an
+ * unplaced lesson could therefore only be reported as "no valid slot found",
+ * which tells a user nothing about what to change. These names exist to answer
+ * "why not here?", and are aggregated across every candidate slot by
+ * `diagnose-unplaced.ts`.
+ */
+export type BlockingReason =
+  | "PERIOD_OUT_OF_RANGE"
+  | "FIXED_OCCASION"
+  | "TEACHER_UNAVAILABLE"
+  | "CLASS_FIXED_SESSION"
+  | "TEACHER_BUSY"
+  | "TEACHER_DAILY_CAP"
+  | "CLASS_BUSY"
+  | "SUBJECT_DAILY_CAP"
+  | "SUBJECT_DAY_SPREAD"
+  | "CORE_DAILY_CAP"
+  | "SUBJECT_CONTINUITY"
+  | "ROOM_BUSY"
+  | "ROOM_CAPACITY"
+  | "NO_ROOM_AVAILABLE"
+  | "SINGLE_RESOURCE_BUSY"
+  /** Raised by findValidMoves before the hard checks run. */
+  | "NOT_A_CLASS_PERIOD"
+  | "NO_SECOND_PERIOD_FOR_DOUBLE";
+
+/** Human-readable, in the terms a timetabler would use to fix it. */
+export const BLOCKING_REASON_LABELS: Record<BlockingReason, string> = {
+  PERIOD_OUT_OF_RANGE: "outside the class's teaching day",
+  FIXED_OCCASION: "reserved for a fixed occasion (Worship, Clubs)",
+  TEACHER_UNAVAILABLE: "teacher marked unavailable",
+  CLASS_FIXED_SESSION: "class has a fixed session booked",
+  TEACHER_BUSY: "teacher already teaching",
+  TEACHER_DAILY_CAP: "teacher's daily period limit reached",
+  CLASS_BUSY: "class already has a lesson",
+  SUBJECT_DAILY_CAP: "subject's daily limit for this class reached",
+  SUBJECT_DAY_SPREAD: "subject day-spread limit reached",
+  CORE_DAILY_CAP: "class's daily core-subject limit reached",
+  SUBJECT_CONTINUITY: "would split or duplicate the subject badly that day",
+  ROOM_BUSY: "required room already in use",
+  ROOM_CAPACITY: "room too small for the class",
+  NO_ROOM_AVAILABLE: "no suitable room free",
+  SINGLE_RESOURCE_BUSY: "shared resource already in use",
+  NOT_A_CLASS_PERIOD: "not a teaching period (break, lunch or assembly)",
+  NO_SECOND_PERIOD_FOR_DOUBLE: "no second period free to complete the double",
+};
+
 export interface HardConstraintOptions {
   /** Unit IDs whose grid occupancy is treated as free (repair evictions). */
   ignoredOccupants?: Set<string>;
@@ -24,6 +74,11 @@ export interface HardConstraintOptions {
   teacherLoadAdjustment?: Map<string, number>;
   /** Slot keys (day-period) excluded from shape/continuity checks during repair. */
   ignoredSlots?: Set<string>;
+  /**
+   * Diagnostics sink. Left undefined by the solver's hot path, so recording a
+   * reason costs nothing during a real solve.
+   */
+  onReject?: (reason: BlockingReason) => void;
 }
 
 function blocksOccupant(
@@ -64,8 +119,14 @@ export const checkHardConstraints = (
   const ignoredSlots = options?.ignoredSlots ?? new Set<string>();
   const teacherLoadAdjustment = options?.teacherLoadAdjustment;
 
+  /** Records why this slot was rejected, then rejects it. */
+  const reject = (reason: BlockingReason): false => {
+    options?.onReject?.(reason);
+    return false;
+  };
+
   // 1. RANK 1.1: STRUCTURAL HIERARCHY & BOUNDS
-  if (!checkImmutableConstraints(d, p, p2, unit, data, teacherMap, classMap)) {
+  if (!checkImmutableConstraints(d, p, p2, unit, data, teacherMap, classMap, options?.onReject)) {
     return false;
   }
 
@@ -74,11 +135,11 @@ export const checkHardConstraints = (
 
   for (const tid of teacherIds) {
     const occupantP1 = state.teacherOccupancy[tid]?.[d]?.[p];
-    if (blocksOccupant(occupantP1, unit.id, ignoredOccupants)) return false;
+    if (blocksOccupant(occupantP1, unit.id, ignoredOccupants)) return reject("TEACHER_BUSY");
 
     if (duration === 2) {
       const occupantP2 = state.teacherOccupancy[tid]?.[d]?.[p2];
-      if (blocksOccupant(occupantP2, unit.id, ignoredOccupants)) return false;
+      if (blocksOccupant(occupantP2, unit.id, ignoredOccupants)) return reject("TEACHER_BUSY");
     }
 
     const currentLoad = state.teacherDailyLoad[tid]?.[d] || 0;
@@ -86,7 +147,7 @@ export const checkHardConstraints = (
     const teacher = teacherMap.get(tid);
     const maxLoad = teacher?.maxPeriodsPerDay ?? maxTeacherLoad;
 
-    if (currentLoad - loadFreed + duration > maxLoad) return false;
+    if (currentLoad - loadFreed + duration > maxLoad) return reject("TEACHER_DAILY_CAP");
   }
 
   const proposedSlots = new Set<number>([p]);
@@ -94,10 +155,10 @@ export const checkHardConstraints = (
 
   for (const cid of classIds) {
     const occupantP1 = state.classOccupancy[cid]?.[d]?.[p];
-    if (blocksOccupant(occupantP1, unit.id, ignoredOccupants)) return false;
+    if (blocksOccupant(occupantP1, unit.id, ignoredOccupants)) return reject("CLASS_BUSY");
     if (duration === 2) {
       const occupantP2 = state.classOccupancy[cid]?.[d]?.[p2];
-      if (blocksOccupant(occupantP2, unit.id, ignoredOccupants)) return false;
+      if (blocksOccupant(occupantP2, unit.id, ignoredOccupants)) return reject("CLASS_BUSY");
     }
 
     const maxSubj = data.settings.maxSubjectPeriodsPerDay || 2;
@@ -111,7 +172,7 @@ export const checkHardConstraints = (
         if (slot.subjectId === subjectId) count += slot.duration || 1;
       });
     }
-    if (count + duration > maxSubj) return false;
+    if (count + duration > maxSubj) return reject("SUBJECT_DAILY_CAP");
 
     const cls = classMap.get(cid);
 
@@ -133,7 +194,7 @@ export const checkHardConstraints = (
           }
         });
       }
-      if (subjectDayCount + duration > spreadCap) return false;
+      if (subjectDayCount + duration > spreadCap) return reject("SUBJECT_DAY_SPREAD");
     }
 
     const maxCorePerDay = data.settings.maxCorePeriodsPerDay;
@@ -148,7 +209,7 @@ export const checkHardConstraints = (
           if (slot?.isCore) coreCount += slot.duration || 1;
         });
       }
-      if (coreCount + duration > maxCorePerDay) return false;
+      if (coreCount + duration > maxCorePerDay) return reject("CORE_DAILY_CAP");
     }
 
     const structure = cls?.structure || data.settings.dayStructure;
@@ -168,7 +229,7 @@ export const checkHardConstraints = (
       ignoredSlots,
     };
     if (checkSubjectContinuity(continuityCtx, proposedSlots, ignoredSlots, state)) {
-      return false;
+      return reject("SUBJECT_CONTINUITY");
     }
   }
 
@@ -180,25 +241,31 @@ export const checkHardConstraints = (
 
   if (targetRoomId) {
     const roomOccP1 = state.roomOccupancy[targetRoomId]?.[d]?.[p];
-    if (blocksOccupant(roomOccP1, unit.id, ignoredOccupants)) return false;
+    if (blocksOccupant(roomOccP1, unit.id, ignoredOccupants)) return reject("ROOM_BUSY");
 
     if (duration === 2) {
       const roomOccP2 = state.roomOccupancy[targetRoomId]?.[d]?.[p2];
-      if (blocksOccupant(roomOccP2, unit.id, ignoredOccupants)) return false;
+      if (blocksOccupant(roomOccP2, unit.id, ignoredOccupants)) return reject("ROOM_BUSY");
     }
 
     const room = roomMap.get(targetRoomId);
-    if (room && repClass && (repClass.studentCount || 0) > room.capacity) return false;
+    if (room && repClass && (repClass.studentCount || 0) > room.capacity) {
+      return reject("ROOM_CAPACITY");
+    }
   } else if (candidates.length > 0 || subject?.requiredRoomId) {
-    return false;
+    return reject("NO_ROOM_AVAILABLE");
   }
 
   if (subject?.isSingleResource) {
     const resOccP1 = state.singleResourceUsage[subjectId]?.[d]?.[p];
-    if (blocksOccupant(resOccP1, unit.id, ignoredOccupants)) return false;
+    if (blocksOccupant(resOccP1, unit.id, ignoredOccupants)) {
+      return reject("SINGLE_RESOURCE_BUSY");
+    }
     if (duration === 2) {
       const resOccP2 = state.singleResourceUsage[subjectId]?.[d]?.[p2];
-      if (blocksOccupant(resOccP2, unit.id, ignoredOccupants)) return false;
+      if (blocksOccupant(resOccP2, unit.id, ignoredOccupants)) {
+        return reject("SINGLE_RESOURCE_BUSY");
+      }
     }
   }
 
@@ -262,35 +329,45 @@ export function checkImmutableConstraints(
   data: AppData,
   teacherMap: Map<string, Teacher>,
   classMap: Map<string, ClassGroup>,
+  onReject?: (reason: BlockingReason) => void,
 ): boolean {
+  const reject = (reason: BlockingReason): false => {
+    onReject?.(reason);
+    return false;
+  };
+
   for (const cid of unit.classIds) {
     const cls = classMap.get(cid);
     const struct = cls?.structure || data.settings.dayStructure;
     const limit = Math.min(cls?.periodCount ?? 99, struct.length);
 
-    if (p >= limit) return false;
-    if (unit.duration === 2 && p2 !== -1 && p2 >= limit) return false;
+    if (p >= limit) return reject("PERIOD_OUT_OF_RANGE");
+    if (unit.duration === 2 && p2 !== -1 && p2 >= limit) return reject("PERIOD_OUT_OF_RANGE");
   }
 
-  if (isGlobalSlotBlocked(data.settings.fixedOccasions?.[d]?.[p])) return false;
+  if (isGlobalSlotBlocked(data.settings.fixedOccasions?.[d]?.[p])) return reject("FIXED_OCCASION");
   if (
     unit.duration === 2 &&
     p2 !== -1 &&
     isGlobalSlotBlocked(data.settings.fixedOccasions?.[d]?.[p2])
   ) {
-    return false;
+    return reject("FIXED_OCCASION");
   }
 
   for (const tid of unit.teacherIds) {
     const t = teacherMap.get(tid);
-    if (t?.constraints?.[d]?.[p]) return false;
-    if (unit.duration === 2 && p2 !== -1 && t?.constraints?.[d]?.[p2]) return false;
+    if (t?.constraints?.[d]?.[p]) return reject("TEACHER_UNAVAILABLE");
+    if (unit.duration === 2 && p2 !== -1 && t?.constraints?.[d]?.[p2]) {
+      return reject("TEACHER_UNAVAILABLE");
+    }
   }
 
   for (const cid of unit.classIds) {
     const cls = classMap.get(cid);
-    if (cls?.fixedSessions?.[d]?.[p]) return false;
-    if (unit.duration === 2 && p2 !== -1 && cls?.fixedSessions?.[d]?.[p2]) return false;
+    if (cls?.fixedSessions?.[d]?.[p]) return reject("CLASS_FIXED_SESSION");
+    if (unit.duration === 2 && p2 !== -1 && cls?.fixedSessions?.[d]?.[p2]) {
+      return reject("CLASS_FIXED_SESSION");
+    }
   }
 
   return true;

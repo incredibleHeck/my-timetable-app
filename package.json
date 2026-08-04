@@ -21,7 +21,8 @@
     "diagnostics:smoke": "tsx scripts/diagnostics/smoke-test.ts",
     "diagnostics:bench": "tsx scripts/diagnostics/benchmark.ts",
     "postinstall": "node scripts/verify-esbuild.mjs",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "diagnostics:why": "tsx scripts/diagnostics/why-unplaced.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

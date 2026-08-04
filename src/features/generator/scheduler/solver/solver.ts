@@ -14,6 +14,7 @@ import {
 import { executeRepairAction } from "./repair-executor";
 import { findBestRepairMove } from "./search";
 import { scoreSchedule } from "../logic/objective";
+import { diagnoseUnplacedGang } from "../logic/diagnose-unplaced";
 import { runConstructionQueue, PlacementRecord, ConstructionMaps } from "./construction";
 import {
   PRIORITY_CRITICAL,
@@ -352,10 +353,17 @@ function runSingleSolve(
   const finalConflicts: Conflict[] = [];
   const reportedUnits = new Set<string>();
 
-  repairQueue.forEach((leader) => {
-    reportUnplacedLeader(leader);
-  });
-  repairController.abandonedLeadersList.forEach((leader) => {
+  // Report from the final grid, not from whichever queues happen to be
+  // non-empty. `unplacedGangs` was already derived from `state.unitPlacements`
+  // while the conflict rows came from `repairQueue` + abandoned leaders, and the
+  // two disagreed: on the reference school the solver reported 5 unplaced gangs
+  // and zero conflict rows explaining them, because a gang evicted during repair
+  // and never re-placed belongs to neither queue. Sharing one source of truth
+  // makes that divergence unrepresentable.
+  unplacedGangLeaders.forEach((leader) => {
+    const gangUnits = gangMap.get(getGangId(leader));
+    if (!gangUnits) return;
+    if (gangUnits.every((u) => state.unitPlacements.has(u.id))) return;
     reportUnplacedLeader(leader);
   });
 
@@ -363,6 +371,16 @@ function runSingleSolve(
     const gangId = getGangId(leader);
     if (reportedUnits.has(gangId)) return;
     reportedUnits.add(gangId);
+
+    // Name the binding constraint instead of shrugging. Runs once per unplaced
+    // lesson, after the search, so it costs nothing during the solve itself.
+    const diagnosis = diagnoseUnplacedGang(state, data, gangMap.get(gangId) ?? [leader], {
+      teacherMap,
+      subjectMap,
+      classMap,
+      roomMap,
+    });
+    const kind = leader.duration === 2 ? "Double" : "Single";
 
     leader.classIds.forEach((cid, idx) => {
       const cls = classMap.get(cid);
@@ -372,7 +390,7 @@ function runSingleSolve(
         subjectId: leader.subjectId,
         subjectName: leader.subjectName,
         teacherName: leader.teacherNames.join(", "),
-        reason: `Unplaced: System could not find a valid slot for ${leader.duration === 2 ? "Double" : "Single"} Period. Try adjusting constraints or availability.`,
+        reason: `Unplaced ${kind} Period. ${diagnosis.summary}`,
         severity: "HIGH",
         kind: "blocking",
         day: 0,
