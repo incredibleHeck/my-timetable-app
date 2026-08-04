@@ -122,19 +122,25 @@ export const MRV_CRITICAL_FIRST = true;
 export const MRV_SAMPLE_THRESHOLD = 20;
 
 // --- SCORING WEIGHTS (construction soft objectives) ---
+/**
+ * Weights the construction scorer actually consults.
+ *
+ * TEACHER_CONTINUITY, LUNCH_PROTECTION, TEACHER_WINDOW and ROOM_CHANGE used to
+ * sit here too, and nothing read any of them — TEACHER_CONTINUITY appeared only
+ * inside a comment in an empty `if`. They were not merely clutter: calibration
+ * perturbs every key in this object across runs, so a third of each solve's
+ * self-tuning was spent randomising numbers that could not affect the outcome.
+ * Quality is handled after the fact by logic/objective.ts and logic/optimise.ts.
+ */
 export const SCORING_WEIGHTS = {
   TEACHER_GAP: -50,
   CLASS_GAP: -400,
-  TEACHER_CONTINUITY: -600,
   TEACHER_CONSECUTIVE: -500,
   SUBJECT_DISTRIBUTION: -30,
   ROOM_EFFICIENCY: 10,
-  LUNCH_PROTECTION: -100,
   MORNING_BIAS: 0.1,
   HCD_PRIME_BIAS: 500,
   SCARCITY_PENALTY: -500,
-  TEACHER_WINDOW: -200,
-  ROOM_CHANGE: -50,
   VARIETY_PENALTY: -150,
   FRIDAY_AFTERNOON: -30,
   WEEKLY_UNBALANCE: -100,
@@ -177,3 +183,13 @@ export const PROGRESS_REPORT_FREQUENCY = 10;
  * finding a home for them beats polishing what is already placed.
  */
 export const OPTIMISE_BUDGET_SHARE = 0.35;
+
+/**
+ * Attempts the solve window is divided into, when that is more than the caller
+ * asked for.
+ *
+ * A repair run either converges within a handful of steps or cycles until the
+ * clock stops it, so the useful currency is number of attempts rather than time
+ * per attempt. Slicing more finely buys more rolls of the dice.
+ */
+export const MIN_SOLVER_ATTEMPTS = 8;

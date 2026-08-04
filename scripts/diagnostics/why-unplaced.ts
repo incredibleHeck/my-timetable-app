@@ -16,6 +16,7 @@ import { AppData } from "../../src/types";
 import { prepareAllocationUnits } from "../../src/features/generator/scheduler/logic/preparation";
 import { resolveSubjectIsCore } from "../../src/features/generator/scheduler/logic/subject-core";
 import { solveSmart } from "../../src/features/generator/scheduler/solver/solver";
+import { auditFinalSchedule } from "../../src/features/generator/scheduler/validation";
 
 function arg(name: string): string | undefined {
   const i = process.argv.indexOf(`--${name}`);
@@ -95,3 +96,18 @@ if (tally.size > 0) {
     .sort((a, b) => b[1] - a[1])
     .forEach(([reason, n]) => console.log(`  ${String(n).padStart(3)}  ${reason}`));
 }
+
+// --- HIGH severity conflicts, grouped by kind -------------------------------
+
+const audited = auditFinalSchedule({ ...data, schedule: result.schedule }, { mode: "full" });
+const high = audited.filter((c) => c.severity === "HIGH");
+console.log(`
+HIGH severity breakdown (${high.length} total):`);
+const kinds = new Map<string, number>();
+for (const c of high) {
+  const label = c.reason.replace(/\d+/g, "N").slice(0, 90);
+  kinds.set(label, (kinds.get(label) ?? 0) + 1);
+}
+[...kinds.entries()]
+  .sort((a, b) => b[1] - a[1])
+  .forEach(([k, n]) => console.log(`  ${String(n).padStart(3)}  ${k}`));

@@ -29,6 +29,7 @@ import {
   ScoringWeightKey,
   ScoringWeightOverrides,
   OPTIMISE_BUDGET_SHARE,
+  MIN_SOLVER_ATTEMPTS,
 } from "../constants";
 import { createSeededRng, shuffleInPlace } from "../utils/rng";
 import { isPerfectGeneratedSchedule } from "../validation";
@@ -466,7 +467,10 @@ export const solveSmart = (
    */
   const perRunSliceMs =
     timeBudget !== undefined
-      ? Math.max(1000, Math.floor(((timeBudget - optimiseReserveMs) / minRuns) * 1.0))
+      ? Math.max(
+          1000,
+          Math.floor((timeBudget - optimiseReserveMs) / Math.max(minRuns, MIN_SOLVER_ATTEMPTS)),
+        )
       : Number.POSITIVE_INFINITY;
 
   if (minRuns === 1 && !timeBudget) {

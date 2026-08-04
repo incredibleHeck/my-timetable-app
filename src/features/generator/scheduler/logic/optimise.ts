@@ -89,6 +89,12 @@ function savePlacement(state: SchedulerState, gang: AllocationUnit[]): Placement
  * The gang must already be removed from the state. No `ignoredOccupants` is
  * passed, so an occupied slot fails — which is exactly the intent: this phase
  * never evicts.
+ *
+ * Staggered-day clashes are caught inside checkHardConstraints, which compares
+ * real clock times when classes do not share a structure. Before that existed,
+ * this phase happily relocated a lesson into a window where its teacher was
+ * already busy in another class, and introduced two genuine double-bookings on
+ * seeds that had none.
  */
 function placementAt(
   state: SchedulerState,

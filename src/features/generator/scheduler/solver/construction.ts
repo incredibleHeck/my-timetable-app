@@ -5,6 +5,7 @@ import { findMostConstrainedGangIdx, MrvCache } from "./heuristics";
 import { findValidMoves } from "./search";
 import { PRIORITY_CRITICAL, MAX_BACKTRACK_DEPTH, MAX_BACKTRACK_ATTEMPTS } from "../constants";
 import { getGangId } from "./repair-controller";
+import { getMaxPeriodsPerDay } from "../utils/utils";
 
 export type ConstructionMove = {
   d: number;
@@ -66,7 +67,7 @@ function findBlockingStackIndices(
   }
 
   const days = maps.data.settings.daysPerWeek ?? 5;
-  const maxP = 15;
+  const maxP = getMaxPeriodsPerDay(maps.data);
   const blockerIndices = new Set<number>();
 
   for (let d = 0; d < days; d++) {

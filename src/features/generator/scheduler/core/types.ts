@@ -84,6 +84,18 @@ export interface SchedulerState {
   /** Pre-calculated time slots for overlap checking */
   classTimeRanges: Map<string, TimeSlot[]>;
 
+  /**
+   * True when classes do not all share one day structure.
+   *
+   * Occupancy grids are indexed by period number, which only means "the same
+   * instant" when every class breaks at the same time. When they do not, two
+   * different indices can overlap in wall-clock time and the grids cannot see
+   * it, so the constraint check has to fall back on `classTimeRanges`. That
+   * fallback is O(periods) and sits in the solver's innermost loop, so it is
+   * skipped entirely for the common case of a single shared structure.
+   */
+  hasStaggeredDays: boolean;
+
   /** Pre-calculated map to skip breaks/lunch efficiently */
   lessonNavigation: Map<string, number[]>;
 

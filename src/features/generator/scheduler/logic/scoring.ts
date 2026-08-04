@@ -260,20 +260,6 @@ export const calculateScore = (
   score += calculateScarcityPenalty(state, d, unit.teacherIds, data, teacherMap, weights);
   score += calculateTeacherGapPenalty(state, d, p, unit.teacherIds, unit.classIds, weights);
 
-  // Local Teacher Continuity Check
-  if (p > 0) {
-    const prevUnitId = state.teacherOccupancy[unit.teacherIds[0]]?.[d]?.[p - 1];
-    if (prevUnitId && prevUnitId !== "BLOCK" && prevUnitId !== unit.id) {
-      // If previous period was a DIFFERENT unit, check if it was for a DIFFERENT class
-      // (Simplified continuity logic for scoring)
-      const prevUnit = state.unitPlacements.has(prevUnitId);
-      if (prevUnit) {
-        // We could add WEIGHTS.TEACHER_CONTINUITY here if we had full unit data,
-        // but for now we rely on the Gap check which is more critical.
-      }
-    }
-  }
-
   // 3. CLASS GAP DETECTION (Student Wellbeing)
   // Logic: If p-2 is occupied by this class, and p-1 is empty, placing at p is a Gap.
   if (classId && p > 1) {

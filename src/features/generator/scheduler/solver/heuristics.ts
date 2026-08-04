@@ -1,7 +1,12 @@
 import { Teacher, AppData, Subject, ClassGroup, Room } from "../../../../types";
 import { AllocationUnit, SchedulerState } from "../core/types";
 import { checkHardConstraints } from "../logic/constraints";
-import { getNextClassPeriod, getPeriodType, getDaysPerWeek } from "../utils/utils";
+import {
+  getNextClassPeriod,
+  getPeriodType,
+  getDaysPerWeek,
+  getMaxPeriodsPerDay,
+} from "../utils/utils";
 import {
   PRIORITY_CRITICAL,
   CRITICAL_UNIT_PRIORITY_BOOST,
@@ -139,7 +144,7 @@ export function countValidSlots(
   subjectMap: Map<string, Subject>,
   roomMap: Map<string, Room>,
 ): number {
-  const globalPeriods = 15;
+  const globalPeriods = getMaxPeriodsPerDay(data);
   const days = getDaysPerWeek(data.settings);
   let count = 0;
 

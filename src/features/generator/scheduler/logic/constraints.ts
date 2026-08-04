@@ -33,6 +33,7 @@ export type BlockingReason =
   | "CLASS_FIXED_SESSION"
   | "TEACHER_BUSY"
   | "TEACHER_DAILY_CAP"
+  | "TEACHER_TIME_OVERLAP"
   | "CLASS_BUSY"
   | "SUBJECT_DAILY_CAP"
   | "SUBJECT_DAY_SPREAD"
@@ -54,6 +55,7 @@ export const BLOCKING_REASON_LABELS: Record<BlockingReason, string> = {
   CLASS_FIXED_SESSION: "class has a fixed session booked",
   TEACHER_BUSY: "teacher already teaching",
   TEACHER_DAILY_CAP: "teacher's daily period limit reached",
+  TEACHER_TIME_OVERLAP: "teacher is teaching another class at that clock time",
   CLASS_BUSY: "class already has a lesson",
   SUBJECT_DAILY_CAP: "subject's daily limit for this class reached",
   SUBJECT_DAY_SPREAD: "subject day-spread limit reached",
@@ -90,6 +92,73 @@ function blocksOccupant(
   if (occupant === unitId) return false;
   if (ignoredOccupants?.has(occupant)) return false;
   return true;
+}
+
+/**
+ * Would placing `unit` at (d, p) put `teacherId` in two places at one time?
+ *
+ * The occupancy grids are indexed by period number, and the fast index check
+ * above assumes index N means the same instant for everyone. That holds only
+ * while all classes share a day structure. When breaks are staggered — Year 4B
+ * breaking at index 4 where the rest of the school breaks at 3 — index 5 in one
+ * class runs at the same clock time as index 6 in another, and the grids report
+ * both as free. The result is a teacher genuinely timetabled into two rooms at
+ * once, which the final audit reports as "Teacher Busy (Staggered)" long after
+ * the solver has committed to it.
+ *
+ * Joint lessons are exempt: teaching two classes together in one slot is the
+ * point of them, not a clash.
+ */
+function teacherOverlapsInTime(
+  state: SchedulerState,
+  data: AppData,
+  d: number,
+  p: number,
+  p2: number,
+  unit: AllocationUnit,
+  teacherId: string,
+  ignoredOccupants?: Set<string>,
+): boolean {
+  const dayOccupancy = state.teacherOccupancy[teacherId]?.[d];
+  if (!dayOccupancy) return false;
+
+  const myClassId = unit.classIds[0];
+  const myRanges = state.classTimeRanges.get(myClassId);
+  if (!myRanges) return false;
+
+  const proposed = p2 === -1 ? [p] : [p, p2];
+
+  for (const mine of proposed) {
+    const myRange = myRanges[mine];
+    if (!myRange) continue;
+
+    for (let otherP = 0; otherP < dayOccupancy.length; otherP++) {
+      if (proposed.includes(otherP)) continue;
+
+      const occupantId = dayOccupancy[otherP];
+      if (!occupantId || occupantId === "BLOCK" || occupantId === unit.id) continue;
+      // Repair evicts as it goes; a slot held by a victim is about to be free.
+      if (ignoredOccupants?.has(occupantId)) continue;
+
+      const otherClassId = state.unitToClassMap.get(occupantId);
+      if (!otherClassId || otherClassId === myClassId) continue;
+
+      const otherRange = state.classTimeRanges.get(otherClassId)?.[otherP];
+      if (!otherRange) continue;
+
+      if (myRange.start < otherRange.end && otherRange.start < myRange.end) {
+        const isJoint = data.jointClasses?.some(
+          (jc) =>
+            jc.subjectId === unit.subjectId &&
+            jc.classIds.includes(myClassId) &&
+            jc.classIds.includes(otherClassId),
+        );
+        if (!isJoint) return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 // --- CORE HARD CONSTRAINTS: RANK 1 THE INVARIANTS ---
@@ -148,6 +217,13 @@ export const checkHardConstraints = (
     const maxLoad = teacher?.maxPeriodsPerDay ?? maxTeacherLoad;
 
     if (currentLoad - loadFreed + duration > maxLoad) return reject("TEACHER_DAILY_CAP");
+
+    if (
+      state.hasStaggeredDays &&
+      teacherOverlapsInTime(state, data, d, p, p2, unit, tid, ignoredOccupants)
+    ) {
+      return reject("TEACHER_TIME_OVERLAP");
+    }
   }
 
   const proposedSlots = new Set<number>([p]);

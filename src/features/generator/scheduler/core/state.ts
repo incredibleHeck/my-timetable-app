@@ -46,6 +46,9 @@ export const initializeState = (data: AppData): SchedulerState => {
     lessonNavigation,
     unitPlacements: new Map(),
     unitToClassMap: new Map(),
+    hasStaggeredDays: classes.some(
+      (c) => c.structure !== undefined && c.structure !== settings.dayStructure,
+    ),
     settings,
   };
 

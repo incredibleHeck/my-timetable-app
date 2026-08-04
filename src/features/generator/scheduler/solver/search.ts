@@ -3,7 +3,12 @@ import { AllocationUnit, SchedulerState } from "../core/types";
 import { checkImmutableConstraints } from "../logic/constraints";
 import { determineRoom, forceDetermineRoom } from "../logic/rooms";
 import { calculateScore } from "../logic/scoring";
-import { getNextClassPeriod, getPeriodType, getDaysPerWeek } from "../utils/utils";
+import {
+  getNextClassPeriod,
+  getPeriodType,
+  getDaysPerWeek,
+  getMaxPeriodsPerDay,
+} from "../utils/utils";
 import { EvaluationEngine } from "../logic/evaluation";
 import { findUnitsInSlot } from "./slot-conflicts";
 import { TabuManager } from "./tabu";
@@ -38,7 +43,7 @@ export function findValidMoves(
   roomMap: Map<string, Room>,
 ) {
   const globalPeriods = data.settings.periodsPerDay;
-  const maxPossiblePeriods = 15; // Support up to 15 periods as per UI limits
+  const maxPossiblePeriods = getMaxPeriodsPerDay(data);
   const days = getDaysPerWeek(data.settings);
   const moves = [];
 
@@ -282,7 +287,7 @@ export function findMinConflictMove(
   tabu?: TabuManager,
   iteration: number = 0,
 ): SlotMove {
-  const maxPossiblePeriods = 15;
+  const maxPossiblePeriods = getMaxPeriodsPerDay(data);
   const days = getDaysPerWeek(data.settings);
 
   let bestMove = {
@@ -352,7 +357,7 @@ export function findSwapMove(
   tabu?: TabuManager,
   iteration: number = 0,
 ): SwapRepairMove | null {
-  const maxPossiblePeriods = 15;
+  const maxPossiblePeriods = getMaxPeriodsPerDay(data);
   const days = getDaysPerWeek(data.settings);
   let bestSwap: SwapRepairMove | null = null;
   let attempts = 0;
@@ -583,7 +588,7 @@ export function findChainRepairMove(
   iteration: number,
 ): ChainRepairMove | null {
   const days = getDaysPerWeek(data.settings);
-  const maxPossiblePeriods = 15;
+  const maxPossiblePeriods = getMaxPeriodsPerDay(data);
   let best: ChainRepairMove | null = null;
 
   for (let d = 0; d < days; d++) {

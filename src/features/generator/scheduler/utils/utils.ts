@@ -1,6 +1,25 @@
-import { PeriodType, PeriodConfig, Settings } from "../../../../types";
+import { AppData, PeriodType, PeriodConfig, Settings } from "../../../../types";
 
 export const getDaysPerWeek = (settings: Settings): number => settings.daysPerWeek ?? 5;
+
+/**
+ * Highest period index any class could legitimately use, plus one.
+ *
+ * The slot scans used to stop at a hardcoded 15 "as per UI limits". That is
+ * wrong in both directions: a school with 12 periods paid to test three columns
+ * that cannot exist, and a school with more than 15 would have had lessons
+ * silently refused a home with no constraint to explain it. Classes may also
+ * override the global structure, so the ceiling is the widest day in the school,
+ * not the default one.
+ */
+export function getMaxPeriodsPerDay(data: AppData): number {
+  let max = data.settings.periodsPerDay ?? 0;
+  for (const cls of data.classes ?? []) {
+    const structure = cls.structure ?? data.settings.dayStructure;
+    max = Math.max(max, cls.periodCount ?? 0, structure?.length ?? 0);
+  }
+  return max;
+}
 
 /**
  * ARCHITECT NOTES:
