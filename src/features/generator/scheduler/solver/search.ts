@@ -499,12 +499,36 @@ function tryRelocateEvictedGangs(
     (id) => id !== gangId && !remaining.includes(id),
   );
 
-  removeGangFromState(state, gang, data);
+  // Collect the victim gangs once: `move.evictions` holds unit ids, and several
+  // units of the same gang evict together.
+  const victimGangs = new Map<string, AllocationUnit[]>();
   for (const victimId of move.evictions) {
     const victimUnit = unitMap.get(victimId);
     if (!victimUnit) continue;
-    const victimGang = gangMap.get(getGangId(victimUnit));
-    if (victimGang) removeGangFromState(state, victimGang, data);
+    const vGangId = getGangId(victimUnit);
+    const victimGang = gangMap.get(vGangId);
+    if (victimGang) victimGangs.set(vGangId, victimGang);
+  }
+
+  // This is a probe, not a commitment: the chain is simulated so its cost can be
+  // measured, and the caller decides afterwards whether to keep it. Everything
+  // disturbed below therefore has to be put back.
+  //
+  // It previously was not. The "undo" removed the victims a second time instead
+  // of restoring them, and never restored the gang either, so merely *evaluating*
+  // a chain deleted every lesson it touched — whether or not the move was chosen.
+  // Measured on a real school, one repair step took the schedule from 1 unplaced
+  // lesson to 6, and those losses were invisible because the repair loop tracks
+  // queue length rather than the grid.
+  const snapshots = new Map<string, SavedGangPlacement | null>();
+  snapshots.set(gangId, saveGangPlacement(state, gang));
+  for (const [vGangId, victimGang] of victimGangs) {
+    snapshots.set(vGangId, saveGangPlacement(state, victimGang));
+  }
+
+  removeGangFromState(state, gang, data);
+  for (const victimGang of victimGangs.values()) {
+    removeGangFromState(state, victimGang, data);
   }
   applyGangToState(state, gang, move);
 
@@ -523,12 +547,17 @@ function tryRelocateEvictedGangs(
     iteration,
   );
 
+  // Unwind: clear the trial placement, then put back whatever was there before.
+  // A gang that was already unplaced on entry has a null snapshot and correctly
+  // stays unplaced.
   removeGangFromState(state, gang, data);
-  for (const victimId of move.evictions) {
-    const victimUnit = unitMap.get(victimId);
-    if (!victimUnit) continue;
-    const victimGang = gangMap.get(getGangId(victimUnit));
-    if (victimGang) removeGangFromState(state, victimGang, data);
+  for (const victimGang of victimGangs.values()) {
+    removeGangFromState(state, victimGang, data);
+  }
+  for (const [id, snapshot] of snapshots) {
+    if (!snapshot) continue;
+    const g = id === gangId ? gang : victimGangs.get(id);
+    if (g) restoreGangPlacement(state, g, snapshot, data);
   }
 
   if (!nested) return null;
