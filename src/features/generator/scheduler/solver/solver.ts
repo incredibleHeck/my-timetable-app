@@ -15,6 +15,7 @@ import { executeRepairAction } from "./repair-executor";
 import { findBestRepairMove } from "./search";
 import { scoreSchedule } from "../logic/objective";
 import { diagnoseUnplacedGang } from "../logic/diagnose-unplaced";
+import { optimiseSchedule } from "../logic/optimise";
 import { runConstructionQueue, PlacementRecord, ConstructionMaps } from "./construction";
 import {
   PRIORITY_CRITICAL,
@@ -27,6 +28,7 @@ import {
   SCORING_WEIGHTS,
   ScoringWeightKey,
   ScoringWeightOverrides,
+  OPTIMISE_BUDGET_SHARE,
 } from "../constants";
 import { createSeededRng, shuffleInPlace } from "../utils/rng";
 import { isPerfectGeneratedSchedule } from "../validation";
@@ -77,6 +79,9 @@ export type SolverResult = {
   perfectRuns: number;
   /** Weighted soft quality cost of this run's schedule; lower is better. */
   softCost?: number;
+  /** Gang leaders and their units, so a later phase can move placed lessons. */
+  gangLeaders: AllocationUnit[];
+  gangMap: Map<string, AllocationUnit[]>;
 };
 
 /** Soft cost of a run, computed at most once and cached on the result. */
@@ -408,6 +413,8 @@ function runSingleSolve(
     totalRuns: 1,
     unplacedGangs: countUnplacedGangLeaders(unplacedGangLeaders, gangMap, state),
     perfectRuns: 0,
+    gangLeaders: unplacedGangLeaders,
+    gangMap,
   };
 }
 
@@ -434,22 +441,37 @@ export const solveSmart = (
   const timeBudget = options.timeBudgetMs;
   const clockStartMs = options.clockStartMs ?? (timeBudget !== undefined ? Date.now() : 0);
 
-  const isTimeBudgetExceeded = (): boolean =>
-    timeBudget !== undefined && Date.now() - clockStartMs >= timeBudget;
-
-  const shouldAbort = (): boolean => isTimeBudgetExceeded();
-
-  if (minRuns === 1 && !timeBudget) {
-    return runSingleSolve(units, data, onProgress, options, 0);
-  }
-
   let bestResult: SolverResult | null = null;
   let bestUnplacedGangsSeen = Number.POSITIVE_INFINITY;
   let perfectRunsFound = 0;
   let run = 0;
 
+  // Tail of the budget reserved for post-feasibility optimisation. It is only
+  // claimed once a feasible schedule exists: while lessons are still unplaced,
+  // searching for one matters more than polishing, so the solve phase keeps the
+  // whole window and the optimiser simply never runs.
+  const optimiseReserveMs =
+    timeBudget !== undefined ? Math.floor(timeBudget * OPTIMISE_BUDGET_SHARE) : 0;
+
+  const isSolvePhaseOver = (): boolean => {
+    if (timeBudget === undefined) return false;
+    const elapsed = Date.now() - clockStartMs;
+    const feasibleAlready = bestResult !== null && bestResult.unplacedGangs === 0;
+    const limit = feasibleAlready ? timeBudget - optimiseReserveMs : timeBudget;
+    return elapsed >= limit;
+  };
+
+  const shouldAbort = (): boolean => isSolvePhaseOver();
+
+  if (minRuns === 1 && !timeBudget) {
+    return runSingleSolve(units, data, onProgress, options, 0);
+  }
+
   const shouldContinueRuns = (): boolean => {
-    if (isTimeBudgetExceeded()) return false;
+    // The same boundary the runs themselves abort on. Using the full budget here
+    // would keep spawning attempts into the reserved window that abort on their
+    // first check — 96 empty restarts in one measured 60s solve.
+    if (isSolvePhaseOver()) return false;
     // Count-only mode: stop early once every unit is placed.
     if (timeBudget === undefined && bestResult && bestResult.unplacedGangs === 0) {
       return false;
@@ -518,12 +540,46 @@ export const solveSmart = (
 
     run++;
 
-    if (runCancelled || isTimeBudgetExceeded()) {
+    if (runCancelled || isSolvePhaseOver()) {
       break;
     }
   }
 
-  return { ...bestResult!, totalRuns: run, perfectRuns: perfectRunsFound };
+  // --- POST-FEASIBILITY OPTIMISATION ---
+  // Everything above answers "can every lesson be placed?" and stops the moment
+  // it can. Whatever feasible arrangement the search happened to land on is what
+  // the school receives. Spend the reserved tail asking whether a better one
+  // exists, measured by the same objective used to rank runs.
+  const best = bestResult!;
+  if (timeBudget !== undefined && best.unplacedGangs === 0) {
+    const deadlineMs = clockStartMs + timeBudget;
+    if (Date.now() < deadlineMs) {
+      const report = optimiseSchedule(
+        best.state,
+        data,
+        best.gangLeaders,
+        best.gangMap,
+        {
+          teacherMap: new Map(data.teachers.map((t) => [t.id, t])),
+          subjectMap: new Map(data.subjects.map((s) => [s.id, s])),
+          classMap: new Map(data.classes.map((c) => [c.id, c])),
+          roomMap: new Map(data.rooms.map((r) => [r.id, r])),
+        },
+        { deadlineMs, rng: createSeededRng(calibrationSeed + 104729) },
+      );
+      best.schedule = best.state.schedule;
+      best.softCost = report.after.softCost;
+      onProgress?.("OPTIMISE", report.accepted, report.probes, 0, {
+        runIndex: run,
+        bestUnplaced: 0,
+        perfectRuns: perfectRunsFound,
+        elapsedMs: Date.now() - clockStartMs,
+        timeBudgetMs: timeBudget,
+      });
+    }
+  }
+
+  return { ...best, totalRuns: run, perfectRuns: perfectRunsFound };
 };
 
 /**

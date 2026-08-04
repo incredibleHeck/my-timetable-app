@@ -169,3 +169,11 @@ export const DEBUG_SOLVER_LOGGING = false;
 
 /** Report frequency for solver progress (report every N iterations) */
 export const PROGRESS_REPORT_FREQUENCY = 10;
+
+/**
+ * Fraction of the time budget reserved for post-feasibility optimisation.
+ *
+ * Only claimed once a feasible schedule exists — while lessons are unplaced,
+ * finding a home for them beats polishing what is already placed.
+ */
+export const OPTIMISE_BUDGET_SHARE = 0.35;
