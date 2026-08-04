@@ -11,6 +11,7 @@ import {
   Square,
   Plus,
   History,
+  DoorOpen,
 } from "lucide-react";
 import { AppData } from "../../../types";
 import { Button } from "../../../components/ui";
@@ -28,13 +29,13 @@ export interface GeneratorStats {
 
 interface GeneratorToolbarProps {
   data: AppData;
-  mode: "CLASS" | "TEACHER";
+  mode: "CLASS" | "TEACHER" | "ROOM";
   isGenerating: boolean;
   isEditMode: boolean;
   isManualPlacementMode: boolean;
   stats: GeneratorStats | null;
   onNavigate?: (view: import("../../../types").ViewState) => void;
-  onModeChange: (mode: "CLASS" | "TEACHER") => void;
+  onModeChange: (mode: "CLASS" | "TEACHER" | "ROOM") => void;
   onToggleEditMode: () => void;
   onToggleManualPlacement: () => void;
   onGenerate: () => void;
@@ -137,6 +138,18 @@ export const GeneratorToolbar: React.FC<GeneratorToolbarProps> = ({
         >
           <Users size={14} /> Teachers
         </button>
+        <button
+          onClick={() => onModeChange("ROOM")}
+          disabled={isGenerating}
+          aria-pressed={mode === "ROOM"}
+          className={`px-4 py-2 text-xs font-bold rounded-md flex items-center gap-2 transition-all ${
+            mode === "ROOM"
+              ? "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm"
+              : "text-content-muted"
+          }`}
+        >
+          <DoorOpen size={14} /> Rooms
+        </button>
       </div>
       <div className="flex items-center gap-2 pl-6 border-l border-slate-200 dark:border-slate-700">
         <button
@@ -206,7 +219,11 @@ export const GeneratorToolbar: React.FC<GeneratorToolbarProps> = ({
         disabled={isGenerating}
         icon={<FileSpreadsheet size={16} />}
         aria-label={
-          mode === "CLASS" ? "Export all classes to Excel" : "Export all teachers to Excel"
+          mode === "CLASS"
+            ? "Export all classes to Excel"
+            : mode === "TEACHER"
+              ? "Export all teachers to Excel"
+              : "Export all rooms to Excel"
         }
       />
 

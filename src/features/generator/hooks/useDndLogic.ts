@@ -27,7 +27,7 @@ interface DragItemData {
 export const useDndLogic = (
   data: AppData,
   activeId: string, // Current Class/Teacher ID in view
-  mode: "CLASS" | "TEACHER",
+  mode: "CLASS" | "TEACHER" | "ROOM",
   onUpdate: (d: AppData) => void,
   setHoverConflict?: (c: Conflict | null) => void,
 ) => {

@@ -10,7 +10,7 @@ interface Props {
   subject?: Subject;
   teacher?: Teacher;
   classGroup?: ClassGroup;
-  mode: "CLASS" | "TEACHER";
+  mode: "CLASS" | "TEACHER" | "ROOM";
   disabled?: boolean;
   timeRange?: string;
 }
@@ -76,7 +76,7 @@ export const DraggableSlot: React.FC<Props> = memo(
         </div>
 
         {/* TIME LABEL (Teacher Mode Only) */}
-        {mode === "TEACHER" && timeRange && (
+        {mode !== "CLASS" && timeRange && (
           <div className="text-2xs font-bold text-content-muted mt-1 flex items-center gap-1 relative z-10 uppercase tracking-tight">
             <Clock size={8} /> {timeRange}
           </div>

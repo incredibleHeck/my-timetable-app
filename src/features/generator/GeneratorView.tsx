@@ -11,6 +11,7 @@ import { exportClassICal, exportTeacherICal } from "../../services/export/ical";
 import { useToast } from "../../components/ui/Toast";
 import { auditFinalSchedule, runPreflightCheck } from "./scheduler/validation";
 import { SOLVER_TARGET_MS } from "./scheduler/constants";
+import { getSpecialistRooms, countRoomPeriods } from "./utils/roomSchedule";
 import {
   applyTeacherReassignments,
   describeReassignments,
@@ -25,7 +26,7 @@ interface ViewProps {
 
 export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) => {
   const { showToast } = useToast();
-  const [mode, setMode] = useState<"CLASS" | "TEACHER">("CLASS");
+  const [mode, setMode] = useState<"CLASS" | "TEACHER" | "ROOM">("CLASS");
   const [activeId, setActiveId] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -189,19 +190,47 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
     return sortedTeachers.filter((t) => t.name.toLowerCase().includes(q));
   }, [sortedTeachers, sidebarFilter]);
 
+  /**
+   * Rooms worth having a timetable for.
+   *
+   * A home classroom's schedule is its class's schedule under another name, so
+   * shared facilities — the ICT lab, music room, arts studio, library — lead the
+   * list; they are the ones with no other view showing who is in them and when.
+   * Home rooms follow rather than disappear, so nothing becomes unreachable.
+   */
+  const sortedRooms = useMemo(() => {
+    const specialistIds = new Set(getSpecialistRooms(data).map((r) => r.id));
+    const byName = (a: { name: string }, b: { name: string }) =>
+      a.name.localeCompare(b.name, undefined, { numeric: true });
+    return [
+      ...data.rooms.filter((r) => specialistIds.has(r.id)).sort(byName),
+      ...data.rooms.filter((r) => !specialistIds.has(r.id)).sort(byName),
+    ];
+  }, [data]);
+
+  const filteredRooms = useMemo(() => {
+    if (!sidebarFilter.trim()) return sortedRooms;
+    const q = sidebarFilter.toLowerCase();
+    return sortedRooms.filter((r) => r.name.toLowerCase().includes(q));
+  }, [sortedRooms, sidebarFilter]);
+
   // Initial Selection Logic
   useEffect(() => {
     if (mode === "CLASS") {
       if (!sortedClasses.some((c) => c.id === activeId) && sortedClasses.length > 0) {
         setActiveId(sortedClasses[0].id);
       }
-    } else {
+    } else if (mode === "TEACHER") {
       if (!sortedTeachers.some((t) => t.id === activeId) && sortedTeachers.length > 0) {
         setActiveId(sortedTeachers[0].id);
       }
+    } else {
+      if (!sortedRooms.some((r) => r.id === activeId) && sortedRooms.length > 0) {
+        setActiveId(sortedRooms[0].id);
+      }
     }
     setSidebarFilter(""); // Clear filter on mode switch
-  }, [mode, sortedClasses, sortedTeachers, activeId]);
+  }, [mode, sortedClasses, sortedTeachers, sortedRooms, activeId]);
 
   // --- WORKER CLEANUP ---
   useEffect(() => {
@@ -352,6 +381,13 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
   };
 
   const handleExcelExport = async () => {
+    // The workbook builder lays out one sheet per class or per teacher; it has
+    // no room layout yet. Say so rather than quietly exporting a different view
+    // than the one on screen. Printing does cover rooms.
+    if (mode === "ROOM") {
+      showToast("Excel export covers classes and teachers. Use Print for room timetables.", "info");
+      return;
+    }
     try {
       // One .xlsx file: every class or every teacher as its own sheet tab
       await exportScheduleToExcel(data, mode);
@@ -413,7 +449,7 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
           <div className="w-44 border-r border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 overflow-y-auto shrink-0 flex flex-col">
             <div className="p-3 border-b border-slate-100 dark:border-slate-700 sticky top-0 bg-slate-50 dark:bg-slate-900 z-10 space-y-2">
               <span className="text-2xs font-bold text-content-muted uppercase tracking-wider block">
-                Select {mode === "CLASS" ? "Group" : "Teacher"}
+                Select {mode === "CLASS" ? "Group" : mode === "TEACHER" ? "Teacher" : "Room"}
               </span>
               <div className="relative">
                 <Search
@@ -459,24 +495,53 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
                     <span className="truncate">{c.name}</span>
                   </button>
                 ))
-              : filteredTeachers.map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => setActiveId(t.id)}
-                    className={`w-full text-left px-4 py-3 border-b border-slate-100 dark:border-slate-700 text-xs font-medium truncate flex items-center gap-3 ${
-                      activeId === t.id
-                        ? "bg-white dark:bg-slate-800 border-l-4 border-l-amber-500"
-                        : "text-content-muted"
-                    }`}
-                  >
-                    <div
-                      className={`w-2 h-2 rounded-full shrink-0 ${
-                        activeId === t.id ? "bg-amber-500" : "bg-slate-300"
+              : mode === "ROOM"
+                ? filteredRooms.map((r) => {
+                    const periods = countRoomPeriods(data, r.id);
+                    return (
+                      <button
+                        key={r.id}
+                        onClick={() => setActiveId(r.id)}
+                        className={`w-full text-left px-4 py-3 border-b border-slate-100 dark:border-slate-700 text-xs font-medium truncate flex items-center gap-3 ${
+                          activeId === r.id
+                            ? "bg-white dark:bg-slate-800 border-l-4 border-l-amber-500"
+                            : "text-content-muted"
+                        }`}
+                      >
+                        <div
+                          className={`w-2 h-2 rounded-full shrink-0 ${
+                            activeId === r.id ? "bg-amber-500" : "bg-slate-300"
+                          }`}
+                        />
+                        <span className="truncate flex-1">{r.name}</span>
+                        <span
+                          className={`text-2xs shrink-0 ${
+                            periods === 0 ? "text-content-muted italic" : "opacity-70"
+                          }`}
+                        >
+                          {periods === 0 ? "unused" : periods}
+                        </span>
+                      </button>
+                    );
+                  })
+                : filteredTeachers.map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => setActiveId(t.id)}
+                      className={`w-full text-left px-4 py-3 border-b border-slate-100 dark:border-slate-700 text-xs font-medium truncate flex items-center gap-3 ${
+                        activeId === t.id
+                          ? "bg-white dark:bg-slate-800 border-l-4 border-l-amber-500"
+                          : "text-content-muted"
                       }`}
-                    />
-                    <span className="truncate">{t.name}</span>
-                  </button>
-                ))}
+                    >
+                      <div
+                        className={`w-2 h-2 rounded-full shrink-0 ${
+                          activeId === t.id ? "bg-amber-500" : "bg-slate-300"
+                        }`}
+                      />
+                      <span className="truncate">{t.name}</span>
+                    </button>
+                  ))}
           </div>
 
           {/* Grid Area */}

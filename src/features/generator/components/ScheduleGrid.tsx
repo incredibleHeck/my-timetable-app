@@ -21,12 +21,13 @@ import { EmptySlotPlacementButton } from "./EmptySlotPlacementButton";
 import { ManualPlacementPicker } from "./ManualPlacementPicker";
 import { useDndLogic } from "../hooks/useDndLogic";
 import { useManualPlacement } from "../hooks/useManualPlacement";
+import { getRoomOccupants } from "../utils/roomSchedule";
 import { PendingPlacement } from "../utils/pendingPlacements";
 
 interface Props {
   data: AppData;
   activeId: string;
-  mode: "CLASS" | "TEACHER";
+  mode: "CLASS" | "TEACHER" | "ROOM";
   onUpdate: (d: AppData) => void;
   editMode: boolean;
   manualPlacementMode?: boolean;
@@ -123,7 +124,7 @@ export const ScheduleGrid: React.FC<Props> = ({
     } else {
       periodsToRender = currentClass.periodCount || settings.periodsPerDay;
     }
-  } else if (mode === "TEACHER" && currentTeacher) {
+  } else if (mode === "ROOM" || (mode === "TEACHER" && currentTeacher)) {
     const maxClassPeriod = Math.max(
       settings.periodsPerDay,
       ...classes.map((c) => Math.max(c.periodCount || 0, c.structure?.length || 0)),
@@ -135,15 +136,29 @@ export const ScheduleGrid: React.FC<Props> = ({
     if (mode === "CLASS") {
       const slot = schedule[activeId]?.[day]?.[period];
       return { slot, classId: activeId };
-    } else {
-      for (const cId of Object.keys(schedule)) {
-        const s = schedule[cId]?.[day]?.[period];
-        if (s && s.teacherId === activeId) {
-          return { slot: s, classId: cId };
-        }
-      }
-      return { slot: undefined, classId: "" };
     }
+
+    if (mode === "ROOM") {
+      // A room can hold one lesson attended by several classes — a joint PE
+      // session, say. getRoomOccupants collapses those into a single entry, so
+      // the cell names every class present instead of silently showing one.
+      const occupants = getRoomOccupants(data, activeId, day, period);
+      const first = occupants[0];
+      return {
+        slot: first?.slot,
+        classId: first?.classIds[0] ?? "",
+        occupantLabel: first?.classNames.join(" + "),
+        isContested: occupants.length > 1,
+      };
+    }
+
+    for (const cId of Object.keys(schedule)) {
+      const s = schedule[cId]?.[day]?.[period];
+      if (s && s.teacherId === activeId) {
+        return { slot: s, classId: cId };
+      }
+    }
+    return { slot: undefined, classId: "" };
   };
 
   const getPeriodLabel = (index: number) => {
@@ -253,7 +268,7 @@ export const ScheduleGrid: React.FC<Props> = ({
               </div>
 
               {Array.from({ length: periodsToRender }).map((_, pIdx) => {
-                const { slot, classId } = getCellData(dIdx, pIdx);
+                const { slot, classId, occupantLabel, isContested } = getCellData(dIdx, pIdx);
                 const structItem = currentStructure?.[pIdx];
                 const structType =
                   typeof structItem === "object" ? structItem.type : structItem || "CLASS";
@@ -313,10 +328,20 @@ export const ScheduleGrid: React.FC<Props> = ({
                   } else {
                     const subject = subjects.find((s) => s.id === slot.subjectId);
                     const teacher = teachers.find((t) => t.id === slot.teacherId);
-                    const classGroup = classes.find((c) => c.id === classId);
+                    const baseClassGroup = classes.find((c) => c.id === classId);
+                    // A room cell names every class in the room. For a joint
+                    // lesson that is "Year 2A + Year 2B", not whichever class
+                    // happened to be found first.
+                    const classGroup =
+                      occupantLabel && baseClassGroup
+                        ? { ...baseClassGroup, name: occupantLabel }
+                        : baseClassGroup;
 
                     let timeRange = "";
-                    if (mode === "TEACHER" && classGroup) {
+                    // Staggered days mean a period index is a different hour for
+                    // each class, so a room's own timetable has to state the
+                    // clock time of whoever is in it.
+                    if (mode !== "CLASS" && classGroup) {
                       const classSched = calculateClassSchedule(
                         classGroup,
                         settings,
@@ -329,7 +354,14 @@ export const ScheduleGrid: React.FC<Props> = ({
                     }
 
                     content = (
-                      <div className={`w-full h-full ${opacityClass}`}>
+                      <div
+                        className={`w-full h-full ${opacityClass}`}
+                        title={
+                          isContested
+                            ? "Two different lessons are booked in this room at the same period"
+                            : undefined
+                        }
+                      >
                         <DraggableSlot
                           slot={slot}
                           day={dIdx}
@@ -338,7 +370,7 @@ export const ScheduleGrid: React.FC<Props> = ({
                           teacher={teacher}
                           classGroup={classGroup}
                           mode={mode}
-                          disabled={!editMode}
+                          disabled={!editMode || mode === "ROOM"}
                           timeRange={timeRange}
                         />
                       </div>
