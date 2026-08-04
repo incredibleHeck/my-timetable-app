@@ -354,7 +354,10 @@ export const validateFullSchedule = (data: AppData, state: SchedulerState): Conf
             period,
             reason: result.message || "Constraint Violation",
             severity: result.severity || "HIGH",
-            kind: "blocking",
+            // Kind is left to the audit's classifier. This site used to stamp
+            // "blocking" on everything it emitted, including the gap and
+            // continuity warnings, which is why the conflict panel's quality
+            // bucket was permanently empty.
           });
         }
       }
@@ -405,7 +408,29 @@ export function auditFinalSchedule(
   }
   raw.push(...collectResourceDoubleBookings(auditData));
 
-  return dedupeConflicts(raw);
+  return dedupeConflicts(raw).map(classifyConflictKind);
+}
+
+/**
+ * Label each conflict as something that must be fixed or something that would
+ * merely be nicer.
+ *
+ * `Conflict.kind` was declared and then set in exactly two places, so nothing
+ * was ever tagged "quality" — and the conflict panel splits its list three ways
+ * on precisely that field. The quality bucket was therefore always empty, and a
+ * pedagogical preference such as "these sessions should be continuous" was
+ * presented to the user beside a genuine double-booking as though both were
+ * equally broken.
+ *
+ * Severity already encodes the distinction each detector intended: HIGH is
+ * raised for things that make a timetable unusable — a teacher in two rooms at
+ * once, a room over capacity, a lesson with nowhere to go — while MEDIUM and LOW
+ * are raised for gaps, continuity and spread. An explicit `kind` set by a
+ * detector still wins, so a detector can disagree.
+ */
+function classifyConflictKind(conflict: Conflict): Conflict {
+  if (conflict.kind) return conflict;
+  return { ...conflict, kind: conflict.severity === "HIGH" ? "blocking" : "quality" };
 }
 
 /** True when the committed grid has no generated-mode audit conflicts. */
