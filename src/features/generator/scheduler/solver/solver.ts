@@ -8,6 +8,9 @@ import {
   countUnplacedGangs,
   countUnplacedGangLeaders,
   diversifyRepairState,
+  snapshotPlacedGangs,
+  restorePlacedGangs,
+  RepairSnapshot,
   getGangId,
   isRepairActionFailed,
 } from "./repair-controller";
@@ -275,6 +278,18 @@ function runSingleSolve(
 
   tabu.adaptToSize(repairQueue.length);
 
+  // The best arrangement repair passes through, and where it was.
+  //
+  // Repair is not a descent: it places one lesson by evicting another, shakes
+  // the grid when it stagnates, and stops wherever the clock leaves it. Nothing
+  // remembered the best point along the way, so a run could finish worse than it
+  // had already been — measured on the reference school, one reached 3 unplaced
+  // and ended at 5. `bestUnplaced` on the controller is counted from the queue,
+  // which is a proxy; this counts the grid itself.
+  let incumbentUnplaced = countUnplacedGangLeaders(unplacedGangLeaders, gangMap, state);
+  let incumbent: RepairSnapshot | null =
+    incumbentUnplaced > 0 ? snapshotPlacedGangs(state, gangMap) : null;
+
   while (repairQueue.length > 0 && repairSteps < MAX_REPAIR_STEPS) {
     repairSteps++;
 
@@ -352,6 +367,24 @@ function runSingleSolve(
         repairController.recordProgress(countUnplacedGangs(repairQueue, repairController));
       }
     }
+
+    // Checked after diversification, so a shake that costs lessons cannot
+    // overwrite the arrangement it was shaken away from.
+    const trueUnplaced = countUnplacedGangLeaders(unplacedGangLeaders, gangMap, state);
+    if (trueUnplaced < incumbentUnplaced) {
+      incumbentUnplaced = trueUnplaced;
+      incumbent = trueUnplaced > 0 ? snapshotPlacedGangs(state, gangMap) : null;
+      if (trueUnplaced === 0) break;
+    }
+  }
+
+  // Only rewind on a genuine loss. A run that ended at its best — the common
+  // case — pays nothing but the comparison.
+  if (
+    incumbent &&
+    countUnplacedGangLeaders(unplacedGangLeaders, gangMap, state) > incumbentUnplaced
+  ) {
+    restorePlacedGangs(state, data, gangMap, incumbent);
   }
 
   const finalConflicts: Conflict[] = [];

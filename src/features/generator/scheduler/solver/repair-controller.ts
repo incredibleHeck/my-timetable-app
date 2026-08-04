@@ -1,5 +1,5 @@
 import { AllocationUnit, SchedulerState } from "../core/types";
-import { removeGangFromState } from "../core/state";
+import { applyGangToState, removeGangFromState } from "../core/state";
 import { AppData } from "../../../../types";
 import {
   PRIORITY_CRITICAL,
@@ -141,6 +141,61 @@ export function countUnplacedGangLeaders(
     }
   }
   return count;
+}
+
+/** Where every placed gang sits, enough to put the grid back exactly. */
+export type RepairSnapshot = Map<
+  string,
+  { d: number; p: number; p2: number; rooms: Record<string, string> }
+>;
+
+/**
+ * Capture the current placement of every gang.
+ *
+ * Repair is not monotonic — it places one lesson by evicting another, shakes the
+ * grid when it stagnates, and simply stops wherever the clock leaves it. Nothing
+ * was remembering the best arrangement it passed through, so a run could and did
+ * finish worse than it had already been: measured on the reference school, one
+ * run reached 3 unplaced and ended at 5.
+ */
+export function snapshotPlacedGangs(
+  state: SchedulerState,
+  gangMap: Map<string, AllocationUnit[]>,
+): RepairSnapshot {
+  const snapshot: RepairSnapshot = new Map();
+  for (const [gangId, gang] of gangMap) {
+    const placement = state.unitPlacements.get(gang[0].id);
+    if (!placement) continue;
+    snapshot.set(gangId, {
+      d: placement.d,
+      p: placement.p,
+      p2: placement.p2,
+      rooms: { ...placement.rooms },
+    });
+  }
+  return snapshot;
+}
+
+/**
+ * Put the grid back to a snapshot, in place.
+ *
+ * Clears every gang first so occupancy, daily loads and subject counters are
+ * rebuilt from scratch rather than patched — `unassignUnit` no-ops on a gang
+ * that is already absent, so the sweep is safe.
+ */
+export function restorePlacedGangs(
+  state: SchedulerState,
+  data: AppData,
+  gangMap: Map<string, AllocationUnit[]>,
+  snapshot: RepairSnapshot,
+): void {
+  for (const gang of gangMap.values()) {
+    removeGangFromState(state, gang, data);
+  }
+  for (const [gangId, move] of snapshot) {
+    const gang = gangMap.get(gangId);
+    if (gang) applyGangToState(state, gang, move);
+  }
 }
 
 /**
