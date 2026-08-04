@@ -34,6 +34,8 @@ export type BlockingReason =
   | "TEACHER_BUSY"
   | "TEACHER_DAILY_CAP"
   | "TEACHER_TIME_OVERLAP"
+  | "ROOM_TIME_OVERLAP"
+  | "SINGLE_RESOURCE_TIME_OVERLAP"
   | "CLASS_BUSY"
   | "SUBJECT_DAILY_CAP"
   | "SUBJECT_DAY_SPREAD"
@@ -56,6 +58,8 @@ export const BLOCKING_REASON_LABELS: Record<BlockingReason, string> = {
   TEACHER_BUSY: "teacher already teaching",
   TEACHER_DAILY_CAP: "teacher's daily period limit reached",
   TEACHER_TIME_OVERLAP: "teacher is teaching another class at that clock time",
+  ROOM_TIME_OVERLAP: "room is in use by another class at that clock time",
+  SINGLE_RESOURCE_TIME_OVERLAP: "shared resource is in use at that clock time",
   CLASS_BUSY: "class already has a lesson",
   SUBJECT_DAILY_CAP: "subject's daily limit for this class reached",
   SUBJECT_DAY_SPREAD: "subject day-spread limit reached",
@@ -95,67 +99,85 @@ function blocksOccupant(
 }
 
 /**
- * Would placing `unit` at (d, p) put `teacherId` in two places at one time?
+ * Would placing `unit` at (d, p) collide with something already holding this
+ * resource at the same time of day?
  *
- * The occupancy grids are indexed by period number, and the fast index check
- * above assumes index N means the same instant for everyone. That holds only
- * while all classes share a day structure. When breaks are staggered — Year 4B
- * breaking at index 4 where the rest of the school breaks at 3 — index 5 in one
- * class runs at the same clock time as index 6 in another, and the grids report
- * both as free. The result is a teacher genuinely timetabled into two rooms at
- * once, which the final audit reports as "Teacher Busy (Staggered)" long after
- * the solver has committed to it.
+ * Every occupancy grid is indexed by period number, and the fast index checks
+ * elsewhere in this file assume index N is the same instant for everyone. That
+ * holds only while all classes share a day structure. When breaks are staggered
+ * — Year 4B breaking at index 4 where the rest of the school breaks at 3 —
+ * index 8 in one class runs at the same clock time as index 9 in another, and
+ * the grids report both as free.
  *
- * Joint lessons are exempt: teaching two classes together in one slot is the
- * point of them, not a clash.
+ * The consequences differ by resource but are equally real: a teacher in two
+ * rooms at once, two classes sent to the same lab, or a shared resource such as
+ * ICT booked twice over. The reference school had five of the last kind, none of
+ * which any index-based check could see.
+ *
+ * Joint lessons are exempt throughout: teaching two classes together in one slot
+ * is the point of them, not a clash.
  */
-function teacherOverlapsInTime(
+function occupancyOverlapsInTime(
   state: SchedulerState,
   data: AppData,
   d: number,
   p: number,
   p2: number,
   unit: AllocationUnit,
-  teacherId: string,
+  dayOccupancy: (string | null)[] | undefined,
   ignoredOccupants?: Set<string>,
 ): boolean {
-  const dayOccupancy = state.teacherOccupancy[teacherId]?.[d];
   if (!dayOccupancy) return false;
-
-  const myClassId = unit.classIds[0];
-  const myRanges = state.classTimeRanges.get(myClassId);
-  if (!myRanges) return false;
 
   const proposed = p2 === -1 ? [p] : [p, p2];
 
+  // Times are zero-padded "HH:MM", so lexicographic order is chronological order
+  // — the comparison the existing validation layer already relies on.
+  //
+  // A joint lesson can span classes whose bells differ, so the window it really
+  // occupies is the union across its classes, not the first one's.
+  const myWindows: Array<{ start: string; end: string }> = [];
   for (const mine of proposed) {
-    const myRange = myRanges[mine];
-    if (!myRange) continue;
-
-    for (let otherP = 0; otherP < dayOccupancy.length; otherP++) {
-      if (proposed.includes(otherP)) continue;
-
-      const occupantId = dayOccupancy[otherP];
-      if (!occupantId || occupantId === "BLOCK" || occupantId === unit.id) continue;
-      // Repair evicts as it goes; a slot held by a victim is about to be free.
-      if (ignoredOccupants?.has(occupantId)) continue;
-
-      const otherClassId = state.unitToClassMap.get(occupantId);
-      if (!otherClassId || otherClassId === myClassId) continue;
-
-      const otherRange = state.classTimeRanges.get(otherClassId)?.[otherP];
-      if (!otherRange) continue;
-
-      if (myRange.start < otherRange.end && otherRange.start < myRange.end) {
-        const isJoint = data.jointClasses?.some(
-          (jc) =>
-            jc.subjectId === unit.subjectId &&
-            jc.classIds.includes(myClassId) &&
-            jc.classIds.includes(otherClassId),
-        );
-        if (!isJoint) return true;
-      }
+    let start: string | undefined;
+    let end: string | undefined;
+    for (const classId of unit.classIds) {
+      const range = state.classTimeRanges.get(classId)?.[mine];
+      if (!range) continue;
+      if (start === undefined || range.start < start) start = range.start;
+      if (end === undefined || range.end > end) end = range.end;
     }
+    if (start !== undefined && end !== undefined && start < end) {
+      myWindows.push({ start, end });
+    }
+  }
+  if (myWindows.length === 0) return false;
+
+  for (let otherP = 0; otherP < dayOccupancy.length; otherP++) {
+    if (proposed.includes(otherP)) continue;
+
+    const occupantId = dayOccupancy[otherP];
+    if (!occupantId || occupantId === "BLOCK" || occupantId === unit.id) continue;
+    // Repair evicts as it goes; a slot held by a victim is about to be free.
+    if (ignoredOccupants?.has(occupantId)) continue;
+
+    const otherClassId = state.unitToClassMap.get(occupantId);
+    if (!otherClassId || unit.classIds.includes(otherClassId)) continue;
+
+    const otherRange = state.classTimeRanges.get(otherClassId)?.[otherP];
+    if (!otherRange) continue;
+
+    const clashes = myWindows.some(
+      (mine) => mine.start < otherRange.end && otherRange.start < mine.end,
+    );
+    if (!clashes) continue;
+
+    const isJoint = data.jointClasses?.some(
+      (jc) =>
+        jc.subjectId === unit.subjectId &&
+        jc.classIds.includes(otherClassId) &&
+        unit.classIds.some((cid) => jc.classIds.includes(cid)),
+    );
+    if (!isJoint) return true;
   }
 
   return false;
@@ -220,7 +242,16 @@ export const checkHardConstraints = (
 
     if (
       state.hasStaggeredDays &&
-      teacherOverlapsInTime(state, data, d, p, p2, unit, tid, ignoredOccupants)
+      occupancyOverlapsInTime(
+        state,
+        data,
+        d,
+        p,
+        p2,
+        unit,
+        state.teacherOccupancy[tid]?.[d],
+        ignoredOccupants,
+      )
     ) {
       return reject("TEACHER_TIME_OVERLAP");
     }
@@ -324,6 +355,22 @@ export const checkHardConstraints = (
       if (blocksOccupant(roomOccP2, unit.id, ignoredOccupants)) return reject("ROOM_BUSY");
     }
 
+    if (
+      state.hasStaggeredDays &&
+      occupancyOverlapsInTime(
+        state,
+        data,
+        d,
+        p,
+        p2,
+        unit,
+        state.roomOccupancy[targetRoomId]?.[d],
+        ignoredOccupants,
+      )
+    ) {
+      return reject("ROOM_TIME_OVERLAP");
+    }
+
     const room = roomMap.get(targetRoomId);
     if (room && repClass && (repClass.studentCount || 0) > room.capacity) {
       return reject("ROOM_CAPACITY");
@@ -342,6 +389,22 @@ export const checkHardConstraints = (
       if (blocksOccupant(resOccP2, unit.id, ignoredOccupants)) {
         return reject("SINGLE_RESOURCE_BUSY");
       }
+    }
+
+    if (
+      state.hasStaggeredDays &&
+      occupancyOverlapsInTime(
+        state,
+        data,
+        d,
+        p,
+        p2,
+        unit,
+        state.singleResourceUsage[subjectId]?.[d],
+        ignoredOccupants,
+      )
+    ) {
+      return reject("SINGLE_RESOURCE_TIME_OVERLAP");
     }
   }
 

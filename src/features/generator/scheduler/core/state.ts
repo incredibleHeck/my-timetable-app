@@ -46,9 +46,13 @@ export const initializeState = (data: AppData): SchedulerState => {
     lessonNavigation,
     unitPlacements: new Map(),
     unitToClassMap: new Map(),
-    hasStaggeredDays: classes.some(
-      (c) => c.structure !== undefined && c.structure !== settings.dayStructure,
-    ),
+    // By value, not by reference: a class carrying its own copy of the global
+    // structure is not staggered, and comparing identity would have forced the
+    // expensive clock-time fallback on every school that stores one per class.
+    // What matters is whether the classes in play resolve to more than one shape.
+    hasStaggeredDays:
+      new Set(classes.map((c) => JSON.stringify(c.structure ?? settings.dayStructure ?? null)))
+        .size > 1,
     settings,
   };
 
