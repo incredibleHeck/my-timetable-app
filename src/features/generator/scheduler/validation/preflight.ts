@@ -1,6 +1,6 @@
 import { AppData } from "../../../../types";
 import { prepareAllocationUnits } from "../logic/preparation";
-import { getDaysPerWeek } from "../utils/utils";
+import { getDaysPerWeek, getMaxPeriodsPerDay } from "../utils/utils";
 import { getType } from "./utils";
 import { isOccasionBlocked } from "../../../../utils/utils";
 
@@ -50,19 +50,27 @@ function countRequiredPeriodsForClass(
   return units.filter((u) => u.classIds.includes(classId)).reduce((sum, u) => sum + u.duration, 0);
 }
 
-/** Available weekly slots for a teacher (days × periods minus blocked constraints). */
+/**
+ * Slots a teacher could physically stand in front of a class for: hours they are
+ * available, capped by how many they may teach in one day.
+ *
+ * Deliberately excludes `maxTeachingPeriodsPerWeek`. That is a staffing policy,
+ * not a physical limit — exceeding it produces a timetable that works but breaks
+ * an agreement, which is a warning below rather than a reason to refuse to
+ * generate at all.
+ */
 function countTeacherWeeklyCapacity(data: AppData, teacherId: string): number {
   const teacher = data.teachers.find((t) => t.id === teacherId);
   if (!teacher) return 0;
 
   const days = getDaysPerWeek(data.settings);
-  const globalPeriods = data.settings.periodsPerDay;
+  const periods = getMaxPeriodsPerDay(data);
   const maxDaily = teacher.maxPeriodsPerDay ?? data.settings.maxTeacherPeriodsPerDay ?? 6;
 
   let available = 0;
   for (let d = 0; d < days; d++) {
     let dayFree = 0;
-    for (let p = 0; p < globalPeriods; p++) {
+    for (let p = 0; p < periods; p++) {
       if (isOccasionBlocked(data.settings.fixedOccasions?.[d]?.[p])) continue;
       if (teacher.constraints?.[d]?.[p]) continue;
       dayFree++;
@@ -146,6 +154,25 @@ export function runPreflightCheck(data: AppData): PreflightResult {
         teacherId,
         teacherName: teacher.name,
         message: `${teacher.name}: workload is ${Math.round((required / capacity) * 100)}% of available capacity.`,
+      });
+    }
+
+    // The weekly teaching cap is a staffing policy, so a breach is reported and
+    // then generation proceeds. Refusing outright would trade a warning the
+    // school can act on for lessons the students never receive, and a curriculum
+    // may legitimately demand more than the cap allows.
+    //
+    // `required` is summed over allocation units, which exist once per joint
+    // lesson rather than once per partner class — a teacher taking 2A and 2B
+    // together spends one period, not two. Counting per class would report
+    // breaches that are not real.
+    const weeklyCap = data.settings.maxTeachingPeriodsPerWeek;
+    if (weeklyCap && weeklyCap > 0 && required > weeklyCap) {
+      warnings.push({
+        severity: "warning",
+        teacherId,
+        teacherName: teacher.name,
+        message: `${teacher.name}: assigned ${required} periods a week, ${required - weeklyCap} over the ${weeklyCap}-period limit. The timetable will still be generated.`,
       });
     }
   }
