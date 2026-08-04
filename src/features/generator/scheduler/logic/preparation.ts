@@ -25,10 +25,18 @@ export const prepareAllocationUnits = (data: AppData): AllocationUnit[] => {
   const processedCurriculumItems = new Set<string>(); // "classId-subjectId"
 
   // 2. HELPERS
-  const resolveRoomRequirement = (subject: Subject | undefined): string | undefined => {
-    if (!subject) return undefined;
-    return subject.requiredRoomType || (subject.isSingleResource ? "Specialist Room" : undefined);
-  };
+  /**
+   * A subject only demands a kind of room when the school has said so.
+   *
+   * `isSingleResource` used to fall back to the literal type "Specialist Room",
+   * which no room can be — room types here are things like "Computer Lab" and
+   * "Music Room". The requirement therefore matched nothing and was silently
+   * dropped. It means "one class at a time", which is a resource constraint, not
+   * a statement about where the lesson happens; to put ICT in the ICT lab, set
+   * the subject's Fixed Facility or give it a required room type.
+   */
+  const resolveRoomRequirement = (subject: Subject | undefined): string | undefined =>
+    subject?.requiredRoomType || undefined;
 
   const getCommonRoomId = (classIds: string[]) => {
     const firstClass = classMap.get(classIds[0]);

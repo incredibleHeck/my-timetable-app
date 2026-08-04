@@ -25,7 +25,8 @@
     "diagnostics:why": "tsx scripts/diagnostics/why-unplaced.ts",
     "diagnostics:clock": "tsx scripts/diagnostics/clock-overlaps.ts",
     "diagnostics:preflight": "tsx scripts/diagnostics/preflight-check.ts",
-    "diagnostics:reassign": "tsx scripts/diagnostics/reassign-consistency.ts"
+    "diagnostics:reassign": "tsx scripts/diagnostics/reassign-consistency.ts",
+    "diagnostics:rooms": "tsx scripts/diagnostics/room-utilisation.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

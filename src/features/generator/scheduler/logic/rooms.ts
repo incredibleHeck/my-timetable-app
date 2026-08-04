@@ -47,15 +47,27 @@ export function getRoomCandidates(
     return candidates;
   }
 
-  unit.preferredRoomIds?.forEach(add);
-  add(classGroup?.defaultRoomId);
-  add(unit.defaultRoomId);
-
+  // A required room TYPE narrows the choice; it does not merely widen it.
+  //
+  // These rooms used to be appended after the class's home classroom, and the
+  // resolver takes the first candidate that is free — so the home classroom,
+  // which is nearly always free, won every time. A school could mark ICT as
+  // needing a Computer Lab and find every ICT lesson scheduled in the ordinary
+  // classroom, with the lab reporting 0% utilisation and nothing explaining why.
+  //
+  // If no room of the type exists the list comes back empty and the lesson goes
+  // unplaced, which is the honest outcome: the requirement cannot be met, and
+  // diagnose-unplaced will say so rather than quietly ignoring it.
   if (unit.requiredRoomType) {
     for (const room of roomMap.values()) {
       if (room.type === unit.requiredRoomType) add(room.id);
     }
+    return candidates;
   }
+
+  unit.preferredRoomIds?.forEach(add);
+  add(classGroup?.defaultRoomId);
+  add(unit.defaultRoomId);
 
   return candidates;
 }
