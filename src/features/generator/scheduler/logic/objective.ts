@@ -46,6 +46,15 @@ export interface ObjectiveBreakdown {
   consolidatedTeacherBlocks: number;
   /** Idle schedulable periods inside a class's day. */
   classGapPeriods: number;
+  /**
+   * Teaching periods a class leaves empty before its first lesson of the day.
+   *
+   * A class with fewer lessons than slots must have free periods somewhere, so
+   * this is about *where* they fall rather than how many there are. Morning is
+   * when children learn best, so an empty first period is worth more than an
+   * empty last one — the same idle time, spent worse.
+   */
+  classMorningIdlePeriods: number;
 }
 
 export interface ObjectiveScore {
@@ -66,6 +75,12 @@ export const OBJECTIVE_WEIGHTS = {
   WEEKLY_CAP_EXCESS: 120,
   LOAD_IMBALANCE: 8,
   CLASS_GAP: 40,
+  /**
+   * A late start costs the same as a hole mid-morning: both are a class sitting
+   * idle when it could be learning. Kept soft rather than forbidden, so the
+   * solver may still open a morning slot when that is what lets everything fit.
+   */
+  CLASS_MORNING_IDLE: 40,
   FRAGMENTED_TEACHER_GAP: 6,
 } as const;
 
@@ -161,6 +176,25 @@ function countClassGaps(occupied: Set<number>, schedulable: Set<number>): number
 }
 
 /**
+ * Count the teaching periods a class wastes before its first lesson.
+ *
+ * `countClassGaps` deliberately measures only the holes *between* lessons, so a
+ * class that simply starts late was charged nothing — its free periods sat in
+ * the morning at no cost, and the objective had no reason to pull lessons
+ * forward. Trailing free periods are still free: a class finishing early is a
+ * class that has gone home, not one waiting around.
+ */
+function countMorningIdle(occupied: Set<number>, schedulable: Set<number>): number {
+  if (occupied.size === 0) return 0;
+  const first = Math.min(...occupied);
+  let idle = 0;
+  for (const p of schedulable) {
+    if (p < first) idle++;
+  }
+  return idle;
+}
+
+/**
  * Evaluate a committed timetable.
  *
  * `unplacedPeriods` must be supplied by the caller — it is a property of the
@@ -217,14 +251,14 @@ export function scoreSchedule(
     }
   }
 
-  // --- Class gaps ---
+  // --- Class gaps and late starts ---
   let classGapPeriods = 0;
+  let classMorningIdlePeriods = 0;
   for (const [classId, byDay] of classOccupancy) {
     for (const [day, occupied] of byDay) {
-      classGapPeriods += countClassGaps(
-        occupied,
-        classSchedulablePeriods(data, classId, day, structureCache),
-      );
+      const schedulable = classSchedulablePeriods(data, classId, day, structureCache);
+      classGapPeriods += countClassGaps(occupied, schedulable);
+      classMorningIdlePeriods += countMorningIdle(occupied, schedulable);
     }
   }
 
@@ -320,6 +354,7 @@ export function scoreSchedule(
     fragmentedTeacherGaps,
     consolidatedTeacherBlocks,
     classGapPeriods,
+    classMorningIdlePeriods,
   };
 
   const softCost =
@@ -327,6 +362,7 @@ export function scoreSchedule(
     weights.WEEKLY_CAP_EXCESS * weeklyCapExcess +
     weights.LOAD_IMBALANCE * loadImbalance +
     weights.CLASS_GAP * classGapPeriods +
+    weights.CLASS_MORNING_IDLE * classMorningIdlePeriods +
     weights.FRAGMENTED_TEACHER_GAP * fragmentedTeacherGaps;
 
   return {

@@ -140,8 +140,14 @@ describe("scoreSchedule — class gaps", () => {
       ],
     });
     expect(r.breakdown.classGapPeriods).toBe(1);
-    // The same hole is also an isolated gap for the teacher, and costs both.
-    expect(r.softCost).toBe(OBJECTIVE_WEIGHTS.CLASS_GAP + OBJECTIVE_WEIGHTS.FRAGMENTED_TEACHER_GAP);
+    // Three separate costs for one arrangement: the hole itself, the isolated
+    // gap it leaves the teacher, and the empty P0 the class starts after.
+    expect(r.breakdown.classMorningIdlePeriods).toBe(1);
+    expect(r.softCost).toBe(
+      OBJECTIVE_WEIGHTS.CLASS_GAP +
+        OBJECTIVE_WEIGHTS.FRAGMENTED_TEACHER_GAP +
+        OBJECTIVE_WEIGHTS.CLASS_MORNING_IDLE,
+    );
   });
 
   it("ignores free time outside the first and last lesson", () => {
@@ -152,6 +158,66 @@ describe("scoreSchedule — class gaps", () => {
       ],
     });
     expect(r.breakdown.classGapPeriods).toBe(0);
+  });
+});
+
+describe("scoreSchedule — morning idle periods", () => {
+  it("charges for a class that starts late", () => {
+    // First lesson at P3; P0 and P2 are teaching periods left empty (P1 is break).
+    const r = score({
+      lessons: [
+        { classId: "c1", day: 0, period: 3, teacherId: "t1", subjectId: "s1" },
+        { classId: "c1", day: 0, period: 4, teacherId: "t1", subjectId: "s1" },
+      ],
+    });
+    expect(r.breakdown.classMorningIdlePeriods).toBe(2);
+  });
+
+  it("does not charge for a class that finishes early", () => {
+    // Morning is when children learn best; going home early is not the same as
+    // waiting around, so trailing free periods stay free.
+    const r = score({
+      lessons: [
+        { classId: "c1", day: 0, period: 0, teacherId: "t1", subjectId: "s1" },
+        { classId: "c1", day: 0, period: 2, teacherId: "t1", subjectId: "s1" },
+      ],
+    });
+    expect(r.breakdown.classMorningIdlePeriods).toBe(0);
+  });
+
+  it("does not count the break before the first lesson", () => {
+    // P0 busy, P1 is break. Nothing was wasted.
+    const r = score({
+      lessons: [{ classId: "c1", day: 0, period: 0, teacherId: "t1", subjectId: "s1" }],
+    });
+    expect(r.breakdown.classMorningIdlePeriods).toBe(0);
+  });
+
+  it("does not count a reserved occasion as a wasted morning period", () => {
+    // Worship holds P0, so the class could not have started earlier than P2.
+    const data = buildData({
+      lessons: [{ classId: "c1", day: 0, period: 2, teacherId: "t1", subjectId: "s1" }],
+      settings: { fixedOccasions: { 0: { 0: { label: "Worship" } } } as never },
+    });
+    expect(scoreSchedule(data, data.schedule).breakdown.classMorningIdlePeriods).toBe(0);
+  });
+
+  it("prices a late start the same as a hole mid-morning", () => {
+    const late = score({
+      lessons: [{ classId: "c1", day: 0, period: 2, teacherId: "t1", subjectId: "s1" }],
+    });
+    expect(late.softCost).toBe(OBJECTIVE_WEIGHTS.CLASS_MORNING_IDLE);
+  });
+
+  it("counts each day separately", () => {
+    const r = score({
+      lessons: [
+        { classId: "c1", day: 0, period: 2, teacherId: "t1", subjectId: "s1" },
+        { classId: "c1", day: 1, period: 3, teacherId: "t1", subjectId: "s1" },
+      ],
+    });
+    // Day 0 wastes P0; day 1 wastes P0 and P2.
+    expect(r.breakdown.classMorningIdlePeriods).toBe(3);
   });
 });
 
@@ -178,8 +244,9 @@ describe("scoreSchedule — teacher free-time shape", () => {
     });
     expect(r.breakdown.fragmentedTeacherGaps).toBe(0);
     expect(r.breakdown.consolidatedTeacherBlocks).toBe(1);
-    // Only the two class gaps are charged — the teacher block costs nothing.
-    expect(r.softCost).toBe(2 * OBJECTIVE_WEIGHTS.CLASS_GAP);
+    // The teacher's block costs nothing. What is charged is the two class gaps
+    // and the empty P0 this class starts after.
+    expect(r.softCost).toBe(2 * OBJECTIVE_WEIGHTS.CLASS_GAP + OBJECTIVE_WEIGHTS.CLASS_MORNING_IDLE);
   });
 
   it("does not treat the break as splitting a free block into singles", () => {

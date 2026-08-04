@@ -88,6 +88,8 @@ export interface BenchmarkMetrics {
   weeklyCapExcess: number;
   /** Idle periods inside a class's day. */
   classGapPeriods: number;
+  /** Teaching periods a class leaves empty before its first lesson. */
+  classMorningIdle: number;
   /** Spread of weekly teaching load across teachers who teach at all. */
   loadMin: number;
   loadMax: number;
@@ -245,6 +247,7 @@ function computeMetrics(
     consolidatedTeacherBlocks: objective.breakdown.consolidatedTeacherBlocks,
     weeklyCapExcess: objective.breakdown.weeklyCapExcess,
     classGapPeriods,
+    classMorningIdle: objective.breakdown.classMorningIdlePeriods,
     loadMin: loads.length ? Math.min(...loads) : 0,
     loadMax: loads.length ? Math.max(...loads) : 0,
     loadStdev: Number(Math.sqrt(variance).toFixed(2)),
@@ -380,6 +383,7 @@ function main() {
     "consolidatedTeacherBlocks",
     "weeklyCapExcess",
     "classGapPeriods",
+    "classMorningIdle",
     "loadMax",
     "loadStdev",
     "runsCompleted",
