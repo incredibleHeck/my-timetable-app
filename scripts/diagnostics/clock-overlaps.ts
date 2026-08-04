@@ -29,14 +29,40 @@ const BUDGET_MS = Number(arg("budget") ?? 45000);
 const SEED = Number(arg("seed") ?? 12345);
 
 const REASSIGN = process.argv.includes("--reassign");
+/**
+ * --link ties each single-resource subject to a room whose name matches it,
+ * modelling a school that has set the Fixed Facility picker. That turns four
+ * specialist rooms into genuinely shared ones, which is precisely the situation
+ * this audit exists to check: several classes competing for one lab.
+ */
+const LINK = process.argv.includes("--link");
+
 const raw = JSON.parse(fs.readFileSync(FIXTURE, "utf-8"));
 const loaded: AppData = raw.data ?? raw;
+
+const subjects = loaded.subjects.map((s) => {
+  if (!LINK || !s.isSingleResource || s.requiredRoomId) return s;
+  const match = loaded.rooms.find((r) =>
+    r.name.toLowerCase().includes(s.name.toLowerCase().split(" ")[0]),
+  );
+  return match ? { ...s, requiredRoomId: match.id } : s;
+});
+
 const data: AppData = {
   ...loaded,
+  subjects,
   settings: REASSIGN ? { ...loaded.settings, allowTeacherReassignment: true } : loaded.settings,
   schedule: {},
   conflicts: [],
 };
+
+if (LINK) {
+  const linked = subjects.filter((s, i) => s.requiredRoomId && !loaded.subjects[i].requiredRoomId);
+  console.log(
+    `linked ${linked.length} single-resource subject(s) to rooms: ` +
+      linked.map((s) => s.name).join(", "),
+  );
+}
 
 const units = prepareAllocationUnits(data);
 const subjectMap = new Map(data.subjects.map((s) => [s.id, s]));
