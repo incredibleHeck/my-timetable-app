@@ -86,6 +86,20 @@ export type SolverResult = {
   /** Gang leaders and their units, so a later phase can move placed lessons. */
   gangLeaders: AllocationUnit[];
   gangMap: Map<string, AllocationUnit[]>;
+  /**
+   * Subjects the optimiser handed to a different qualified teacher, when
+   * `settings.allowTeacherReassignment` is on. Empty otherwise.
+   *
+   * The timetable already reflects them. The curriculum does not: its
+   * `assignedTeacherId` still names the original teacher, and the Workload
+   * screen reads that, so a caller adopting these must write them back.
+   */
+  reassignedTeachers?: Array<{
+    classId: string;
+    subjectId: string;
+    fromTeacherId: string;
+    toTeacherId: string;
+  }>;
 };
 
 /** Soft cost of a run, computed at most once and cached on the result. */
@@ -647,6 +661,7 @@ export const solveSmart = (
       );
       best.schedule = best.state.schedule;
       best.softCost = report.after.softCost;
+      best.reassignedTeachers = report.reassigned;
       onProgress?.("OPTIMISE", report.accepted, report.probes, 0, {
         runIndex: run,
         bestUnplaced: 0,

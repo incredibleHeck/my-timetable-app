@@ -262,7 +262,31 @@ export function scoreSchedule(
     }
   }
 
-  const loads = [...teacherTotals.values()];
+  // Who counts as teaching staff for the purpose of balance.
+  //
+  // Measuring only the teachers currently on the grid looks reasonable and is a
+  // trap: emptying a teacher removes them from the average entirely, so the
+  // cheapest way to "balance" a schedule is to concentrate every lesson on
+  // fewer people. Reassignment made that actionable and immediately exploited
+  // it, moving work onto the busiest teacher because dropping the other one to
+  // zero scored better than an even split.
+  //
+  // The denominator is therefore anyone the school gave work to, whether or not
+  // they still hold any, plus anyone who ended up teaching. A teacher the school
+  // never assigned stays out: the generator cannot invent lessons, and handing
+  // work to unassigned staff is a curriculum decision, not a scheduling one.
+  const staff = new Set<string>(teacherTotals.keys());
+  for (const cls of data.classes) {
+    for (const item of cls.curriculum ?? []) {
+      const assigned = (item as { assignedTeacherId?: string }).assignedTeacherId;
+      if (assigned) staff.add(assigned);
+    }
+  }
+  for (const joint of data.jointClasses ?? []) {
+    if (joint.teacherId) staff.add(joint.teacherId);
+  }
+
+  const loads = [...staff].map((id) => teacherTotals.get(id) ?? 0);
   const mean = loads.length ? loads.reduce((a, b) => a + b, 0) / loads.length : 0;
   const loadImbalance = loads.reduce((sum, l) => sum + (l - mean) ** 2, 0);
 

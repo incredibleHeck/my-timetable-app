@@ -57,6 +57,8 @@ const REPEATS = Number(arg("repeat") ?? 1);
 const BASE_SEED = Number(arg("seed") ?? 12345);
 const JSON_OUT = arg("json");
 const QUIET = hasFlag("quiet");
+/** `--reassign` lets the optimiser move a class's subject to another qualified teacher. */
+const REASSIGN = hasFlag("reassign");
 
 // ------------------------------------------------------------------- Metrics
 
@@ -259,7 +261,12 @@ function loadFixture(file: string): AppData {
   const raw = JSON.parse(fs.readFileSync(file, "utf-8"));
   const data: AppData = raw.data ?? raw;
   // Always solve from scratch; a saved grid would mask the solver's real work.
-  return { ...data, schedule: {}, conflicts: [] };
+  return {
+    ...data,
+    settings: REASSIGN ? { ...data.settings, allowTeacherReassignment: true } : data.settings,
+    schedule: {},
+    conflicts: [],
+  };
 }
 
 function runOnce(data: AppData, seed: number): BenchmarkMetrics {

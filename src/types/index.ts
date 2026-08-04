@@ -69,6 +69,15 @@ export interface Settings {
   maxCorePeriodsPerDay?: number;
   /** Spread each subject across the week: max ceil(N/D)+1 periods per day */
   enforceSubjectDaySpread?: boolean;
+  /**
+   * Let the optimiser move a class's subject to a different qualified teacher.
+   *
+   * Off by default, because it changes who teaches whom — a decision with
+   * consequences outside the software. It is the only lever that can improve
+   * teacher load balance: relocating or swapping a lesson never changes who
+   * takes it, so the load terms of the objective are otherwise inert.
+   */
+  allowTeacherReassignment?: boolean;
   /** Override default soft scoring weights used during construction */
   scoringWeightOverrides?: ScoringWeightOverrides;
   /** Exam timetable grid: columns per day and default drop times */

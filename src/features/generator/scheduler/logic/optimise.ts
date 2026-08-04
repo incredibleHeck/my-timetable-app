@@ -55,6 +55,22 @@ export interface OptimiseReport {
   probes: number;
   relocations: number;
   swaps: number;
+  /** Whole (class, subject) blocks moved to a different qualified teacher. */
+  reassignments: number;
+  /**
+   * What those moves changed, so the caller can update the curriculum to match.
+   *
+   * The generated timetable is self-consistent on its own — each slot carries
+   * its teacher — but `curriculum.assignedTeacherId` still names the original,
+   * and the Workload screen reads that. Adopting a reassignment means writing
+   * these back; reporting them keeps the divergence visible instead of silent.
+   */
+  reassigned: Array<{
+    classId: string;
+    subjectId: string;
+    fromTeacherId: string;
+    toTeacherId: string;
+  }>;
   passes: number;
 }
 
@@ -189,6 +205,8 @@ export function optimiseSchedule(
     probes: 0,
     relocations: 0,
     swaps: 0,
+    reassignments: 0,
+    reassigned: [],
     passes: 0,
   };
 
@@ -339,6 +357,143 @@ export function optimiseSchedule(
     if (!improvedThisPass) break;
   }
 
+  if (data.settings.allowTeacherReassignment) {
+    reassignTeachers(state, data, placed, gangMap, maps, options, report, weights, (next) => {
+      if (next >= cost) return false;
+      cost = next;
+      return true;
+    });
+  }
+
   report.after = scoreSchedule(data, state.schedule, 0, weights);
   return report;
+}
+
+/**
+ * Move a class's whole subject to a different qualified teacher.
+ *
+ * This is the only move that changes *who* teaches a lesson, and therefore the
+ * only one that can affect teacher load balance or a weekly-cap breach: relocate
+ * and swap shuffle lessons around the week but leave every teacher's total
+ * exactly as it was, which is why those terms of the objective never moved.
+ *
+ * It reassigns a whole (class, subject) block rather than individual periods,
+ * for two reasons. A school assigns a teacher to a class's subject, not to
+ * Tuesday's Maths; and the curriculum record carries `assignedTeacherId`, so
+ * moving one period would leave the timetable disagreeing with the Workload
+ * screen about who teaches it.
+ *
+ * Joint and elective lessons are excluded. Their teacher lives on the joint-class
+ * or elective definition rather than on the curriculum item, so reassigning one
+ * here would desync the same way.
+ */
+function reassignTeachers(
+  state: SchedulerState,
+  data: AppData,
+  placed: AllocationUnit[],
+  gangMap: Map<string, AllocationUnit[]>,
+  maps: OptimiseMaps,
+  options: OptimiseOptions,
+  report: OptimiseReport,
+  weights: ObjectiveWeights,
+  accept: (next: number) => boolean,
+): void {
+  // Teachers the school already considers qualified. Reassignment never invents
+  // an expertise a teacher was not given.
+  const qualified = new Map<string, string[]>();
+  for (const subject of data.subjects) {
+    qualified.set(
+      subject.id,
+      data.teachers.filter((t) => t.specialtyIds?.includes(subject.id)).map((t) => t.id),
+    );
+  }
+
+  // Group by class and subject; a block moves together or not at all.
+  const blocks = new Map<string, AllocationUnit[]>();
+  for (const leader of placed) {
+    if (leader.jointClassId || leader.electiveBlockId) continue;
+    if (leader.classIds.length !== 1 || leader.teacherIds.length !== 1) continue;
+    const key = `${leader.classIds[0]}|${leader.subjectId}`;
+    if (!blocks.has(key)) blocks.set(key, []);
+    blocks.get(key)!.push(leader);
+  }
+
+  for (const leaders of shuffled([...blocks.values()], options.rng)) {
+    if (Date.now() >= options.deadlineMs) return;
+
+    const subjectId = leaders[0].subjectId;
+    const currentTeacher = leaders[0].teacherIds[0];
+    const candidates = (qualified.get(subjectId) ?? []).filter((t) => t !== currentTeacher);
+    if (candidates.length === 0) continue;
+
+    const gangs = leaders
+      .map((l) => gangMap.get(l.electiveBlockId || l.id))
+      .filter((g): g is AllocationUnit[] => Boolean(g));
+
+    const savedPlacements = gangs.map((g) => savePlacement(state, g));
+    if (savedPlacements.some((p) => p === null)) continue;
+
+    const savedTeachers = gangs.map((g) => g.map((u) => [...u.teacherIds]));
+    const savedNames = gangs.map((g) => g.map((u) => [...u.teacherNames]));
+
+    for (const candidate of shuffled(candidates, options.rng)) {
+      if (Date.now() >= options.deadlineMs) return;
+
+      const restore = () => {
+        for (let i = 0; i < gangs.length; i++) {
+          removeGangFromState(state, gangs[i], data);
+          gangs[i].forEach((u, j) => {
+            u.teacherIds = [...savedTeachers[i][j]];
+            u.teacherNames = [...savedNames[i][j]];
+          });
+        }
+        for (let i = 0; i < gangs.length; i++) {
+          applyGangToState(state, gangs[i], savedPlacements[i]!);
+        }
+      };
+
+      for (const gang of gangs) removeGangFromState(state, gang, data);
+      const candidateName = maps.teacherMap.get(candidate)?.name ?? candidate;
+      for (const gang of gangs) {
+        for (const u of gang) {
+          u.teacherIds = [candidate];
+          u.teacherNames = [candidateName];
+        }
+      }
+
+      // Every lesson of the block must keep its existing slot under the new
+      // teacher. Re-placed one at a time so each is judged against the grid the
+      // earlier ones have already been put back into.
+      let placedAll = true;
+      for (let i = 0; i < gangs.length; i++) {
+        const saved = savedPlacements[i]!;
+        const candidateMove = placementAt(state, data, gangs[i], saved.d, saved.p, maps);
+        if (!candidateMove) {
+          placedAll = false;
+          break;
+        }
+        applyGangToState(state, gangs[i], candidateMove);
+      }
+
+      if (!placedAll) {
+        restore();
+        continue;
+      }
+
+      report.probes++;
+      if (accept(scoreSchedule(data, state.schedule, 0, weights).softCost)) {
+        report.accepted++;
+        report.reassignments++;
+        report.reassigned.push({
+          classId: leaders[0].classIds[0],
+          subjectId,
+          fromTeacherId: currentTeacher,
+          toTeacherId: candidate,
+        });
+        break;
+      }
+
+      restore();
+    }
+  }
 }

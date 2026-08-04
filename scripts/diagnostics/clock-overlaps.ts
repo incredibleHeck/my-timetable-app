@@ -28,9 +28,15 @@ const FIXTURE = arg("fixture") ?? path.join(HERE, "fixtures", "school-data.json"
 const BUDGET_MS = Number(arg("budget") ?? 45000);
 const SEED = Number(arg("seed") ?? 12345);
 
+const REASSIGN = process.argv.includes("--reassign");
 const raw = JSON.parse(fs.readFileSync(FIXTURE, "utf-8"));
 const loaded: AppData = raw.data ?? raw;
-const data: AppData = { ...loaded, schedule: {}, conflicts: [] };
+const data: AppData = {
+  ...loaded,
+  settings: REASSIGN ? { ...loaded.settings, allowTeacherReassignment: true } : loaded.settings,
+  schedule: {},
+  conflicts: [],
+};
 
 const units = prepareAllocationUnits(data);
 const subjectMap = new Map(data.subjects.map((s) => [s.id, s]));
@@ -142,6 +148,24 @@ console.log(
   `fixture ${path.basename(FIXTURE)} | unplaced ${result.unplacedGangs} | ` +
     `${bookings.length} bookings audited against wall-clock times`,
 );
+
+if (REASSIGN) {
+  const moved = result.reassignedTeachers ?? [];
+  const byName = new Map(data.teachers.map((t) => [t.id, t.name]));
+  const classByName = new Map(data.classes.map((c) => [c.id, c.name]));
+  const subjectByName = new Map(data.subjects.map((s) => [s.id, s.name]));
+  console.log(`
+reassignments: ${moved.length}`);
+  moved
+    .slice(0, 10)
+    .forEach((m) =>
+      console.log(
+        `  ${classByName.get(m.classId)} ${subjectByName.get(m.subjectId)}: ` +
+          `${byName.get(m.fromTeacherId)} -> ${byName.get(m.toTeacherId)}`,
+      ),
+    );
+  if (moved.length > 10) console.log(`  ... and ${moved.length - 10} more`);
+}
 
 report("TEACHER double-booked", (b) => (b.teacherId ? `teacher ${b.teacherId}` : undefined));
 report("ROOM double-booked", (b) => (b.roomId ? `room ${b.roomId}` : undefined));
