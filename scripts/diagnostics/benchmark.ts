@@ -274,7 +274,7 @@ function runOnce(data: AppData, seed: number): BenchmarkMetrics {
   const subjectMap = new Map(data.subjects.map((s) => [s.id, s]));
   units.forEach((u) => {
     if (u.isCore === undefined) {
-      u.isCore = resolveSubjectIsCore(subjectMap.get(u.subjectId), u.subjectName);
+      u.isCore = resolveSubjectIsCore(subjectMap.get(u.subjectId));
     }
   });
 

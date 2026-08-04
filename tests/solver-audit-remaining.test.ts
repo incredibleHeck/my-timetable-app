@@ -11,10 +11,15 @@ import { solveSmart } from "../src/features/generator/scheduler/solver/solver";
 import { AllocationUnit } from "../src/features/generator/scheduler/core/types";
 
 describe("Remaining solver audit fixes", () => {
-  it("resolveSubjectIsCore prefers explicit Subject.isCore flag", () => {
+  it("resolveSubjectIsCore uses only the explicit Subject.isCore flag", () => {
     expect(resolveSubjectIsCore({ name: "Kunst", isCore: true })).toBe(true);
     expect(resolveSubjectIsCore({ name: "Mathematik", isCore: false })).toBe(false);
-    expect(resolveSubjectIsCore({ name: "Mathematik" })).toBe(true);
+
+    // Deliberate change of meaning. This used to infer core status from an
+    // English keyword list, so "Mathematik" resolved to true here — a subject
+    // given morning priority by its spelling, with the Subject editor's Core
+    // checkbox unticked and nothing explaining it. Only the checkbox counts now.
+    expect(resolveSubjectIsCore({ name: "Mathematik" })).toBe(false);
     expect(resolveSubjectIsCore({ name: "Kunst" })).toBe(false);
   });
 

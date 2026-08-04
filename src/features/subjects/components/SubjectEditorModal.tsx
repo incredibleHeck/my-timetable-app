@@ -163,8 +163,8 @@ export const SubjectEditorModal: React.FC<SubjectEditorModalProps> = ({ form, da
               <BookOpen size={14} className={isCore ? "text-blue-600" : "text-content-muted"} />
             </div>
             <p className="text-xs text-content-muted mt-1">
-              Marks this as a core discipline for morning bias, weekly balance, and spread
-              heuristics. When unset, the scheduler falls back to English name matching.
+              Schedules this subject earlier in the day where possible, and applies weekly balance
+              and spread heuristics. Only subjects ticked here get that priority.
             </p>
           </div>
         </div>

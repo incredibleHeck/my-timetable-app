@@ -20,7 +20,7 @@ ctx.onmessage = (e: MessageEvent<AppData>) => {
 
     units.forEach((u) => {
       if (u.isCore === undefined) {
-        u.isCore = resolveSubjectIsCore(subjectMap.get(u.subjectId), u.subjectName);
+        u.isCore = resolveSubjectIsCore(subjectMap.get(u.subjectId));
       }
     });
 
