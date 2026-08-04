@@ -34,6 +34,7 @@ ctx.onmessage = (e: MessageEvent<AppData>) => {
       totalRuns,
       unplacedGangs,
       perfectRuns,
+      reassignedTeachers,
     } = solveSmartWithRestarts(
       units,
       data,
@@ -87,6 +88,10 @@ ctx.onmessage = (e: MessageEvent<AppData>) => {
         totalRuns,
         unplaced: unplacedGangs,
         perfectRuns,
+        // Only non-empty when the school enabled teacher reassignment. The main
+        // thread has to write these into the curriculum, or the Workload screen
+        // will keep naming the teacher who no longer takes the lesson.
+        reassignedTeachers: reassignedTeachers ?? [],
       },
     });
   } catch (error) {

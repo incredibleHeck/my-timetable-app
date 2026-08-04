@@ -11,6 +11,11 @@ import { exportClassICal, exportTeacherICal } from "../../services/export/ical";
 import { useToast } from "../../components/ui/Toast";
 import { auditFinalSchedule, runPreflightCheck } from "./scheduler/validation";
 import { SOLVER_TARGET_MS } from "./scheduler/constants";
+import {
+  applyTeacherReassignments,
+  describeReassignments,
+  TeacherReassignment,
+} from "./utils/applyReassignments";
 
 interface ViewProps {
   data: AppData;
@@ -108,9 +113,20 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
   }, [isGenerating]);
 
   const applyGeneratedSchedule = useCallback(
-    (baseData: AppData, schedule: AppData["schedule"], toastMessage?: string) => {
+    (
+      baseData: AppData,
+      schedule: AppData["schedule"],
+      toastMessage?: string,
+      reassignedTeachers?: TeacherReassignment[],
+    ) => {
+      // The optimiser may have handed a class's subject to a different qualified
+      // teacher to even out workloads. The grid already says so; the curriculum
+      // does not, and the Workload screen reads the curriculum. Write the change
+      // through so the two cannot disagree about who teaches what.
+      const { data: rebased, applied } = applyTeacherReassignments(baseData, reassignedTeachers);
+
       const settledData: AppData = {
-        ...baseData,
+        ...rebased,
         schedule,
         conflicts: [],
         lastGenerated: new Date().toISOString(),
@@ -119,6 +135,16 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
         mode: "generated",
       });
       onUpdate({ ...settledData, conflicts: auditedConflicts });
+
+      if (applied.length > 0) {
+        const lines = describeReassignments(settledData, applied);
+        console.info(["Teacher reassignments applied:", ...lines].join("\n"));
+        showToast(
+          `${applied.length} subject${applied.length === 1 ? "" : "s"} moved to another qualified teacher to balance workloads.`,
+          "info",
+        );
+      }
+
       if (toastMessage) {
         showToast(toastMessage, "success");
       }
@@ -266,7 +292,7 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
         });
 
         const baseData = generationBaseDataRef.current ?? clearedData;
-        applyGeneratedSchedule(baseData, payload.schedule);
+        applyGeneratedSchedule(baseData, payload.schedule, undefined, payload.reassignedTeachers);
         terminateWorker();
 
         // Start 60-second restore window
