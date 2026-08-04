@@ -166,7 +166,14 @@ function runSingleSolve(
   options: SolverOptions,
   runIndex: number,
   shouldAbort?: () => boolean,
+  /**
+   * Stops the repair phase only. Construction is bounded by `shouldAbort`, the
+   * overall solve deadline, because a run that never finishes constructing is
+   * worthless: it contributes a grid missing most of its lessons.
+   */
+  shouldStopRepair?: () => boolean,
 ): SolverResult {
+  const stopRepair = shouldStopRepair ?? shouldAbort;
   const teacherMap = new Map<string, Teacher>(data.teachers.map((t) => [t.id, t]));
   const subjectMap = new Map<string, Subject>(data.subjects.map((s) => [s.id, s]));
   const classMap = new Map<string, ClassGroup>(data.classes.map((c) => [c.id, c]));
@@ -293,7 +300,7 @@ function runSingleSolve(
   while (repairQueue.length > 0 && repairSteps < MAX_REPAIR_STEPS) {
     repairSteps++;
 
-    if (shouldAbort?.()) {
+    if (stopRepair?.()) {
       break;
     }
 
@@ -524,18 +531,25 @@ export const solveSmart = (
   };
 
   while (shouldContinueRuns()) {
-    // Cap each attempt so one unlucky run cannot swallow the whole budget.
+    // Cap the repair phase of each attempt, so one cycling run cannot swallow
+    // the whole budget.
     //
-    // A repair step costs roughly a third of a second on a 361-lesson school,
-    // and a run that is cycling — placing A by evicting B, then B by evicting C
-    // — burns the entire window making no net progress. Measured across three
-    // seeds: one reached a complete timetable in a single repair step, while the
-    // other two spent 39 seconds on 117 and 182 steps and still finished a
-    // lesson short. Restarting is cheap and frequently wins outright, so the
-    // budget is divided rather than gambled on the first attempt.
+    // Repair either converges in a handful of steps or cycles — placing A by
+    // evicting B, then B by evicting C — burning the window with no net
+    // progress. Measured across three seeds: one reached a complete timetable in
+    // a single repair step, while two others spent 39 seconds on 117 and 182
+    // steps and still finished a lesson short. Restarting is cheap and often
+    // wins outright, so the budget is divided rather than gambled on one attempt.
+    //
+    // The cap deliberately excludes construction. It used to bound the whole
+    // run, which starved the phase that has to finish: on a slower machine
+    // construction alone took 2.8-4.9s against a 4.9s slice, so runs aborted
+    // part-built and reported 64 to 137 unplaced lessons. Construction answers
+    // to the overall solve deadline instead, and only repair is sliced.
     const runStartedMs = Date.now();
-    const runDeadlineMs = runStartedMs + perRunSliceMs;
-    const runShouldAbort = (): boolean => isSolvePhaseOver() || Date.now() >= runDeadlineMs;
+    const runShouldAbort = (): boolean => isSolvePhaseOver();
+    const runShouldStopRepair = (): boolean =>
+      isSolvePhaseOver() || Date.now() - runStartedMs >= perRunSliceMs;
 
     const runData =
       calibrate && run > 0
@@ -566,7 +580,15 @@ export const solveSmart = (
       return continueSolving;
     };
 
-    const result = runSingleSolve(units, runData, wrappedProgress, options, run, runShouldAbort);
+    const result = runSingleSolve(
+      units,
+      runData,
+      wrappedProgress,
+      options,
+      run,
+      runShouldAbort,
+      runShouldStopRepair,
+    );
     bestUnplacedGangsSeen = Math.min(bestUnplacedGangsSeen, result.unplacedGangs);
     if (isPerfectGeneratedSchedule(data, result.schedule)) {
       perfectRunsFound++;
