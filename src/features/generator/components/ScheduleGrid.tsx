@@ -29,8 +29,6 @@ interface Props {
   activeId: string;
   mode: "CLASS" | "TEACHER" | "ROOM";
   onUpdate: (d: AppData) => void;
-  editMode: boolean;
-  manualPlacementMode?: boolean;
   setHoverConflict?: (c: Conflict | null) => void;
   highlightedConflict?: Conflict | null;
 }
@@ -40,8 +38,6 @@ export const ScheduleGrid: React.FC<Props> = ({
   activeId,
   mode,
   onUpdate,
-  editMode,
-  manualPlacementMode = false,
   setHoverConflict,
   highlightedConflict,
 }) => {
@@ -76,13 +72,22 @@ export const ScheduleGrid: React.FC<Props> = ({
     onUpdate,
   );
 
-  const showManualPlacement =
-    manualPlacementMode && editMode && mode === "CLASS" && !activeDragItem;
-
   const pendingForClass = useMemo(
     () => (mode === "CLASS" ? listPendingForClass(activeId) : []),
     [mode, activeId, listPendingForClass],
   );
+
+  /**
+   * Placing an unplaced lesson used to sit behind a "Manual Placement" mode
+   * nested inside an "Edit" mode. It never conflicted with dragging — the button
+   * only appears in empty cells, dragging only starts on full ones — so the mode
+   * gated nothing. The affordance now shows exactly when it can do something:
+   * this class has lessons the solver could not place.
+   */
+  const showPlacementSlots = mode === "CLASS" && pendingForClass.length > 0 && !activeDragItem;
+
+  /** Room timetables are a read-only projection; edits happen per class or teacher. */
+  const isReadOnlyView = mode === "ROOM";
 
   const handlePlacementSelect = (pending: PendingPlacement) => {
     if (!placementTarget || mode !== "CLASS") return;
@@ -217,21 +222,30 @@ export const ScheduleGrid: React.FC<Props> = ({
       onDragOver={handleDragOver}
     >
       <div className="flex flex-col h-full min-w-full w-fit print:min-w-0">
-        {/* STATUS BAR — states what this mode lets you do, so it stays a hint. */}
-        <div className="mb-3 flex items-center gap-2 rounded-md border border-edge bg-surface px-3 py-2 text-xs text-content-muted">
-          {editMode ? (
-            <ArrowRightLeft size={13} className="shrink-0 text-accent-ink" aria-hidden />
-          ) : (
-            <Lock size={13} className="shrink-0" aria-hidden />
-          )}
-          <span>
-            {manualPlacementMode && mode === "CLASS"
-              ? "Manual placement: click + on empty slots to assign unplaced lessons."
-              : editMode
-                ? "Drag and drop lessons to move or swap."
-                : "Read-only mode. Enable editing to modify schedule."}
-          </span>
-        </div>
+        {/* Only shown when there is something to say. It used to be a permanent
+            strip restating which mode you were in. */}
+        {(isReadOnlyView || showPlacementSlots) && (
+          <div className="mb-3 flex items-center gap-2 rounded-md border border-edge bg-surface px-3 py-2 text-xs text-content-muted">
+            {isReadOnlyView ? (
+              <>
+                <Lock size={13} className="shrink-0" aria-hidden />
+                <span>
+                  Room timetables are a read-only view. Move a lesson from its class or teacher
+                  timetable.
+                </span>
+              </>
+            ) : (
+              <>
+                <ArrowRightLeft size={13} className="shrink-0 text-accent-ink" aria-hidden />
+                <span>
+                  <span className="tabular-nums">{pendingForClass.length}</span> unplaced{" "}
+                  {pendingForClass.length === 1 ? "lesson" : "lessons"} for this class — choose an
+                  empty slot marked + to place one.
+                </span>
+              </>
+            )}
+          </div>
+        )}
 
         {/* GRID HEADER */}
         <div
@@ -372,7 +386,7 @@ export const ScheduleGrid: React.FC<Props> = ({
                           teacher={teacher}
                           classGroup={classGroup}
                           mode={mode}
-                          disabled={!editMode || mode === "ROOM"}
+                          disabled={isReadOnlyView}
                           timeRange={timeRange}
                         />
                       </div>
@@ -407,10 +421,9 @@ export const ScheduleGrid: React.FC<Props> = ({
                     );
                   }
 
-                  if (!content && showManualPlacement && !fixedText) {
+                  if (!content && showPlacementSlots && !fixedText) {
                     content = (
                       <EmptySlotPlacementButton
-                        hasPending={pendingForClass.length > 0}
                         onClick={() => setPlacementTarget({ day: dIdx, period: pIdx })}
                       />
                     );

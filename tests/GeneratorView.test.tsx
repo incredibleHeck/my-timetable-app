@@ -40,25 +40,22 @@ describe("GeneratorView", () => {
     expect(screen.getByText("Bob")).toBeInTheDocument();
   });
 
-  it("should enable edit mode", () => {
+  // The grid is directly editable. "Enable Edit" and the "Manual Placement"
+  // mode nested inside it are gone: neither gated anything a drag or a click on
+  // an empty slot could not decide for itself, and undo already covers mistakes.
+  it("does not gate the grid behind an edit mode", () => {
     render(<GeneratorView data={testData} onUpdate={mockOnUpdate} />);
 
-    const editBtn = screen.getByText("Enable Edit");
-    fireEvent.click(editBtn);
-
-    expect(screen.getByText("Disable Edit")).toBeInTheDocument();
+    expect(screen.queryByText("Enable Edit")).not.toBeInTheDocument();
+    expect(screen.queryByText("Manual Placement")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Read-only mode/i)).not.toBeInTheDocument();
   });
 
-  it("should enable manual placement mode", () => {
+  it("says room timetables cannot be edited in place", () => {
     render(<GeneratorView data={testData} onUpdate={mockOnUpdate} />);
 
-    // Manual placement is only visible when edit mode is on
-    const editBtn = screen.getByText("Enable Edit");
-    fireEvent.click(editBtn);
+    fireEvent.click(screen.getByText("Rooms"));
 
-    const manualBtn = screen.getByText("Manual Placement");
-    fireEvent.click(manualBtn);
-
-    expect(screen.getByText("Manual Placement On")).toBeInTheDocument();
+    expect(screen.getByText(/Room timetables are a read-only view/i)).toBeInTheDocument();
   });
 });

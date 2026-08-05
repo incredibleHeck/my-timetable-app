@@ -62,7 +62,6 @@ describe("ScheduleGrid UI Labels", () => {
         activeId="class-1"
         mode="CLASS"
         onUpdate={() => {}}
-        editMode={false}
       />,
     );
 
@@ -98,7 +97,6 @@ describe("ScheduleGrid UI Labels", () => {
         activeId="class-1"
         mode="CLASS"
         onUpdate={() => {}}
-        editMode={false}
       />,
     );
 
@@ -110,7 +108,6 @@ describe("ScheduleGrid UI Labels", () => {
         activeId="class-2"
         mode="CLASS"
         onUpdate={() => {}}
-        editMode={false}
       />,
     );
 

@@ -44,8 +44,12 @@ export const DraggableSlot: React.FC<Props> = memo(
          ${
            slot.isFixed
              ? "opacity-90 cursor-not-allowed bg-slate-50 dark:bg-slate-900"
-             : "cursor-grab active:cursor-grabbing hover:shadow-md"
-         } 
+             : // The cursor used to promise a grab whenever the slot was not a
+               // fixed occasion, including in views where dragging is switched off.
+               disabled
+               ? "cursor-default"
+               : "cursor-grab active:cursor-grabbing hover:shadow-md"
+         }
          ${
            isDragging
              ? "opacity-40 z-50 ring-2 ring-accent" // the lifted copy is what the cursor follows

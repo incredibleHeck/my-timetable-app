@@ -30,8 +30,6 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
   const [mode, setMode] = useState<"CLASS" | "TEACHER" | "ROOM">("CLASS");
   const [activeId, setActiveId] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [isManualPlacementMode, setIsManualPlacementMode] = useState(false);
   const [hoverConflict, setHoverConflict] = useState<Conflict | null>(null);
   const [highlightedConflict, setHighlightedConflict] = useState<Conflict | null>(null);
   const [stats, setStats] = useState<GeneratorStats | null>(null);
@@ -89,12 +87,6 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
       return () => clearTimeout(timer);
     }
   }, [highlightedConflict, mode, activeId]);
-
-  useEffect(() => {
-    if (!isEditMode) {
-      setIsManualPlacementMode(false);
-    }
-  }, [isEditMode]);
 
   // WORKER REF
   // We keep a reference to the active worker so we can terminate it if needed
@@ -260,16 +252,18 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
       if (restoreTimerRef.current) clearTimeout(restoreTimerRef.current);
     }
 
-    // 0. Deep Clean up existing timetable
+    // The solver starts from an empty grid, but only the worker sees that. The
+    // view used to commit the cleared data first "so the UI shows Empty during
+    // generation" — which destroyed the current timetable before knowing whether
+    // a replacement existed. A worker error, or stopping before the first clean
+    // result, then left nothing behind and no way back. The overlay covers the
+    // grid anyway, so there is nothing to gain by emptying it.
     const clearedData = {
       ...data,
       schedule: {},
       conflicts: [],
       lastGenerated: null,
     };
-
-    // Update parent state immediately so UI shows "Empty" during generation
-    onUpdate(clearedData);
 
     generationBaseDataRef.current = clearedData;
     lastPerfectScheduleRef.current = null;
@@ -436,13 +430,9 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
         data={data}
         mode={mode}
         isGenerating={isGenerating}
-        isEditMode={isEditMode}
-        isManualPlacementMode={isManualPlacementMode}
         stats={stats}
         onNavigate={onNavigate}
         onModeChange={setMode}
-        onToggleEditMode={() => setIsEditMode(!isEditMode)}
-        onToggleManualPlacement={() => setIsManualPlacementMode(!isManualPlacementMode)}
         onGenerate={handleGenerate}
         onStop={handleStop}
         onExcelExport={handleExcelExport}
@@ -533,8 +523,6 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
               activeId={activeId}
               mode={mode}
               onUpdate={onUpdate}
-              editMode={isEditMode}
-              manualPlacementMode={isManualPlacementMode}
               setHoverConflict={setHoverConflict}
               highlightedConflict={highlightedConflict}
             />

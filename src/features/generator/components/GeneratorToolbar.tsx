@@ -1,5 +1,5 @@
 import React from "react";
-import { Play, Recycle, Lock, Unlock, FileSpreadsheet, Square, Plus, History } from "lucide-react";
+import { Play, Recycle, FileSpreadsheet, Square, History } from "lucide-react";
 import { AppData } from "../../../types";
 import { Button, quietButtonClass } from "../../../components/ui";
 import { ExportMenu } from "./ExportMenu";
@@ -26,13 +26,9 @@ interface GeneratorToolbarProps {
   data: AppData;
   mode: Mode;
   isGenerating: boolean;
-  isEditMode: boolean;
-  isManualPlacementMode: boolean;
   stats: GeneratorStats | null;
   onNavigate?: (view: import("../../../types").ViewState) => void;
   onModeChange: (mode: Mode) => void;
-  onToggleEditMode: () => void;
-  onToggleManualPlacement: () => void;
   onGenerate: () => void;
   onStop: () => void;
   onExcelExport: () => void;
@@ -42,25 +38,12 @@ interface GeneratorToolbarProps {
   onRestore?: () => void;
 }
 
-const toggleClass = (isOn: boolean) =>
-  `inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-sm transition-colors
-   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent
-   focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:opacity-50 ${
-     isOn
-       ? "border-accent bg-accent/15 font-medium text-content"
-       : "border-edge bg-surface text-content-secondary hover:border-edge-strong hover:text-content"
-   }`;
-
 export const GeneratorToolbar: React.FC<GeneratorToolbarProps> = ({
   data,
   mode,
   isGenerating,
-  isEditMode,
-  isManualPlacementMode,
   stats,
   onModeChange,
-  onToggleEditMode,
-  onToggleManualPlacement,
   onGenerate,
   onStop,
   onExcelExport,
@@ -158,6 +141,8 @@ export const GeneratorToolbar: React.FC<GeneratorToolbarProps> = ({
     </div>
 
     <div className="flex flex-wrap items-center gap-2">
+      {/* The grid is directly editable, so this is the only mode left: which
+          timetable you are looking at. */}
       <div
         role="group"
         aria-label="Schedule view mode"
@@ -183,31 +168,6 @@ export const GeneratorToolbar: React.FC<GeneratorToolbarProps> = ({
             </button>
           );
         })}
-      </div>
-
-      <div className="ml-2 flex items-center gap-2 border-l border-edge pl-4">
-        <button
-          type="button"
-          onClick={onToggleEditMode}
-          disabled={isGenerating}
-          aria-pressed={isEditMode}
-          className={toggleClass(isEditMode)}
-        >
-          {isEditMode ? <Unlock size={14} aria-hidden /> : <Lock size={14} aria-hidden />}
-          {isEditMode ? "Disable Edit" : "Enable Edit"}
-        </button>
-        {isEditMode && mode === "CLASS" && (
-          <button
-            type="button"
-            onClick={onToggleManualPlacement}
-            disabled={isGenerating}
-            aria-pressed={isManualPlacementMode}
-            className={toggleClass(isManualPlacementMode)}
-          >
-            <Plus size={14} aria-hidden />
-            {isManualPlacementMode ? "Manual Placement On" : "Manual Placement"}
-          </button>
-        )}
       </div>
     </div>
   </div>
