@@ -28,6 +28,16 @@ describe("GeneratorView", () => {
     expect(screen.getByText("10B")).toBeInTheDocument();
   });
 
+  // Exam Timetable and Duty Roster both carry one. Dropping it here left the
+  // timetable as the only full-width workspace with no way back out of it.
+  it("offers a way back to the dashboard", () => {
+    render(<GeneratorView data={testData} onUpdate={mockOnUpdate} onNavigate={mockOnNavigate} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Back to Dashboard" }));
+
+    expect(mockOnNavigate).toHaveBeenCalledWith("DASHBOARD");
+  });
+
   it("should toggle to teacher view", () => {
     render(<GeneratorView data={testData} onUpdate={mockOnUpdate} />);
 

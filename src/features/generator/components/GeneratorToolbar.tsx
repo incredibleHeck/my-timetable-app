@@ -1,5 +1,5 @@
 import React from "react";
-import { Play, Recycle, FileSpreadsheet, Square, History } from "lucide-react";
+import { ArrowLeft, Play, Recycle, FileSpreadsheet, Square, History } from "lucide-react";
 import { AppData } from "../../../types";
 import { Button, quietButtonClass } from "../../../components/ui";
 import { ExportMenu } from "./ExportMenu";
@@ -43,6 +43,7 @@ export const GeneratorToolbar: React.FC<GeneratorToolbarProps> = ({
   mode,
   isGenerating,
   stats,
+  onNavigate,
   onModeChange,
   onGenerate,
   onStop,
@@ -54,33 +55,49 @@ export const GeneratorToolbar: React.FC<GeneratorToolbarProps> = ({
 }) => (
   <div className="mb-5 flex flex-col gap-3 print:hidden">
     <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
-      <div>
-        {/* The page called itself "Auto-Scheduler" while the nav called it
-            "Auto-Generator", and printed its build string underneath. */}
-        <h2 className="text-lg font-semibold tracking-tight text-content">Auto-Generator</h2>
-        <p className="mt-1 text-xs text-content-muted">
-          {data.lastGenerated ? (
-            <>
-              Last run {new Date(data.lastGenerated).toLocaleTimeString()}
-              {stats && (
-                <>
-                  {" · "}
-                  <span className="tabular-nums">{(stats.duration / 1000).toFixed(1)}s</span>
-                  {" · "}
-                  {stats.unplaced === 0 ? (
-                    <span className="text-success-ink">every lesson placed</span>
-                  ) : (
-                    <span className="text-accent-ink">
-                      <span className="tabular-nums">{stats.unplaced}</span> unplaced
-                    </span>
-                  )}
-                </>
-              )}
-            </>
-          ) : (
-            "No timetable generated yet."
-          )}
-        </p>
+      <div className="flex min-w-0 items-start gap-3">
+        {/* The full-width workspace screens — this one, Exam Timetable and Duty
+            Roster — each carry a way back out. Dropping it here left the
+            timetable as the only one you could not step out of. */}
+        {onNavigate && (
+          <button
+            type="button"
+            onClick={() => onNavigate("DASHBOARD")}
+            className={`${quietButtonClass} w-9 shrink-0 justify-center px-0`}
+            title="Back to Dashboard"
+            aria-label="Back to Dashboard"
+          >
+            <ArrowLeft size={16} aria-hidden />
+          </button>
+        )}
+        <div className="min-w-0">
+          {/* The page called itself "Auto-Scheduler" while the nav called it
+              "Auto-Generator", and printed its build string underneath. */}
+          <h2 className="text-lg font-semibold tracking-tight text-content">Auto-Generator</h2>
+          <p className="mt-1 text-xs text-content-muted">
+            {data.lastGenerated ? (
+              <>
+                Last run {new Date(data.lastGenerated).toLocaleTimeString()}
+                {stats && (
+                  <>
+                    {" · "}
+                    <span className="tabular-nums">{(stats.duration / 1000).toFixed(1)}s</span>
+                    {" · "}
+                    {stats.unplaced === 0 ? (
+                      <span className="text-success-ink">every lesson placed</span>
+                    ) : (
+                      <span className="text-accent-ink">
+                        <span className="tabular-nums">{stats.unplaced}</span> unplaced
+                      </span>
+                    )}
+                  </>
+                )}
+              </>
+            ) : (
+              "No timetable generated yet."
+            )}
+          </p>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
