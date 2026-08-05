@@ -1,223 +1,192 @@
 import React from "react";
-import { Card } from "../../../components/ui";
-import { DoorOpen, Clock, BookOpen, CalendarCheck, Building2, Coffee } from "lucide-react";
+import { Panel, PanelRegion } from "../../../components/ui";
 import { Analytics, UNDERUSED_ROOM_PCT } from "../hooks/useAnalytics";
 
 interface StatTileProps {
   label: string;
   value: string | number;
-  icon: React.ReactNode;
-  color: "blue" | "emerald" | "amber" | "violet";
   hint: string;
 }
 
-const TILE_COLORS: Record<StatTileProps["color"], string> = {
-  blue: "bg-blue-50 dark:bg-blue-900/30 text-blue-600 border-blue-100",
-  emerald: "bg-emerald-50 dark:bg-emerald-900/30 text-success-ink border-emerald-100",
-  amber: "bg-amber-50 dark:bg-amber-900/30 text-accent-ink border-amber-100",
-  violet: "bg-violet-50 dark:bg-violet-900/30 text-violet-600 border-violet-100",
-};
-
-const StatTile: React.FC<StatTileProps> = ({ label, value, icon, color, hint }) => (
-  <Card className="p-5 border-slate-100 dark:border-slate-700">
-    <div className={`inline-flex p-2.5 rounded-xl mb-3 ${TILE_COLORS[color]}`}>{icon}</div>
-    <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tabular-nums">{value}</h3>
-    <p className="text-[11px] font-bold text-content-muted uppercase tracking-wider mt-1">
-      {label}
-    </p>
-    <p className="text-[11px] text-content-muted mt-1">{hint}</p>
-  </Card>
+const StatTile: React.FC<StatTileProps> = ({ label, value, hint }) => (
+  <div className="rounded-lg border border-edge bg-surface px-4 py-3">
+    <p className="text-xl font-semibold tabular-nums text-content">{value}</p>
+    <p className="mt-0.5 text-xs font-medium text-content-secondary">{label}</p>
+    <p className="mt-0.5 text-2xs leading-relaxed text-content-muted">{hint}</p>
+  </div>
 );
 
-// Occupancy: high = well-used (green), low = under-used (slate).
-const occupancyColor = (pct: number): string => {
-  if (pct >= 70) return "bg-emerald-500";
-  if (pct >= 40) return "bg-amber-500";
-  return "bg-slate-300";
+/** Occupancy is the one figure here with a good and a bad end. */
+const occupancyTone = (pct: number): string => {
+  if (pct >= 70) return "bg-success";
+  if (pct >= UNDERUSED_ROOM_PCT) return "bg-accent";
+  return "bg-edge-strong";
 };
+
+const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
 
 interface AnalyticsDashboardProps {
   analytics: Analytics;
 }
 
 export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytics }) => {
-  const { summary, rooms, teacherGaps, subjects, hasSchedule } = analytics;
+  const { summary, rooms, teacherFreePeriods, subjects, hasSchedule } = analytics;
 
   if (!hasSchedule) {
     return (
-      <Card className="p-12 text-center border-slate-100 dark:border-slate-700">
-        <div className="inline-flex p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-content-muted mb-3">
-          <CalendarCheck size={24} />
-        </div>
-        <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200">
-          No schedule to analyse yet
-        </h3>
-        <p className="text-sm text-content-muted mt-1">
-          Generate a timetable in the Scheduler to see room occupancy, teacher gaps, and subject
+      <div className="rounded-lg border border-dashed border-edge px-5 py-12 text-center">
+        <p className="text-sm text-content">No timetable to analyse yet.</p>
+        <p className="mt-1 text-xs text-content-muted">
+          Generate one in the Auto-Generator to see room occupancy, teacher free periods and subject
           spread.
         </p>
-      </Card>
+      </div>
     );
   }
 
-  const teachersWithGaps = teacherGaps.filter((t) => t.gapPeriods > 0);
+  const teachingStaff = teacherFreePeriods.filter((t) => t.teachingPeriods > 0);
   const maxSubjectPeriods = subjects[0]?.periods ?? 1;
 
   return (
-    <div className="space-y-6">
-      {/* Summary tiles */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatTile
-          label="Lessons Scheduled"
+          label="Lessons scheduled"
           value={summary.totalLessons}
-          icon={<CalendarCheck size={18} />}
-          color="blue"
-          hint={`${summary.teachingSlotsPerWeek} teaching slots / week`}
+          hint={`${summary.teachingSlotsPerWeek} teaching slots per week`}
         />
         <StatTile
-          label="Avg Room Occupancy"
+          label="Average room occupancy"
           value={`${summary.avgRoomOccupancyPct}%`}
-          icon={<Building2 size={18} />}
-          color="emerald"
-          hint={`Across ${summary.roomsCount} room${summary.roomsCount !== 1 ? "s" : ""}`}
+          hint={`Across ${summary.roomsCount} ${plural(summary.roomsCount, "room", "rooms")}`}
+        />
+        {/* Free periods are marking and preparation time, so this tile states a
+            total rather than flagging a count of teachers "affected". */}
+        <StatTile
+          label="Teacher free periods"
+          value={summary.totalFreePeriods}
+          hint={
+            teachingStaff.length > 0
+              ? `Marking and prep time across ${teachingStaff.length} teaching staff`
+              : "No teaching staff scheduled"
+          }
         />
         <StatTile
-          label="Teacher Gap Periods"
-          value={summary.totalGapPeriods}
-          icon={<Coffee size={18} />}
-          color="amber"
-          hint={`${teachersWithGaps.length} teacher${teachersWithGaps.length !== 1 ? "s" : ""} affected`}
-        />
-        {/* Was "Subjects Timetabled" — a count with nothing to act on.
-            Under-used rooms points at capacity that can be reclaimed. */}
-        <StatTile
-          label="Under-used Rooms"
+          label="Under-used rooms"
           value={summary.underusedRooms}
-          icon={<DoorOpen size={18} />}
-          color="violet"
           hint={`Below ${UNDERUSED_ROOM_PCT}% of weekly slots`}
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Room utilisation */}
-        <Card className="p-6 border-slate-100 dark:border-slate-700">
-          <div className="flex items-center gap-2 mb-4">
-            <DoorOpen size={16} className="text-content-muted" />
-            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
-              Room Utilisation
-            </h3>
-          </div>
-          {rooms.length === 0 ? (
-            <p className="text-xs text-content-muted italic">No rooms defined.</p>
-          ) : (
-            <ul className="space-y-3">
-              {rooms.map((room) => (
-                <li key={room.roomId}>
-                  <div className="flex justify-between items-baseline mb-1">
-                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">
-                      {room.roomName}
-                      {room.isHomeRoom && (
-                        <span className="ml-1.5 text-2xs font-bold uppercase text-content-muted">
-                          home
-                        </span>
-                      )}
-                    </span>
-                    <span className="text-[11px] text-content-muted tabular-nums whitespace-nowrap">
-                      {room.occupiedSlots}/{room.capacitySlots} · {room.occupancyPct}%
-                    </span>
-                  </div>
-                  <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-700 ${occupancyColor(
-                        room.occupancyPct,
-                      )}`}
-                      style={{ width: `${room.occupancyPct}%` }}
-                    />
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Panel
+          title="Room utilisation"
+          description="Share of the week's teaching slots each room is in use for."
+        >
+          <PanelRegion className="px-5 py-4">
+            {rooms.length === 0 ? (
+              <p className="text-xs text-content-muted">No rooms defined.</p>
+            ) : (
+              <ul className="custom-scrollbar max-h-72 space-y-2.5 overflow-y-auto pr-1">
+                {rooms.map((room) => (
+                  <li key={room.roomId}>
+                    <div className="mb-1 flex items-baseline justify-between gap-2">
+                      <span className="truncate text-xs text-content-secondary">
+                        {room.roomName}
+                        {room.isHomeRoom && (
+                          <span className="ml-1.5 text-2xs text-content-muted">home</span>
+                        )}
+                      </span>
+                      <span className="whitespace-nowrap text-2xs tabular-nums text-content-muted">
+                        {room.occupiedSlots}/{room.capacitySlots} · {room.occupancyPct}%
+                      </span>
+                    </div>
+                    <div className="h-[3px] w-full overflow-hidden rounded-full bg-surface-inset">
+                      <div
+                        className={`h-full ${occupancyTone(room.occupancyPct)}`}
+                        style={{ width: `${room.occupancyPct}%` }}
+                      />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </PanelRegion>
+        </Panel>
 
-        {/* Teacher gaps */}
-        <Card className="p-6 border-slate-100 dark:border-slate-700">
-          <div className="flex items-center gap-2 mb-4">
-            <Clock size={16} className="text-content-muted" />
-            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
-              Teacher Idle / Gap Periods
-            </h3>
-          </div>
-          {teachersWithGaps.length === 0 ? (
-            <p className="text-xs text-content-muted italic">
-              No gaps — every teacher's day runs back-to-back. 🎉
-            </p>
-          ) : (
-            <ul className="space-y-2 max-h-72 overflow-y-auto custom-scrollbar pr-1">
-              {teachersWithGaps.map((t) => (
-                <li
-                  key={t.teacherId}
-                  className="flex items-center justify-between text-xs border-b border-slate-50 pb-2 last:border-0"
-                >
-                  <span className="font-semibold text-slate-700 dark:text-slate-200 truncate">
-                    {t.teacherName}
-                  </span>
-                  <span className="flex items-center gap-3 whitespace-nowrap">
-                    <span className="text-content-muted">{t.teachingPeriods} taught</span>
-                    <span
-                      className={`font-bold tabular-nums px-2 py-0.5 rounded-full ${
-                        t.gapPeriods >= 4
-                          ? "bg-red-50 dark:bg-red-900/30 text-danger-ink"
-                          : t.gapPeriods >= 2
-                            ? "bg-amber-50 dark:bg-amber-900/30 text-accent-ink"
-                            : "bg-slate-100 dark:bg-slate-800 text-content-muted"
-                      }`}
-                    >
-                      {t.gapPeriods} gap{t.gapPeriods !== 1 ? "s" : ""}
+        {/* Was "Teacher Idle / Gap Periods", sorted most-first with a red badge
+            past four — which put the teacher with the most marking time at the
+            top of the list and coloured them as the worst problem on screen. */}
+        <Panel
+          title="Teacher free periods"
+          description="Non-teaching periods between a teacher's first and last lesson of the day — time to mark, prepare and rest. Listed with the least first."
+          action={
+            summary.teachersWithNoFreePeriod > 0 ? (
+              <span className="text-xs tabular-nums text-content-muted">
+                {summary.teachersWithNoFreePeriod} with none
+              </span>
+            ) : undefined
+          }
+        >
+          <PanelRegion className="px-5 py-4">
+            {teachingStaff.length === 0 ? (
+              <p className="text-xs text-content-muted">
+                No teacher has lessons in this timetable.
+              </p>
+            ) : (
+              <ul className="custom-scrollbar max-h-72 divide-y divide-edge-subtle overflow-y-auto pr-1">
+                {teachingStaff.map((t) => (
+                  <li key={t.teacherId} className="flex items-center justify-between gap-3 py-1.5">
+                    <span className="truncate text-xs text-content-secondary">{t.teacherName}</span>
+                    <span className="flex shrink-0 items-center gap-3 whitespace-nowrap text-2xs tabular-nums text-content-muted">
+                      <span>{t.teachingPeriods} taught</span>
+                      <span className="text-content">
+                        {t.freePeriods} free
+                        {t.mostInOneDay > 1 && (
+                          <span className="text-content-muted"> · {t.mostInOneDay} in a day</span>
+                        )}
+                      </span>
                     </span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </PanelRegion>
+        </Panel>
       </div>
 
-      {/* Subject distribution */}
-      <Card className="p-6 border-slate-100 dark:border-slate-700">
-        <div className="flex items-center gap-2 mb-4">
-          <BookOpen size={16} className="text-content-muted" />
-          <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
-            Subject Distribution
-          </h3>
-        </div>
-        {subjects.length === 0 ? (
-          <p className="text-xs text-content-muted italic">No subjects scheduled.</p>
-        ) : (
-          <ul className="space-y-3">
-            {subjects.map((s) => (
-              <li key={s.subjectId} className="flex items-center gap-3">
-                <span className="w-28 text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">
-                  {s.subjectName}
-                </span>
-                <div className="flex-1 h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-700"
-                    style={{
-                      width: `${(s.periods / maxSubjectPeriods) * 100}%`,
-                      backgroundColor: s.color,
-                    }}
-                  />
-                </div>
-                <span className="text-[11px] text-content-muted tabular-nums whitespace-nowrap w-20 text-right">
-                  {s.periods} · {s.pct}%
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
+      <Panel
+        title="Subject distribution"
+        description="How the week's lessons divide across subjects."
+      >
+        <PanelRegion className="px-5 py-4">
+          {subjects.length === 0 ? (
+            <p className="text-xs text-content-muted">No subjects scheduled.</p>
+          ) : (
+            <ul className="space-y-2.5">
+              {subjects.map((s) => (
+                <li key={s.subjectId} className="flex items-center gap-3">
+                  <span className="w-28 shrink-0 truncate text-xs text-content-secondary">
+                    {s.subjectName}
+                  </span>
+                  <div className="h-[3px] flex-1 overflow-hidden rounded-full bg-surface-inset">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${(s.periods / maxSubjectPeriods) * 100}%`,
+                        backgroundColor: s.color,
+                      }}
+                    />
+                  </div>
+                  <span className="w-20 shrink-0 whitespace-nowrap text-right text-2xs tabular-nums text-content-muted">
+                    {s.periods} · {s.pct}%
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </PanelRegion>
+      </Panel>
     </div>
   );
 };

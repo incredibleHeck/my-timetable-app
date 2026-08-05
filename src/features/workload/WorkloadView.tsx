@@ -1,16 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { AppData } from "../../types";
-import { Card, Button } from "../../components/ui";
-import {
-  Upload,
-  AlertCircle,
-  Clock,
-  Search,
-  ArrowUpDown,
-  AlertTriangle,
-  Users,
-  BarChart3,
-} from "lucide-react";
+import { Upload, Search } from "lucide-react";
+import { Button, controlClass, quietButtonClass } from "../../components/ui";
 import { useWorkloadStats } from "./hooks/useWorkloadStats";
 import { useAnalytics } from "./hooks/useAnalytics";
 import { WorkloadTeacherDetail } from "./components/WorkloadTeacherDetail";
@@ -23,8 +14,19 @@ interface ViewProps {
   onUpdate: (newData: AppData) => void;
 }
 
-type SortBy = "name" | "load" | "periods";
+type SortBy = "load" | "name" | "periods";
 type WorkloadTab = "CAPACITY" | "ANALYTICS";
+
+const TABS: { id: WorkloadTab; label: string }[] = [
+  { id: "CAPACITY", label: "Capacity" },
+  { id: "ANALYTICS", label: "Analytics" },
+];
+
+const SORTS: { id: SortBy; label: string }[] = [
+  { id: "load", label: "Load" },
+  { id: "name", label: "Name" },
+  { id: "periods", label: "Periods" },
+];
 
 export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
   const { workloadStats } = useWorkloadStats(data);
@@ -35,10 +37,6 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
   const [nameFilter, setNameFilter] = useState("");
   const [sortBy, setSortBy] = useState<SortBy>("load");
   const [overloadedOnly, setOverloadedOnly] = useState(false);
-
-  const handleExportExcel = () => {
-    exportWorkloadToExcel(workloadStats, notify);
-  };
 
   const filteredStats = useMemo(() => {
     let result = [...workloadStats];
@@ -56,7 +54,7 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
       result.sort((a, b) => a.t.name.localeCompare(b.t.name));
     } else if (sortBy === "load") {
       result.sort((a, b) => b.utilizationPct - a.utilizationPct);
-    } else if (sortBy === "periods") {
+    } else {
       result.sort((a, b) => b.assignedPeriods - a.assignedPeriods);
     }
 
@@ -64,127 +62,153 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
   }, [workloadStats, nameFilter, sortBy, overloadedOnly]);
 
   const overloadedCount = workloadStats.filter((s) => s.utilizationPct > 100).length;
-
-  const tabs: { key: WorkloadTab; label: string; icon: React.ReactNode }[] = [
-    { key: "CAPACITY", label: "Capacity Planning", icon: <Users size={14} /> },
-    { key: "ANALYTICS", label: "Analytics", icon: <BarChart3 size={14} /> },
-  ];
+  const unassignedCount = workloadStats.filter((s) => s.assignedPeriods === 0).length;
+  const isFiltered = Boolean(nameFilter.trim()) || overloadedOnly;
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto p-8">
-      <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1 w-fit">
-        {tabs.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            aria-pressed={tab === t.key}
-            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-md transition-all ${
-              tab === t.key
-                ? "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm"
-                : "text-content-muted hover:text-slate-700"
-            }`}
-          >
-            {t.icon}
-            {t.label}
-          </button>
-        ))}
-      </div>
+    <div className="mx-auto max-w-7xl space-y-5 p-6 pb-16 md:p-8">
+      <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+        <div>
+          <h2 className="text-lg font-semibold tracking-tight text-content">Workload Analysis</h2>
+          <p className="mt-1 text-xs text-content-muted">
+            <span className="tabular-nums">{workloadStats.length}</span> teachers measured against{" "}
+            <span className="tabular-nums">{maxWeeklyDefault}</span> periods per week
+            {overloadedCount > 0 && (
+              <>
+                {" · "}
+                <span className="tabular-nums text-danger-ink">{overloadedCount}</span> over
+                capacity
+              </>
+            )}
+            {unassignedCount > 0 && (
+              <>
+                {" · "}
+                <span className="tabular-nums text-accent-ink">{unassignedCount}</span> with no
+                lessons
+              </>
+            )}
+          </p>
+        </div>
+        <Button
+          variant="secondary"
+          onClick={() => exportWorkloadToExcel(workloadStats, notify)}
+          icon={<Upload size={15} />}
+        >
+          Export Report
+        </Button>
+      </header>
 
-      {tab === "ANALYTICS" ? (
-        <>
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
-              Scheduling Analytics
-            </h2>
-            <p className="text-xs text-content-muted mt-1">
-              Utilisation insights derived from the generated timetable — room occupancy, teacher
-              idle windows, and how periods are spread across subjects.
-            </p>
-          </div>
-          <AnalyticsDashboard analytics={analytics} />
-        </>
-      ) : (
-        <>
-          <div className="flex justify-between items-center bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div>
-              <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
-                Capacity Planning
-              </h2>
-              <p className="text-xs text-content-muted mt-1">
-                Utilization is based on requested curriculum load vs the school-wide max of{" "}
-                {maxWeeklyDefault} periods per week. Hover or click a card for class breakdown.
-              </p>
-            </div>
-            <div className="flex gap-4 items-center">
-              <div className="flex gap-4 text-2xs font-bold uppercase tracking-wider border-r border-slate-200 dark:border-slate-700 pr-4 mr-2">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500"></div> Optimal
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 rounded-full bg-amber-500"></div> High
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 rounded-full bg-red-500"></div> Overload
-                </div>
-              </div>
-              <Button variant="secondary" onClick={handleExportExcel} icon={<Upload size={16} />}>
-                Export Report
-              </Button>
-            </div>
-          </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <div
+          role="tablist"
+          aria-label="Workload views"
+          className="inline-flex h-9 shrink-0 items-center rounded-md border border-edge bg-surface p-0.5"
+        >
+          {TABS.map((t) => {
+            const isActive = tab === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => setTab(t.id)}
+                className={`h-8 rounded px-3 text-sm transition-colors focus-visible:outline-none
+                            focus-visible:ring-2 focus-visible:ring-accent ${
+                              isActive
+                                ? "bg-surface-inset font-medium text-content dark:bg-slate-700"
+                                : "text-content-muted hover:text-content"
+                            }`}
+              >
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
 
-          {/* Filter / Sort Bar */}
-          <div className="flex flex-wrap items-center gap-3 bg-white dark:bg-slate-800 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div className="relative flex-1 min-w-[180px]">
+        {tab === "CAPACITY" && (
+          <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
+            <div className="relative min-w-[12rem] flex-1 sm:max-w-xs">
               <Search
                 size={14}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-content-muted"
+                aria-hidden
+                className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-content-muted"
               />
               <input
-                type="text"
+                aria-label="Search teachers by name"
+                className={`${controlClass} w-full pl-8`}
+                placeholder="Search by name"
                 value={nameFilter}
                 onChange={(e) => setNameFilter(e.target.value)}
-                placeholder="Search by teacher name..."
-                className="w-full pl-8 pr-3 py-1.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-amber-400 text-slate-700 dark:text-slate-200 placeholder:text-content-muted"
               />
             </div>
 
-            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
-              <ArrowUpDown size={12} className="text-content-muted ml-1.5" />
-              {(["load", "name", "periods"] as SortBy[]).map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setSortBy(s)}
-                  className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all capitalize ${
-                    sortBy === s
-                      ? "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm"
-                      : "text-content-muted hover:text-slate-700"
-                  }`}
-                >
-                  {s === "load" ? "Load %" : s === "periods" ? "Periods" : "Name"}
-                </button>
-              ))}
+            <div
+              role="group"
+              aria-label="Sort teachers by"
+              className="inline-flex h-9 items-center rounded-md border border-edge bg-surface p-0.5"
+            >
+              {SORTS.map((s) => {
+                const isActive = sortBy === s.id;
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    aria-pressed={isActive}
+                    onClick={() => setSortBy(s.id)}
+                    className={`h-8 rounded px-2.5 text-xs transition-colors focus-visible:outline-none
+                                focus-visible:ring-2 focus-visible:ring-accent ${
+                                  isActive
+                                    ? "bg-surface-inset font-medium text-content dark:bg-slate-700"
+                                    : "text-content-muted hover:text-content"
+                                }`}
+                  >
+                    {s.label}
+                  </button>
+                );
+              })}
             </div>
 
             <button
+              type="button"
+              aria-pressed={overloadedOnly}
               onClick={() => setOverloadedOnly((o) => !o)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border transition-all ${
-                overloadedOnly
-                  ? "bg-red-50 dark:bg-red-900/30 border-red-200 text-red-800 dark:text-red-200"
-                  : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-content-muted hover:border-red-200 hover:text-danger-ink"
+              className={`${quietButtonClass} ${
+                overloadedOnly ? "border-accent bg-accent/15 text-content" : ""
               }`}
             >
-              <AlertTriangle size={12} />
-              Overloaded Only
+              Over capacity
               {overloadedCount > 0 && (
-                <span className="ml-1 bg-red-500 text-white text-2xs font-black px-1.5 py-0.5 rounded-full">
-                  {overloadedCount}
-                </span>
+                <span className="tabular-nums text-content-muted">{overloadedCount}</span>
               )}
             </button>
           </div>
+        )}
+      </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {tab === "ANALYTICS" ? (
+        <AnalyticsDashboard analytics={analytics} />
+      ) : (
+        <div className="space-y-2">
+          {isFiltered && (
+            <p className="text-xs text-content-muted">
+              Showing <span className="tabular-nums">{filteredStats.length}</span> of{" "}
+              <span className="tabular-nums">{workloadStats.length}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setNameFilter("");
+                  setOverloadedOnly(false);
+                }}
+                className="ml-2 rounded text-accent-ink underline-offset-4 hover:underline
+                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              >
+                Clear filters
+              </button>
+            </p>
+          )}
+
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
             {filteredStats.map((stat) => {
               const {
                 t,
@@ -196,13 +220,14 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
                 classBreakdown,
               } = stat;
 
-              let statusColor = "bg-emerald-500";
-
-              if (utilizationPct > 100) {
-                statusColor = "bg-red-600";
-              } else if (utilizationPct > 85) {
-                statusColor = "bg-amber-500";
-              }
+              const isOver = utilizationPct > 100;
+              const isHigh = utilizationPct > 85;
+              const barTone = isOver ? "bg-danger" : isHigh ? "bg-accent" : "bg-success";
+              const pctTone = isOver
+                ? "text-danger-ink"
+                : isHigh
+                  ? "text-accent-ink"
+                  : "text-content";
 
               return (
                 <WorkloadTeacherDetail
@@ -215,102 +240,58 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
                   blockedSlots={blockedSlots}
                   classBreakdown={classBreakdown}
                 >
-                  <Card
-                    className={`p-5 flex flex-col gap-3 transition-all hover:shadow-md ${
-                      utilizationPct > 100 ? "ring-2 ring-red-500 ring-offset-2" : ""
+                  <div
+                    className={`rounded-lg border bg-surface px-4 py-3 transition-colors ${
+                      isOver ? "border-l-2 border-edge border-l-danger" : "border-edge"
                     }`}
                   >
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-center space-x-3">
-                        <div
-                          className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-slate-600 dark:text-slate-300 border ${
-                            utilizationPct > 100
-                              ? "bg-red-100 dark:bg-red-900/40 border-red-300 text-red-800 dark:text-red-200"
-                              : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
-                          }`}
-                        >
-                          {t.name.substring(0, 2).toUpperCase()}
-                        </div>
-                        <div>
-                          <span className="font-bold text-slate-800 dark:text-slate-100 block leading-tight">
-                            {t.name}
-                          </span>
-                          <span className="text-2xs text-content-muted font-medium flex items-center gap-1">
-                            {blockedSlots > 0 ? (
-                              <>
-                                <Clock size={10} /> {blockedSlots} periods blocked
-                              </>
-                            ) : (
-                              "Full availability"
-                            )}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <span
-                          className={`text-xl font-bold ${
-                            utilizationPct > 100
-                              ? "text-danger-ink"
-                              : utilizationPct > 85
-                                ? "text-accent-ink"
-                                : "text-slate-700 dark:text-slate-200"
-                          }`}
-                        >
-                          {Math.round(utilizationPct)}%
-                        </span>
-                        <span className="text-2xs text-content-muted font-bold uppercase block tracking-wider">
-                          Load
-                        </span>
-                      </div>
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="truncate text-sm font-medium text-content">{t.name}</span>
+                      <span className={`shrink-0 text-sm tabular-nums ${pctTone}`}>
+                        {Math.round(utilizationPct)}%
+                      </span>
                     </div>
 
-                    <div className="w-full h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex relative border border-slate-100 dark:border-slate-700">
+                    <div className="mt-2 h-[3px] w-full overflow-hidden rounded-full bg-surface-inset">
                       <div
-                        className={`h-full ${statusColor} transition-all duration-1000`}
+                        className={`h-full ${barTone}`}
                         style={{ width: `${Math.min(utilizationPct, 100)}%` }}
                       />
-                      {utilizationPct > 100 && (
-                        <div
-                          className="h-full bg-red-700 animate-pulse striped-bar"
-                          style={{
-                            width: `${Math.min(utilizationPct - 100, 100)}%`,
-                          }}
-                        />
-                      )}
                     </div>
 
-                    <div className="flex justify-between items-center text-[11px] pt-2 border-t border-slate-50 mt-1">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-content-muted">
-                          <strong>{assignedPeriods}</strong> Requested
-                        </span>
-                        <span className="text-content-muted">
-                          <strong>{scheduledPeriods}</strong> Scheduled
-                        </span>
-                      </div>
-                      <div className="text-content-muted text-right">
-                        <strong>{maxWeeklyCapacity}</strong> Weekly max
-                      </div>
-                    </div>
-
-                    {utilizationPct > 100 && (
-                      <div className="flex items-center gap-2 text-2xs text-danger-ink font-bold bg-white/50 dark:bg-slate-800/50 px-2 py-1 rounded">
-                        <AlertCircle size={12} /> Teacher is overloaded!
-                      </div>
-                    )}
-                  </Card>
+                    <p className="mt-2 flex flex-wrap gap-x-3 text-2xs tabular-nums text-content-muted">
+                      <span>
+                        <span className="text-content-secondary">{assignedPeriods}</span> requested
+                      </span>
+                      <span>
+                        <span className="text-content-secondary">{scheduledPeriods}</span> scheduled
+                      </span>
+                      <span>
+                        <span className="text-content-secondary">{maxWeeklyCapacity}</span> max
+                      </span>
+                      {blockedSlots > 0 && <span>{blockedSlots} blocked</span>}
+                    </p>
+                  </div>
                 </WorkloadTeacherDetail>
               );
             })}
-            {filteredStats.length === 0 && (
-              <div className="col-span-full text-center py-12 text-content-muted">
-                {workloadStats.length === 0
-                  ? "No teachers found. Add faculty to see analysis."
-                  : "No teachers match your current filters."}
-              </div>
-            )}
           </div>
-        </>
+
+          {filteredStats.length === 0 && (
+            <div className="rounded-lg border border-dashed border-edge px-5 py-10 text-center">
+              <p className="text-sm text-content">
+                {workloadStats.length === 0
+                  ? "No teachers yet."
+                  : "No teachers match these filters."}
+              </p>
+              <p className="mt-1 text-xs text-content-muted">
+                {workloadStats.length === 0
+                  ? "Add staff in Teachers to see their weekly load."
+                  : "Try a different name, or clear the over-capacity filter."}
+              </p>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

@@ -74,17 +74,27 @@ describe("useAnalytics", () => {
     expect(r2.occupiedSlots).toBe(2);
   });
 
-  it("detects teacher gap periods between first and last lesson of a day", () => {
+  // A free period is marking and preparation time, not a scheduling fault, so
+  // the list leads with whoever has the least of it rather than the most.
+  it("counts teacher free periods between first and last lesson of a day", () => {
     const { result } = renderHook(() => useAnalytics(makeData()));
-    const ada = result.current.teacherGaps.find((t) => t.teacherId === "t1")!;
-    const bo = result.current.teacherGaps.find((t) => t.teacherId === "t2")!;
-    // Ada: P1 and P3 with idle P2 between => 1 gap
+    const ada = result.current.teacherFreePeriods.find((t) => t.teacherId === "t1")!;
+    const bo = result.current.teacherFreePeriods.find((t) => t.teacherId === "t2")!;
+    // Ada: P1 and P3 with a free P2 between => 1 free period
     expect(ada.teachingPeriods).toBe(2);
-    expect(ada.gapPeriods).toBe(1);
-    // Bo: consecutive P1+P2 => no gaps
+    expect(ada.freePeriods).toBe(1);
+    // Bo: consecutive P1+P2 => no break at all
     expect(bo.teachingPeriods).toBe(2);
-    expect(bo.gapPeriods).toBe(0);
-    expect(result.current.summary.totalGapPeriods).toBe(1);
+    expect(bo.freePeriods).toBe(0);
+    expect(result.current.summary.totalFreePeriods).toBe(1);
+  });
+
+  it("leads with the teacher who gets no break, and counts them", () => {
+    const { result } = renderHook(() => useAnalytics(makeData()));
+    const teaching = result.current.teacherFreePeriods.filter((t) => t.teachingPeriods > 0);
+
+    expect(teaching[0].teacherId).toBe("t2");
+    expect(result.current.summary.teachersWithNoFreePeriod).toBe(1);
   });
 
   it("builds subject distribution sorted by periods and excludes unused subjects", () => {

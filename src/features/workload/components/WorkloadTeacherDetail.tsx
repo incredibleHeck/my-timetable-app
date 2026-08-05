@@ -98,7 +98,7 @@ export const WorkloadTeacherDetail: React.FC<WorkloadTeacherDetailProps> = ({
             handleTogglePin();
           }
         }}
-        className="outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 rounded-xl"
+        className="rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
       >
         {children}
       </div>
@@ -108,11 +108,11 @@ export const WorkloadTeacherDetail: React.FC<WorkloadTeacherDetailProps> = ({
           id={panelId}
           role="dialog"
           aria-label={`Workload breakdown for ${teacherName}`}
-          className="absolute left-0 right-0 top-full z-20 mt-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-lg"
+          className="absolute left-0 right-0 top-full z-20 mt-2 rounded-lg border border-edge bg-surface p-4 shadow-lg"
           onClick={(e) => e.stopPropagation()}
         >
-          <p className="text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">{teacherName}</p>
-          <p className="text-[11px] text-content-muted mb-3">
+          <p className="mb-1 text-sm font-medium text-content">{teacherName}</p>
+          <p className="mb-3 text-2xs text-content-muted">
             <strong>{assignedPeriods}</strong> requested / <strong>{maxWeeklyCapacity}</strong>{" "}
             weekly max
             {targetLoad != null && targetLoad > 0 && (
@@ -136,30 +136,26 @@ export const WorkloadTeacherDetail: React.FC<WorkloadTeacherDetailProps> = ({
           </p>
 
           {classBreakdown.length > 0 ? (
-            <ul className="space-y-1.5 max-h-48 overflow-y-auto custom-scrollbar">
+            <ul className="custom-scrollbar max-h-48 divide-y divide-edge-subtle overflow-y-auto">
               {classBreakdown.map((row) => (
                 <li
                   key={`${row.classId}:${row.subjectId}`}
-                  className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 text-[11px] border-b border-slate-50 pb-1.5 last:border-0"
+                  className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 py-1.5 text-2xs"
                   title={`${row.className} — ${row.subjectName}`}
                 >
-                  <span className="font-medium text-slate-800 dark:text-slate-100 whitespace-nowrap">
-                    {row.className}
-                  </span>
-                  <span className="text-content-muted truncate">{row.subjectName}</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-100 whitespace-nowrap text-right">
+                  <span className="whitespace-nowrap text-content-secondary">{row.className}</span>
+                  <span className="truncate text-content-muted">{row.subjectName}</span>
+                  <span className="whitespace-nowrap text-right tabular-nums text-content">
                     {row.periods} {row.periods === 1 ? "period" : "periods"}
                   </span>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-[11px] text-content-muted italic">
-              No class assignments in curriculum.
-            </p>
+            <p className="text-2xs text-content-muted">No class assignments in curriculum.</p>
           )}
 
-          <p className="text-2xs text-content-muted mt-2">
+          <p className="mt-2 text-2xs text-content-muted">
             {pinned ? "Click again or press Escape to close" : "Click to pin · hover to preview"}
           </p>
         </div>

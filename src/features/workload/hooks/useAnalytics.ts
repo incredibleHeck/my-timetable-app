@@ -10,12 +10,19 @@ export interface RoomUtilization {
   occupancyPct: number;
 }
 
-export interface TeacherGapStat {
+/**
+ * Non-teaching periods falling between a teacher's first and last lesson of a
+ * day. These are not scheduling faults: they are the breaks a teacher marks,
+ * prepares and rests in. Reported as a plain fact about the week, which is why
+ * nothing here carries a severity.
+ */
+export interface TeacherFreePeriodStat {
   teacherId: string;
   teacherName: string;
   teachingPeriods: number;
-  gapPeriods: number;
-  busiestDayGaps: number;
+  freePeriods: number;
+  /** Most free periods in any single day — a long unbroken stretch off. */
+  mostInOneDay: number;
 }
 
 export interface SubjectDistribution {
@@ -30,7 +37,9 @@ export interface AnalyticsSummary {
   totalLessons: number;
   teachingSlotsPerWeek: number;
   avgRoomOccupancyPct: number;
-  totalGapPeriods: number;
+  totalFreePeriods: number;
+  /** Teachers with lessons but no break anywhere in their week. */
+  teachersWithNoFreePeriod: number;
   roomsCount: number;
   teachersCount: number;
   scheduledSubjects: number;
@@ -44,7 +53,7 @@ export const UNDERUSED_ROOM_PCT = 25;
 export interface Analytics {
   summary: AnalyticsSummary;
   rooms: RoomUtilization[];
-  teacherGaps: TeacherGapStat[];
+  teacherFreePeriods: TeacherFreePeriodStat[];
   subjects: SubjectDistribution[];
   hasSchedule: boolean;
 }
@@ -52,10 +61,10 @@ export interface Analytics {
 const round1 = (n: number): number => Math.round(n * 10) / 10;
 
 /**
- * Derives school-wide scheduling analytics from the generated timetable:
- * room occupancy, teacher idle/gap windows, and subject spread. All figures
- * come from `data.schedule` + `data.settings.dayStructure`, so they update
- * automatically whenever the schedule changes.
+ * Derives school-wide scheduling analytics from the generated timetable: room
+ * occupancy, teacher free periods, and subject spread. All figures come from
+ * `data.schedule` + `data.settings.dayStructure`, so they update automatically
+ * whenever the schedule changes.
  */
 export const useAnalytics = (data: AppData): Analytics => {
   return useMemo(() => {
@@ -138,13 +147,15 @@ export const useAnalytics = (data: AppData): Analytics => {
       })
       .sort((a, b) => b.occupancyPct - a.occupancyPct);
 
-    // --- Teacher gaps (idle CLASS periods between first and last lesson of a day) ---
-    const teacherGaps: TeacherGapStat[] = teachers
+    // --- Teacher free periods (non-teaching CLASS periods between first and last lesson of a day) ---
+    // Sorted fewest-first: a teacher running back to back all week is the one
+    // worth looking at, not the one with the most time to mark in.
+    const teacherFreePeriods: TeacherFreePeriodStat[] = teachers
       .map((teacher) => {
         const byDayMap = teacherDayPeriods.get(teacher.id);
         let teachingPeriods = 0;
-        let gapPeriods = 0;
-        let busiestDayGaps = 0;
+        let freePeriods = 0;
+        let mostInOneDay = 0;
 
         if (byDayMap) {
           for (const periods of byDayMap.values()) {
@@ -155,12 +166,12 @@ export const useAnalytics = (data: AppData): Analytics => {
             const first = sorted[0];
             const last = sorted[sorted.length - 1];
 
-            let dayGaps = 0;
+            let dayFree = 0;
             for (const idx of teachingIndices) {
-              if (idx > first && idx < last && !periods.has(idx)) dayGaps++;
+              if (idx > first && idx < last && !periods.has(idx)) dayFree++;
             }
-            gapPeriods += dayGaps;
-            if (dayGaps > busiestDayGaps) busiestDayGaps = dayGaps;
+            freePeriods += dayFree;
+            if (dayFree > mostInOneDay) mostInOneDay = dayFree;
           }
         }
 
@@ -168,11 +179,11 @@ export const useAnalytics = (data: AppData): Analytics => {
           teacherId: teacher.id,
           teacherName: teacher.name,
           teachingPeriods,
-          gapPeriods,
-          busiestDayGaps,
+          freePeriods,
+          mostInOneDay,
         };
       })
-      .sort((a, b) => b.gapPeriods - a.gapPeriods || b.teachingPeriods - a.teachingPeriods);
+      .sort((a, b) => a.freePeriods - b.freePeriods || b.teachingPeriods - a.teachingPeriods);
 
     // --- Subject distribution ---
     const subjectStats: SubjectDistribution[] = subjects
@@ -194,11 +205,14 @@ export const useAnalytics = (data: AppData): Analytics => {
         ? round1(roomStats.reduce((sum, r) => sum + r.occupancyPct, 0) / roomStats.length)
         : 0;
 
+    const teachingStaff = teacherFreePeriods.filter((t) => t.teachingPeriods > 0);
+
     const summary: AnalyticsSummary = {
       totalLessons,
       teachingSlotsPerWeek: capacityPerWeek,
       avgRoomOccupancyPct,
-      totalGapPeriods: teacherGaps.reduce((sum, t) => sum + t.gapPeriods, 0),
+      totalFreePeriods: teacherFreePeriods.reduce((sum, t) => sum + t.freePeriods, 0),
+      teachersWithNoFreePeriod: teachingStaff.filter((t) => t.freePeriods === 0).length,
       roomsCount: rooms.length,
       teachersCount: teachers.length,
       scheduledSubjects: subjectStats.length,
@@ -208,7 +222,7 @@ export const useAnalytics = (data: AppData): Analytics => {
     return {
       summary,
       rooms: roomStats,
-      teacherGaps,
+      teacherFreePeriods,
       subjects: subjectStats,
       hasSchedule: totalLessons > 0,
     };
