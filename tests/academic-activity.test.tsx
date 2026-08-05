@@ -33,7 +33,7 @@ describe("Academic Activity Logging", () => {
     const onUpdate = vi.fn();
     render(<TeachersView data={baseData} onUpdate={onUpdate} />);
 
-    const duplicateButton = screen.getByTitle("Duplicate");
+    const duplicateButton = screen.getByTitle("Duplicate John Doe");
     fireEvent.click(duplicateButton);
 
     expect(mockAddActivity).toHaveBeenCalledWith(

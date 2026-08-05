@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Sun, Moon, Calendar, XSquare, Ban, Coffee, Utensils } from "lucide-react";
+import { Check } from "lucide-react";
 import { AppData } from "../../../types";
 import { Teacher } from "../types";
-import { Button, Modal, Input } from "../../../components/ui";
-import { DAYS } from "../../../utils/constants";
+import { Button, Modal, controlClass } from "../../../components/ui";
 import { generateId } from "../../../utils/utils";
+import { AvailabilityGrid, AvailabilityTemplate } from "./AvailabilityGrid";
 
 interface TeacherEditorModalProps {
   isOpen: boolean;
@@ -13,6 +13,23 @@ interface TeacherEditorModalProps {
   data: AppData;
   onSave: (teacher: Teacher) => void;
 }
+
+interface FieldProps {
+  id: string;
+  label: string;
+  hint?: string;
+  children: React.ReactNode;
+}
+
+const Field: React.FC<FieldProps> = ({ id, label, hint, children }) => (
+  <div className="min-w-0">
+    <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-content">
+      {label}
+    </label>
+    {children}
+    {hint && <p className="mt-1 text-2xs text-content-muted">{hint}</p>}
+  </div>
+);
 
 export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
   isOpen,
@@ -28,6 +45,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
   const [tConstraints, setTConstraints] = useState<boolean[][]>([]);
 
   const globalMaxDaily = data.settings.maxTeacherPeriodsPerDay ?? 6;
+  const globalWeekly = data.settings.maxTeachingPeriodsPerWeek ?? 24;
 
   const maxClassPeriods = useMemo(
     () => Math.max(data.settings.periodsPerDay, ...data.classes.map((c) => c.periodCount || 0)),
@@ -65,16 +83,15 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
   }, [isOpen, editingTeacher, maxClassPeriods]);
 
   const handleSave = () => {
-    if (!tName) return;
-    const newT: Teacher = {
+    if (!tName.trim()) return;
+    onSave({
       id: editingTeacher ? editingTeacher.id : generateId(),
-      name: tName,
+      name: tName.trim(),
       specialtyIds: tSpecialties,
       constraints: tConstraints,
       targetLoad: parseInt(tTargetLoad) || undefined,
       maxPeriodsPerDay: parseInt(tMaxPeriods) || undefined,
-    };
-    onSave(newT);
+    });
     onClose();
   };
 
@@ -91,8 +108,7 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
     setTConstraints(n);
   };
 
-  const applyTemplate = (type: "MORNINGS" | "AFTERNOONS" | "FRIDAYS" | "CLEAR") => {
-    const n = tConstraints.map((row) => [...row]);
+  const applyTemplate = (type: AvailabilityTemplate) => {
     const pCount = maxClassPeriods;
     const midPoint = Math.floor(pCount / 2);
 
@@ -105,14 +121,11 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
       return;
     }
 
+    const n = tConstraints.map((row) => [...row]);
     for (let d = 0; d < 5; d++) {
       for (let p = 0; p < pCount; p++) {
-        if (type === "MORNINGS" && p < midPoint) n[d][p] = false;
-        if (type === "MORNINGS" && p >= midPoint) n[d][p] = true;
-
-        if (type === "AFTERNOONS" && p < midPoint) n[d][p] = true;
-        if (type === "AFTERNOONS" && p >= midPoint) n[d][p] = false;
-
+        if (type === "MORNINGS") n[d][p] = p >= midPoint;
+        if (type === "AFTERNOONS") n[d][p] = p < midPoint;
         if (type === "FRIDAYS" && d === 4) n[d][p] = true;
       }
     }
@@ -124,213 +137,114 @@ export const TeacherEditorModal: React.FC<TeacherEditorModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={editingTeacher ? "Edit Teacher" : "Add New Teacher"}
-      maxWidth="max-w-5xl"
+      maxWidth="max-w-4xl"
       footer={
-        <div className="flex justify-end gap-2 w-full">
+        <div className="flex w-full justify-end gap-2">
           <Button variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>Save Changes</Button>
+          <Button onClick={handleSave} disabled={!tName.trim()}>
+            Save Changes
+          </Button>
         </div>
       }
     >
       <div className="space-y-6">
-        <div className="flex gap-4">
-          <div className="flex-[2]">
-            <Input
-              label="Full Name"
+        <div className="grid gap-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]">
+          <Field id="teacher-name" label="Full name">
+            <input
+              id="teacher-name"
+              className={`${controlClass} w-full`}
               value={tName}
               onChange={(e) => setTName(e.target.value)}
-              placeholder="e.g. John Doe"
+              placeholder="John Doe"
               autoFocus
             />
-          </div>
-          <div className="flex-1">
-            <Input
-              label="Target Load"
+          </Field>
+          <Field id="teacher-target-load" label="Target load" hint={`Default ${globalWeekly}/week`}>
+            <input
+              id="teacher-target-load"
               type="number"
+              className={`${controlClass} w-full`}
               value={tTargetLoad}
               onChange={(e) => setTTargetLoad(e.target.value)}
-              placeholder="e.g. 20"
+              placeholder={String(globalWeekly)}
             />
-          </div>
-          <div className="flex-1">
-            <Input
-              label="Max Periods Per Day"
+          </Field>
+          <Field
+            id="teacher-max-periods"
+            label="Max periods per day"
+            hint={`Default ${globalMaxDaily}/day`}
+          >
+            <input
+              id="teacher-max-periods"
               type="number"
+              className={`${controlClass} w-full`}
               value={tMaxPeriods}
               onChange={(e) => setTMaxPeriods(e.target.value)}
-              placeholder={`Use global (${globalMaxDaily})`}
+              placeholder={String(globalMaxDaily)}
             />
-          </div>
+          </Field>
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-content-muted uppercase mb-2">
-            Subject Specialties
-          </label>
-          <div className="flex flex-wrap gap-2 p-3 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 max-h-32 overflow-y-auto custom-scrollbar">
-            {sortedSubjects.map((s) => (
-              <button
-                key={s.id}
-                onClick={() =>
-                  setTSpecialties((p) =>
-                    p.includes(s.id) ? p.filter((x) => x !== s.id) : [...p, s.id],
-                  )
-                }
-                className={`px-3 py-1.5 rounded-md text-xs font-bold border transition-all ${
-                  tSpecialties.includes(s.id)
-                    ? "bg-slate-800 text-white border-slate-800 shadow-sm"
-                    : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-400"
-                }`}
-              >
-                {s.name}
-              </button>
-            ))}
-            {sortedSubjects.length === 0 && (
-              <span className="text-xs text-content-muted italic">
-                No subjects defined. Go to Subjects library.
-              </span>
-            )}
-          </div>
-          <p className="text-2xs text-content-muted mt-2">
-            Selecting subjects here adds this teacher to the corresponding Faculty. Max Periods Per
-            Day overrides the global daily scheduler limit ({globalMaxDaily}). Workload % uses
-            Configuration → Max Teaching Periods / Week.
+          <h4 className="text-sm font-medium text-content">Subjects</h4>
+          <p className="mb-2 mt-0.5 text-xs text-content-muted">
+            Determines which faculties this teacher belongs to and what the generator may assign
+            them.
           </p>
-        </div>
-
-        <div>
-          <div className="flex justify-between items-end mb-2">
-            <label className="block text-xs font-bold text-content-muted uppercase">
-              Availability Constraints
-            </label>
-            <div className="flex gap-1">
-              <button
-                onClick={() => applyTemplate("MORNINGS")}
-                className="text-2xs px-2 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded hover:bg-blue-100 dark:hover:bg-blue-900/40 font-bold flex items-center gap-1"
-              >
-                <Sun size={10} /> Mornings Only
-              </button>
-              <button
-                onClick={() => applyTemplate("AFTERNOONS")}
-                className="text-2xs px-2 py-1 bg-indigo-50 text-indigo-600 rounded hover:bg-indigo-100 font-bold flex items-center gap-1"
-              >
-                <Moon size={10} /> Afternoons Only
-              </button>
-              <button
-                onClick={() => applyTemplate("FRIDAYS")}
-                className="text-2xs px-2 py-1 bg-red-50 dark:bg-red-900/30 text-danger-ink rounded hover:bg-red-100 dark:hover:bg-red-900/40 font-bold flex items-center gap-1"
-              >
-                <Calendar size={10} /> No Fridays
-              </button>
-              <button
-                onClick={() => applyTemplate("CLEAR")}
-                className="text-2xs px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded hover:bg-slate-200 font-bold flex items-center gap-1"
-              >
-                <XSquare size={10} /> Reset
-              </button>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50 dark:bg-slate-900 shadow-inner">
-            <div
-              className="grid gap-1 min-w-[700px]"
-              style={{
-                gridTemplateColumns: `80px repeat(${maxClassPeriods}, 1fr)`,
-              }}
-            >
-              <div className="text-right pr-2 text-2xs font-bold text-content-muted self-end pb-1">
-                Day \ Per
-              </div>
-              {Array.from({ length: maxClassPeriods }).map((_, i) => {
-                const config = data.settings.dayStructure[i];
-                const label = config?.label || `${i + 1}`;
-                const isBreak = config?.type === "BREAK" || config?.type === "LUNCH";
-                const icon =
-                  config?.type === "LUNCH" ? (
-                    <Utensils size={8} />
-                  ) : config?.type === "BREAK" ? (
-                    <Coffee size={8} />
-                  ) : null;
-
+          {sortedSubjects.length === 0 ? (
+            <p className="rounded-md border border-dashed border-edge px-3 py-4 text-center text-xs text-content-muted">
+              No subjects defined yet — add them in the Subjects library first.
+            </p>
+          ) : (
+            <div className="custom-scrollbar flex max-h-36 flex-wrap gap-1.5 overflow-y-auto">
+              {sortedSubjects.map((s) => {
+                const isSelected = tSpecialties.includes(s.id);
                 return (
-                  <div
-                    key={i}
-                    className={`text-center text-2xs font-bold rounded py-1 flex flex-col items-center justify-center h-8 leading-tight ${
-                      isBreak
-                        ? "bg-orange-100 dark:bg-orange-900/40 text-orange-800 dark:text-orange-200"
-                        : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
-                    }`}
+                  <button
+                    key={s.id}
+                    type="button"
+                    aria-pressed={isSelected}
+                    onClick={() =>
+                      setTSpecialties((p) =>
+                        p.includes(s.id) ? p.filter((x) => x !== s.id) : [...p, s.id],
+                      )
+                    }
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs
+                                transition-colors focus-visible:outline-none focus-visible:ring-2
+                                focus-visible:ring-accent focus-visible:ring-offset-2
+                                focus-visible:ring-offset-surface ${
+                                  isSelected
+                                    ? "border-accent bg-accent/15 font-medium text-content"
+                                    : "border-edge text-content-secondary hover:border-edge-strong"
+                                }`}
                   >
-                    {icon}
-                    <span>{label}</span>
-                  </div>
+                    {isSelected ? (
+                      <Check size={11} className="text-accent-ink" aria-hidden />
+                    ) : (
+                      <span
+                        aria-hidden
+                        className="h-2 w-2 rounded-full ring-1 ring-black/10"
+                        style={{ backgroundColor: s.color }}
+                      />
+                    )}
+                    {s.name}
+                  </button>
                 );
               })}
-
-              {DAYS.map((d, dIdx) => (
-                <React.Fragment key={d}>
-                  <button
-                    onClick={() => toggleDay(dIdx)}
-                    className="text-right text-xs font-bold text-slate-600 dark:text-slate-300 pr-3 hover:text-accent-ink transition-colors uppercase tracking-wider h-9 flex items-center justify-end"
-                    title="Toggle Entire Day"
-                    aria-label="Toggle Entire Day"
-                  >
-                    {d.substring(0, 3)}
-                  </button>
-                  {Array.from({ length: maxClassPeriods }).map((_, pIdx) => {
-                    const isBlocked = tConstraints[dIdx]?.[pIdx];
-                    const globalType = data.settings.dayStructure[pIdx]?.type;
-                    const isGlobalBreak = globalType === "BREAK" || globalType === "LUNCH";
-
-                    return (
-                      <button
-                        key={pIdx}
-                        onClick={() => toggleConstraint(dIdx, pIdx)}
-                        className={`h-9 rounded-md border flex items-center justify-center transition-all duration-200 text-2xs font-bold 
-                                ${
-                                  isBlocked
-                                    ? "bg-red-500 border-red-600 shadow-inner"
-                                    : isGlobalBreak
-                                      ? "bg-amber-50 dark:bg-amber-900/30 border-dashed border-amber-300"
-                                      : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-amber-400 hover:shadow-sm"
-                                }`}
-                        title={
-                          isBlocked
-                            ? "Blocked"
-                            : isGlobalBreak
-                              ? "Available (Teaching during Break)"
-                              : "Available"
-                        }
-                      >
-                        {isBlocked && (
-                          <Ban size={16} className="text-white animate-in zoom-in duration-200" />
-                        )}
-                        {!isBlocked && isGlobalBreak && (
-                          <span className="text-amber-400/50 uppercase tracking-tighter">Open</span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </React.Fragment>
-              ))}
             </div>
-          </div>
-          <div className="flex gap-4 mt-2 justify-end">
-            <div className="flex items-center gap-1 text-2xs text-content-muted">
-              <div className="w-3 h-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded"></div>{" "}
-              Available
-            </div>
-            <div className="flex items-center gap-1 text-2xs text-content-muted">
-              <div className="w-3 h-3 bg-amber-50 dark:bg-amber-900/30 border border-dashed border-amber-300 rounded"></div>{" "}
-              Teaching during Break
-            </div>
-            <div className="flex items-center gap-1 text-2xs text-content-muted">
-              <div className="w-3 h-3 bg-red-500 border border-red-600 rounded"></div> Blocked
-            </div>
-          </div>
+          )}
         </div>
+
+        <AvailabilityGrid
+          data={data}
+          periodCount={maxClassPeriods}
+          constraints={tConstraints}
+          onToggleSlot={toggleConstraint}
+          onToggleDay={toggleDay}
+          onApplyTemplate={applyTemplate}
+        />
       </div>
     </Modal>
   );

@@ -10,7 +10,7 @@ vi.mock("../src/contexts/ProfileContext", () => ({
   }),
 }));
 
-describe("TeachersView card interactions", () => {
+describe("TeachersView row interactions", () => {
   const mockData = {
     ...DEFAULT_DATA,
     teachers: [
@@ -25,26 +25,26 @@ describe("TeachersView card interactions", () => {
     ],
   };
 
-  // The card is a plain container, not role="button": it holds its own
-  // Duplicate/Edit/Delete buttons, and nesting interactive elements inside an
-  // interactive ancestor is invalid. Mouse users still get the click shortcut.
-  it("opens Edit Teacher modal when clicking the teacher card", () => {
+  // The name is the primary control for the row, so it is a real button rather
+  // than a heading inside a clickable card. That removes the old trade-off where
+  // the click shortcut was mouse-only because the card could not be focused.
+  it("opens the editor when the teacher name is activated", () => {
     render(<TeachersView data={mockData} onUpdate={vi.fn()} />);
 
-    fireEvent.click(screen.getByRole("heading", { name: /Alice Smith/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Alice Smith" }));
 
     expect(screen.getByText("Edit Teacher")).toBeDefined();
-    expect((screen.getByLabelText(/Full Name/i) as HTMLInputElement).value).toBe("Alice Smith");
+    expect((screen.getByLabelText(/Full name/i) as HTMLInputElement).value).toBe("Alice Smith");
   });
 
-  // Keyboard users reach the same action through the card's Edit button, which
-  // is what makes dropping the card-level role="button" safe.
-  it("exposes an accessible Edit button as the keyboard path", () => {
+  // Row actions name their subject: forty rows of buttons all called "Edit"
+  // gives a screen reader no way to tell which teacher is about to change.
+  it("exposes row actions labelled with the teacher they act on", () => {
     render(<TeachersView data={mockData} onUpdate={vi.fn()} />);
 
-    fireEvent.click(screen.getByRole("button", { name: /^Edit$/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Edit Alice Smith" }));
 
     expect(screen.getByText("Edit Teacher")).toBeDefined();
-    expect((screen.getByLabelText(/Full Name/i) as HTMLInputElement).value).toBe("Alice Smith");
+    expect((screen.getByLabelText(/Full name/i) as HTMLInputElement).value).toBe("Alice Smith");
   });
 });
