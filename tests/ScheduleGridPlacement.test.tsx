@@ -102,6 +102,17 @@ describe("ScheduleGrid unplaced-lesson placement", () => {
     expect(screen.queryByText(/unplaced/i)).toBeNull();
   });
 
+  // Removing the edit mode also removed the only text saying the grid responds
+  // to a drag, which made a permanently-editable grid look permanently locked.
+  // A complete timetable is exactly when someone wants to swap two periods.
+  it("still says lessons can be dragged when the timetable is complete", () => {
+    render(
+      <ScheduleGrid data={buildData(0)} activeId="class-1" mode="CLASS" onUpdate={() => {}} />,
+    );
+
+    expect(screen.getByText(/drag a lesson onto another slot/i)).toBeInTheDocument();
+  });
+
   it("never offers placement on the read-only room view", () => {
     render(<ScheduleGrid data={buildData(2)} activeId="r1" mode="ROOM" onUpdate={() => {}} />);
 

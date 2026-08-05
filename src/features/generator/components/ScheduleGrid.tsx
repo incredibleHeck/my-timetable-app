@@ -222,30 +222,33 @@ export const ScheduleGrid: React.FC<Props> = ({
       onDragOver={handleDragOver}
     >
       <div className="flex flex-col h-full min-w-full w-fit print:min-w-0">
-        {/* Only shown when there is something to say. It used to be a permanent
-            strip restating which mode you were in. */}
-        {(isReadOnlyView || showPlacementSlots) && (
-          <div className="mb-3 flex items-center gap-2 rounded-md border border-edge bg-surface px-3 py-2 text-xs text-content-muted">
-            {isReadOnlyView ? (
-              <>
-                <Lock size={13} className="shrink-0" aria-hidden />
-                <span>
-                  Room timetables are a read-only view. Move a lesson from its class or teacher
-                  timetable.
-                </span>
-              </>
-            ) : (
-              <>
-                <ArrowRightLeft size={13} className="shrink-0 text-accent-ink" aria-hidden />
-                <span>
+        {/* Says what this grid lets you do. Removing the old mode banner also
+            removed the only thing telling anyone the grid is draggable at all,
+            which made a permanently-editable grid look permanently locked. */}
+        <div className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border border-edge bg-surface px-3 py-2 text-xs text-content-muted">
+          {isReadOnlyView ? (
+            <>
+              <Lock size={13} className="shrink-0" aria-hidden />
+              <span>
+                Room timetables are a read-only view. Move a lesson from its class or teacher
+                timetable.
+              </span>
+            </>
+          ) : (
+            <>
+              <ArrowRightLeft size={13} className="shrink-0 text-accent-ink" aria-hidden />
+              <span>Drag a lesson onto another slot to move or swap it.</span>
+              {showPlacementSlots && (
+                <span className="text-content-secondary">
+                  <span aria-hidden>· </span>
                   <span className="tabular-nums">{pendingForClass.length}</span> unplaced{" "}
-                  {pendingForClass.length === 1 ? "lesson" : "lessons"} for this class — choose an
-                  empty slot marked + to place one.
+                  {pendingForClass.length === 1 ? "lesson" : "lessons"} — pick an empty slot marked
+                  + to place one.
                 </span>
-              </>
-            )}
-          </div>
-        )}
+              )}
+            </>
+          )}
+        </div>
 
         {/* GRID HEADER */}
         <div

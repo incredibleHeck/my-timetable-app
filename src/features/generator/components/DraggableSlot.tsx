@@ -86,14 +86,22 @@ export const DraggableSlot: React.FC<Props> = memo(
           </div>
         )}
 
-        {/* Icons for Interaction Status */}
-        {!slot.isFixed ? (
-          <div className="absolute top-1 right-1 text-content-muted opacity-50 group-hover:opacity-100 transition-opacity">
-            <Repeat size={10} />
+        {/* Interaction status. The swap mark used to show on every non-fixed
+            slot, including views where dragging is off, so it promised something
+            the cell would not do. */}
+        {slot.isFixed ? (
+          <div
+            className="absolute right-1 top-1 text-content-muted opacity-50"
+            title="Fixed slot — set in Configuration"
+          >
+            <Lock size={10} aria-hidden />
           </div>
-        ) : (
-          <div className="absolute top-1 right-1 text-slate-300 opacity-50">
-            <Lock size={10} />
+        ) : disabled ? null : (
+          <div
+            className="absolute right-1 top-1 text-content-muted opacity-60 transition-opacity group-hover:opacity-100"
+            title="Drag to move or swap"
+          >
+            <Repeat size={10} aria-hidden />
           </div>
         )}
       </div>
