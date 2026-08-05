@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { Plus, AlertTriangle } from "lucide-react";
+import { AlertTriangle, Plus } from "lucide-react";
 import { AppData } from "../../types";
 import { Subject } from "./types";
 import { Button, Modal } from "../../components/ui";
@@ -24,9 +24,24 @@ export const SubjectsView: React.FC<ViewProps> = ({ data }) => {
   const [subjectToDelete, setSubjectToDelete] = useState<Subject | null>(null);
   const [subjectForTeacherList, setSubjectForTeacherList] = useState<Subject | null>(null);
 
-  const sortedSubjects = useMemo(() => {
-    return [...data.subjects].sort((a, b) => a.name.localeCompare(b.name));
-  }, [data.subjects]);
+  const sortedSubjects = useMemo(
+    () => [...data.subjects].sort((a, b) => a.name.localeCompare(b.name)),
+    [data.subjects],
+  );
+
+  const roomNameById = useMemo(
+    () => new Map((data.rooms || []).map((r) => [r.id, r.name])),
+    [data.rooms],
+  );
+
+  /** Subjects nobody teaches and nobody studies are the ones worth acting on. */
+  const unusedCount = useMemo(() => {
+    const claimed = new Set([
+      ...data.teachers.flatMap((t) => t.specialtyIds),
+      ...data.classes.flatMap((c) => c.curriculum.map((curr) => curr.subjectId)),
+    ]);
+    return data.subjects.filter((s) => !claimed.has(s.id)).length;
+  }, [data.subjects, data.teachers, data.classes]);
 
   const initiateDelete = (subj: Subject) => {
     setSubjectToDelete(subj);
@@ -37,27 +52,19 @@ export const SubjectsView: React.FC<ViewProps> = ({ data }) => {
     if (!subjectToDelete) return;
     const id = subjectToDelete.id;
 
-    try {
-      const updatedSubjects = data.subjects.filter((s) => s.id !== id);
-      const updatedTeachers = data.teachers.map((t) => ({
+    const nextData = {
+      ...data,
+      subjects: data.subjects.filter((s) => s.id !== id),
+      teachers: data.teachers.map((t) => ({
         ...t,
         specialtyIds: t.specialtyIds.filter((sid) => sid !== id),
-      }));
-      const updatedClasses = data.classes.map((c) => ({
+      })),
+      classes: data.classes.map((c) => ({
         ...c,
         curriculum: c.curriculum.filter((curr) => curr.subjectId !== id),
-      }));
-
-      const nextData = {
-        ...data,
-        subjects: updatedSubjects,
-        teachers: updatedTeachers,
-        classes: updatedClasses,
-      };
-      addActivity("ACADEMIC", `Deleted Subject: ${subjectToDelete.name}`, nextData);
-    } catch (e) {
-      console.error(e);
-    }
+      })),
+    };
+    addActivity("ACADEMIC", `Deleted Subject: ${subjectToDelete.name}`, nextData);
 
     setDeleteModalOpen(false);
     setSubjectToDelete(null);
@@ -66,97 +73,113 @@ export const SubjectsView: React.FC<ViewProps> = ({ data }) => {
   const usageToDelete = subjectToDelete
     ? getSubjectUsage(subjectToDelete.id)
     : { classCount: 0, teacherCount: 0 };
+  const hasDependencies = usageToDelete.classCount > 0 || usageToDelete.teacherCount > 0;
 
   return (
-    <div className="max-w-7xl mx-auto p-8 space-y-6 animate-in fade-in duration-500 pb-12">
-      <div className="flex justify-between items-center">
+    <div className="mx-auto max-w-7xl space-y-5 p-6 pb-16 md:p-8">
+      <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
         <div>
-          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Subject Library</h2>
-          <p className="text-xs text-content-muted">
-            Manage academic disciplines and track their usage.
+          <h2 className="text-lg font-semibold tracking-tight text-content">Subject Library</h2>
+          <p className="mt-1 text-xs text-content-muted">
+            <span className="tabular-nums">{data.subjects.length}</span> subjects
+            {unusedCount > 0 && (
+              <>
+                {" · "}
+                <span className="tabular-nums">{unusedCount}</span> not yet used by any class or
+                teacher
+              </>
+            )}
           </p>
         </div>
         <Button onClick={() => form.openModal()} icon={<Plus size={16} />}>
           New Subject
         </Button>
-      </div>
+      </header>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-        {sortedSubjects.map((subj) => {
-          const stats = getSubjectUsage(subj.id);
-          return (
-            <SubjectCard
-              key={subj.id}
-              subject={subj}
-              classCount={stats.classCount}
-              teacherCount={stats.teacherCount}
-              onEdit={() => form.openModal(subj)}
-              onDelete={() => initiateDelete(subj)}
-              onShowTeachers={() => setSubjectForTeacherList(subj)}
-            />
-          );
-        })}
-
-        <button
-          onClick={() => form.openModal()}
-          className="bg-slate-50 dark:bg-slate-900 rounded-xl border-2 border-dashed border-slate-300 hover:border-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-all flex flex-col items-center justify-center p-6 group h-full min-h-[200px]"
-        >
-          <div className="w-14 h-14 rounded-full bg-slate-200 dark:bg-slate-700 group-hover:bg-amber-100 dark:group-hover:bg-amber-900/40 text-content-muted group-hover:text-accent-ink flex items-center justify-center mb-3 transition-colors shadow-inner">
-            <Plus size={28} />
-          </div>
-          <span className="font-bold text-content-muted group-hover:text-accent-ink">
-            Add Subject
-          </span>
-        </button>
-      </div>
+      {sortedSubjects.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-edge px-5 py-12 text-center">
+          <p className="text-sm text-content">No subjects yet.</p>
+          <p className="mt-1 text-xs text-content-muted">
+            Subjects are the building blocks of every class curriculum — add your first to get
+            started.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {sortedSubjects.map((subj) => {
+            const stats = getSubjectUsage(subj.id);
+            return (
+              <SubjectCard
+                key={subj.id}
+                subject={subj}
+                classCount={stats.classCount}
+                teacherCount={stats.teacherCount}
+                requiredRoomName={
+                  subj.requiredRoomId ? roomNameById.get(subj.requiredRoomId) : undefined
+                }
+                onEdit={() => form.openModal(subj)}
+                onDelete={() => initiateDelete(subj)}
+                onShowTeachers={() => setSubjectForTeacherList(subj)}
+              />
+            );
+          })}
+        </div>
+      )}
 
       <SubjectEditorModal form={form} data={data} />
 
       <Modal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
-        title="Delete Subject?"
-        aria-label="Delete Subject?"
+        title="Delete subject"
         footer={
-          <div className="flex justify-end gap-2 w-full">
+          <div className="flex w-full justify-end gap-2">
             <Button variant="secondary" onClick={() => setDeleteModalOpen(false)}>
-              Keep It
+              Cancel
             </Button>
             <Button variant="danger" onClick={confirmDelete}>
-              Yes, Delete Everything
+              Delete Subject
             </Button>
           </div>
         }
       >
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center text-danger-ink shrink-0">
-            <AlertTriangle size={24} />
-          </div>
-          <div>
-            <p className="font-bold text-slate-800 dark:text-slate-100 text-lg">
-              Are you sure you want to delete "{subjectToDelete?.name}"?
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="mt-0.5 shrink-0 text-danger-ink" size={18} aria-hidden />
+          <div className="min-w-0">
+            <p className="text-sm text-content">
+              Delete <span className="font-medium">{subjectToDelete?.name}</span>?
             </p>
-
-            {usageToDelete.classCount > 0 || usageToDelete.teacherCount > 0 ? (
-              <div className="mt-3 bg-red-50 dark:bg-red-900/30 border border-red-100 p-3 rounded-lg text-sm text-red-800 dark:text-red-200">
-                <p className="font-bold mb-1">Warning: Active Dependencies</p>
-                <ul className="list-disc list-inside space-y-1">
-                  {usageToDelete.teacherCount > 0 && (
-                    <li>
-                      Removed from <b>{usageToDelete.teacherCount}</b> teacher profiles.
+            {hasDependencies ? (
+              <>
+                <p className="mt-1 text-xs text-content-muted">This also removes it from:</p>
+                <ul className="mt-1.5 space-y-1 text-xs text-content-secondary">
+                  {usageToDelete.classCount > 0 && (
+                    <li className="flex gap-1.5">
+                      <span aria-hidden>·</span>
+                      <span>
+                        <span className="font-medium tabular-nums">{usageToDelete.classCount}</span>{" "}
+                        class {usageToDelete.classCount === 1 ? "curriculum" : "curriculums"}, along
+                        with any lessons already scheduled for it
+                      </span>
                     </li>
                   )}
-                  {usageToDelete.classCount > 0 && (
-                    <li>
-                      Removed from <b>{usageToDelete.classCount}</b> class curriculums.
+                  {usageToDelete.teacherCount > 0 && (
+                    <li className="flex gap-1.5">
+                      <span aria-hidden>·</span>
+                      <span>
+                        <span className="font-medium tabular-nums">
+                          {usageToDelete.teacherCount}
+                        </span>{" "}
+                        teacher {usageToDelete.teacherCount === 1 ? "record" : "records"}
+                      </span>
                     </li>
                   )}
                 </ul>
-                <p className="mt-2 text-xs opacity-80">This action cannot be undone.</p>
-              </div>
+                <p className="mt-2 text-xs text-content-muted">This cannot be undone.</p>
+              </>
             ) : (
-              <p className="text-sm text-content-muted mt-2">
-                This subject is not currently in use. It is safe to delete.
+              <p className="mt-1 text-xs text-content-muted">
+                No class or teacher currently uses it, so nothing else changes.
               </p>
             )}
           </div>

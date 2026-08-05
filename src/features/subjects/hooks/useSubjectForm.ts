@@ -24,9 +24,12 @@ export const useSubjectForm = (data: AppData, addActivity: AddActivity) => {
   const openModal = (subj?: Subject) => {
     setEditingSubject(subj || null);
     setName(subj?.name || "");
-    const usedColors = data.subjects.filter((s) => s.id !== subj?.id).map((s) => s.color);
+    // Lower-cased so a subject stored as "#A0522D" still counts that shade as taken.
+    const usedColors = new Set(
+      data.subjects.filter((s) => s.id !== subj?.id).map((s) => s.color?.toLowerCase()),
+    );
     const defaultHex =
-      COLOR_PALETTE.find((c) => !usedColors.includes(c.hex))?.hex || COLOR_PALETTE[0].hex;
+      COLOR_PALETTE.find((c) => !usedColors.has(c.hex.toLowerCase()))?.hex || COLOR_PALETTE[0].hex;
     setColor(subj?.color || defaultHex);
     setIsSingleResource(subj?.isSingleResource || false);
     setIsExaminable(subj?.isExaminable !== undefined ? subj.isExaminable : true);
@@ -47,7 +50,12 @@ export const useSubjectForm = (data: AppData, addActivity: AddActivity) => {
 
   const save = () => {
     if (!name) return;
+    // Spread the existing subject first: this form owns six fields, but a
+    // Subject also carries exam paper counts and durations, preferred rooms and
+    // a required room type. Building the record from scratch dropped all of
+    // them, so renaming a subject silently wiped its exam configuration.
     const newSubj: Subject = {
+      ...editingSubject,
       id: editingSubject ? editingSubject.id : generateId(),
       name,
       color,

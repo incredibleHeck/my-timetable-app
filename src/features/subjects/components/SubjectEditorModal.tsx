@@ -1,7 +1,7 @@
 import React from "react";
-import { Check, BookOpen, Users, Palette, Gem, FileText } from "lucide-react";
+import { Check } from "lucide-react";
 import { AppData } from "../../../types";
-import { Button, Modal, Input } from "../../../components/ui";
+import { Button, Modal, controlClass } from "../../../components/ui";
 import { COLOR_PALETTE } from "../../../utils/constants";
 import { SubjectFormState } from "../hooks/useSubjectForm";
 
@@ -9,6 +9,37 @@ interface SubjectEditorModalProps {
   form: SubjectFormState;
   data: AppData;
 }
+
+interface ToggleRowProps {
+  id: string;
+  label: string;
+  description: React.ReactNode;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}
+
+/**
+ * A real checkbox with a label. The three settings here used to be `div`s with
+ * an onClick and a hand-drawn tick in purple, amber and blue — three colours for
+ * three equivalent switches, none of which could be reached from the keyboard.
+ */
+const ToggleRow: React.FC<ToggleRowProps> = ({ id, label, description, checked, onChange }) => (
+  <div className="flex items-start gap-3 px-4 py-3">
+    <input
+      id={id}
+      type="checkbox"
+      checked={checked}
+      onChange={(e) => onChange(e.target.checked)}
+      className="mt-0.5 h-4 w-4 shrink-0 rounded border-edge-strong text-accent focus:ring-accent"
+    />
+    <div className="min-w-0">
+      <label htmlFor={id} className="text-sm font-medium text-content">
+        {label}
+      </label>
+      <p className="mt-0.5 text-xs leading-relaxed text-content-muted">{description}</p>
+    </div>
+  </div>
+);
 
 export const SubjectEditorModal: React.FC<SubjectEditorModalProps> = ({ form, data }) => {
   const {
@@ -30,220 +61,139 @@ export const SubjectEditorModal: React.FC<SubjectEditorModalProps> = ({ form, da
     save,
   } = form;
 
+  // Hex values are compared lower-cased: subjects stored with mixed-case colours
+  // ("#A0522D") otherwise read as unused, and the picker would hand the same
+  // shade to a second subject.
+  const usedColors = new Set(
+    data.subjects.filter((s) => s.id !== editingSubject?.id).map((s) => s.color?.toLowerCase()),
+  );
+  const selectedColorName = COLOR_PALETTE.find(
+    (c) => c.hex.toLowerCase() === color?.toLowerCase(),
+  )?.name;
+
   return (
     <Modal
       isOpen={modalOpen}
       onClose={closeModal}
       title={editingSubject ? "Edit Subject" : "New Subject"}
       footer={
-        <div className="flex justify-end gap-2 w-full">
+        <div className="flex w-full justify-end gap-2">
           <Button variant="secondary" onClick={closeModal}>
             Cancel
           </Button>
-          <Button onClick={save}>Save Subject</Button>
+          <Button onClick={save} disabled={!name.trim()}>
+            Save Subject
+          </Button>
         </div>
       }
-      maxWidth="max-w-3xl"
+      maxWidth="max-w-2xl"
     >
-      <div className="space-y-6">
-        <Input
-          label="Subject Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          autoFocus
-          placeholder="e.g. Mathematics"
-        />
-
-        {/* Single Resource Toggle */}
-        <div
-          className={`flex items-start gap-3 p-4 rounded-xl border transition-colors cursor-pointer ${
-            isSingleResource
-              ? "bg-purple-50 dark:bg-purple-900/30 border-purple-200"
-              : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300"
-          }`}
-          onClick={() => setIsSingleResource(!isSingleResource)}
-        >
-          <div
-            className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors ${
-              isSingleResource
-                ? "bg-purple-600 border-purple-600"
-                : "bg-white dark:bg-slate-800 border-slate-300"
-            }`}
-          >
-            {isSingleResource && <Check size={14} className="text-white" />}
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h4
-                className={`text-sm font-bold ${
-                  isSingleResource
-                    ? "text-purple-800 dark:text-purple-200"
-                    : "text-slate-700 dark:text-slate-200"
-                }`}
-              >
-                Single Resource Facility
-              </h4>
-              <Gem
-                size={14}
-                className={isSingleResource ? "text-purple-600" : "text-content-muted"}
-              />
-            </div>
-            <p className="text-xs text-content-muted mt-1">
-              Enable this for subjects that require a unique room (e.g. ICT Lab, Science Lab). The
-              scheduler will ensure <strong>only one class</strong> in the entire school is
-              scheduled for this subject at any given time.
-            </p>
-          </div>
-        </div>
-
-        {/* Examinable Toggle */}
-        <div
-          className={`flex items-start gap-3 p-4 rounded-xl border transition-colors cursor-pointer ${
-            isExaminable
-              ? "bg-amber-50 dark:bg-amber-900/30 border-amber-200"
-              : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300"
-          }`}
-          onClick={() => setIsExaminable(!isExaminable)}
-        >
-          <div
-            className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors ${
-              isExaminable
-                ? "bg-amber-600 border-amber-600"
-                : "bg-white dark:bg-slate-800 border-slate-300"
-            }`}
-          >
-            {isExaminable && <Check size={14} className="text-white" />}
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h4
-                className={`text-sm font-bold ${
-                  isExaminable
-                    ? "text-amber-800 dark:text-amber-200"
-                    : "text-slate-700 dark:text-slate-200"
-                }`}
-              >
-                Examinable Subject
-              </h4>
-              <FileText
-                size={14}
-                className={isExaminable ? "text-accent-ink" : "text-content-muted"}
-              />
-            </div>
-            <p className="text-xs text-content-muted mt-1">
-              If enabled, this subject will be automatically selected for inclusion when
-              auto-generating the exam timetable.
-            </p>
-          </div>
-        </div>
-
-        {/* Core Subject Toggle */}
-        <div
-          className={`flex items-start gap-3 p-4 rounded-xl border transition-colors cursor-pointer ${
-            isCore
-              ? "bg-blue-50 dark:bg-blue-900/30 border-blue-200"
-              : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300"
-          }`}
-          onClick={() => setIsCore(!isCore)}
-        >
-          <div
-            className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors ${
-              isCore ? "bg-blue-600 border-blue-600" : "bg-white dark:bg-slate-800 border-slate-300"
-            }`}
-          >
-            {isCore && <Check size={14} className="text-white" />}
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h4
-                className={`text-sm font-bold ${isCore ? "text-blue-800 dark:text-blue-200" : "text-slate-700 dark:text-slate-200"}`}
-              >
-                Core Subject
-              </h4>
-              <BookOpen size={14} className={isCore ? "text-blue-600" : "text-content-muted"} />
-            </div>
-            <p className="text-xs text-content-muted mt-1">
-              Schedules this subject earlier in the day where possible, and applies weekly balance
-              and spread heuristics. Only subjects ticked here get that priority.
-            </p>
-          </div>
-        </div>
-
-        {/* Room Requirements */}
-        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 space-y-4">
-          <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
-            <Users size={16} /> Facility Mapping
-          </h4>
-
-          <div className="space-y-2">
-            <label className="block text-xs font-bold text-content-muted uppercase">
-              Fixed Facility / Room
+      <div className="space-y-5">
+        <div className="flex flex-wrap items-end gap-4">
+          <div className="min-w-[12rem] flex-1">
+            <label htmlFor="subject-name" className="mb-1.5 block text-sm font-medium text-content">
+              Name
             </label>
-            <select
-              className="w-full rounded-md border-slate-300 text-sm p-2 focus:ring-amber-500 focus:border-amber-500"
-              value={requiredRoomId || ""}
-              onChange={(e) => setRequiredRoomId(e.target.value || null)}
-            >
-              <option value="">No Fixed Room (Use Home Classroom)</option>
-              {(data.rooms || []).map((room) => (
-                <option key={room.id} value={room.id}>
-                  {room.name} ({room.type})
-                </option>
-              ))}
-            </select>
-            <p className="text-2xs text-content-muted italic">
-              If selected, this subject will always be scheduled in this specific room.
-            </p>
+            <input
+              id="subject-name"
+              className={`${controlClass} w-full`}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoFocus
+              placeholder="Mathematics"
+            />
+          </div>
+          <div className="flex items-center gap-2 pb-1.5">
+            <span
+              className="h-8 w-8 rounded-md ring-1 ring-black/10"
+              style={{ backgroundColor: color }}
+              aria-hidden
+            />
+            <span className="text-xs text-content-muted">{selectedColorName ?? "Custom"}</span>
           </div>
         </div>
 
         <div>
-          <div className="flex justify-between items-center mb-3">
-            <label className="block text-xs font-bold text-content-muted uppercase tracking-wide">
-              Select Identifier Color
-            </label>
-            <div className="flex items-center text-2xs text-content-muted gap-1 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
-              <Palette size={10} /> {COLOR_PALETTE.length} Distinct Shades
-            </div>
-          </div>
-
-          <div className="grid grid-cols-8 gap-3 p-1">
+          <h4 className="mb-1.5 text-sm font-medium text-content">Colour</h4>
+          <p className="mb-2 text-xs text-content-muted">
+            Identifies this subject across timetables and exports. Colours already taken by another
+            subject are disabled.
+          </p>
+          <div className="flex flex-wrap gap-2">
             {COLOR_PALETTE.map((colorObj) => {
-              const usedColors = data.subjects
-                .filter((s) => s.id !== editingSubject?.id)
-                .map((s) => s.color);
-              const isUsed = usedColors.includes(colorObj.hex);
-              const isSelected = color === colorObj.hex;
-
+              const isSelected = color?.toLowerCase() === colorObj.hex.toLowerCase();
+              const isUsed = usedColors.has(colorObj.hex.toLowerCase());
               return (
                 <button
                   key={colorObj.hex}
+                  type="button"
                   disabled={isUsed && !isSelected}
                   onClick={() => setColor(colorObj.hex)}
-                  className={`
-                      w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 relative group/btn hover:z-50
-                      ${
-                        isUsed && !isSelected
-                          ? "opacity-20 grayscale cursor-not-allowed scale-90"
-                          : "hover:scale-125 shadow-sm cursor-pointer"
-                      }
-                      ${
-                        isSelected
-                          ? "ring-2 ring-offset-2 ring-slate-800 scale-125 z-10 shadow-md"
-                          : ""
-                      }
-                    `}
+                  aria-pressed={isSelected}
+                  aria-label={isUsed && !isSelected ? `${colorObj.name} (in use)` : colorObj.name}
+                  title={isUsed && !isSelected ? `${colorObj.name} — in use` : colorObj.name}
                   style={{ backgroundColor: colorObj.hex }}
-                  title={isUsed && !isSelected ? `${colorObj.name} (Used)` : colorObj.name}
+                  className={`grid h-7 w-7 place-items-center rounded-md ring-1 ring-inset ring-black/10
+                              transition-shadow focus-visible:outline-none focus-visible:ring-2
+                              focus-visible:ring-accent focus-visible:ring-offset-2
+                              focus-visible:ring-offset-surface
+                              disabled:cursor-not-allowed disabled:opacity-25 ${
+                                isSelected
+                                  ? "ring-2 ring-offset-2 ring-offset-surface ring-content"
+                                  : ""
+                              }`}
                 >
-                  {isSelected && <Check size={12} className="text-white drop-shadow-md" />}
-                  <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 text-white text-2xs rounded opacity-0 group-hover/btn:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-opacity shadow-lg">
-                    {colorObj.name}
-                  </span>
+                  {isSelected && <Check size={13} className="text-white drop-shadow" aria-hidden />}
                 </button>
               );
             })}
           </div>
+        </div>
+
+        <div className="divide-y divide-edge-subtle rounded-lg border border-edge">
+          <ToggleRow
+            id="subject-core"
+            label="Core subject"
+            checked={isCore}
+            onChange={setIsCore}
+            description="Scheduled earlier in the day where possible, with weekly balance and spread heuristics applied. Only subjects ticked here get that priority."
+          />
+          <ToggleRow
+            id="subject-single-resource"
+            label="Single resource"
+            checked={isSingleResource}
+            onChange={setIsSingleResource}
+            description="For subjects tied to one facility, such as an ICT or science lab. Only one class in the school can be scheduled for it at a time."
+          />
+          <ToggleRow
+            id="subject-examinable"
+            label="Examinable"
+            checked={isExaminable}
+            onChange={setIsExaminable}
+            description="Included automatically when auto-generating the exam timetable."
+          />
+        </div>
+
+        <div>
+          <label htmlFor="subject-room" className="mb-1.5 block text-sm font-medium text-content">
+            Room requirement
+          </label>
+          <select
+            id="subject-room"
+            className={`${controlClass} w-full cursor-pointer`}
+            value={requiredRoomId || ""}
+            onChange={(e) => setRequiredRoomId(e.target.value || null)}
+          >
+            <option value="">No fixed room — use the class home room</option>
+            {(data.rooms || []).map((room) => (
+              <option key={room.id} value={room.id}>
+                {room.name} ({room.type})
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-content-muted">
+            When set, every lesson of this subject is scheduled in that room.
+          </p>
         </div>
       </div>
     </Modal>

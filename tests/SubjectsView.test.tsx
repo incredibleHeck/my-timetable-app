@@ -2,41 +2,71 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { SubjectsView } from "../src/features/subjects/SubjectsView";
+import { AppData } from "../src/types";
 import { DEFAULT_DATA } from "../src/utils/constants";
 
-// Mock useProfile
+const mockAddActivity = vi.fn();
+
 vi.mock("../src/contexts/ProfileContext", () => ({
   useProfile: () => ({
-    addActivity: vi.fn(),
+    addActivity: mockAddActivity,
   }),
 }));
 
 describe("SubjectsView", () => {
   const mockOnUpdate = vi.fn();
 
-  const defaultProps = {
-    data: DEFAULT_DATA,
-    onUpdate: mockOnUpdate,
-  };
+  const dataWithRooms = {
+    ...DEFAULT_DATA,
+    rooms: [{ id: "r-lab", name: "Computer Lab", type: "Lab", capacity: 30 }],
+  } as AppData;
 
-  it("shows Room selection in Subject modal", () => {
-    const dataWithRooms = {
-      ...DEFAULT_DATA,
-      rooms: [{ id: "r-lab", name: "Computer Lab", type: "Lab", capacity: 30 }],
-    };
-    render(<SubjectsView {...defaultProps} data={dataWithRooms as any} />);
+  it("offers a room requirement in the subject modal", () => {
+    render(<SubjectsView data={dataWithRooms} onUpdate={mockOnUpdate} />);
 
-    // Open modal
-    const addButton = screen.getByText(/New Subject/i);
-    fireEvent.click(addButton);
+    fireEvent.click(screen.getByText(/New Subject/i));
 
-    // Check for Facility Mapping section
-    expect(screen.getByText(/Facility Mapping/i)).toBeDefined();
-    expect(screen.getByText(/Fixed Facility \/ Room/i)).toBeDefined();
-
-    // Check if Lab is in dropdown
-    const select = screen.getByRole("combobox");
-    expect(select).toBeDefined();
+    expect(screen.getByLabelText(/Room requirement/i)).toBeDefined();
+    expect(screen.getByRole("combobox")).toBeDefined();
     expect(screen.getByText(/Computer Lab/i)).toBeDefined();
+  });
+
+  // The editor owns six fields but a Subject carries more. Rebuilding the record
+  // from the form alone dropped exam paper settings and room preferences, so
+  // renaming a subject quietly discarded its exam configuration.
+  it("preserves fields the editor does not own when saving an edit", () => {
+    mockAddActivity.mockClear();
+
+    const data = {
+      ...dataWithRooms,
+      subjects: [
+        {
+          id: "s1",
+          name: "Physics",
+          color: "#ef4444",
+          examPaperCount: 3,
+          examPaperDurations: [60, 90, 45],
+          requiredRoomType: "Lab",
+          preferredRoomIds: ["r-lab"],
+        },
+      ],
+      teachers: [],
+      classes: [],
+    } as unknown as AppData;
+
+    render(<SubjectsView data={data} onUpdate={mockOnUpdate} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Edit Physics" }));
+    fireEvent.change(screen.getByLabelText(/^Name$/i), { target: { value: "Physics I" } });
+    fireEvent.click(screen.getByRole("button", { name: /Save Subject/i }));
+
+    const [, , nextData] = mockAddActivity.mock.calls.at(-1) as [string, string, AppData];
+    expect(nextData.subjects[0]).toMatchObject({
+      name: "Physics I",
+      examPaperCount: 3,
+      examPaperDurations: [60, 90, 45],
+      requiredRoomType: "Lab",
+      preferredRoomIds: ["r-lab"],
+    });
   });
 });
