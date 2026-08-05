@@ -1,9 +1,16 @@
 import React from "react";
 
 /**
- * Empty, then green, then yellow, then red, in even quarters of the scale.
- * Past 75% the ramp has arrived at red and stays there, so the last quarter of
- * capacity reads as full regardless of how far over it goes.
+ * Four quarters, each one a stage of the ramp:
+ *
+ *   0–25%    empty fading into green
+ *   25–50%   green fading into yellow
+ *   50–75%   yellow, held
+ *   75–100%  yellow fading into red, fully red only at capacity
+ *
+ * Red arriving at 100% rather than earlier is the point: a teacher at
+ * three-quarters of their cap is not in the same position as one at their
+ * limit, and the bar should not say they are.
  *
  * The first stop is the surface token rather than literal white so it means
  * "nothing here" in both themes: white on the light track, panel colour on the
@@ -14,7 +21,8 @@ export const CAPACITY_GRADIENT =
   " rgb(var(--surface)) 0%," +
   " rgb(var(--success)) 25%," +
   " rgb(var(--accent)) 50%," +
-  " rgb(var(--danger)) 75%)";
+  " rgb(var(--accent)) 75%," +
+  " rgb(var(--danger)) 100%)";
 
 interface CapacityMeterProps {
   /** Percentage of capacity used. Values over 100 fill the track. */
