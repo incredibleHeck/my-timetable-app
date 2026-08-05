@@ -4,13 +4,18 @@ import { resolveSubjectIsCore } from "../logic/subject-core";
 import { solveSmartWithRestarts } from "../solver/solver";
 import { runConflictAudit } from "../validation/audit";
 import { auditFinalSchedule, dedupeConflicts } from "../validation";
-import { SOLVER_TIME_LIMIT_MS, SOLVER_TARGET_MS } from "../constants";
+import { resolveSolverBudgetMs, resolveSolverHardLimitMs } from "../constants";
 
 const ctx: Worker = self as unknown as Worker;
 
 ctx.onmessage = (e: MessageEvent<AppData>) => {
   const data = e.data;
   const startTime = Date.now();
+  // Both deadlines below come from the school's configured limit. They were
+  // flat constants, so the worker cut every run off at 60s however many
+  // minutes had been asked for.
+  const budgetMs = resolveSolverBudgetMs(data.settings);
+  const hardLimitMs = resolveSolverHardLimitMs(data.settings);
 
   try {
     // 1. PREPARATION
@@ -39,7 +44,7 @@ ctx.onmessage = (e: MessageEvent<AppData>) => {
       units,
       data,
       (phase, progress, total, currentConflictCount, meta) => {
-        if (Date.now() - startTime >= SOLVER_TARGET_MS) {
+        if (Date.now() - startTime >= budgetMs) {
           return false;
         }
 
@@ -54,7 +59,7 @@ ctx.onmessage = (e: MessageEvent<AppData>) => {
             bestUnplaced: meta?.bestUnplaced ?? currentConflictCount,
             perfectRuns: meta?.perfectRuns ?? 0,
             elapsedMs: meta?.elapsedMs ?? Date.now() - startTime,
-            timeBudgetMs: meta?.timeBudgetMs ?? SOLVER_TARGET_MS,
+            timeBudgetMs: meta?.timeBudgetMs ?? budgetMs,
             schedule: meta?.scheduleSnapshot,
           },
         });
@@ -63,7 +68,7 @@ ctx.onmessage = (e: MessageEvent<AppData>) => {
       { clockStartMs: startTime },
     );
 
-    if (Date.now() - startTime > SOLVER_TIME_LIMIT_MS) {
+    if (Date.now() - startTime > hardLimitMs) {
       throw new Error("Solver exceeded hard time limit");
     }
 

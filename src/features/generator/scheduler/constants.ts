@@ -9,11 +9,30 @@
  */
 
 // --- PERFORMANCE & TIMING ---
-/** Maximum time (ms) web worker is allowed to run before timeout */
-export const SOLVER_TIME_LIMIT_MS = 65000; // 65 seconds (5s buffer for audit/post)
-
-/** Target solve time (ms) — solver keeps spawning runs until this elapses */
+/** Fallback solve time (ms) when the school has not configured a limit. */
 export const SOLVER_TARGET_MS = 60000;
+
+/** Headroom on top of the budget for the final audit before the run is aborted. */
+export const SOLVER_POST_BUDGET_MS = 5000;
+
+/**
+ * How long the solver may keep spawning runs, from the school's configured
+ * limit in Configuration → Auto-generator.
+ *
+ * Everything that enforces a deadline has to read it from here. The worker used
+ * to police the run against a flat 60s constant while the solver sized its
+ * budget from this setting, so a limit above one minute was silently ignored —
+ * the worker stopped the run at 60s no matter what had been asked for.
+ */
+export function resolveSolverBudgetMs(settings: { solverTimeoutMinutes?: number }): number {
+  const minutes = settings.solverTimeoutMinutes;
+  return minutes && minutes > 0 ? minutes * 60_000 : SOLVER_TARGET_MS;
+}
+
+/** Hard ceiling for a worker run: the budget plus audit headroom. */
+export function resolveSolverHardLimitMs(settings: { solverTimeoutMinutes?: number }): number {
+  return resolveSolverBudgetMs(settings) + SOLVER_POST_BUDGET_MS;
+}
 
 /** Maximum iterations in the repair phase before stopping */
 export const MAX_REPAIR_STEPS = 5000;

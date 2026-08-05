@@ -11,7 +11,7 @@ import { exportClassICal, exportTeacherICal } from "../../services/export/ical";
 import { Button, controlClass } from "../../components/ui";
 import { useToast } from "../../components/ui/Toast";
 import { auditFinalSchedule, runPreflightCheck } from "./scheduler/validation";
-import { SOLVER_TARGET_MS } from "./scheduler/constants";
+import { resolveSolverBudgetMs } from "./scheduler/constants";
 import { getSpecialistRooms, countRoomPeriods } from "./utils/roomSchedule";
 import {
   applyTeacherReassignments,
@@ -303,7 +303,7 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
           bestUnplaced: payload.bestUnplaced,
           perfectRuns: payload.perfectRuns ?? 0,
           elapsedMs: payload.elapsedMs ?? 0,
-          timeBudgetMs: payload.timeBudgetMs ?? SOLVER_TARGET_MS,
+          timeBudgetMs: payload.timeBudgetMs ?? resolveSolverBudgetMs(data.settings),
         });
       } else if (type === "success") {
         setStats({

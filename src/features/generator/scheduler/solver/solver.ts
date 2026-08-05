@@ -27,7 +27,7 @@ import {
   TABU_CLEANUP_FREQUENCY,
   MRV_CRITICAL_FIRST,
   SOLVER_RUN_COUNT,
-  SOLVER_TARGET_MS,
+  resolveSolverBudgetMs,
   SCORING_WEIGHTS,
   ScoringWeightKey,
   ScoringWeightOverrides,
@@ -677,7 +677,8 @@ export const solveSmart = (
 
 /**
  * Worker entry: time-driven solver that fills the full time budget.
- * Keeps spawning seeded, shuffled, calibrated runs until 60 seconds elapse,
+ * Keeps spawning seeded, shuffled, calibrated runs until the configured time
+ * limit elapses (Configuration → Auto-generator, one minute by default),
  * returning the best result found across all attempts.
  */
 export const solveSmartWithRestarts = (
@@ -686,13 +687,9 @@ export const solveSmartWithRestarts = (
   onProgress?: SolverProgressCallback,
   options: SolverOptions = {},
 ): SolverResult => {
-  const dynamicBudgetMs = data.settings.solverTimeoutMinutes
-    ? data.settings.solverTimeoutMinutes * 60000
-    : SOLVER_TARGET_MS;
-
   return solveSmart(units, data, onProgress, {
     runs: options.runs ?? SOLVER_RUN_COUNT,
-    timeBudgetMs: options.timeBudgetMs ?? dynamicBudgetMs,
+    timeBudgetMs: options.timeBudgetMs ?? resolveSolverBudgetMs(data.settings),
     clockStartMs: options.clockStartMs,
     calibrate: options.calibrate ?? true,
     shuffleConstruction: options.shuffleConstruction ?? true,
