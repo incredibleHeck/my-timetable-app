@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { AppData } from "../../types";
 import { Upload, Search } from "lucide-react";
-import { Button, controlClass, quietButtonClass } from "../../components/ui";
+import { Button, CapacityMeter, controlClass, quietButtonClass } from "../../components/ui";
 import { useWorkloadStats } from "./hooks/useWorkloadStats";
 import { useAnalytics } from "./hooks/useAnalytics";
 import { WorkloadTeacherDetail } from "./components/WorkloadTeacherDetail";
@@ -222,7 +222,9 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
 
               const isOver = utilizationPct > 100;
               const isHigh = utilizationPct > 85;
-              const barTone = isOver ? "bg-danger" : isHigh ? "bg-accent" : "bg-success";
+              // The bar ramps continuously across the whole scale; the figure
+              // stays on three ink tones, because an interpolated colour cannot
+              // be held to a contrast ratio the way a fixed one can.
               const pctTone = isOver
                 ? "text-danger-ink"
                 : isHigh
@@ -252,12 +254,11 @@ export const WorkloadView: React.FC<ViewProps> = ({ data }) => {
                       </span>
                     </div>
 
-                    <div className="mt-2 h-[3px] w-full overflow-hidden rounded-full bg-surface-inset">
-                      <div
-                        className={`h-full ${barTone}`}
-                        style={{ width: `${Math.min(utilizationPct, 100)}%` }}
-                      />
-                    </div>
+                    <CapacityMeter
+                      pct={utilizationPct}
+                      className="mt-2 h-1"
+                      label={`${assignedPeriods} of ${maxWeeklyCapacity} periods used`}
+                    />
 
                     <p className="mt-2 flex flex-wrap gap-x-3 text-2xs tabular-nums text-content-muted">
                       <span>

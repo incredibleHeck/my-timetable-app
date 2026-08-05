@@ -5,6 +5,7 @@ export * from "./Modal";
 export * from "./Card";
 export * from "./Panel";
 export * from "./Badge";
+export * from "./CapacityMeter";
 export * from "./EntityChip";
 export * from "./DataTable";
 export * from "./Toast";
