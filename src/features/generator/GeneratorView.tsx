@@ -361,6 +361,14 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
         perfectRuns: progressSnapshot?.perfectRuns ?? 1,
       });
       applyGeneratedSchedule(baseData, perfectSchedule, "Perfect timetable applied.");
+
+      // Stopping early overwrites the timetable just as finishing does, but this
+      // path never opened the restore window — so the one case where you halt a
+      // run because you would rather keep what you had was the one case with no
+      // way back to it.
+      setCanRestore(true);
+      if (restoreTimerRef.current) clearTimeout(restoreTimerRef.current);
+      restoreTimerRef.current = setTimeout(() => setCanRestore(false), 60_000);
     } else {
       showToast("Stopped — no perfect timetable was saved yet.", "info");
     }
