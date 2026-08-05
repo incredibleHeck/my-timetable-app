@@ -1,20 +1,7 @@
 import React from "react";
-import {
-  Play,
-  Users,
-  BookOpen,
-  Recycle,
-  Lock,
-  Unlock,
-  ArrowLeft,
-  FileSpreadsheet,
-  Square,
-  Plus,
-  History,
-  DoorOpen,
-} from "lucide-react";
+import { Play, Recycle, Lock, Unlock, FileSpreadsheet, Square, Plus, History } from "lucide-react";
 import { AppData } from "../../../types";
-import { Button } from "../../../components/ui";
+import { Button, quietButtonClass } from "../../../components/ui";
 import { ExportMenu } from "./ExportMenu";
 import { PrintMode } from "../../../services/export/print";
 
@@ -27,15 +14,23 @@ export interface GeneratorStats {
   perfectRuns: number;
 }
 
+type Mode = "CLASS" | "TEACHER" | "ROOM";
+
+const MODES: { id: Mode; label: string }[] = [
+  { id: "CLASS", label: "Classes" },
+  { id: "TEACHER", label: "Teachers" },
+  { id: "ROOM", label: "Rooms" },
+];
+
 interface GeneratorToolbarProps {
   data: AppData;
-  mode: "CLASS" | "TEACHER" | "ROOM";
+  mode: Mode;
   isGenerating: boolean;
   isEditMode: boolean;
   isManualPlacementMode: boolean;
   stats: GeneratorStats | null;
   onNavigate?: (view: import("../../../types").ViewState) => void;
-  onModeChange: (mode: "CLASS" | "TEACHER" | "ROOM") => void;
+  onModeChange: (mode: Mode) => void;
   onToggleEditMode: () => void;
   onToggleManualPlacement: () => void;
   onGenerate: () => void;
@@ -47,6 +42,15 @@ interface GeneratorToolbarProps {
   onRestore?: () => void;
 }
 
+const toggleClass = (isOn: boolean) =>
+  `inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-sm transition-colors
+   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent
+   focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:opacity-50 ${
+     isOn
+       ? "border-accent bg-accent/15 font-medium text-content"
+       : "border-edge bg-surface text-content-secondary hover:border-edge-strong hover:text-content"
+   }`;
+
 export const GeneratorToolbar: React.FC<GeneratorToolbarProps> = ({
   data,
   mode,
@@ -54,7 +58,6 @@ export const GeneratorToolbar: React.FC<GeneratorToolbarProps> = ({
   isEditMode,
   isManualPlacementMode,
   stats,
-  onNavigate,
   onModeChange,
   onToggleEditMode,
   onToggleManualPlacement,
@@ -66,173 +69,146 @@ export const GeneratorToolbar: React.FC<GeneratorToolbarProps> = ({
   canRestore,
   onRestore,
 }) => (
-  <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 print:hidden">
-    <div className="flex flex-col md:flex-row md:items-center gap-6">
-      <button
-        onClick={() => onNavigate && onNavigate("DASHBOARD")}
-        className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-content-muted"
-        aria-label="Back to dashboard"
-      >
-        <ArrowLeft size={20} />
-      </button>
+  <div className="mb-5 flex flex-col gap-3 print:hidden">
+    <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
       <div>
-        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-          Auto-Scheduler
-          {data.lastGenerated && !isGenerating && (
-            <span className="text-2xs font-normal text-content-muted bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
-              Last run: {new Date(data.lastGenerated).toLocaleTimeString()}
-            </span>
-          )}
-        </h2>
-        <p className="text-xs text-content-muted mt-1 flex flex-wrap gap-x-2 gap-y-0.5">
-          <span>v10.0 (Worker-Enabled)</span>
-          {stats && (
+        {/* The page called itself "Auto-Scheduler" while the nav called it
+            "Auto-Generator", and printed its build string underneath. */}
+        <h2 className="text-lg font-semibold tracking-tight text-content">Auto-Generator</h2>
+        <p className="mt-1 text-xs text-content-muted">
+          {data.lastGenerated ? (
             <>
-              <span className="text-success-ink font-medium">
-                • {(stats.duration / 1000).toFixed(1)}s
-              </span>
-              <span className="text-content-muted">
-                • {stats.totalRuns} run{stats.totalRuns !== 1 ? "s" : ""}
-              </span>
-              <span className="text-content-muted">
-                • {stats.iterations.toLocaleString()} moves
-              </span>
-              {stats.perfectRuns > 0 && (
-                <span className="text-success-ink font-medium">• {stats.perfectRuns} perfect</span>
-              )}
-              {stats.unplaced === 0 ? (
-                <span className="text-success-ink font-medium">• fully placed</span>
-              ) : (
-                <span className="text-accent-ink font-medium">• {stats.unplaced} unplaced</span>
+              Last run {new Date(data.lastGenerated).toLocaleTimeString()}
+              {stats && (
+                <>
+                  {" · "}
+                  <span className="tabular-nums">{(stats.duration / 1000).toFixed(1)}s</span>
+                  {" · "}
+                  {stats.unplaced === 0 ? (
+                    <span className="text-success-ink">every lesson placed</span>
+                  ) : (
+                    <span className="text-accent-ink">
+                      <span className="tabular-nums">{stats.unplaced}</span> unplaced
+                    </span>
+                  )}
+                </>
               )}
             </>
+          ) : (
+            "No timetable generated yet."
           )}
         </p>
       </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        {canRestore && onRestore && (
+          <button
+            type="button"
+            onClick={onRestore}
+            className={quietButtonClass}
+            title="Restore the schedule from before the last regeneration"
+          >
+            <History size={14} aria-hidden />
+            Restore previous
+          </button>
+        )}
+        {isGenerating ? (
+          <Button onClick={onStop} variant="danger" icon={<Square size={14} fill="currentColor" />}>
+            Stop Solver
+          </Button>
+        ) : (
+          <Button
+            onClick={onGenerate}
+            icon={data.lastGenerated ? <Recycle size={16} /> : <Play size={16} />}
+          >
+            {data.lastGenerated ? "Regenerate" : "Generate Schedule"}
+          </Button>
+        )}
+
+        <button
+          type="button"
+          onClick={onExcelExport}
+          disabled={isGenerating}
+          className={`${quietButtonClass} w-9 justify-center px-0`}
+          title={
+            mode === "CLASS"
+              ? "Export all classes to Excel"
+              : mode === "TEACHER"
+                ? "Export all teachers to Excel"
+                : "Export all rooms to Excel"
+          }
+          aria-label={
+            mode === "CLASS"
+              ? "Export all classes to Excel"
+              : mode === "TEACHER"
+                ? "Export all teachers to Excel"
+                : "Export all rooms to Excel"
+          }
+        >
+          <FileSpreadsheet size={15} aria-hidden />
+        </button>
+
+        <ExportMenu
+          data={data}
+          disabled={isGenerating}
+          onPrint={onPrint}
+          onExportICal={onExportICal}
+        />
+      </div>
+    </div>
+
+    <div className="flex flex-wrap items-center gap-2">
       <div
-        className="flex bg-slate-200 dark:bg-slate-700 p-1 rounded-lg"
         role="group"
         aria-label="Schedule view mode"
+        className="inline-flex h-9 items-center rounded-md border border-edge bg-surface p-0.5"
       >
-        <button
-          onClick={() => onModeChange("CLASS")}
-          disabled={isGenerating}
-          aria-pressed={mode === "CLASS"}
-          className={`px-4 py-2 text-xs font-bold rounded-md flex items-center gap-2 transition-all ${
-            mode === "CLASS"
-              ? "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm"
-              : "text-content-muted"
-          }`}
-        >
-          <BookOpen size={14} /> Classes
-        </button>
-        <button
-          onClick={() => onModeChange("TEACHER")}
-          disabled={isGenerating}
-          aria-pressed={mode === "TEACHER"}
-          className={`px-4 py-2 text-xs font-bold rounded-md flex items-center gap-2 transition-all ${
-            mode === "TEACHER"
-              ? "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm"
-              : "text-content-muted"
-          }`}
-        >
-          <Users size={14} /> Teachers
-        </button>
-        <button
-          onClick={() => onModeChange("ROOM")}
-          disabled={isGenerating}
-          aria-pressed={mode === "ROOM"}
-          className={`px-4 py-2 text-xs font-bold rounded-md flex items-center gap-2 transition-all ${
-            mode === "ROOM"
-              ? "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm"
-              : "text-content-muted"
-          }`}
-        >
-          <DoorOpen size={14} /> Rooms
-        </button>
+        {MODES.map((m) => {
+          const isActive = mode === m.id;
+          return (
+            <button
+              key={m.id}
+              type="button"
+              onClick={() => onModeChange(m.id)}
+              disabled={isGenerating}
+              aria-pressed={isActive}
+              className={`h-8 rounded px-3 text-sm transition-colors focus-visible:outline-none
+                          focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-50 ${
+                            isActive
+                              ? "bg-surface-inset font-medium text-content dark:bg-slate-700"
+                              : "text-content-muted hover:text-content"
+                          }`}
+            >
+              {m.label}
+            </button>
+          );
+        })}
       </div>
-      <div className="flex items-center gap-2 pl-6 border-l border-slate-200 dark:border-slate-700">
+
+      <div className="ml-2 flex items-center gap-2 border-l border-edge pl-4">
         <button
+          type="button"
           onClick={onToggleEditMode}
           disabled={isGenerating}
           aria-pressed={isEditMode}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
-            isEditMode
-              ? "bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border-amber-200"
-              : "bg-white dark:bg-slate-800 text-content-muted border-slate-200 dark:border-slate-700"
-          }`}
+          className={toggleClass(isEditMode)}
         >
-          {isEditMode ? <Unlock size={14} /> : <Lock size={14} />}
+          {isEditMode ? <Unlock size={14} aria-hidden /> : <Lock size={14} aria-hidden />}
           {isEditMode ? "Disable Edit" : "Enable Edit"}
         </button>
         {isEditMode && mode === "CLASS" && (
           <button
+            type="button"
             onClick={onToggleManualPlacement}
             disabled={isGenerating}
             aria-pressed={isManualPlacementMode}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
-              isManualPlacementMode
-                ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200 border-emerald-200"
-                : "bg-white dark:bg-slate-800 text-content-muted border-slate-200 dark:border-slate-700"
-            }`}
+            className={toggleClass(isManualPlacementMode)}
           >
-            <Plus size={14} />
+            <Plus size={14} aria-hidden />
             {isManualPlacementMode ? "Manual Placement On" : "Manual Placement"}
           </button>
         )}
       </div>
-    </div>
-
-    <div className="flex gap-3 items-center">
-      {canRestore && onRestore && (
-        <button
-          onClick={onRestore}
-          className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-content-muted border border-slate-200 dark:border-slate-700 rounded-lg hover:border-amber-400 hover:text-accent-ink hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-all"
-          title="Restore the schedule from before the last regeneration"
-          aria-label="Restore the schedule from before the last regeneration"
-        >
-          <History size={14} />
-          Restore Previous
-        </button>
-      )}
-      {isGenerating ? (
-        <Button
-          onClick={onStop}
-          variant="danger"
-          size="md"
-          icon={<Square size={16} fill="currentColor" />}
-        >
-          Stop Solver
-        </Button>
-      ) : (
-        <Button
-          onClick={onGenerate}
-          size="md"
-          icon={data.lastGenerated ? <Recycle size={16} /> : <Play size={16} />}
-        >
-          {data.lastGenerated ? "Regenerate" : "Generate Schedule"}
-        </Button>
-      )}
-
-      <Button
-        onClick={onExcelExport}
-        disabled={isGenerating}
-        icon={<FileSpreadsheet size={16} />}
-        aria-label={
-          mode === "CLASS"
-            ? "Export all classes to Excel"
-            : mode === "TEACHER"
-              ? "Export all teachers to Excel"
-              : "Export all rooms to Excel"
-        }
-      />
-
-      <ExportMenu
-        data={data}
-        disabled={isGenerating}
-        onPrint={onPrint}
-        onExportICal={onExportICal}
-      />
     </div>
   </div>
 );

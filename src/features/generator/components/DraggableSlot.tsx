@@ -48,7 +48,7 @@ export const DraggableSlot: React.FC<Props> = memo(
          } 
          ${
            isDragging
-             ? "opacity-50 z-50 shadow-xl ring-2 ring-blue-400 rotate-2 scale-105" // Enhanced visual feedback
+             ? "opacity-40 z-50 ring-2 ring-accent" // the lifted copy is what the cursor follows
              : ""
          }
       `}

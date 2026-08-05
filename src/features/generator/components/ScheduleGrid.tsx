@@ -217,13 +217,13 @@ export const ScheduleGrid: React.FC<Props> = ({
       onDragOver={handleDragOver}
     >
       <div className="flex flex-col h-full min-w-full w-fit print:min-w-0">
-        {/* STATUS BAR */}
-        <div className="mb-3 p-3 rounded-lg text-xs font-bold flex items-center gap-3 transition-all shadow-sm border bg-white dark:bg-slate-800 text-content-muted border-slate-200 dark:border-slate-700">
-          <div
-            className={`p-1 rounded ${editMode ? "bg-amber-100 dark:bg-amber-900/40 text-accent-ink" : "bg-slate-100 dark:bg-slate-800"}`}
-          >
-            {editMode ? <ArrowRightLeft size={14} /> : <Lock size={14} />}
-          </div>
+        {/* STATUS BAR — states what this mode lets you do, so it stays a hint. */}
+        <div className="mb-3 flex items-center gap-2 rounded-md border border-edge bg-surface px-3 py-2 text-xs text-content-muted">
+          {editMode ? (
+            <ArrowRightLeft size={13} className="shrink-0 text-accent-ink" aria-hidden />
+          ) : (
+            <Lock size={13} className="shrink-0" aria-hidden />
+          )}
           <span>
             {manualPlacementMode && mode === "CLASS"
               ? "Manual placement: click + on empty slots to assign unplaced lessons."
@@ -285,8 +285,10 @@ export const ScheduleGrid: React.FC<Props> = ({
                   highlightedConflict.day === dIdx &&
                   highlightedConflict.period === pIdx;
 
+                // A ring is enough to find the cell. Scaling it up nudged its
+                // neighbours and made the grid appear to shift under the cursor.
                 const highlightClass = isHighlighted
-                  ? "ring-4 ring-red-400 ring-opacity-70 shadow-lg scale-[1.02] z-20 transition-all duration-300"
+                  ? "ring-2 ring-danger ring-offset-1 ring-offset-surface z-20 transition-shadow duration-200"
                   : "";
 
                 if (slot) {
@@ -437,7 +439,7 @@ export const ScheduleGrid: React.FC<Props> = ({
           dropAnimation={{ duration: 200, easing: "cubic-bezier(0.18, 0.67, 0.6, 1.22)" }}
         >
           {activeDragItem ? (
-            <div className="h-16 w-32 shadow-2xl opacity-90 rotate-2">
+            <div className="h-16 w-32 opacity-90 shadow-lg">
               <DraggableSlot
                 slot={activeDragItem.slot}
                 day={activeDragItem.day}

@@ -1,13 +1,5 @@
 import React, { useMemo } from "react";
-import {
-  Layers,
-  Wrench,
-  Sparkles,
-  Target,
-  RotateCcw,
-  AlertCircle,
-  CheckCircle2,
-} from "lucide-react";
+import { CheckCircle2, Layers, Wrench, type LucideIcon } from "lucide-react";
 import { SOLVER_TARGET_MS } from "../scheduler/constants";
 
 export type SolverLiveProgress = {
@@ -34,40 +26,46 @@ function formatSeconds(ms: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-function phaseMeta(phase: string) {
+interface PhaseMeta {
+  label: string;
+  detail: string;
+  icon: LucideIcon;
+  /** What the progress bar is counting in this phase. */
+  unit: string;
+}
+
+function phaseMeta(phase: string): PhaseMeta {
   if (phase === "RUN_COMPLETE") {
     return {
       label: "Run complete",
-      headline: "Scoring this attempt",
-      detail: "Starting the next combination search",
+      detail: "Scoring this attempt, then starting the next one",
       icon: CheckCircle2,
-      accent: "from-emerald-400 to-teal-500",
-      badge: "bg-emerald-100 text-emerald-800 border-emerald-200",
-      ring: "ring-emerald-500/20",
+      unit: "Lessons placed",
     };
   }
   if (phase === "REPAIR") {
     return {
-      label: "Repair phase",
-      headline: "Polishing the timetable",
+      label: "Repairing",
       detail: "Swapping and nudging lessons to close gaps",
       icon: Wrench,
-      accent: "from-violet-500 to-indigo-600",
-      badge: "bg-violet-100 text-violet-700 border-violet-200",
-      ring: "ring-violet-500/20",
+      unit: "Repair moves",
     };
   }
   return {
-    label: "Construction",
-    headline: "Building your schedule",
+    label: "Building",
     detail: "Placing lesson blocks into open slots",
     icon: Layers,
-    accent: "from-amber-400 to-orange-500",
-    badge: "bg-amber-100 text-amber-800 border-amber-200",
-    ring: "ring-amber-500/20",
+    unit: "Lessons placed",
   };
 }
 
+/**
+ * Shown over the grid while the worker runs. It reports one thing — how far
+ * through its time budget the solver is and what it has managed so far — so it
+ * carries no gradients, pulses or glass, all of which competed with the numbers
+ * that are the point. It also renders in both themes now: the previous version
+ * hardcoded a white panel and slate text, and was unreadable in dark mode.
+ */
 export const SolverProgressOverlay: React.FC<Props> = ({ progress, elapsedMs }) => {
   const budgetMs = progress?.timeBudgetMs ?? SOLVER_TARGET_MS;
   const timePct = Math.min(100, (elapsedMs / budgetMs) * 100);
@@ -87,132 +85,84 @@ export const SolverProgressOverlay: React.FC<Props> = ({ progress, elapsedMs }) 
   const perfectRuns = progress?.perfectRuns ?? 0;
 
   return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center p-6 animate-in fade-in duration-300">
-      <div
-        className={`absolute inset-0 bg-slate-950/40 backdrop-blur-md transition-all duration-300`}
-        aria-hidden
-      />
+    <div
+      role="status"
+      aria-live="polite"
+      className="absolute inset-0 z-50 flex items-center justify-center p-6"
+    >
+      <div className="absolute inset-0 bg-slate-950/40" aria-hidden />
 
-      <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-white/40 bg-white/75 shadow-2xl shadow-slate-950/20 backdrop-blur-2xl transition-all duration-300">
-        <div
-          className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${meta.accent}`}
-          style={{ width: `${timePct}%` }}
-        />
+      <div className="relative w-full max-w-md overflow-hidden rounded-lg border border-edge bg-surface shadow-lg">
+        {/* Time budget: the one bar that always applies, so it reads as the frame. */}
+        <div className="h-0.5 w-full bg-surface-inset" aria-hidden>
+          <div
+            className="h-full bg-accent transition-[width] duration-200 ease-out"
+            style={{ width: `${timePct}%` }}
+          />
+        </div>
 
-        <div className="p-6 pb-5">
-          <div className="flex items-start justify-between gap-4 mb-6">
-            <div className="flex items-start gap-3">
-              <div
-                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${meta.accent} text-white shadow-lg shadow-amber-500/25 relative overflow-hidden`}
-              >
-                <div className="absolute inset-0 bg-white/20 animate-pulse pointer-events-none" />
-                <PhaseIcon size={20} className="drop-shadow-sm relative z-10" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span
-                    className={`text-2xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${meta.badge}`}
-                  >
-                    {meta.label}
-                  </span>
-                  <Sparkles size={12} className="text-amber-500 animate-pulse" />
-                </div>
-                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 leading-tight">
+        <div className="space-y-5 p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex min-w-0 items-start gap-2.5">
+              <PhaseIcon size={16} className="mt-0.5 shrink-0 text-accent-ink" aria-hidden />
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold text-content">
                   {phase === "RUN_COMPLETE" && conflicts === 0
-                    ? "Perfect timetable found!"
-                    : phase === "RUN_COMPLETE"
-                      ? "Run finished"
-                      : meta.headline}
+                    ? "Conflict-free timetable found"
+                    : meta.label}
                 </h3>
-                <p className="text-xs text-slate-600 mt-0.5">{meta.detail}</p>
+                <p className="mt-0.5 text-xs leading-relaxed text-content-muted">{meta.detail}</p>
               </div>
             </div>
 
-            <div className="text-right shrink-0">
-              <div className="text-2xl font-mono font-bold tabular-nums text-slate-800 dark:text-slate-100">
+            <div className="shrink-0 text-right">
+              <div className="text-lg font-semibold tabular-nums text-content">
                 {formatSeconds(elapsedMs)}
               </div>
-              <div className="text-2xs font-medium text-slate-400 uppercase tracking-wide">
+              <div className="text-2xs tabular-nums text-content-muted">
                 of {formatSeconds(budgetMs)}
               </div>
             </div>
           </div>
 
           {progress && total > 0 && (
-            <div className="mb-5">
-              <div className="flex justify-between text-2xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
-                <span>{phase === "REPAIR" ? "Repair moves" : "Lessons placed"}</span>
-                <span>
+            <div>
+              <div className="mb-1.5 flex justify-between text-2xs text-content-muted">
+                <span>{meta.unit}</span>
+                <span className="tabular-nums">
                   {iteration.toLocaleString()} / {total.toLocaleString()}
                 </span>
               </div>
-              <div className="h-2 rounded-full bg-slate-100/80 overflow-hidden border border-slate-200/50 p-0.5">
+              <div className="h-1 w-full overflow-hidden rounded-full bg-surface-inset">
                 <div
-                  className={`h-full rounded-full bg-gradient-to-r ${meta.accent} transition-[width] duration-200 ease-out relative overflow-hidden`}
+                  className="h-full bg-success transition-[width] duration-200 ease-out"
                   style={{ width: `${phasePct}%` }}
-                >
-                  <div className="absolute inset-0 bg-white/20 animate-pulse" />
-                </div>
+                />
               </div>
             </div>
           )}
 
-          <div className="mb-4 rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-teal-50 px-4 py-3 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5">
-              <div
-                className={`flex h-9 w-9 items-center justify-center rounded-lg ${
-                  perfectRuns > 0
-                    ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/30"
-                    : "bg-white dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700"
-                }`}
-              >
-                <CheckCircle2 size={18} />
-              </div>
-              <div>
-                <div className="text-2xs font-bold uppercase tracking-wider text-emerald-800/70">
-                  Perfect timetables
-                </div>
-                <div className="text-xs text-slate-600">Runs with zero audit conflicts</div>
-              </div>
-            </div>
-            <div
-              className={`text-3xl font-bold tabular-nums leading-none ${
-                perfectRuns > 0 ? "text-emerald-600" : "text-slate-400"
-              }`}
-            >
-              {perfectRuns}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-3">
-            <StatTile
-              icon={<AlertCircle size={14} />}
+          <dl className="grid grid-cols-3 gap-px overflow-hidden rounded-md border border-edge bg-edge">
+            <Stat
               label="Unplaced now"
               value={conflicts !== undefined ? conflicts.toLocaleString() : "—"}
-              tone={conflicts === undefined ? "slate" : conflicts > 0 ? "amber" : "emerald"}
+              tone={conflicts === undefined || conflicts > 0 ? "default" : "good"}
             />
-            <StatTile
-              icon={<Target size={14} />}
-              label="Best unplaced"
+            <Stat
+              label="Best so far"
               value={bestUnplaced !== undefined ? bestUnplaced.toLocaleString() : "—"}
-              tone={bestUnplaced === undefined ? "slate" : bestUnplaced === 0 ? "emerald" : "amber"}
+              tone={bestUnplaced === 0 ? "good" : "default"}
             />
-            <StatTile
-              icon={<RotateCcw size={14} />}
-              label="Run attempt"
-              value={`#${runIndex}`}
-              tone="slate"
+            <Stat
+              label={perfectRuns > 0 ? "Clean runs" : "Attempt"}
+              value={perfectRuns > 0 ? String(perfectRuns) : `#${runIndex}`}
+              tone={perfectRuns > 0 ? "good" : "default"}
             />
-          </div>
-        </div>
+          </dl>
 
-        <div className="px-6 py-3 bg-slate-50/80 border-t border-slate-100 dark:border-slate-700 flex items-center justify-center gap-2">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-60" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
-          </span>
-          <p className="text-[11px] text-slate-600 font-medium">
-            Exploring combinations in the background — you can stop anytime
+          <p className="text-2xs text-content-muted">
+            Exploring combinations in the background — you can stop at any time and keep the best
+            result so far.
           </p>
         </div>
       </div>
@@ -220,31 +170,17 @@ export const SolverProgressOverlay: React.FC<Props> = ({ progress, elapsedMs }) 
   );
 };
 
-function StatTile({
-  icon,
-  label,
-  value,
-  tone,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  tone: "amber" | "emerald" | "slate";
-}) {
-  const tones = {
-    amber: "text-amber-700 bg-amber-50 border-amber-100",
-    emerald: "text-emerald-700 bg-emerald-50 border-emerald-100",
-    slate:
-      "text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-700",
-  };
-
+function Stat({ label, value, tone }: { label: string; value: string; tone: "default" | "good" }) {
   return (
-    <div className={`rounded-xl border px-3 py-2.5 ${tones[tone]} transition-colors duration-300`}>
-      <div className="flex items-center gap-1.5 text-2xs font-semibold uppercase tracking-wide opacity-70 mb-1">
-        {icon}
-        {label}
-      </div>
-      <div className="text-lg font-bold tabular-nums leading-none">{value}</div>
+    <div className="bg-surface px-3 py-2">
+      <dt className="text-2xs text-content-muted">{label}</dt>
+      <dd
+        className={`mt-0.5 text-sm font-medium tabular-nums ${
+          tone === "good" ? "text-success-ink" : "text-content"
+        }`}
+      >
+        {value}
+      </dd>
     </div>
   );
 }

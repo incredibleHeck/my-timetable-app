@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { Lock, ChevronLeft, ChevronRight, Zap, Search } from "lucide-react";
+import { Lock, ChevronLeft, ChevronRight, Play, Search } from "lucide-react";
 import { AppData, ViewState, Conflict } from "../../types";
 import { ScheduleGrid } from "./components/ScheduleGrid";
 import { ConflictPanel } from "./components/ConflictPanel";
@@ -8,6 +8,7 @@ import { GeneratorToolbar, GeneratorStats } from "./components/GeneratorToolbar"
 import { exportScheduleToExcel } from "../../services/export/excel";
 import { printAllSchedules, PrintMode } from "../../services/export/print";
 import { exportClassICal, exportTeacherICal } from "../../services/export/ical";
+import { Button, controlClass } from "../../components/ui";
 import { useToast } from "../../components/ui/Toast";
 import { auditFinalSchedule, runPreflightCheck } from "./scheduler/validation";
 import { SOLVER_TARGET_MS } from "./scheduler/constants";
@@ -414,8 +415,23 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
     }
   };
 
+  /** Classes, teachers and rooms rendered the same list markup three times over. */
+  const entityList: { id: string; name: string; meta?: number }[] =
+    mode === "CLASS"
+      ? filteredClasses.map((c) => ({ id: c.id, name: c.name }))
+      : mode === "ROOM"
+        ? filteredRooms.map((r) => ({
+            id: r.id,
+            name: r.name,
+            meta: countRoomPeriods(data, r.id) || undefined,
+          }))
+        : filteredTeachers.map((t) => ({ id: t.id, name: t.name }));
+
+  const entityNoun = mode === "CLASS" ? "Group" : mode === "TEACHER" ? "Teacher" : "Room";
+  const hasSchedule = Object.keys(data.schedule).length > 0;
+
   return (
-    <div className="flex flex-col h-[calc(100vh-80px)] p-6">
+    <div className="flex h-full min-h-0 flex-col p-6">
       <GeneratorToolbar
         data={data}
         mode={mode}
@@ -436,137 +452,79 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
         onRestore={handleRestore}
       />
 
-      {/* --- MAIN INTERACTIVE GRID --- */}
-      <div className="flex flex-1 overflow-hidden gap-4">
+      <div className="flex min-h-0 flex-1 gap-4 overflow-hidden">
         <div
-          className={`flex flex-1 overflow-hidden border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 shadow-sm relative transition-opacity ${
-            isGenerating ? "opacity-60 pointer-events-none" : ""
+          className={`relative flex flex-1 overflow-hidden rounded-lg border border-edge bg-surface transition-opacity ${
+            isGenerating ? "pointer-events-none opacity-60" : ""
           }`}
         >
           {isGenerating && <SolverProgressOverlay progress={liveProgress} elapsedMs={elapsedMs} />}
 
-          {/* Sidebar */}
-          <div className="w-44 border-r border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 overflow-y-auto shrink-0 flex flex-col">
-            <div className="p-3 border-b border-slate-100 dark:border-slate-700 sticky top-0 bg-slate-50 dark:bg-slate-900 z-10 space-y-2">
-              <span className="text-2xs font-bold text-content-muted uppercase tracking-wider block">
-                Select {mode === "CLASS" ? "Group" : mode === "TEACHER" ? "Teacher" : "Room"}
-              </span>
+          <div className="flex w-48 shrink-0 flex-col overflow-y-auto border-r border-edge bg-canvas">
+            <div className="sticky top-0 z-10 space-y-2 border-b border-edge bg-canvas p-3">
+              <span className="block text-2xs text-content-muted">Select {entityNoun}</span>
               <div className="relative">
                 <Search
-                  size={11}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 text-content-muted"
+                  size={12}
+                  aria-hidden
+                  className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-content-muted"
                 />
                 <input
                   type="text"
                   value={sidebarFilter}
                   onChange={(e) => setSidebarFilter(e.target.value)}
-                  placeholder="Filter..."
-                  className="w-full pl-6 pr-2 py-1 text-[11px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-amber-400 text-slate-700 dark:text-slate-200 placeholder:text-slate-300"
+                  placeholder="Filter"
+                  aria-label={`Filter ${entityNoun.toLowerCase()} list`}
+                  className={`${controlClass} h-8 w-full pl-7 text-xs`}
                 />
               </div>
             </div>
-            {/* Empty schedule CTA — shown when no schedule exists */}
-            {Object.keys(data.schedule).length === 0 && !isGenerating && (
-              <div className="flex-1 flex flex-col items-center justify-center p-4 text-center">
-                <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/40 text-accent-ink flex items-center justify-center mb-2">
-                  <Zap size={20} />
-                </div>
-                <p className="text-2xs text-content-muted font-medium leading-tight">
-                  No schedule yet
-                </p>
-              </div>
+
+            {!hasSchedule && !isGenerating && (
+              <p className="flex flex-1 items-center justify-center p-4 text-center text-2xs text-content-muted">
+                No schedule yet
+              </p>
             )}
-            {mode === "CLASS"
-              ? filteredClasses.map((c) => (
-                  <button
-                    key={c.id}
-                    onClick={() => setActiveId(c.id)}
-                    className={`w-full text-left px-4 py-3 border-b border-slate-100 dark:border-slate-700 text-xs font-medium truncate flex items-center gap-3 ${
-                      activeId === c.id
-                        ? "bg-white dark:bg-slate-800 border-l-4 border-l-amber-500"
-                        : "text-content-muted"
-                    }`}
-                  >
-                    <div
-                      className={`w-2 h-2 rounded-full shrink-0 ${
-                        activeId === c.id ? "bg-amber-500" : "bg-slate-300"
-                      }`}
-                    />
-                    <span className="truncate">{c.name}</span>
-                  </button>
-                ))
-              : mode === "ROOM"
-                ? filteredRooms.map((r) => {
-                    const periods = countRoomPeriods(data, r.id);
-                    return (
-                      <button
-                        key={r.id}
-                        onClick={() => setActiveId(r.id)}
-                        className={`w-full text-left px-4 py-3 border-b border-slate-100 dark:border-slate-700 text-xs font-medium truncate flex items-center gap-3 ${
-                          activeId === r.id
-                            ? "bg-white dark:bg-slate-800 border-l-4 border-l-amber-500"
-                            : "text-content-muted"
-                        }`}
-                      >
-                        <div
-                          className={`w-2 h-2 rounded-full shrink-0 ${
-                            activeId === r.id ? "bg-amber-500" : "bg-slate-300"
-                          }`}
-                        />
-                        <span className="truncate flex-1">{r.name}</span>
-                        <span
-                          className={`text-2xs shrink-0 ${
-                            periods === 0 ? "text-content-muted italic" : "opacity-70"
-                          }`}
-                        >
-                          {periods === 0 ? "unused" : periods}
-                        </span>
-                      </button>
-                    );
-                  })
-                : filteredTeachers.map((t) => (
-                    <button
-                      key={t.id}
-                      onClick={() => setActiveId(t.id)}
-                      className={`w-full text-left px-4 py-3 border-b border-slate-100 dark:border-slate-700 text-xs font-medium truncate flex items-center gap-3 ${
-                        activeId === t.id
-                          ? "bg-white dark:bg-slate-800 border-l-4 border-l-amber-500"
-                          : "text-content-muted"
-                      }`}
-                    >
-                      <div
-                        className={`w-2 h-2 rounded-full shrink-0 ${
-                          activeId === t.id ? "bg-amber-500" : "bg-slate-300"
-                        }`}
-                      />
-                      <span className="truncate">{t.name}</span>
-                    </button>
-                  ))}
+
+            {entityList.map((entity) => {
+              const isActive = activeId === entity.id;
+              return (
+                <button
+                  key={entity.id}
+                  type="button"
+                  onClick={() => setActiveId(entity.id)}
+                  aria-current={isActive}
+                  className={`flex w-full items-center gap-2 border-b border-edge-subtle border-l-2 px-3 py-2.5
+                              text-left text-xs transition-colors focus-visible:outline-none
+                              focus-visible:ring-2 focus-visible:ring-accent ${
+                                isActive
+                                  ? "border-l-accent bg-surface font-medium text-content"
+                                  : "border-l-transparent text-content-muted hover:text-content-secondary"
+                              }`}
+                >
+                  <span className="min-w-0 flex-1 truncate">{entity.name}</span>
+                  {mode === "ROOM" && (
+                    <span className="shrink-0 text-2xs tabular-nums text-content-muted">
+                      {entity.meta ?? "—"}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
-          {/* Grid Area */}
-          <div className="flex-1 overflow-auto p-6 bg-slate-50/30 dark:bg-slate-900/30 custom-scrollbar relative">
-            {/* Empty Schedule CTA Overlay */}
-            {Object.keys(data.schedule).length === 0 && !isGenerating && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-slate-50/95 dark:bg-slate-900/95">
-                <div className="text-center max-w-sm">
-                  <div className="w-20 h-20 rounded-2xl bg-amber-100 dark:bg-amber-900/40 text-accent-ink flex items-center justify-center mx-auto mb-5 shadow-inner">
-                    <Zap size={40} />
-                  </div>
-                  <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">
-                    No Schedule Generated Yet
-                  </h3>
-                  <p className="text-sm text-content-muted mb-6 leading-relaxed">
-                    Run the auto-scheduler to build a complete timetable for all classes based on
-                    your curriculum and constraints.
+          <div className="custom-scrollbar relative flex-1 overflow-auto bg-canvas/40 p-6">
+            {!hasSchedule && !isGenerating && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-canvas">
+                <div className="max-w-sm text-center">
+                  <h3 className="text-sm font-semibold text-content">No timetable yet</h3>
+                  <p className="mt-1.5 text-xs leading-relaxed text-content-muted">
+                    The auto-generator builds a full week for every class from your curriculum,
+                    teacher availability and scheduling limits.
                   </p>
-                  <button
-                    onClick={handleGenerate}
-                    className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg shadow-amber-500/30 transition-all active:scale-95"
-                  >
-                    <Zap size={18} />
+                  <Button onClick={handleGenerate} className="mt-4" icon={<Play size={15} />}>
                     Generate Schedule
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
@@ -583,46 +541,51 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
           </div>
         </div>
 
-        {/* Conflict Panel & Toggle */}
         {(hoverConflict ||
           (!isGenerating && (data.lastGenerated || data.conflicts.length > 0))) && (
           <div className="relative flex">
-            {/* Toggle Button */}
             {!isGenerating && data.lastGenerated && (
               <button
+                type="button"
                 onClick={() => setIsConflictPanelOpen(!isConflictPanelOpen)}
-                className="absolute -left-8 top-1/2 -translate-y-1/2 w-8 h-16 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 border-r-0 rounded-l-lg shadow-sm flex items-center justify-center text-content-muted hover:text-accent-ink hover:bg-amber-50 dark:hover:bg-amber-900/30 z-10 transition-colors"
+                className="absolute -left-7 top-1/2 flex h-14 w-7 -translate-y-1/2 items-center
+                           justify-center rounded-l-md border border-r-0 border-edge bg-surface
+                           text-content-muted transition-colors hover:text-content
+                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 aria-label={isConflictPanelOpen ? "Hide validation panel" : "Show validation panel"}
                 title={isConflictPanelOpen ? "Hide validation panel" : "Show validation panel"}
               >
-                {isConflictPanelOpen ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+                {isConflictPanelOpen ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
               </button>
             )}
 
             <div
-              className={`transition-all duration-300 ease-in-out origin-right ${
-                isConflictPanelOpen ? "w-96 opacity-100 ml-4" : "w-0 opacity-0 ml-0 overflow-hidden"
+              className={`origin-right transition-all duration-200 ease-in-out ${
+                isConflictPanelOpen ? "ml-4 w-96 opacity-100" : "ml-0 w-0 overflow-hidden opacity-0"
               }`}
             >
-              <div className="w-96">
-                {/* LIVE VALIDATION ERROR */}
+              <div className="w-96 space-y-3">
                 {hoverConflict && (
-                  <div
-                    className="w-full mb-4 border border-red-200 bg-red-50 dark:bg-red-900/30 rounded-xl shadow-sm p-4 animate-pulse cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
+                  <button
+                    type="button"
                     onClick={() => setHighlightedConflict(hoverConflict)}
+                    className="w-full rounded-md border border-l-2 border-edge border-l-danger
+                               bg-surface px-4 py-3 text-left transition-colors hover:border-edge-strong
+                               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                   >
-                    <h4 className="font-bold text-red-800 dark:text-red-200 mb-1 text-sm flex items-center gap-2">
-                      <Lock size={14} /> Invalid Move
+                    <h4 className="flex items-center gap-2 text-sm font-medium text-content">
+                      <Lock size={13} className="text-danger-ink" aria-hidden />
+                      Move not allowed
                     </h4>
-                    <p className="text-xs text-danger-ink font-medium leading-relaxed">
+                    <p className="mt-1 text-xs leading-relaxed text-content-muted">
                       {hoverConflict.reason}
                     </p>
-                    <div className="mt-2 pt-2 border-t border-red-100 flex flex-col gap-1">
-                      <span className="text-2xs text-red-400">
-                        Target: {hoverConflict.className || "Unknown"}
-                      </span>
-                    </div>
-                  </div>
+                    {hoverConflict.className && (
+                      <p className="mt-1.5 text-2xs text-content-muted">
+                        Target: {hoverConflict.className}
+                      </p>
+                    )}
+                  </button>
                 )}
 
                 {!isGenerating && (data.lastGenerated || data.conflicts.length > 0) && (

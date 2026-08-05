@@ -1,16 +1,5 @@
 import React, { useMemo } from "react";
-import {
-  AlertCircle,
-  AlertTriangle,
-  BookOpen,
-  Calendar,
-  CheckCircle2,
-  ChevronRight,
-  Clock,
-  Lightbulb,
-  Sparkles,
-  Users,
-} from "lucide-react";
+import { AlertCircle, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Conflict } from "../../../types";
 
 interface Props {
@@ -87,39 +76,11 @@ function getResolutionHint(c: Conflict): string {
   return "Open Edit mode, adjust the slot on the grid, and the conflict will clear once the timetable is valid.";
 }
 
-function Badge({
-  children,
-  tone = "neutral",
-}: {
-  children: React.ReactNode;
-  tone?: "neutral" | "red" | "amber" | "slate";
-}) {
-  const tones = {
-    neutral: "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300",
-    red: "bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-200 border border-red-100",
-    amber:
-      "bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border border-amber-100",
-    slate:
-      "bg-slate-50 dark:bg-slate-900 text-content-muted border border-slate-100 dark:border-slate-700",
-  };
-  return (
-    <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-semibold ${tones[tone]}`}
-    >
-      {children}
-    </span>
-  );
-}
-
-function SectionEmptyState({ message }: { message: string }) {
-  return (
-    <div className="flex items-center gap-2 px-3 py-4 rounded-lg bg-emerald-50/60 border border-emerald-100 text-emerald-800 dark:text-emerald-200 text-xs font-medium">
-      <CheckCircle2 size={14} className="shrink-0" />
-      <span>{message}</span>
-    </div>
-  );
-}
-
+/**
+ * Severity is carried by a left rule and the count, not by tinting whole cards.
+ * Every row here is a problem, so painting them all red and amber made the list
+ * uniformly loud and left nothing for the selected row to say.
+ */
 function ConflictCard({
   conflict,
   variant,
@@ -132,12 +93,6 @@ function ConflictCard({
   onSelect?: (conflict: Conflict) => void;
 }) {
   const isCollision = variant === "collision";
-  const borderAccent = isCollision ? "border-l-red-500" : "border-l-amber-400";
-  const selectedRing = isSelected
-    ? isCollision
-      ? "ring-2 ring-red-200 bg-red-50/30"
-      : "ring-2 ring-amber-200 bg-amber-50/30"
-    : "bg-white dark:bg-slate-800";
 
   const unitBadge = conflict.missingPeriods
     ? `${conflict.missingPeriods} missing`
@@ -151,72 +106,58 @@ function ConflictCard({
     <button
       type="button"
       onClick={() => onSelect?.(conflict)}
-      className={`w-full text-left rounded-lg border border-slate-200 dark:border-slate-700 border-l-4 ${borderAccent} ${selectedRing} shadow-sm p-3 transition-colors hover:bg-slate-50 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400`}
+      aria-pressed={isSelected}
+      className={`w-full rounded-md border border-l-2 px-3 py-2.5 text-left transition-colors
+                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent
+                  focus-visible:ring-offset-1 focus-visible:ring-offset-surface ${
+                    isCollision ? "border-l-danger" : "border-l-accent"
+                  } ${
+                    isSelected
+                      ? "border-edge-strong bg-surface-muted"
+                      : "border-edge bg-surface hover:border-edge-strong"
+                  }`}
     >
-      <div className="flex items-start justify-between gap-2 mb-2">
+      <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
+          <p className="truncate text-sm font-medium text-content">
             {conflict.subjectName || "Unresolved lesson"}
           </p>
-          <p className="text-[11px] text-content-muted truncate mt-0.5">
+          <p className="mt-0.5 truncate text-xs text-content-muted">
             {isCollision ? getCollisionLabel(conflict) : "Curriculum shortfall"}
           </p>
         </div>
-        {unitBadge && <Badge tone={isCollision ? "red" : "amber"}>{unitBadge}</Badge>}
+        {unitBadge && (
+          <span className="shrink-0 whitespace-nowrap rounded-full border border-edge px-2 py-0.5 text-2xs text-content-secondary">
+            {unitBadge}
+          </span>
+        )}
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
-          <BookOpen size={12} className="shrink-0 text-content-muted" />
-          <span className="truncate font-medium">{conflict.className}</span>
-        </div>
-
+      <p className="mt-1.5 truncate text-xs text-content-secondary">
+        <span>{conflict.className}</span>
         {conflict.teacherName && (
-          <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
-            <Users size={12} className="shrink-0 text-content-muted" />
-            <span className="truncate">{conflict.teacherName}</span>
-          </div>
+          <>
+            <span className="text-content-muted" aria-hidden>
+              {" · "}
+            </span>
+            <span className="text-content-muted">{conflict.teacherName}</span>
+          </>
         )}
+      </p>
 
-        {hasGridLocation(conflict) && (
-          <div className="flex flex-wrap gap-1.5 mt-0.5">
-            <Badge tone="slate">
-              <Calendar size={10} />
-              Day {conflict.day + 1}
-            </Badge>
-            <Badge tone="slate">
-              <Clock size={10} />
-              Period {conflict.period + 1}
-            </Badge>
-          </div>
-        )}
-      </div>
-
-      {isSelected && (
-        <div
-          className={`mt-3 pt-3 border-t ${isCollision ? "border-red-100" : "border-amber-100"}`}
-        >
-          <div className="flex items-start gap-2">
-            <Lightbulb
-              size={14}
-              className={`shrink-0 mt-0.5 ${isCollision ? "text-danger-ink" : "text-accent-ink"}`}
-            />
-            <div>
-              <p className="text-2xs font-bold uppercase tracking-wide text-content-muted mb-1">
-                How to fix
-              </p>
-              <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">
-                {getResolutionHint(conflict)}
-              </p>
-            </div>
-          </div>
-        </div>
+      {hasGridLocation(conflict) && (
+        <p className="mt-1 flex gap-2 text-2xs tabular-nums text-content-muted">
+          <span>Day {conflict.day + 1}</span>
+          <span>Period {conflict.period + 1}</span>
+        </p>
       )}
 
-      {!isSelected && (
-        <div className="mt-2 flex items-center gap-1 text-2xs text-content-muted">
-          <ChevronRight size={10} />
-          <span>Click to highlight on grid</span>
+      {isSelected && (
+        <div className="mt-2.5 border-t border-edge-subtle pt-2.5">
+          <p className="text-2xs font-medium text-content-secondary">How to fix</p>
+          <p className="mt-1 text-xs leading-relaxed text-content-muted">
+            {getResolutionHint(conflict)}
+          </p>
         </div>
       )}
     </button>
@@ -227,7 +168,6 @@ function ResolutionSection({
   title,
   icon,
   count,
-  tone,
   items,
   emptyMessage,
   selectedConflict,
@@ -237,36 +177,27 @@ function ResolutionSection({
   title: string;
   icon: React.ReactNode;
   count: number;
-  tone: "red" | "amber";
   items: Conflict[];
   emptyMessage: string;
   selectedConflict?: Conflict | null;
   onConflictSelect?: (conflict: Conflict) => void;
   variant: "collision" | "unplaced";
 }) {
-  const headerBg =
-    tone === "red"
-      ? "bg-red-50 dark:bg-red-900/30 border-red-100"
-      : "bg-amber-50 dark:bg-amber-900/30 border-amber-100";
-  const headerText =
-    tone === "red" ? "text-red-800 dark:text-red-200" : "text-amber-800 dark:text-amber-200";
-  const badgeBg =
-    tone === "red"
-      ? "bg-red-200 text-red-800 dark:text-red-200"
-      : "bg-amber-200 text-amber-800 dark:text-amber-200";
-
   return (
-    <section className="flex flex-col border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl shadow-lg overflow-hidden">
-      <header className={`p-3 border-b flex justify-between items-center ${headerBg}`}>
-        <h3 className={`font-bold flex items-center gap-2 text-sm ${headerText}`}>
+    <section className="flex flex-col overflow-hidden rounded-lg border border-edge bg-surface">
+      <header className="flex items-center justify-between gap-2 border-b border-edge px-4 py-2.5">
+        <h3 className="flex items-center gap-2 text-sm font-semibold text-content">
           {icon}
           {title}
         </h3>
-        <span className={`text-2xs font-bold px-2 py-0.5 rounded-full ${badgeBg}`}>{count}</span>
+        <span className="text-xs tabular-nums text-content-muted">{count}</span>
       </header>
-      <div className="overflow-y-auto p-3 space-y-2 custom-scrollbar max-h-[280px]">
+      <div className="custom-scrollbar max-h-[280px] space-y-1.5 overflow-y-auto p-3">
         {items.length === 0 ? (
-          <SectionEmptyState message={emptyMessage} />
+          <p className="flex items-center gap-2 px-1 py-3 text-xs text-content-muted">
+            <CheckCircle2 size={13} className="shrink-0 text-success-ink" aria-hidden />
+            {emptyMessage}
+          </p>
         ) : (
           items.map((c) => (
             <ConflictCard
@@ -285,18 +216,14 @@ function ResolutionSection({
 
 function ValidTimetableEmptyState() {
   return (
-    <div className="w-96 flex flex-col items-center text-center p-8 rounded-2xl border border-emerald-200 bg-gradient-to-b from-emerald-50 to-white shadow-lg">
-      <div className="relative mb-4">
-        <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center">
-          <CheckCircle2 size={32} className="text-success-ink" />
-        </div>
-        <Sparkles size={18} className="absolute -top-1 -right-1 text-amber-400" />
-      </div>
-      <h3 className="text-lg font-bold text-emerald-800 dark:text-emerald-200 mb-2">
+    <div className="w-96 rounded-lg border border-edge bg-surface p-5">
+      <h3 className="flex items-center gap-2 text-sm font-semibold text-content">
+        <CheckCircle2 size={15} className="shrink-0 text-success-ink" aria-hidden />
         Timetable Valid
       </h3>
-      <p className="text-sm text-emerald-700/90 leading-relaxed max-w-[260px]">
-        No hard collisions or curriculum gaps detected. Your final timetable is 100% schedulable.
+      <p className="mt-1.5 text-xs leading-relaxed text-content-muted">
+        No hard collisions and no curriculum gaps. Every lesson the curriculum asks for has a slot
+        the constraints allow.
       </p>
     </div>
   );
@@ -344,23 +271,22 @@ export const ConflictPanel: React.FC<Props> = ({
   }
 
   return (
-    <div className="w-96 flex flex-col gap-3 h-fit max-h-[calc(100vh-140px)]">
-      <div className="px-1">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-content-muted">
-          Resolution Center
-        </h2>
-        <p className="text-[11px] text-content-muted mt-0.5">
-          {blockingCount} issue{blockingCount === 1 ? "" : "s"} in final timetable
+    <div className="flex h-fit max-h-[calc(100vh-140px)] w-96 flex-col gap-3">
+      <div>
+        <h2 className="text-sm font-semibold text-content">Issues to resolve</h2>
+        <p className="mt-0.5 text-xs text-content-muted">
+          <span className="tabular-nums">{blockingCount}</span> blocking{" "}
+          {blockingCount === 1 ? "issue" : "issues"} in the final timetable. Select one to highlight
+          it on the grid.
         </p>
       </div>
 
       <ResolutionSection
         title="Hard Collisions"
-        icon={<AlertCircle size={16} />}
+        icon={<AlertCircle size={15} className="text-danger-ink" aria-hidden />}
         count={hardCollisions.length}
-        tone="red"
         items={hardCollisions}
-        emptyMessage="Zero Hard Collisions 🎉"
+        emptyMessage="Nothing double-booked."
         selectedConflict={selectedConflict}
         onConflictSelect={onConflictSelect}
         variant="collision"
@@ -368,11 +294,10 @@ export const ConflictPanel: React.FC<Props> = ({
 
       <ResolutionSection
         title="Unplaced Lessons"
-        icon={<AlertTriangle size={16} />}
+        icon={<AlertTriangle size={15} className="text-accent-ink" aria-hidden />}
         count={unplacedLessons.length}
-        tone="amber"
         items={unplacedLessons}
-        emptyMessage="Zero Unplaced Lessons 🎉"
+        emptyMessage="Every curriculum lesson was placed."
         selectedConflict={selectedConflict}
         onConflictSelect={onConflictSelect}
         variant="unplaced"
@@ -381,9 +306,8 @@ export const ConflictPanel: React.FC<Props> = ({
       {qualityWarnings.length > 0 && (
         <ResolutionSection
           title="Layout Preferences"
-          icon={<AlertTriangle size={16} className="text-yellow-600" />}
+          icon={<AlertTriangle size={15} className="text-content-muted" aria-hidden />}
           count={qualityWarnings.length}
-          tone="amber"
           items={qualityWarnings}
           emptyMessage=""
           selectedConflict={selectedConflict}

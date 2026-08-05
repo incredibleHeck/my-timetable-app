@@ -61,14 +61,14 @@ describe("ConflictPanel", () => {
   it("shows section success states when a bucket is empty", () => {
     render(<ConflictPanel conflicts={[hardCollision]} />);
 
-    expect(screen.getByText("Zero Unplaced Lessons 🎉")).toBeInTheDocument();
+    expect(screen.getByText("Every curriculum lesson was placed.")).toBeInTheDocument();
   });
 
   it("shows a reassuring empty state when there are no conflicts", () => {
     render(<ConflictPanel conflicts={[]} />);
 
     expect(screen.getByText("Timetable Valid")).toBeInTheDocument();
-    expect(screen.getByText(/100% schedulable/i)).toBeInTheDocument();
+    expect(screen.getByText(/no curriculum gaps/i)).toBeInTheDocument();
   });
 
   it("expands selected card with fix guidance and calls onConflictSelect", () => {
