@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
+import { X } from "lucide-react";
 import { AppData } from "../../../types";
-import { Badge, Button, Select } from "../../../components/ui";
-import { Check, Plus } from "lucide-react";
+import { Button, Panel, PanelRegion, controlClass, quietButtonClass } from "../../../components/ui";
 import { useHistory } from "../../../contexts/HistoryContext";
 
 interface Props {
@@ -9,84 +9,53 @@ interface Props {
   onUpdate: (d: AppData) => void;
 }
 
+type Notice = { text: string; tone: "done" | "blocked" };
+
 export const ClassAssignmentsPanel: React.FC<Props> = ({ data, onUpdate }) => {
   const { pushToHistory } = useHistory();
   const [selectedClassId, setSelectedClassId] = useState("");
   const [selectedTeacherId, setSelectedTeacherId] = useState("");
-  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
+  const [notice, setNotice] = useState<Notice | null>(null);
 
-  const sortedClasses = useMemo(() => {
-    return [...data.classes].sort((a, b) =>
-      a.name.localeCompare(b.name, undefined, { numeric: true }),
-    );
-  }, [data.classes]);
+  const sortedClasses = useMemo(
+    () =>
+      [...data.classes].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true })),
+    [data.classes],
+  );
 
-  const sortedTeachers = useMemo(() => {
-    return [...data.teachers].sort((a, b) => a.name.localeCompare(b.name));
-  }, [data.teachers]);
+  const sortedTeachers = useMemo(
+    () => [...data.teachers].sort((a, b) => a.name.localeCompare(b.name)),
+    [data.teachers],
+  );
+
+  const selectedClass = data.classes.find((c) => c.id === selectedClassId);
+
+  const commit = (nextClasses: AppData["classes"], text: string) => {
+    pushToHistory(data);
+    onUpdate({ ...data, classes: nextClasses });
+    setNotice({ text, tone: "done" });
+  };
 
   const handleAssign = () => {
-    setMessage(null);
-    if (!selectedClassId || !selectedTeacherId) return;
-
-    const cls = data.classes.find((c) => c.id === selectedClassId);
-    if (!cls) return;
-
-    if (selectedTeacherId === "UNASSIGN") {
-      let unassignedCount = 0;
-      const newCurriculum = cls.curriculum.map((c) => {
-        if (c.assignedTeacherId) {
-          unassignedCount++;
-          return { ...c, assignedTeacherId: undefined };
-        }
-        return c;
-      });
-
-      if (unassignedCount === 0) {
-        setMessage({
-          text: `Warning: No teachers are currently assigned to ${cls.name}.`,
-          type: "error",
-        });
-        return;
-      }
-
-      const newClass = { ...cls, curriculum: newCurriculum };
-      const newClasses = data.classes.map((c) => (c.id === cls.id ? newClass : c));
-
-      pushToHistory(data);
-      onUpdate({ ...data, classes: newClasses });
-
-      setMessage({
-        text: `Successfully unassigned all teachers from ${cls.name}.`,
-        type: "success",
-      });
-      setSelectedTeacherId("");
-      return;
-    }
-
+    setNotice(null);
+    const cls = selectedClass;
     const teacher = data.teachers.find((t) => t.id === selectedTeacherId);
-    if (!teacher) return;
+    if (!cls || !teacher) return;
 
-    // 1. Identify common subjects
-    const teacherSubjects = teacher.specialtyIds;
     const classSubjects = cls.curriculum.map((c) => c.subjectId);
+    const matching = teacher.specialtyIds.filter((sid) => classSubjects.includes(sid));
 
-    // Intersection
-    const matchingSubjectIds = teacherSubjects.filter((sid) => classSubjects.includes(sid));
-
-    if (matchingSubjectIds.length === 0) {
-      setMessage({
-        text: `Error: ${teacher.name} does not teach any subjects present in ${cls.name}'s curriculum.`,
-        type: "error",
+    if (matching.length === 0) {
+      setNotice({
+        text: `${teacher.name} teaches none of the subjects on ${cls.name}'s curriculum.`,
+        tone: "blocked",
       });
       return;
     }
 
-    // 2. Perform Update
     let assignedCount = 0;
     const newCurriculum = cls.curriculum.map((c) => {
-      // Only assign if it's a matching subject AND has periods (is active)
-      if (matchingSubjectIds.includes(c.subjectId) && c.periodsPerWeek > 0) {
+      if (matching.includes(c.subjectId) && c.periodsPerWeek > 0) {
         assignedCount++;
         return { ...c, assignedTeacherId: teacher.id };
       }
@@ -94,111 +63,152 @@ export const ClassAssignmentsPanel: React.FC<Props> = ({ data, onUpdate }) => {
     });
 
     if (assignedCount === 0) {
-      setMessage({
-        text: `Warning: Subject match found, but 0 periods are allocated in curriculum.`,
-        type: "error",
+      setNotice({
+        text: `${teacher.name}'s subjects appear on ${cls.name}'s curriculum but have no periods allocated.`,
+        tone: "blocked",
       });
       return;
     }
 
-    const newClass = { ...cls, curriculum: newCurriculum };
-    const newClasses = data.classes.map((c) => (c.id === cls.id ? newClass : c));
-
-    pushToHistory(data);
-    onUpdate({ ...data, classes: newClasses });
-
-    // 3. Feedback
-    const subjNames = matchingSubjectIds
+    const subjNames = matching
       .map((sid) => data.subjects.find((s) => s.id === sid)?.name)
+      .filter(Boolean)
       .join(", ");
 
-    setMessage({
-      text: `Successfully assigned ${teacher.name} to ${cls.name} for: ${subjNames}`,
-      type: "success",
-    });
+    commit(
+      data.classes.map((c) => (c.id === cls.id ? { ...cls, curriculum: newCurriculum } : c)),
+      `${teacher.name} now teaches ${subjNames} in ${cls.name}.`,
+    );
+    setSelectedTeacherId("");
+  };
 
-    // Reset selection
+  const handleClearTeachers = () => {
+    setNotice(null);
+    const cls = selectedClass;
+    if (!cls) return;
+
+    const assignedCount = cls.curriculum.filter((c) => c.assignedTeacherId).length;
+    if (assignedCount === 0) {
+      setNotice({ text: `${cls.name} has no teachers assigned.`, tone: "blocked" });
+      return;
+    }
+
+    const newCurriculum = cls.curriculum.map((c) =>
+      c.assignedTeacherId ? { ...c, assignedTeacherId: undefined } : c,
+    );
+
+    commit(
+      data.classes.map((c) => (c.id === cls.id ? { ...cls, curriculum: newCurriculum } : c)),
+      `Cleared ${assignedCount} teacher ${assignedCount === 1 ? "assignment" : "assignments"} from ${cls.name}.`,
+    );
     setSelectedTeacherId("");
   };
 
   return (
-    <div className="space-y-8 animate-in slide-in-from-right-4">
-      {/* 1. ASSIGNMENT ACTION AREA */}
-      <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-          <Plus size={20} className="text-accent-ink" />
-          Quick Assign Teacher
-        </h3>
-        <p className="text-sm text-content-muted mb-6">
-          Select a class and a teacher. The system will automatically link the teacher to the class
-          for any subjects they are qualified to teach (based on their Faculty/Specialty).
-        </p>
-
-        <div className="flex flex-col md:flex-row gap-4 items-end">
-          <div className="flex-1 w-full">
-            <label className="block text-xs font-bold text-content-muted uppercase mb-1">
-              1. Select Class
-            </label>
-            <Select
-              value={selectedClassId}
-              onChange={(e) => setSelectedClassId(e.target.value)}
-              options={[
-                { value: "", label: "Choose a Class..." },
-                ...sortedClasses.map((c) => ({ value: c.id, label: c.name })),
-              ]}
-            />
-          </div>
-          <div className="flex-1 w-full">
-            <label className="block text-xs font-bold text-content-muted uppercase mb-1">
-              2. Select Teacher
-            </label>
-            <Select
-              value={selectedTeacherId}
-              onChange={(e) => setSelectedTeacherId(e.target.value)}
-              options={[
-                { value: "", label: "Choose a Teacher..." },
-                { value: "UNASSIGN", label: "⚠️ Unassign All" },
-                ...sortedTeachers.map((t) => ({ value: t.id, label: t.name })),
-              ]}
-            />
-          </div>
-          <div className="w-full md:w-auto">
-            <Button
-              onClick={handleAssign}
-              disabled={!selectedClassId || !selectedTeacherId}
-              className="w-full md:w-auto"
-            >
+    <div className="space-y-4">
+      <Panel
+        title="Assign a teacher across a curriculum"
+        description="Links the teacher to every subject on the class's curriculum they are qualified for. Existing assignments for those subjects are replaced."
+      >
+        <PanelRegion className="space-y-3 px-5 py-4">
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="min-w-[12rem] flex-1">
+              <label
+                htmlFor="assign-class"
+                className="mb-1.5 block text-sm font-medium text-content"
+              >
+                Class
+              </label>
+              <select
+                id="assign-class"
+                className={`${controlClass} w-full cursor-pointer`}
+                value={selectedClassId}
+                onChange={(e) => {
+                  setSelectedClassId(e.target.value);
+                  setNotice(null);
+                }}
+              >
+                <option value="">Choose a class</option>
+                {sortedClasses.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="min-w-[12rem] flex-1">
+              <label
+                htmlFor="assign-teacher"
+                className="mb-1.5 block text-sm font-medium text-content"
+              >
+                Teacher
+              </label>
+              <select
+                id="assign-teacher"
+                className={`${controlClass} w-full cursor-pointer`}
+                value={selectedTeacherId}
+                onChange={(e) => {
+                  setSelectedTeacherId(e.target.value);
+                  setNotice(null);
+                }}
+              >
+                <option value="">Choose a teacher</option>
+                {sortedTeachers.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <Button onClick={handleAssign} disabled={!selectedClassId || !selectedTeacherId}>
               Assign to Class
             </Button>
+            {/* Unassigning is a different operation, not a teacher you can pick.
+                It used to hide inside the teacher dropdown as "⚠️ Unassign All". */}
+            <button
+              type="button"
+              onClick={handleClearTeachers}
+              disabled={!selectedClassId}
+              className={quietButtonClass}
+            >
+              Clear all teachers
+            </button>
           </div>
-        </div>
 
-        {message && (
-          <div
-            className={`mt-4 p-3 rounded text-sm font-medium flex items-center gap-2 ${
-              message.type === "success"
-                ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200"
-                : "bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-200"
-            }`}
-          >
-            {message.type === "success" ? <Check size={16} /> : null}
-            {message.text}
-          </div>
-        )}
-      </div>
+          {notice && (
+            <div
+              role="status"
+              className={`flex items-start gap-2 rounded-md border px-3 py-2 text-xs ${
+                notice.tone === "done"
+                  ? "border-edge bg-surface-muted text-content-secondary"
+                  : "border-l-2 border-edge border-l-accent bg-surface text-content-secondary"
+              }`}
+            >
+              <span className="flex-1">{notice.text}</span>
+              <button
+                type="button"
+                onClick={() => setNotice(null)}
+                aria-label="Dismiss message"
+                className="shrink-0 rounded text-content-muted transition-colors hover:text-content
+                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              >
+                <X size={13} aria-hidden />
+              </button>
+            </div>
+          )}
+        </PanelRegion>
+      </Panel>
 
-      {/* 2. OVERVIEW GRID (Migrated from TeachersView) */}
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
-            Current Assignments Overview
-          </h3>
-          <Badge className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-            {data.classes.length} Classes
-          </Badge>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <Panel
+        title="Who teaches what"
+        description="Every staffed subject on each class's curriculum, with its weekly period count."
+        action={
+          <span className="text-xs tabular-nums text-content-muted">
+            {data.classes.length} classes
+          </span>
+        }
+      >
+        <PanelRegion className="divide-y divide-edge-subtle">
           {sortedClasses.map((cls) => {
             const assignments = cls.curriculum
               .filter((c) => c.assignedTeacherId && c.periodsPerWeek > 0)
@@ -208,61 +218,60 @@ export const ClassAssignmentsPanel: React.FC<Props> = ({ data, onUpdate }) => {
                 periods: c.periodsPerWeek,
               }))
               .filter((x) => x.teacher && x.subject)
-              .sort((a, b) => (a.teacher?.name || "").localeCompare(b.teacher?.name || ""));
+              .sort((a, b) => (a.subject?.name || "").localeCompare(b.subject?.name || ""));
+
+            const unstaffed = cls.curriculum.filter(
+              (c) => c.periodsPerWeek > 0 && !c.assignedTeacherId,
+            ).length;
 
             return (
               <div
                 key={cls.id}
-                className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col sm:flex-row"
+                className="flex flex-col gap-2 px-5 py-3 sm:flex-row sm:items-start sm:gap-6"
               >
-                <div className="p-4 bg-slate-50 dark:bg-slate-900 border-b sm:border-b-0 sm:border-r border-slate-200 dark:border-slate-700 flex justify-between items-center sm:flex-col sm:justify-center sm:w-28 shrink-0">
-                  <div className="sm:text-center">
-                    <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm">
-                      {cls.name}
-                    </h3>
-                    <p className="text-2xs text-content-muted uppercase tracking-wide">
-                      {assignments.length} Staff
-                    </p>
-                  </div>
-                  <div className="w-7 h-7 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-content-muted text-2xs mt-2 hidden sm:flex">
-                    {cls.name.substring(0, 2).toUpperCase()}
-                  </div>
+                <div className="flex w-full shrink-0 items-baseline justify-between gap-2 sm:w-40 sm:justify-start">
+                  <span className="truncate text-sm font-medium text-content">{cls.name}</span>
+                  <span className="ml-auto shrink-0 text-2xs tabular-nums text-content-muted">
+                    {assignments.length}
+                  </span>
                 </div>
-                <div className="p-3 flex flex-wrap gap-2 items-center flex-1">
-                  {assignments.length > 0 ? (
-                    assignments.map((item, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center gap-2 p-1.5 bg-white dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700 hover:border-amber-200 transition-all shadow-sm group"
-                      >
-                        <div
-                          className="w-1 h-5 rounded-full"
-                          style={{ backgroundColor: item.subject?.color }}
-                        ></div>
-                        <div>
-                          <p className="text-2xs font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">
-                            {item.teacher?.name}
-                          </p>
-                          <p className="text-2xs text-content-muted whitespace-nowrap">
-                            {item.subject?.name}
-                          </p>
-                        </div>
-                        <span className="text-2xs font-medium text-content-muted bg-slate-50 dark:bg-slate-900 px-1 rounded ml-1">
-                          {item.periods}p
-                        </span>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="w-full py-2 text-center text-2xs text-content-muted italic">
-                      No teachers assigned.
-                    </div>
+
+                <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+                  {assignments.map((item, idx) => (
+                    <span
+                      key={idx}
+                      title={`${item.teacher?.name} — ${item.subject?.name}, ${item.periods} periods per week`}
+                      className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-edge
+                                 bg-surface-muted py-0.5 pl-1.5 pr-2 text-2xs text-content-secondary"
+                    >
+                      <span
+                        aria-hidden
+                        className="h-2 w-2 shrink-0 rounded-full ring-1 ring-black/10"
+                        style={{ backgroundColor: item.subject?.color }}
+                      />
+                      <span className="truncate">
+                        {item.subject?.name}
+                        <span className="text-content-muted"> · {item.teacher?.name}</span>
+                      </span>
+                      <span className="shrink-0 tabular-nums text-content-muted">
+                        {item.periods}
+                      </span>
+                    </span>
+                  ))}
+                  {unstaffed > 0 && (
+                    <span className="text-2xs text-accent-ink">{unstaffed} without a teacher</span>
+                  )}
+                  {assignments.length === 0 && unstaffed === 0 && (
+                    <span className="text-xs text-content-muted">
+                      Nothing on the curriculum yet
+                    </span>
                   )}
                 </div>
               </div>
             );
           })}
-        </div>
-      </div>
+        </PanelRegion>
+      </Panel>
     </div>
   );
 };

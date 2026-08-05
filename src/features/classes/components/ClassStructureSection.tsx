@@ -1,7 +1,11 @@
 import React from "react";
-import { School, Coffee, Utensils } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { AppData, PeriodType } from "../../../types";
-import { Input } from "../../../components/ui";
+import { controlClass } from "../../../components/ui";
+import { periodTypeMeta } from "../../../utils/periodTypes";
+
+/** A class override covers the three types a class day is built from. */
+const CLASS_PERIOD_TYPES: PeriodType[] = ["CLASS", "BREAK", "LUNCH"];
 
 interface ClassStructureSectionProps {
   data: AppData;
@@ -17,6 +21,28 @@ interface ClassStructureSectionProps {
   setCStructure: (struct: PeriodType[]) => void;
 }
 
+interface NumberFieldProps {
+  id: string;
+  label: string;
+  value: number;
+  onChange: (val: number) => void;
+}
+
+const NumberField: React.FC<NumberFieldProps> = ({ id, label, value, onChange }) => (
+  <div className="min-w-0">
+    <label htmlFor={id} className="mb-1 block text-xs text-content-muted">
+      {label}
+    </label>
+    <input
+      id={id}
+      type="number"
+      className={`${controlClass} w-full`}
+      value={value}
+      onChange={(e) => onChange(parseInt(e.target.value) || 0)}
+    />
+  </div>
+);
+
 export const ClassStructureSection: React.FC<ClassStructureSectionProps> = ({
   data,
   cPeriodCount,
@@ -30,90 +56,100 @@ export const ClassStructureSection: React.FC<ClassStructureSectionProps> = ({
   cStructure,
   setCStructure,
 }) => {
-  const renderStructureTimingInputs = () => (
-    <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-slate-100 dark:border-slate-700">
-      <Input
-        label="Periods/Day"
-        type="number"
-        value={cPeriodCount}
-        onChange={(e) => handlePeriodCountChange(parseInt(e.target.value) || 0)}
-      />
-      <Input
-        label="Duration (min)"
-        type="number"
-        value={cDuration}
-        onChange={(e) => setCDuration(parseInt(e.target.value) || 0)}
-      />
-      <Input
-        label="Break (min)"
-        type="number"
-        value={cBreakDuration}
-        onChange={(e) => setCBreakDuration(parseInt(e.target.value) || 0)}
-      />
-      <Input
-        label="Lunch (min)"
-        type="number"
-        value={cLunchDuration}
-        onChange={(e) => setCLunchDuration(parseInt(e.target.value) || 0)}
-      />
-    </div>
-  );
+  /**
+   * Setting a type also seeds its duration the first time that type appears, so
+   * a class that gains its first break does not inherit a zero length.
+   */
+  const setType = (idx: number, next: PeriodType) => {
+    if (cStructure[idx] === next) return;
+    if (!cStructure.includes(next)) {
+      if (next === "BREAK") setCBreakDuration(data.settings.defaultBreakDuration || 20);
+      else if (next === "LUNCH") setCLunchDuration(data.settings.defaultLunchDuration || 60);
+      else if (next === "CLASS") setCDuration(data.settings.defaultClassDuration || 50);
+    }
+    const newStruct = [...cStructure];
+    newStruct[idx] = next;
+    setCStructure(newStruct);
+  };
 
   return (
-    <div className="space-y-4 animate-in fade-in">
-      <p className="text-xs text-content-muted bg-blue-50 dark:bg-blue-900/30 p-3 rounded border border-blue-100">
-        <span className="font-bold">Instructions:</span> Click any block below to toggle it between{" "}
-        <b>Class</b>, <b>Break</b>, or <b>Lunch</b>. This overrides the global schedule for this
-        specific class only.
-      </p>
-      <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
-        {cStructure.map((type, idx) => (
-          <button
-            key={idx}
-            onClick={() => {
-              const types: PeriodType[] = ["CLASS", "BREAK", "LUNCH"];
-              const next = types[(types.indexOf(type) + 1) % 3];
-              const newStruct = [...cStructure];
-              newStruct[idx] = next;
-
-              // Auto-update duration if it's the first slot of this type
-              const isFirstOfType = !cStructure.includes(next);
-              if (isFirstOfType) {
-                if (next === "BREAK") {
-                  setCBreakDuration(data.settings.defaultBreakDuration || 20);
-                } else if (next === "LUNCH") {
-                  setCLunchDuration(data.settings.defaultLunchDuration || 60);
-                } else if (next === "CLASS") {
-                  setCDuration(data.settings.defaultClassDuration || 50);
-                }
-              }
-
-              setCStructure(newStruct);
-            }}
-            className={`
-                      p-3 rounded-lg border text-center text-xs font-bold transition-all relative overflow-hidden group
-                      ${
-                        type === "CLASS"
-                          ? "bg-white dark:bg-slate-800 border-slate-300 text-slate-700 dark:text-slate-200 hover:border-blue-400"
-                          : ""
-                      }
-                      ${type === "BREAK" ? "bg-amber-50 dark:bg-amber-900/30 border-amber-300 text-amber-800 dark:text-amber-200" : ""}
-                      ${type === "LUNCH" ? "bg-orange-50 dark:bg-orange-900/30 border-orange-300 text-orange-800 dark:text-orange-200" : ""}
-                  `}
-          >
-            <div className="absolute top-1 left-1 text-2xs text-content-muted font-normal opacity-50">
-              {idx + 1}
-            </div>
-            <div className="mt-1">
-              {type === "CLASS" && <School size={16} className="mx-auto mb-1" />}
-              {type === "BREAK" && <Coffee size={16} className="mx-auto mb-1" />}
-              {type === "LUNCH" && <Utensils size={16} className="mx-auto mb-1" />}
-              {type || "CLASS"}
-            </div>
-          </button>
-        ))}
+    <div className="space-y-4">
+      <div>
+        <h4 className="text-sm font-medium text-content">Day structure</h4>
+        <p className="mt-0.5 text-xs text-content-muted">
+          Overrides the school-wide day for this class only.
+        </p>
       </div>
-      {renderStructureTimingInputs()}
+
+      <div className="grid grid-cols-2 gap-3">
+        <NumberField
+          id="class-period-count"
+          label="Periods/Day"
+          value={cPeriodCount}
+          onChange={handlePeriodCountChange}
+        />
+        <NumberField
+          id="class-duration"
+          label="Duration (min)"
+          value={cDuration}
+          onChange={setCDuration}
+        />
+        <NumberField
+          id="class-break-duration"
+          label="Break (min)"
+          value={cBreakDuration}
+          onChange={setCBreakDuration}
+        />
+        <NumberField
+          id="class-lunch-duration"
+          label="Lunch (min)"
+          value={cLunchDuration}
+          onChange={setCLunchDuration}
+        />
+      </div>
+
+      {/* One select per period rather than a click-to-cycle tile: cycling gave no
+          way back to the previous type and never announced what a tap would do. */}
+      <ul className="space-y-1">
+        {cStructure.map((type, idx) => {
+          const meta = periodTypeMeta(type);
+          const Icon = meta.icon;
+          return (
+            <li key={idx} className="flex items-center gap-2">
+              <span
+                className={`grid h-7 w-7 shrink-0 place-items-center rounded border text-2xs tabular-nums ${meta.block} ${meta.ink}`}
+                aria-hidden
+              >
+                {idx + 1}
+              </span>
+              <div className="relative min-w-0 flex-1">
+                <Icon
+                  size={12}
+                  className={`pointer-events-none absolute left-2.5 top-2.5 ${meta.ink}`}
+                  aria-hidden
+                />
+                <select
+                  aria-label={`Period ${idx + 1} type`}
+                  value={type}
+                  onChange={(e) => setType(idx, e.target.value as PeriodType)}
+                  className={`${controlClass} h-8 w-full cursor-pointer appearance-none pl-7 pr-7 ${meta.ink}`}
+                >
+                  {CLASS_PERIOD_TYPES.map((option) => (
+                    <option key={option} value={option} className="text-content">
+                      {periodTypeMeta(option).label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown
+                  size={12}
+                  className="pointer-events-none absolute right-2.5 top-2.5 text-content-muted"
+                  aria-hidden
+                />
+              </div>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 };

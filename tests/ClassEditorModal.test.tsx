@@ -20,7 +20,7 @@ describe("ClassEditorModal", () => {
     render(<ClassEditorModal {...defaultProps} />);
 
     // Set a name so save is enabled
-    const nameInput = screen.getByPlaceholderText(/e\.g\. Grade 10A/i);
+    const nameInput = screen.getByLabelText(/Class Name/i);
     fireEvent.change(nameInput, { target: { value: "Test Class" } });
 
     // Click Save
@@ -66,6 +66,32 @@ describe("ClassEditorModal", () => {
         duration: 40,
       }),
       expect.objectContaining({ id: "c1" }),
+    );
+  });
+
+  // The editor owns eight fields but a ClassGroup carries more. `level` and
+  // `studentCount` are editable nowhere in the UI yet drive exam year grouping
+  // and the scheduler's room-capacity check, so rebuilding the record from form
+  // state alone silently discarded them on every save.
+  it("preserves fields the editor does not own when saving an edit", () => {
+    mockOnSave.mockClear();
+
+    const existingClass = {
+      id: "c2",
+      name: "Year 7A",
+      curriculum: [],
+      periodCount: 8,
+      structure: [],
+      level: "7",
+      studentCount: 32,
+    };
+
+    render(<ClassEditorModal {...defaultProps} editingClass={existingClass as any} />);
+    fireEvent.click(screen.getByText(/Save Class/i));
+
+    expect(mockOnSave).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "Year 7A", level: "7", studentCount: 32 }),
+      expect.objectContaining({ id: "c2" }),
     );
   });
 });

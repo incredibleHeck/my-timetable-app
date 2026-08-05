@@ -147,7 +147,13 @@ export const useClassForm = ({
       return { type, label };
     });
 
+    // Spread the existing class first. This form owns eight fields, but a
+    // ClassGroup also carries `level` and `studentCount` — neither of which is
+    // editable anywhere in the UI, and both of which are read by the scheduler
+    // (room capacity checks) and the exam generator (year grouping). Rebuilding
+    // the record from form state alone discarded them on every edit.
     const newClass: ClassGroup = {
+      ...editingClass,
       id: editingClass ? editingClass.id : generateId(),
       name: cName,
       defaultRoomId: cDefaultRoomId || "",

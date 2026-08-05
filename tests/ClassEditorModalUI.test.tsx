@@ -33,7 +33,7 @@ describe("ClassEditorModal UI Reorganization", () => {
     render(<ClassEditorModal {...defaultProps} />);
 
     // Switch to Structure tab
-    const structureTabButton = screen.getByRole("button", { name: /Structure/i });
+    const structureTabButton = screen.getByRole("tab", { name: /Structure/i });
     fireEvent.click(structureTabButton);
 
     // These SHOULD be in the Structure tab
@@ -47,7 +47,7 @@ describe("ClassEditorModal UI Reorganization", () => {
     render(<ClassEditorModal {...defaultProps} />);
 
     // Switch to Structure tab
-    const structureTabButton = screen.getByRole("button", { name: /Structure/i });
+    const structureTabButton = screen.getByRole("tab", { name: /Structure/i });
     fireEvent.click(structureTabButton);
 
     // Change Periods/Day to 10
@@ -55,7 +55,7 @@ describe("ClassEditorModal UI Reorganization", () => {
     fireEvent.change(periodsInput, { target: { value: "10" } });
 
     // Switch back to Basics tab
-    const basicsTabButton = screen.getByRole("button", { name: /Basics/i });
+    const basicsTabButton = screen.getByRole("tab", { name: /Basics/i });
     fireEvent.click(basicsTabButton);
 
     // Check for 10 period headers (P1 through P10)
