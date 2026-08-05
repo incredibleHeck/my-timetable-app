@@ -48,11 +48,10 @@ describe("Academic Activity Logging", () => {
     render(<RoomsView data={baseData} onUpdate={onUpdate} />);
 
     // Open modal
-    const addButtons = screen.getAllByText("Add Room");
-    fireEvent.click(addButtons[0]); // The first one is the main button
+    fireEvent.click(screen.getByRole("button", { name: "Add Room" }));
 
     // Fill form
-    fireEvent.change(screen.getByLabelText("Room Name/Number"), { target: { value: "New Room" } });
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "New Room" } });
 
     // Save
     fireEvent.click(screen.getByText("Save Room"));

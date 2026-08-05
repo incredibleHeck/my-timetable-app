@@ -1,261 +1,195 @@
-import React, { useState, useMemo } from "react";
-import { Plus, Trash2, Edit2, AlertTriangle, Building2 } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { AlertTriangle, Plus } from "lucide-react";
 import { AppData } from "../../types";
 import { Room } from "./types";
-import { Button, Modal, Input, Select, DataTable } from "../../components/ui";
-import { generateId } from "../../utils/utils";
+import { Button, Modal, quietButtonClass } from "../../components/ui";
 import { useProfile } from "../../contexts/ProfileContext";
+import { useRoomUsage } from "./hooks/useRoomUsage";
+import { RoomEditorModal } from "./components/RoomEditorModal";
+import { RoomTable } from "./components/RoomTable";
 
 interface ViewProps {
   data: AppData;
   onUpdate: (newData: AppData) => void;
 }
 
-const ROOM_TYPES = [
-  { value: "Classroom", label: "Standard Classroom" },
-  { value: "Lab", label: "Laboratory" },
-  { value: "Library", label: "Library" },
-  { value: "Gym", label: "Gymnasium" },
-  { value: "Art Studio", label: "Art Studio" },
-  { value: "Music Room", label: "Music Room" },
-  { value: "Hall", label: "Assembly Hall" },
-  { value: "Computer Lab", label: "Computer Lab" },
-  { value: "Workshop", label: "Workshop" },
-];
+const SectionHeading: React.FC<{
+  title: string;
+  description: string;
+  action?: React.ReactNode;
+}> = ({ title, description, action }) => (
+  <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+    <div>
+      <h3 className="text-sm font-semibold text-content">{title}</h3>
+      <p className="mt-0.5 max-w-prose text-xs leading-relaxed text-content-muted">{description}</p>
+    </div>
+    {action}
+  </div>
+);
 
 export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate }) => {
   const { addActivity } = useProfile();
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingRoom, setEditingRoom] = useState<Room | null>(null);
-  const [roomName, setRoomName] = useState("");
-  const [roomCapacity, setRoomCapacity] = useState("30");
-  const [roomType, setRoomType] = useState("Classroom");
+  const getUsage = useRoomUsage(data);
 
-  // Delete Modal State
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [roomToDelete, setRoomToDelete] = useState<Room | null>(null);
 
-  // Smart Sort
-  const sortedRooms = useMemo(() => {
-    return [...data.rooms].sort((a, b) =>
-      a.name.localeCompare(b.name, undefined, { numeric: true }),
-    );
+  const byName = (a: Room, b: Room) => a.name.localeCompare(b.name, undefined, { numeric: true });
+
+  /**
+   * Home rooms are generated one per class and outnumber real facilities several
+   * times over, so listing all of them together buried the handful of spaces the
+   * school actually manages.
+   */
+  const { facilities, homeRooms } = useMemo(() => {
+    const sorted = [...data.rooms].sort(byName);
+    return {
+      facilities: sorted.filter((r) => !r.isHomeRoom),
+      homeRooms: sorted.filter((r) => r.isHomeRoom),
+    };
   }, [data.rooms]);
 
-  const saveRoom = () => {
-    if (!roomName) return;
-    const newRoom: Room = {
-      id: editingRoom ? editingRoom.id : generateId(),
-      name: roomName,
-      capacity: parseInt(roomCapacity) || 0,
-      type: roomType,
-    };
-
-    let newRooms = [...data.rooms];
-    const msg = editingRoom ? `Updated Room: ${newRoom.name}` : `Added Room: ${newRoom.name}`;
-    if (editingRoom) {
-      newRooms = newRooms.map((r) => (r.id === editingRoom.id ? newRoom : r));
-    } else {
-      newRooms.push(newRoom);
-    }
-    const nextData = { ...data, rooms: newRooms };
-    addActivity("ACADEMIC", msg, nextData);
-
-    setModalOpen(false);
-    resetForm();
+  const openEditor = (room: Room | null) => {
+    setEditingRoom(room);
+    setEditorOpen(true);
   };
 
-  const resetForm = () => {
-    setRoomName("");
-    setRoomCapacity("30");
-    setRoomType("Classroom");
-    setEditingRoom(null);
-  };
-
-  const initiateDelete = (room: Room) => {
-    setRoomToDelete(room);
-    setDeleteModalOpen(true);
+  const saveRoom = (room: Room) => {
+    const exists = data.rooms.some((r) => r.id === room.id);
+    const newRooms = exists
+      ? data.rooms.map((r) => (r.id === room.id ? room : r))
+      : [...data.rooms, room];
+    addActivity("ACADEMIC", `${exists ? "Updated" : "Added"} Room: ${room.name}`, {
+      ...data,
+      rooms: newRooms,
+    });
   };
 
   const confirmDelete = () => {
     if (!roomToDelete) return;
     const id = roomToDelete.id;
-
-    try {
-      const updatedRooms = data.rooms.filter((r) => r.id !== id);
-      const nextData = { ...data, rooms: updatedRooms };
-      addActivity("ACADEMIC", `Deleted Room: ${roomToDelete.name}`, nextData);
-    } catch (e) {
-      console.error(e);
-    }
-
-    setDeleteModalOpen(false);
+    addActivity("ACADEMIC", `Deleted Room: ${roomToDelete.name}`, {
+      ...data,
+      rooms: data.rooms.filter((r) => r.id !== id),
+      // A subject pinned to a deleted room would keep pointing at nothing, and
+      // the scheduler would find no room to satisfy it.
+      subjects: data.subjects.map((s) =>
+        s.requiredRoomId === id ? { ...s, requiredRoomId: undefined } : s,
+      ),
+    });
     setRoomToDelete(null);
   };
 
-  const openModal = (room?: Room) => {
-    if (room) {
-      setEditingRoom(room);
-      setRoomName(room.name);
-      setRoomCapacity(room.capacity.toString());
-      setRoomType(room.type);
-    } else {
-      resetForm();
-    }
-    setModalOpen(true);
-  };
+  const pinnedSubjects = roomToDelete ? getUsage(roomToDelete.id).requiredBySubjects : [];
 
   return (
-    <div className="max-w-7xl mx-auto p-8 space-y-6 animate-in fade-in duration-500 pb-12">
-      <div className="flex justify-between items-center">
+    <div className="mx-auto max-w-7xl space-y-6 p-6 pb-16 md:p-8">
+      <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
         <div>
-          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Room Management</h2>
-          <p className="text-xs text-content-muted">Define physical spaces and their capacities.</p>
+          <h2 className="text-lg font-semibold tracking-tight text-content">Rooms</h2>
+          <p className="mt-1 text-xs text-content-muted">
+            <span className="tabular-nums">{facilities.length}</span> shared facilities ·{" "}
+            <span className="tabular-nums">{homeRooms.length}</span> home rooms
+          </p>
         </div>
-        <Button onClick={() => openModal()} icon={<Plus size={16} />}>
+        <Button onClick={() => openEditor(null)} icon={<Plus size={16} />}>
           Add Room
         </Button>
-      </div>
+      </header>
 
-      {/* Rooms are a uniform record set (name/type/capacity), so a table reads
-          faster and denser than a card grid of near-identical badges. */}
-      <DataTable
-        caption="Rooms with their type and capacity"
-        rows={sortedRooms}
-        rowKey={(room) => room.id}
-        empty={
-          <div className="rounded-xl border border-dashed border-edge-strong bg-surface-muted p-12 text-center">
-            <Building2 size={24} className="mx-auto mb-2 text-content-muted" />
-            <p className="text-sm font-semibold text-content">No rooms yet</p>
-            <p className="mt-1 text-xs text-content-muted">
-              Add a room to assign lessons to physical spaces.
-            </p>
-          </div>
-        }
-        columns={[
-          {
-            header: "Room",
-            className: "w-[40%]",
-            cell: (room) => (
-              <div className="flex items-center gap-2 min-w-0">
-                <Building2 size={14} className="shrink-0 text-content-muted" aria-hidden="true" />
-                <span className="font-semibold truncate" title={room.name}>
-                  {room.name}
-                </span>
-                {room.isHomeRoom && (
-                  <span className="shrink-0 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-2xs font-bold text-amber-800 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
-                    Home
-                  </span>
-                )}
-              </div>
-            ),
-          },
-          {
-            header: "Type",
-            cell: (room) => <span className="text-content-muted">{room.type}</span>,
-          },
-          {
-            header: "Capacity",
-            numeric: true,
-            cell: (room) => room.capacity,
-          },
-          {
-            header: "Actions",
-            className: "w-[1%] whitespace-nowrap",
-            cell: (room) => (
-              <div className="flex items-center justify-end gap-1">
-                <button
-                  onClick={() => openModal(room)}
-                  aria-label={`Edit ${room.name}`}
-                  className="rounded-md p-2 text-content-muted transition-colors hover:bg-surface-muted hover:text-accent-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                >
-                  <Edit2 size={14} />
-                </button>
-                <button
-                  onClick={() => initiateDelete(room)}
-                  disabled={room.isHomeRoom}
-                  aria-label={
-                    room.isHomeRoom
-                      ? `${room.name} is a home room and cannot be deleted`
-                      : `Delete ${room.name}`
-                  }
-                  className="rounded-md p-2 text-content-muted transition-colors hover:bg-red-50 hover:text-danger-ink disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-content-muted dark:hover:bg-red-900/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            ),
-          },
-        ]}
+      <section className="space-y-3">
+        <SectionHeading
+          title="Shared facilities"
+          description="Spaces used across classes — labs, studios, halls. A subject can be pinned to one so every lesson of it is scheduled there."
+          action={
+            <button type="button" onClick={() => openEditor(null)} className={quietButtonClass}>
+              Add room
+            </button>
+          }
+        />
+        <RoomTable
+          caption="Shared facilities with their type, capacity and the subjects pinned to them"
+          rooms={facilities}
+          getUsage={getUsage}
+          usageHeader="Reserved for"
+          onEdit={openEditor}
+          onDelete={setRoomToDelete}
+          empty={
+            <div className="rounded-lg border border-dashed border-edge px-5 py-10 text-center">
+              <p className="text-sm text-content">No shared facilities yet.</p>
+              <p className="mt-1 text-xs text-content-muted">
+                Add one for any space a subject has to be taught in.
+              </p>
+            </div>
+          }
+        />
+      </section>
+
+      <section className="space-y-3">
+        <SectionHeading
+          title="Home rooms"
+          description="One per class, created and named automatically. They are renamed with their class and removed when it is deleted, so only capacity and type are editable here."
+        />
+        <RoomTable
+          caption="Home rooms with the class each belongs to"
+          rooms={homeRooms}
+          getUsage={getUsage}
+          usageHeader="Class"
+          onEdit={openEditor}
+          empty={
+            <div className="rounded-lg border border-dashed border-edge px-5 py-10 text-center">
+              <p className="text-sm text-content">No home rooms yet.</p>
+              <p className="mt-1 text-xs text-content-muted">
+                One is created automatically for each class you add.
+              </p>
+            </div>
+          }
+        />
+      </section>
+
+      <RoomEditorModal
+        isOpen={editorOpen}
+        onClose={() => setEditorOpen(false)}
+        editingRoom={editingRoom}
+        onSave={saveRoom}
       />
 
       <Modal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title={editingRoom ? "Edit Room" : "New Room"}
+        isOpen={roomToDelete !== null}
+        onClose={() => setRoomToDelete(null)}
+        title="Delete room"
         footer={
-          <div className="flex justify-end gap-2 w-full">
-            <Button variant="secondary" onClick={() => setModalOpen(false)}>
+          <div className="flex w-full justify-end gap-2">
+            <Button variant="secondary" onClick={() => setRoomToDelete(null)}>
               Cancel
             </Button>
-            <Button onClick={saveRoom}>Save Room</Button>
-          </div>
-        }
-        maxWidth="max-w-md"
-      >
-        <div className="space-y-4">
-          <Input
-            label="Room Name/Number"
-            value={roomName}
-            onChange={(e) => setRoomName(e.target.value)}
-            autoFocus
-            placeholder="e.g. Room 101, Science Lab A"
-          />
-
-          <Select
-            label="Room Type"
-            value={roomType}
-            onChange={(e) => setRoomType(e.target.value)}
-            options={ROOM_TYPES}
-          />
-
-          <Input
-            label="Capacity (Students)"
-            type="number"
-            value={roomCapacity}
-            onChange={(e) => setRoomCapacity(e.target.value)}
-            placeholder="e.g. 30"
-          />
-        </div>
-      </Modal>
-
-      <Modal
-        isOpen={deleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
-        title="Delete Room?"
-        aria-label="Delete Room?"
-        footer={
-          <div className="flex justify-end gap-2 w-full">
-            <Button variant="secondary" onClick={() => setDeleteModalOpen(false)}>
-              Keep It
-            </Button>
             <Button variant="danger" onClick={confirmDelete}>
-              Yes, Delete Room
+              Delete Room
             </Button>
           </div>
         }
       >
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center text-danger-ink shrink-0">
-            <AlertTriangle size={24} />
-          </div>
-          <div>
-            <p className="font-bold text-slate-800 dark:text-slate-100 text-lg">
-              Delete "{roomToDelete?.name}"?
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="mt-0.5 shrink-0 text-danger-ink" size={18} aria-hidden />
+          <div className="min-w-0">
+            <p className="text-sm text-content">
+              Delete <span className="font-medium">{roomToDelete?.name}</span>?
             </p>
-            <p className="text-sm text-content-muted mt-2">
-              This will remove the room from your facility list.
-            </p>
+            {pinnedSubjects.length > 0 ? (
+              <p className="mt-1 text-xs text-content-muted">
+                <span className="font-medium text-content-secondary">
+                  {pinnedSubjects.map((s) => s.name).join(", ")}
+                </span>{" "}
+                {pinnedSubjects.length === 1
+                  ? "is pinned to this room and will fall back to the class home room."
+                  : "are pinned to this room and will fall back to their class home rooms."}
+              </p>
+            ) : (
+              <p className="mt-1 text-xs text-content-muted">
+                No subject is pinned to it, so nothing else changes.
+              </p>
+            )}
           </div>
         </div>
       </Modal>
