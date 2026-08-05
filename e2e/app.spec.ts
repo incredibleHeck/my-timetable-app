@@ -70,9 +70,10 @@ test.describe("Configuration", () => {
   test("updates periods per day from config view", async ({ page }) => {
     await nav(page).getByRole("button", { name: "Configuration", exact: true }).click();
     await page.getByRole("tab", { name: "Day structure" }).click();
-    const slider = page.locator("#periods-per-day");
-    await slider.fill("10");
-    await expect(page.getByText("10 Blocks")).toBeVisible();
+    const periods = page.locator("#periods-per-day");
+    await periods.fill("10");
+    await periods.blur();
+    await expect(page.getByRole("textbox", { name: "Period 10 name" })).toBeVisible();
   });
 });
 
@@ -220,18 +221,19 @@ test.describe("Undo/Redo E2E", () => {
     await seedProfile(page, "Undo School");
     await nav(page).getByRole("button", { name: "Configuration", exact: true }).click();
     await page.getByRole("tab", { name: "Day structure" }).click();
-    const slider = page.locator("#periods-per-day");
-    await slider.fill("10");
-    await expect(page.getByText("10 Blocks")).toBeVisible();
+    const periods = page.locator("#periods-per-day");
+    await periods.fill("10");
+    await periods.blur();
+    await expect(periods).toHaveValue("10");
 
     // Click Undo button in the header
     await page.getByRole("button", { name: "Undo", exact: true }).click();
-    // Verify it reverts to original (which is 8 blocks in seed data)
-    await expect(page.getByText("8 Blocks")).toBeVisible();
+    // Verify it reverts to original (which is 8 periods in seed data)
+    await expect(periods).toHaveValue("8");
 
     // Click Redo button in the header
     await page.getByRole("button", { name: "Redo", exact: true }).click();
-    await expect(page.getByText("10 Blocks")).toBeVisible();
+    await expect(periods).toHaveValue("10");
   });
 });
 

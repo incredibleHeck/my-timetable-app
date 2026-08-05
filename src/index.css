@@ -16,6 +16,11 @@
  * ------------------------------------------------------------------------- */
 @layer base {
   :root {
+    /* Native controls (time pickers, select popups, spinners, scrollbars) follow
+     * this, not the token layer — without it they render light-on-light in dark
+     * mode, which is visible wherever the UI leans on real form controls. */
+    color-scheme: light;
+
     --canvas: 248 250 252; /* slate-50  */
     --surface: 255 255 255; /* white     */
     --surface-muted: 241 245 249; /* slate-100 */
@@ -43,6 +48,8 @@
   }
 
   .dark {
+    color-scheme: dark;
+
     --canvas: 15 23 42; /* slate-900 */
     --surface: 30 41 59; /* slate-800 */
     --surface-muted: 30 41 59; /* slate-800 */
@@ -155,6 +162,7 @@
    * components migrate from literal colours (bg-white) to tokens (bg-surface). */
   :root,
   .dark {
+    color-scheme: light;
     --canvas: 255 255 255;
     --surface: 255 255 255;
     --surface-muted: 241 245 249;

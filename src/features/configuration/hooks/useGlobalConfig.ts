@@ -17,8 +17,6 @@ export const useGlobalConfig = (data: AppData) => {
     label: string;
   } | null>(null);
   const [applyToAllDays, setApplyToAllDays] = useState(false);
-  const [editingLabelIdx, setEditingLabelIdx] = useState<number | null>(null);
-  const [tempLabel, setTempLabel] = useState("");
 
   const recalculateTimeline = useCallback(
     (
@@ -152,14 +150,9 @@ export const useGlobalConfig = (data: AppData) => {
     return { ...data, settings: { ...data.settings, timeSlots: newTimes } };
   };
 
-  const saveCustomLabel = (): AppData | undefined => {
-    if (editingLabelIdx === null) return undefined;
+  const setPeriodLabel = (idx: number, label: string): AppData => {
     const newStructure = [...data.settings.dayStructure];
-    newStructure[editingLabelIdx] = {
-      ...newStructure[editingLabelIdx],
-      label: tempLabel,
-    };
-    setEditingLabelIdx(null);
+    newStructure[idx] = { ...newStructure[idx], label };
     return {
       ...data,
       settings: { ...data.settings, dayStructure: newStructure },
@@ -234,17 +227,13 @@ export const useGlobalConfig = (data: AppData) => {
     setEditingSlot,
     applyToAllDays,
     setApplyToAllDays,
-    editingLabelIdx,
-    setEditingLabelIdx,
-    tempLabel,
-    setTempLabel,
     handleDurationChange,
     recalculateAllSlotTimes,
     setPeriodType,
     handlePeriodCountChange,
     handleIdentityUpdate,
     updateTimeSlot,
-    saveCustomLabel,
+    setPeriodLabel,
     updateMaxConsecutive,
     updateMaxSubjectPeriods,
     updateMaxTeacherPeriods,

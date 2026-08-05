@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { GraduationCap } from "lucide-react";
-import { Card, Input } from "../../../components/ui";
 import { AppData } from "../../../types";
 import { ConfigCommitFn } from "../hooks/useConfigCommit";
+import { ConfigPanel, SettingRow, SettingRows, controlClass } from "./ConfigPanel";
+
+type IdentityField = "schoolName" | "academicYear";
 
 interface SchoolIdentitySectionProps {
   data: AppData;
   commit: ConfigCommitFn;
-  handleIdentityUpdate: (field: "schoolName" | "academicYear", val: string) => AppData;
+  handleIdentityUpdate: (field: IdentityField, val: string) => AppData;
 }
 
 export const SchoolIdentitySection: React.FC<SchoolIdentitySectionProps> = ({
@@ -23,52 +24,54 @@ export const SchoolIdentitySection: React.FC<SchoolIdentitySectionProps> = ({
     setAcademicYear(data.settings.academicYear || "");
   }, [data.settings.schoolName, data.settings.academicYear]);
 
-  const commitField = (field: "schoolName" | "academicYear", val: string, label: string) => {
+  const commitField = (field: IdentityField, val: string, label: string) => {
     const stored = data.settings[field] || "";
     if (val === stored) return;
-    const nextData = handleIdentityUpdate(field, val);
-    commit(`Updated ${label}: ${val}`, nextData);
+    commit(`Updated ${label}: ${val}`, handleIdentityUpdate(field, val));
+  };
+
+  const blurOnEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") (e.target as HTMLInputElement).blur();
   };
 
   return (
-    <Card className="p-6 border-l-4 border-l-slate-800 bg-white dark:bg-slate-800">
-      <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
-        <div>
-          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <GraduationCap className="text-slate-800 dark:text-slate-100" size={24} aria-hidden />{" "}
-            School Identity
-          </h3>
-          <p className="text-xs text-content-muted mt-1">
-            Appears on printed schedules and reports. Changes save when you leave each field.
-          </p>
-        </div>
-        <div className="flex gap-4 w-full md:w-auto flex-1 max-w-xl">
-          <div className="flex-1">
-            <Input
-              label="Institution Name"
-              placeholder="e.g. St. Mary's High School"
+    <ConfigPanel
+      title="School identity"
+      description="Printed on exported timetables, rosters and reports. Each field saves when you leave it."
+    >
+      <SettingRows>
+        <SettingRow
+          title="School name"
+          htmlFor="school-name"
+          control={
+            <input
+              id="school-name"
+              className={`${controlClass} w-64 max-w-full`}
+              placeholder="St. Mary's High School"
               value={schoolName}
               onChange={(e) => setSchoolName(e.target.value)}
               onBlur={() => commitField("schoolName", schoolName, "School Name")}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-              }}
+              onKeyDown={blurOnEnter}
             />
-          </div>
-          <div className="w-40">
-            <Input
-              label="Academic Term"
-              placeholder="e.g. 2024-2025"
+          }
+        />
+        <SettingRow
+          title="Academic year"
+          description="Shown alongside the school name in report headers."
+          htmlFor="academic-year"
+          control={
+            <input
+              id="academic-year"
+              className={`${controlClass} w-36`}
+              placeholder="2025-2026"
               value={academicYear}
               onChange={(e) => setAcademicYear(e.target.value)}
               onBlur={() => commitField("academicYear", academicYear, "Academic Year")}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-              }}
+              onKeyDown={blurOnEnter}
             />
-          </div>
-        </div>
-      </div>
-    </Card>
+          }
+        />
+      </SettingRows>
+    </ConfigPanel>
   );
 };

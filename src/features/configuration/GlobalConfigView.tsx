@@ -1,33 +1,26 @@
 import React, { useState } from "react";
-import { Settings as SettingsIcon, Info } from "lucide-react";
 import { AppData, ViewState } from "../../types";
-import { Card, ConfirmDialog } from "../../components/ui";
+import { ConfirmDialog, NumberStepper } from "../../components/ui";
 import { useGlobalConfig } from "./hooks/useGlobalConfig";
 import { useConfigCommit } from "./hooks/useConfigCommit";
 import { useProfile } from "../../contexts/ProfileContext";
 import { countScheduleSlotsAtOrAfterPeriod } from "./logic/configUtils";
+import { getOccasionLabel } from "../../utils/utils";
 
 import { ConfigPageHeader } from "./components/ConfigPageHeader";
 import { ConfigImpactBanner } from "./components/ConfigImpactBanner";
+import { ConfigNav, ConfigSection } from "./components/ConfigNav";
+import { ConfigPanel, PanelRegion } from "./components/ConfigPanel";
 import { SchoolIdentitySection } from "./components/SchoolIdentitySection";
-import { TimelineAutomationSection } from "./components/TimelineAutomationSection";
+import { BellScheduleSection } from "./components/BellScheduleSection";
 import { RulesSection } from "./components/RulesSection";
 import { ExamDefaultsSection } from "./components/ExamDefaultsSection";
-import { ScheduleChainSection } from "./components/ScheduleChainSection";
+import { PeriodListSection } from "./components/PeriodListSection";
 import { ReservationsGridSection } from "./components/ReservationsGridSection";
 import { SlotEditModal } from "./components/SlotEditModal";
-import { DaySummaryStrip } from "./components/DaySummaryStrip";
-import { TimelineVisualizer } from "./components/TimelineVisualizer";
+import { DayTimeline } from "./components/DayTimeline";
 
 type ConfigTab = "identity" | "structure" | "rules" | "reservations" | "exams";
-
-const TABS: { id: ConfigTab; label: string }[] = [
-  { id: "identity", label: "Identity" },
-  { id: "structure", label: "Day structure" },
-  { id: "rules", label: "Rules" },
-  { id: "reservations", label: "Fixed slots" },
-  { id: "exams", label: "Exam defaults" },
-];
 
 interface ViewProps {
   data: AppData;
@@ -52,17 +45,13 @@ export const GlobalConfigView: React.FC<ViewProps> = ({
     setEditingSlot,
     applyToAllDays,
     setApplyToAllDays,
-    editingLabelIdx,
-    setEditingLabelIdx,
-    tempLabel,
-    setTempLabel,
     handleDurationChange,
     recalculateAllSlotTimes,
     setPeriodType,
+    setPeriodLabel,
     handlePeriodCountChange,
     handleIdentityUpdate,
     updateTimeSlot,
-    saveCustomLabel,
     updateMaxConsecutive,
     updateMaxSubjectPeriods,
     updateMaxTeacherPeriods,
@@ -74,198 +63,174 @@ export const GlobalConfigView: React.FC<ViewProps> = ({
   } = useGlobalConfig(data);
 
   const displayProfileName = profileName ?? activeProfile?.name;
+  const { periodsPerDay, fixedOccasions, examGrid } = data.settings;
 
-  const handlePeriodSliderChange = (val: number) => {
-    const current = data.settings.periodsPerDay;
-    if (val < current) {
+  const reservedCount = fixedOccasions.reduce(
+    (total, day) => total + (day || []).filter((slot) => getOccasionLabel(slot)).length,
+    0,
+  );
+
+  const sections: ConfigSection<ConfigTab>[] = [
+    { id: "identity", label: "School identity" },
+    { id: "structure", label: "Day structure", meta: `${periodsPerDay} periods` },
+    { id: "rules", label: "Scheduling rules" },
+    {
+      id: "reservations",
+      label: "Reserved slots",
+      meta: reservedCount > 0 ? String(reservedCount) : undefined,
+    },
+    { id: "exams", label: "Exam defaults", meta: `${examGrid?.sessionsPerDay ?? 2}/day` },
+  ];
+
+  const applyPeriodCount = (val: number) => {
+    if (val < periodsPerDay) {
       const dropped = countScheduleSlotsAtOrAfterPeriod(data.schedule, val);
       if (dropped > 0) {
         setPeriodConfirm({ val, dropped });
         return;
       }
     }
-    const nextData = handlePeriodCountChange(val);
-    commit(`Updated daily period count to ${val}`, nextData);
+    commit(`Updated daily period count to ${val}`, handlePeriodCountChange(val));
   };
 
   const confirmPeriodReduction = () => {
     if (!periodConfirm) return;
-    const nextData = handlePeriodCountChange(periodConfirm.val);
-    commit(`Updated daily period count to ${periodConfirm.val}`, nextData);
+    commit(
+      `Updated daily period count to ${periodConfirm.val}`,
+      handlePeriodCountChange(periodConfirm.val),
+    );
     setPeriodConfirm(null);
   };
 
+  const panelProps = (id: ConfigTab) => ({
+    role: "tabpanel",
+    id: `config-panel-${id}`,
+    "aria-labelledby": `config-tab-${id}`,
+    tabIndex: 0,
+  });
+
   return (
-    <div className="max-w-7xl mx-auto p-8 space-y-6 animate-in fade-in duration-500 pb-12">
+    <div className="mx-auto max-w-7xl space-y-5 p-6 pb-16 md:p-8">
       <ConfigPageHeader profileName={displayProfileName} />
       <ConfigImpactBanner conflictCount={data.conflicts?.length ?? 0} onNavigate={onNavigate} />
 
-      <div
-        className="flex border-b border-slate-200 dark:border-slate-700 overflow-x-auto"
-        role="tablist"
-        aria-label="Configuration sections"
-      >
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            id={`config-tab-${tab.id}`}
-            aria-selected={activeTab === tab.id}
-            aria-controls={`config-panel-${tab.id}`}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-3 text-sm font-bold whitespace-nowrap border-b-2 transition-colors ${
-              activeTab === tab.id
-                ? "border-amber-500 text-amber-800 dark:text-amber-200"
-                : "border-transparent text-content-muted hover:text-slate-800"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <div className="lg:grid lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-8">
+        <ConfigNav sections={sections} activeId={activeTab} onSelect={setActiveTab} />
 
-      {activeTab === "identity" && (
-        <div role="tabpanel" id="config-panel-identity" aria-labelledby="config-tab-identity">
-          <SchoolIdentitySection
-            data={data}
-            commit={commit}
-            handleIdentityUpdate={handleIdentityUpdate}
-          />
-        </div>
-      )}
-
-      {activeTab === "structure" && (
-        <div role="tabpanel" id="config-panel-structure" aria-labelledby="config-tab-structure">
-          <Card className="p-8 border-t-4 border-t-amber-500">
-            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center">
-              <SettingsIcon className="mr-3 text-accent-ink" size={24} aria-hidden />
-              Timetable Structure
-            </h3>
-
-            <div className="flex items-start gap-2 p-3 mb-6 rounded-lg bg-blue-50 dark:bg-blue-900/30 border border-blue-100 text-xs text-blue-800 dark:text-blue-200">
-              <Info size={16} className="shrink-0 mt-0.5" aria-hidden />
-              <p>
-                Individual classes can override period count and day structure in{" "}
-                <strong>Classes</strong>.
-              </p>
-            </div>
-
-            <TimelineAutomationSection
-              data={data}
-              commit={commit}
-              handleDurationChange={handleDurationChange}
-              recalculateAllSlotTimes={recalculateAllSlotTimes}
-            />
-
-            <div className="mb-8">
-              <TimelineVisualizer data={data} />
-            </div>
-
-            <div className="mb-10 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-sm">
-              <div className="flex justify-between items-center mb-4">
-                <div>
-                  <label
-                    htmlFor="periods-per-day"
-                    className="block text-sm font-bold text-slate-700 dark:text-slate-200"
-                  >
-                    Total Daily Periods
-                  </label>
-                  <p className="text-xs text-content-muted">
-                    Adjusting this will add or remove slots from the daily structure.
-                  </p>
-                </div>
-                <span className="bg-slate-800 text-white font-bold px-4 py-1.5 rounded-lg text-sm shadow-sm">
-                  {data.settings.periodsPerDay} Blocks
-                </span>
-              </div>
-              <input
-                id="periods-per-day"
-                type="range"
-                min="4"
-                max="15"
-                value={data.settings.periodsPerDay}
-                onChange={(e) => handlePeriodSliderChange(parseInt(e.target.value, 10))}
-                className="w-full accent-amber-500 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer"
-              />
-            </div>
-
-            <div className="mb-6">
-              <ScheduleChainSection
+        <div className="min-w-0">
+          {activeTab === "identity" && (
+            <div {...panelProps("identity")}>
+              <SchoolIdentitySection
                 data={data}
                 commit={commit}
-                editingLabelIdx={editingLabelIdx}
-                setEditingLabelIdx={setEditingLabelIdx}
-                tempLabel={tempLabel}
-                setTempLabel={setTempLabel}
-                setPeriodType={setPeriodType}
-                updateTimeSlot={updateTimeSlot}
-                saveCustomLabel={saveCustomLabel}
+                handleIdentityUpdate={handleIdentityUpdate}
               />
             </div>
+          )}
 
-            <DaySummaryStrip data={data} />
-          </Card>
-        </div>
-      )}
+          {activeTab === "structure" && (
+            <div {...panelProps("structure")} className="space-y-4">
+              <BellScheduleSection
+                data={data}
+                commit={commit}
+                handleDurationChange={handleDurationChange}
+                recalculateAllSlotTimes={recalculateAllSlotTimes}
+              />
 
-      {activeTab === "rules" && (
-        <div role="tabpanel" id="config-panel-rules" aria-labelledby="config-tab-rules">
-          <Card className="p-8">
-            <RulesSection
-              data={data}
-              commit={commit}
-              updateMaxConsecutive={updateMaxConsecutive}
-              updateMaxSubjectPeriods={updateMaxSubjectPeriods}
-              updateMaxTeacherPeriods={updateMaxTeacherPeriods}
-              updateMaxTeachingPeriodsPerWeek={updateMaxTeachingPeriodsPerWeek}
-              updateSolverTimeout={updateSolverTimeout}
-            />
-          </Card>
-        </div>
-      )}
-
-      {activeTab === "reservations" && (
-        <div
-          role="tabpanel"
-          id="config-panel-reservations"
-          aria-labelledby="config-tab-reservations"
-        >
-          <Card className="p-8">
-            <ReservationsGridSection data={data} handleSlotClick={handleSlotClick} />
-            <SlotEditModal
-              editingSlot={editingSlot}
-              setEditingSlot={setEditingSlot}
-              applyToAllDays={applyToAllDays}
-              setApplyToAllDays={setApplyToAllDays}
-              saveSlot={(label) => {
-                const nextData = saveSlot(label);
-                if (nextData) {
-                  commit(`Updated reservation: ${label || "Cleared"}`, nextData);
+              <ConfigPanel
+                title="Periods"
+                description="The shape of a single day, repeated Monday to Friday. Individual classes can override this in Classes."
+                action={
+                  <NumberStepper
+                    id="periods-per-day"
+                    label="Periods per day"
+                    value={periodsPerDay}
+                    min={4}
+                    max={15}
+                    unit="per day"
+                    onChange={applyPeriodCount}
+                  />
                 }
-              }}
-            />
-          </Card>
-        </div>
-      )}
+              >
+                <PanelRegion>
+                  <DayTimeline data={data} />
+                </PanelRegion>
+                <PanelRegion>
+                  <PeriodListSection
+                    data={data}
+                    commit={commit}
+                    setPeriodType={setPeriodType}
+                    setPeriodLabel={setPeriodLabel}
+                    updateTimeSlot={updateTimeSlot}
+                  />
+                </PanelRegion>
+              </ConfigPanel>
+            </div>
+          )}
 
-      {activeTab === "exams" && (
-        <div role="tabpanel" id="config-panel-exams" aria-labelledby="config-tab-exams">
-          <Card className="p-8">
-            <ExamDefaultsSection data={data} commit={commit} updateExamGrid={updateExamGrid} />
-          </Card>
+          {activeTab === "rules" && (
+            <div {...panelProps("rules")}>
+              <RulesSection
+                data={data}
+                commit={commit}
+                updateMaxConsecutive={updateMaxConsecutive}
+                updateMaxSubjectPeriods={updateMaxSubjectPeriods}
+                updateMaxTeacherPeriods={updateMaxTeacherPeriods}
+                updateMaxTeachingPeriodsPerWeek={updateMaxTeachingPeriodsPerWeek}
+                updateSolverTimeout={updateSolverTimeout}
+              />
+            </div>
+          )}
+
+          {activeTab === "reservations" && (
+            <div {...panelProps("reservations")}>
+              <ConfigPanel
+                title="Reserved slots"
+                description="Periods blocked for every class — assemblies, staff meetings, chapel. The generator leaves them empty."
+                action={
+                  <span className="text-xs tabular-nums text-content-muted">
+                    {reservedCount} reserved
+                  </span>
+                }
+              >
+                <PanelRegion>
+                  <ReservationsGridSection data={data} handleSlotClick={handleSlotClick} />
+                </PanelRegion>
+              </ConfigPanel>
+              <SlotEditModal
+                editingSlot={editingSlot}
+                setEditingSlot={setEditingSlot}
+                applyToAllDays={applyToAllDays}
+                setApplyToAllDays={setApplyToAllDays}
+                saveSlot={(label) => {
+                  const nextData = saveSlot(label);
+                  if (nextData) {
+                    commit(label ? `Reserved slot: ${label}` : "Cleared reserved slot", nextData);
+                  }
+                }}
+              />
+            </div>
+          )}
+
+          {activeTab === "exams" && (
+            <div {...panelProps("exams")}>
+              <ExamDefaultsSection data={data} commit={commit} updateExamGrid={updateExamGrid} />
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       <ConfirmDialog
         isOpen={periodConfirm !== null}
         title="Reduce daily periods?"
         message={
           periodConfirm
-            ? `Reducing to ${periodConfirm.val} periods will remove ${periodConfirm.dropped} assignment(s) in dropped period columns. Continue?`
+            ? `Reducing to ${periodConfirm.val} periods removes ${periodConfirm.dropped} assignment${
+                periodConfirm.dropped === 1 ? "" : "s"
+              } from the periods being dropped. This can be undone.`
             : ""
         }
-        confirmLabel="Continue"
+        confirmLabel="Reduce periods"
         variant="danger"
         onConfirm={confirmPeriodReduction}
         onCancel={() => setPeriodConfirm(null)}

@@ -1,7 +1,7 @@
 import React from "react";
-import { Clock } from "lucide-react";
 import { AppData } from "../../../types";
 import { ConfigCommitFn } from "../hooks/useConfigCommit";
+import { ConfigPanel, SettingRow, SettingRows, controlClass } from "./ConfigPanel";
 
 interface ExamDefaultsSectionProps {
   data: AppData;
@@ -13,64 +13,104 @@ export const ExamDefaultsSection: React.FC<ExamDefaultsSectionProps> = ({
   data,
   commit,
   updateExamGrid,
-}) => (
-  <div className="w-full">
-    <div className="flex justify-between items-end mb-3">
-      <p className="text-xs font-bold text-content-muted uppercase tracking-wide">
-        Exam Timetable Defaults
-      </p>
-    </div>
-    <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 space-y-4">
-      <div className="flex items-center gap-2">
-        <Clock size={18} className="text-accent-ink" aria-hidden />
-        <h4 className="font-bold text-slate-700 dark:text-slate-200 text-sm">Exam grid</h4>
-      </div>
-      <p className="text-xs text-content-muted leading-relaxed">
-        Sessions per day (grid columns) and default drop times for each session. Also used when
-        building exams in Exam Timetable.
-      </p>
-      <div className="flex items-center gap-3">
-        <span className="text-xs font-bold text-content-muted">Sessions per day</span>
-        {[1, 2].map((n) => (
-          <button
-            key={n}
-            type="button"
-            onClick={() => {
-              const nextData = updateExamGrid({ sessionsPerDay: n });
-              commit(`Exam sessions per day set to ${n}`, nextData);
-            }}
-            className={`px-3 py-1 rounded border text-xs font-bold ${
-              (data.settings.examGrid?.sessionsPerDay ?? 2) === n
-                ? "bg-amber-50 dark:bg-amber-900/30 border-amber-300 text-amber-800 dark:text-amber-200"
-                : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-content-muted"
-            }`}
-          >
-            {n}
-          </button>
-        ))}
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {(
-          [
-            ["sessionCutoff", "Session cutoff", "11:30"],
-            ["session1DefaultTime", "Session 1 default", "09:00"],
-            ["session2DefaultTime", "Session 2 default", "14:00"],
-          ] as const
-        ).map(([key, label, fallback]) => (
-          <label key={key} className="flex flex-col gap-1 text-xs">
-            <span className="font-bold text-content-muted">{label}</span>
-            <input
-              type="time"
-              className="border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 font-mono text-sm focus:border-amber-500 outline-none"
-              value={data.settings.examGrid?.[key] || fallback}
-              onChange={(e) => {
-                const nextData = updateExamGrid({ [key]: e.target.value });
-                commit(`Updated exam grid ${label}`, nextData);
-              }}
-            />
-          </label>
-        ))}
-      </div>
-    </div>
-  </div>
-);
+}) => {
+  const grid = data.settings.examGrid;
+  const sessionsPerDay = grid?.sessionsPerDay ?? 2;
+
+  const timeRow = (
+    key: "sessionCutoff" | "session1DefaultTime" | "session2DefaultTime",
+    title: string,
+    description: string,
+    fallback: string,
+    disabled = false,
+  ) => (
+    <SettingRow
+      title={title}
+      description={description}
+      htmlFor={`exam-${key}`}
+      control={
+        <input
+          id={`exam-${key}`}
+          type="time"
+          disabled={disabled}
+          value={grid?.[key] || fallback}
+          onChange={(e) =>
+            commit(`Updated exam ${title}`, updateExamGrid({ [key]: e.target.value }))
+          }
+          className={`${controlClass} w-28`}
+        />
+      }
+    />
+  );
+
+  return (
+    <ConfigPanel
+      title="Exam defaults"
+      description="Starting point for new exam timetables. Individual exams can still be moved once scheduled."
+    >
+      <SettingRows>
+        <SettingRow
+          title="Sessions per day"
+          description="One session runs a single sitting each day; two split the day into morning and afternoon."
+          control={
+            <div
+              role="radiogroup"
+              aria-label="Sessions per day"
+              className="inline-flex h-9 items-center rounded-md border border-edge bg-surface p-0.5"
+            >
+              {[1, 2].map((n) => {
+                const isActive = sessionsPerDay === n;
+                return (
+                  <button
+                    key={n}
+                    type="button"
+                    role="radio"
+                    aria-checked={isActive}
+                    onClick={() =>
+                      commit(
+                        `Exam sessions per day set to ${n}`,
+                        updateExamGrid({ sessionsPerDay: n }),
+                      )
+                    }
+                    className={`h-8 w-10 rounded text-sm tabular-nums transition-colors
+                                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                                  isActive
+                                    ? "bg-surface-inset font-medium text-content dark:bg-slate-700"
+                                    : "text-content-muted hover:text-content"
+                                }`}
+                  >
+                    {n}
+                  </button>
+                );
+              })}
+            </div>
+          }
+        />
+
+        {timeRow(
+          "session1DefaultTime",
+          sessionsPerDay === 1 ? "Session start" : "Morning session start",
+          "Default start time given to a newly scheduled exam.",
+          "09:00",
+        )}
+
+        {sessionsPerDay === 2 && (
+          <>
+            {timeRow(
+              "session2DefaultTime",
+              "Afternoon session start",
+              "Default start time for exams placed in the second session.",
+              "14:00",
+            )}
+            {timeRow(
+              "sessionCutoff",
+              "Session boundary",
+              "Exams starting before this time count as morning; anything later is afternoon.",
+              "11:30",
+            )}
+          </>
+        )}
+      </SettingRows>
+    </ConfigPanel>
+  );
+};

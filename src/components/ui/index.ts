@@ -3,6 +3,7 @@ export * from "./Input";
 export * from "./Select";
 export * from "./Modal";
 export * from "./Card";
+export * from "./Panel";
 export * from "./Badge";
 export * from "./EntityChip";
 export * from "./DataTable";

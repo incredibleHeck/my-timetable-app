@@ -1,6 +1,5 @@
 import React from "react";
-import { AlertTriangle } from "lucide-react";
-import { Button } from "../../../components/ui";
+import { AlertTriangle, ArrowRight } from "lucide-react";
 import { ViewState } from "../../../types";
 
 interface ConfigImpactBannerProps {
@@ -8,6 +7,10 @@ interface ConfigImpactBannerProps {
   onNavigate?: (view: ViewState) => void;
 }
 
+/**
+ * Standing notice, not an alert: the conflicts already exist, this screen just
+ * has to say that editing rules will move them around.
+ */
 export const ConfigImpactBanner: React.FC<ConfigImpactBannerProps> = ({
   conflictCount,
   onNavigate,
@@ -16,29 +19,28 @@ export const ConfigImpactBanner: React.FC<ConfigImpactBannerProps> = ({
 
   return (
     <div
-      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-900/30"
       role="status"
+      className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-md border border-edge border-l-2 border-l-accent bg-surface px-4 py-2.5"
     >
-      <div className="flex items-start gap-3">
-        <AlertTriangle className="text-accent-ink shrink-0 mt-0.5" size={20} aria-hidden />
-        <div>
-          <p className="text-sm font-bold text-amber-800 dark:text-amber-200">
-            {conflictCount} scheduling conflict{conflictCount === 1 ? "" : "s"} detected
-          </p>
-          <p className="text-xs text-amber-800/80 mt-0.5">
-            Rule or structure changes may affect existing timetables. Review assignments in the
-            generator.
-          </p>
-        </div>
-      </div>
+      <AlertTriangle className="shrink-0 text-accent-ink" size={15} aria-hidden />
+      <p className="text-xs text-content-secondary">
+        <span className="font-medium text-content">
+          {conflictCount} unresolved conflict{conflictCount === 1 ? "" : "s"}
+        </span>{" "}
+        in the current timetable. Editing rules or the day structure will change which assignments
+        remain valid.
+      </p>
       {onNavigate && (
-        <Button
-          variant="secondary"
-          className="shrink-0 border-amber-300 text-amber-800 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/40"
+        <button
+          type="button"
           onClick={() => onNavigate("GENERATOR")}
+          className="ml-auto inline-flex items-center gap-1 rounded text-xs font-medium text-accent-ink
+                     underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2
+                     focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
         >
-          Review in Generator
-        </Button>
+          Open generator
+          <ArrowRight size={13} aria-hidden />
+        </button>
       )}
     </div>
   );

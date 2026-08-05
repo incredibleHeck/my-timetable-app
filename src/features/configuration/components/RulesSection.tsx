@@ -1,8 +1,8 @@
 import React from "react";
-import { ShieldAlert, BarChart3 } from "lucide-react";
 import { AppData } from "../../../types";
 import { NumberStepper } from "../../../components/ui/NumberStepper";
 import { ConfigCommitFn } from "../hooks/useConfigCommit";
+import { ConfigPanel, SettingRow, SettingRows } from "./ConfigPanel";
 
 interface RulesSectionProps {
   data: AppData;
@@ -14,6 +14,11 @@ interface RulesSectionProps {
   updateSolverTimeout: (val: number) => AppData;
 }
 
+/**
+ * Limits are stated as what they cap, not as branded names: "Fatigue Guard" told
+ * nobody which number it guarded. Each row says whose limit it is, so the icons
+ * that used to distinguish them — the same shield in five colours — are gone.
+ */
 export const RulesSection: React.FC<RulesSectionProps> = ({
   data,
   commit,
@@ -32,89 +37,102 @@ export const RulesSection: React.FC<RulesSectionProps> = ({
   } = data.settings;
 
   return (
-    <div className="w-full">
-      <div className="flex justify-between items-end mb-3">
-        <p className="text-xs font-bold text-content-muted uppercase tracking-wide">
-          Rules & Constraints
-        </p>
-      </div>
-      <p className="text-xs text-content-muted mb-4">
-        Used by Auto-Generator and Workload Analysis when validating timetables.
-      </p>
-      <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="flex items-start gap-2">
-          <ShieldAlert size={18} className="text-accent-ink shrink-0 mt-1" aria-hidden />
-          <NumberStepper
-            label="Fatigue Guard"
-            value={maxConsecutive || 4}
-            min={2}
-            max={8}
-            helpText={`Prevents teachers from having more than ${maxConsecutive || 4} consecutive class periods.`}
-            onChange={(val) =>
-              commit(`Updated Fatigue Guard to ${val} periods`, updateMaxConsecutive(val))
+    <div className="space-y-4">
+      <ConfigPanel
+        title="Scheduling limits"
+        description="Enforced by the auto-generator and checked by workload analysis. Individual teachers and classes can tighten these further in their own settings."
+      >
+        <SettingRows>
+          <SettingRow
+            title="Consecutive periods per teacher"
+            description="How many classes in a row a teacher may be given before a gap is required."
+            control={
+              <NumberStepper
+                label="Consecutive periods per teacher"
+                value={maxConsecutive || 4}
+                min={2}
+                max={8}
+                unit="periods"
+                onChange={(val) =>
+                  commit(`Updated consecutive period limit to ${val}`, updateMaxConsecutive(val))
+                }
+              />
             }
           />
-        </div>
+          <SettingRow
+            title="Same subject per class, per day"
+            description="How often one subject may repeat for a class within a single day."
+            control={
+              <NumberStepper
+                label="Same subject per class per day"
+                value={maxSubject || 2}
+                min={1}
+                max={4}
+                unit="periods"
+                onChange={(val) =>
+                  commit(`Updated subject daily limit to ${val}`, updateMaxSubjectPeriods(val))
+                }
+              />
+            }
+          />
+          <SettingRow
+            title="Teaching periods per teacher, per day"
+            description="Total periods a teacher can be assigned across all classes in one day."
+            control={
+              <NumberStepper
+                label="Teaching periods per teacher per day"
+                value={maxTeacher || 6}
+                min={1}
+                max={15}
+                unit="periods"
+                onChange={(val) =>
+                  commit(`Updated teacher daily load to ${val}`, updateMaxTeacherPeriods(val))
+                }
+              />
+            }
+          />
+          <SettingRow
+            title="Teaching periods per teacher, per week"
+            description="A full weekly load. Workload utilisation percentages are measured against this figure."
+            control={
+              <NumberStepper
+                label="Teaching periods per teacher per week"
+                value={maxWeekly ?? 24}
+                min={1}
+                max={40}
+                unit="periods"
+                onChange={(val) =>
+                  commit(
+                    `Updated weekly teaching limit to ${val}`,
+                    updateMaxTeachingPeriodsPerWeek(val),
+                  )
+                }
+              />
+            }
+          />
+        </SettingRows>
+      </ConfigPanel>
 
-        <div className="flex items-start gap-2">
-          <ShieldAlert size={18} className="text-blue-600 shrink-0 mt-1" aria-hidden />
-          <NumberStepper
-            label="Subject Daily Limit"
-            value={maxSubject || 2}
-            min={1}
-            max={4}
-            helpText="Maximum times one subject can be taught to a class in a single day."
-            onChange={(val) =>
-              commit(`Updated Subject Daily Limit to ${val}`, updateMaxSubjectPeriods(val))
+      <ConfigPanel title="Auto-generator">
+        <SettingRows>
+          <SettingRow
+            title="Time limit"
+            description="How long the solver may search before returning the best timetable it has found. Longer runs place more lessons on tightly constrained data."
+            control={
+              <NumberStepper
+                label="Solver time limit"
+                value={solverTimeoutMinutes ?? 1}
+                min={1}
+                max={10}
+                unit="min"
+                onChange={(val) =>
+                  commit(`Updated solver time limit to ${val} minutes`, updateSolverTimeout(val))
+                }
+              />
             }
           />
-        </div>
-
-        <div className="flex items-start gap-2">
-          <ShieldAlert size={18} className="text-violet-600 shrink-0 mt-1" aria-hidden />
-          <NumberStepper
-            label="Teacher Daily Load"
-            value={maxTeacher || 6}
-            min={1}
-            max={15}
-            helpText="Maximum periods a teacher can be assigned across all classes per day."
-            onChange={(val) =>
-              commit(`Updated Teacher Daily Load to ${val}`, updateMaxTeacherPeriods(val))
-            }
-          />
-        </div>
-
-        <div className="flex items-start gap-2">
-          <BarChart3 size={18} className="text-indigo-600 shrink-0 mt-1" aria-hidden />
-          <NumberStepper
-            label="Max Teaching Periods / Week"
-            value={maxWeekly ?? 24}
-            min={1}
-            max={40}
-            helpText="School-wide weekly capacity for workload utilization percentages."
-            onChange={(val) =>
-              commit(
-                `Updated Max Teaching Periods Per Week to ${val}`,
-                updateMaxTeachingPeriodsPerWeek(val),
-              )
-            }
-          />
-        </div>
-
-        <div className="flex items-start gap-2">
-          <ShieldAlert size={18} className="text-success-ink shrink-0 mt-1" aria-hidden />
-          <NumberStepper
-            label="Solver Timeout (Minutes)"
-            value={solverTimeoutMinutes ?? 1}
-            min={1}
-            max={10}
-            helpText="Maximum time allowed for the auto-generator algorithm."
-            onChange={(val) =>
-              commit(`Updated Solver Timeout to ${val} minutes`, updateSolverTimeout(val))
-            }
-          />
-        </div>
-      </div>
+        </SettingRows>
+      </ConfigPanel>
     </div>
   );
 };

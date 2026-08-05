@@ -38,7 +38,7 @@ describe("GlobalConfigView Synchronization", () => {
     pushToHistory.mockClear();
   });
 
-  it("updates dayStructure when period slider is changed", () => {
+  it("updates dayStructure when the periods-per-day stepper is changed", () => {
     const onUpdate = vi.fn();
     const data = {
       ...DEFAULT_DATA,
@@ -53,8 +53,10 @@ describe("GlobalConfigView Synchronization", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: "Day structure" }));
 
-    const slider = screen.getByRole("slider");
-    fireEvent.change(slider, { target: { value: "10" } });
+    // The stepper commits on blur, so a typed value only lands when focus leaves.
+    const periods = screen.getByLabelText("Periods per day");
+    fireEvent.change(periods, { target: { value: "10" } });
+    fireEvent.blur(periods);
 
     expect(pushToHistory).toHaveBeenCalledTimes(1);
     expect(onUpdate).toHaveBeenCalledTimes(1);
@@ -71,7 +73,7 @@ describe("GlobalConfigView Synchronization", () => {
     expect(lastCall.settings.dayStructure.length).toBe(10);
   });
 
-  it("updates timeSlots when timeline automation changes", () => {
+  it("updates timeSlots when a bell schedule default changes", () => {
     const onUpdate = vi.fn();
     const data = DEFAULT_DATA;
 
@@ -79,7 +81,7 @@ describe("GlobalConfigView Synchronization", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: "Day structure" }));
 
-    const startInput = screen.getByLabelText(/start of day/i);
+    const startInput = screen.getByLabelText(/first bell/i);
     fireEvent.change(startInput, { target: { value: "07:30" } });
 
     expect(pushToHistory).toHaveBeenCalledTimes(1);

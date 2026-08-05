@@ -1,5 +1,7 @@
 import React from "react";
-import { Modal, Button, Input } from "../../../components/ui";
+import { Modal, Button } from "../../../components/ui";
+import { DAYS } from "../../../utils/constants";
+import { controlClass } from "./ConfigPanel";
 
 const OCCASION_PRESETS = ["Assembly", "Staff Meeting", "CCA", "Chapel"] as const;
 
@@ -22,72 +24,85 @@ export const SlotEditModal: React.FC<SlotEditModalProps> = ({
     if (editingSlot) setEditingSlot({ ...editingSlot, label });
   };
 
+  const slotName = editingSlot
+    ? `${DAYS[editingSlot.d] ?? "Day"}, period ${editingSlot.p + 1}`
+    : "";
+  const isExisting = Boolean(editingSlot?.label);
+
   return (
     <Modal
       isOpen={!!editingSlot}
       onClose={() => setEditingSlot(null)}
-      title="Configure Global Event"
-      aria-label="Configure Global Event"
+      title="Reserve slot"
       footer={
-        <div className="flex justify-between w-full">
-          <Button variant="danger" onClick={() => saveSlot("")}>
-            Clear Slot
-          </Button>
+        <div className="flex w-full items-center justify-between gap-2">
+          {isExisting ? (
+            <Button variant="ghost" onClick={() => saveSlot("")}>
+              Remove reservation
+            </Button>
+          ) : (
+            <span />
+          )}
           <div className="flex gap-2">
             <Button variant="secondary" onClick={() => setEditingSlot(null)}>
               Cancel
             </Button>
-            <Button onClick={() => saveSlot(editingSlot?.label || "Reserved")}>Save Event</Button>
+            <Button onClick={() => saveSlot(editingSlot?.label?.trim() || "Reserved")}>Save</Button>
           </div>
         </div>
       }
     >
-      <div className="space-y-6">
-        <Input
-          label="Event Name"
-          value={editingSlot?.label || ""}
-          onChange={(e) => setLabel(e.target.value)}
-          placeholder="e.g. Morning Assembly, Staff Meeting"
-          autoFocus
-        />
+      <div className="space-y-5">
+        <p className="text-xs text-content-muted">
+          Blocks <span className="font-medium text-content-secondary">{slotName}</span> for every
+          class. The generator will not place lessons here.
+        </p>
+
         <div>
-          <p className="text-xs font-bold text-content-muted uppercase tracking-wider mb-2">
-            Presets
-          </p>
-          <div className="flex flex-wrap gap-2">
+          <label
+            htmlFor="reservation-name"
+            className="mb-1.5 block text-sm font-medium text-content"
+          >
+            Name
+          </label>
+          <input
+            id="reservation-name"
+            className={`${controlClass} w-full`}
+            value={editingSlot?.label || ""}
+            onChange={(e) => setLabel(e.target.value)}
+            placeholder="Morning Assembly"
+            autoFocus
+          />
+          <div className="mt-2 flex flex-wrap gap-1.5">
             {OCCASION_PRESETS.map((preset) => (
               <button
                 key={preset}
                 type="button"
                 onClick={() => setLabel(preset)}
-                className="px-3 py-1.5 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30 text-slate-600 dark:text-slate-300 transition-colors"
+                className="rounded-full border border-edge px-2.5 py-1 text-xs text-content-secondary
+                           transition-colors hover:border-accent hover:text-accent-ink
+                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent
+                           focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
               >
                 {preset}
               </button>
             ))}
           </div>
         </div>
-        <label
-          className={`flex items-center p-3 rounded-lg border cursor-pointer transition-colors ${
-            applyToAllDays
-              ? "bg-amber-50 dark:bg-amber-900/30 border-amber-300"
-              : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-50"
-          }`}
-        >
+
+        <label className="flex cursor-pointer items-start gap-2.5">
           <input
             type="checkbox"
             checked={applyToAllDays}
             onChange={(e) => setApplyToAllDays(e.target.checked)}
-            className="w-4 h-4 rounded border-slate-300 text-accent-ink focus:ring-amber-500 mr-3"
+            className="mt-0.5 h-4 w-4 rounded border-edge-strong text-accent focus:ring-accent"
           />
-          <div>
-            <p
-              className={`text-sm font-bold ${applyToAllDays ? "text-amber-800 dark:text-amber-200" : "text-slate-700 dark:text-slate-200"}`}
-            >
-              Apply to all days
-            </p>
-            <p className="text-xs text-content-muted">Block this period for Monday–Friday.</p>
-          </div>
+          <span>
+            <span className="block text-sm text-content">Repeat on every day</span>
+            <span className="block text-xs text-content-muted">
+              Reserves period {(editingSlot?.p ?? 0) + 1} Monday through Friday.
+            </span>
+          </span>
         </label>
       </div>
     </Modal>
