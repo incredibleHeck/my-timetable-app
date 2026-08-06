@@ -49,8 +49,12 @@ describe("ExamGrid DND Integration", () => {
   const defaultProps = {
     data: mockData,
     exams: mockExams,
+    // The grid renders the rows it is given rather than deriving them, so empty
+    // days the user has added still appear.
+    dates: ["2026-05-01"],
     onEdit: vi.fn(),
     checkConflicts: vi.fn(() => []),
+    checkMoveConflicts: vi.fn(() => []),
     onSwap: vi.fn(),
     onMoveToSlot: vi.fn(),
     isEditMode: true,

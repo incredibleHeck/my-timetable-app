@@ -51,6 +51,15 @@ export const toLocalDateString = (date: Date): string => {
   return `${y}-${m}-${d}`;
 };
 
+/** The next weekday strictly after `dateStr`, skipping Saturday and Sunday. */
+export const getNextExamDay = (dateStr: string): string => {
+  const d = new Date(dateStr + "T12:00:00");
+  do {
+    d.setDate(d.getDate() + 1);
+  } while (d.getDay() === 0 || d.getDay() === 6);
+  return toLocalDateString(d);
+};
+
 export const getDayEndMinutes = (timeSlots?: TimeSlot[]): number => {
   if (!timeSlots?.length) return 16 * 60;
   let latest = 0;

@@ -2,24 +2,20 @@ import React, { useState, useMemo } from "react";
 import {
   Plus,
   Search,
-  FileText,
   LayoutGrid,
   List,
   Wand2,
-  Users,
   Lock,
   Unlock,
   ArrowLeft,
   Printer,
   FileSpreadsheet,
   Table,
-  History,
   Trash2,
-  Pencil,
 } from "lucide-react";
 import { AppData, ViewState } from "../../types";
 import { ExamSession } from "./types";
-import { Button } from "../../components/ui";
+import { Button, controlClass, quietButtonClass } from "../../components/ui";
 import { useToast } from "../../components/ui/Toast";
 
 // Hooks
@@ -36,6 +32,7 @@ import { InvigilatorExclusionModal } from "./components/InvigilatorExclusionModa
 
 // Logic
 import { allocateInvigilators } from "./logic/invigilatorAllocator";
+import { getNextExamDay, toLocalDateString } from "./logic/examUtils";
 import {
   exportExamsToExcel,
   exportExamsToPDF,
@@ -104,6 +101,23 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
       ...activeData,
       exams: newSessions,
     });
+  };
+
+  // Empty days the user has appended to drop exams into. Kept in view state:
+  // once an exam lands on one it becomes a real exam date and persists on its
+  // own, so this only needs to survive until then.
+  const [extraDates, setExtraDates] = useState<string[]>([]);
+
+  const displayDates = useMemo(() => {
+    const set = new Set<string>(exams.map((e) => e.date));
+    extraDates.forEach((d) => set.add(d));
+    return Array.from(set).sort();
+  }, [exams, extraDates]);
+
+  const handleAddDay = () => {
+    const last = displayDates[displayDates.length - 1];
+    const from = last ?? toLocalDateString(new Date(Date.now() - 86_400_000));
+    setExtraDates((prev) => [...new Set([...prev, getNextExamDay(from)])]);
   };
 
   // 4. Sorting & Memoization
@@ -244,282 +258,270 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
 
   if (!activeRoster) return null;
 
+  const viewTabs = [
+    { id: "GRID" as const, label: "Grid", icon: LayoutGrid },
+    { id: "ROSTER" as const, label: "Roster", icon: Table },
+    { id: "CARDS" as const, label: "Cards", icon: List },
+  ];
+
   return (
-    <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-900 overflow-hidden">
+    <div className="flex h-full flex-col overflow-hidden bg-canvas">
       {/* HEADER TOOLBAR */}
-      <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-4 flex items-center justify-between gap-4 z-10 shrink-0 shadow-sm">
-        <div className="flex items-center gap-2 flex-1">
-          {/* Back Button */}
+      <div className="z-10 flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-edge bg-surface px-4 py-3">
+        <button
+          type="button"
+          onClick={() => onNavigate && onNavigate("DASHBOARD")}
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-edge bg-surface
+                     text-content-muted transition-colors hover:border-edge-strong hover:text-content
+                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          title="Back to Dashboard"
+          aria-label="Back to Dashboard"
+        >
+          <ArrowLeft size={16} aria-hidden />
+        </button>
+
+        <input
+          value={activeRoster.name}
+          onChange={(e) => renameRoster(e.target.value)}
+          aria-label="Exam roster name"
+          className="min-w-0 max-w-[16rem] rounded-md border border-transparent bg-transparent px-2 py-1
+                     text-base font-semibold text-content transition-colors hover:border-edge
+                     focus:border-accent focus:bg-surface focus:outline-none focus:ring-2 focus:ring-accent/30"
+        />
+
+        <div
+          role="tablist"
+          aria-label="Exam view"
+          className="inline-flex h-9 items-center rounded-md border border-edge bg-surface p-0.5"
+        >
+          {viewTabs.map((t) => {
+            const Icon = t.icon;
+            const isActive = viewMode === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => setViewMode(t.id)}
+                title={t.label}
+                className={`inline-flex h-8 items-center gap-1.5 rounded px-2.5 text-sm transition-colors
+                            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                              isActive
+                                ? "bg-surface-inset font-medium text-content dark:bg-slate-700"
+                                : "text-content-muted hover:text-content"
+                            }`}
+              >
+                <Icon size={14} aria-hidden />
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {viewMode === "GRID" && (
           <button
-            onClick={() => onNavigate && onNavigate("DASHBOARD")}
-            className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-content-muted mr-2"
-            title="Back to Dashboard"
-            aria-label="Back to Dashboard"
+            type="button"
+            onClick={() => setIsEditMode(!isEditMode)}
+            aria-pressed={isEditMode}
+            className={`inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-sm transition-colors
+                        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                          isEditMode
+                            ? "border-accent bg-accent/15 font-medium text-content"
+                            : "border-edge bg-surface text-content-secondary hover:border-edge-strong hover:text-content"
+                        }`}
           >
-            <ArrowLeft size={20} />
+            {isEditMode ? <Unlock size={14} aria-hidden /> : <Lock size={14} aria-hidden />}
+            {isEditMode ? "Editing" : "Edit"}
           </button>
+        )}
 
-          <div className="flex flex-col mr-4">
-            <div className="flex items-center group/title relative">
-              <input
-                value={activeRoster.name}
-                onChange={(e) => renameRoster(e.target.value)}
-                aria-label="Exam roster name"
-                className="text-xl font-bold text-slate-800 dark:text-slate-100 bg-transparent border-none p-0 focus:ring-0 w-auto hover:bg-slate-50 rounded px-1 transition-colors"
-              />
-              <Pencil
-                size={12}
-                className="text-slate-300 ml-1 opacity-0 group-hover/title:opacity-100 transition-opacity pointer-events-none"
-              />
-            </div>
-            <p className="text-2xs text-content-muted font-bold uppercase tracking-tight">
-              Exam Management History
-            </p>
-          </div>
+        <div className="relative ml-auto w-48">
+          <Search
+            size={14}
+            aria-hidden
+            className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-content-muted"
+          />
+          <input
+            placeholder="Search exams"
+            aria-label="Search exams"
+            className={`${controlClass} w-full pl-8`}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
 
-          {/* View Toggles */}
-          <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg ml-2">
-            <button
-              onClick={() => setViewMode("GRID")}
-              className={`p-1.5 rounded ${
-                viewMode === "GRID"
-                  ? "bg-white dark:bg-slate-800 shadow-sm text-accent-ink"
-                  : "text-content-muted hover:text-slate-600"
-              }`}
-              title="Master Table View"
-              aria-label="Master Table View"
-            >
-              <LayoutGrid size={16} />
-            </button>
-            <button
-              onClick={() => setViewMode("ROSTER")}
-              className={`p-1.5 rounded ${
-                viewMode === "ROSTER"
-                  ? "bg-white dark:bg-slate-800 shadow-sm text-accent-ink"
-                  : "text-content-muted hover:text-slate-600"
-              }`}
-              title="Invigilator Roster"
-              aria-label="Invigilator Roster"
-            >
-              <Table size={16} />
-            </button>
-            <button
-              onClick={() => setViewMode("CARDS")}
-              className={`p-1.5 rounded ${
-                viewMode === "CARDS"
-                  ? "bg-white dark:bg-slate-800 shadow-sm text-accent-ink"
-                  : "text-content-muted hover:text-slate-600"
-              }`}
-              title="Card List View"
-              aria-label="Card List View"
-            >
-              <List size={16} />
-            </button>
-          </div>
-
-          {/* Edit Mode Toggles */}
-          <div className="flex items-center gap-2 pl-4 border-l border-slate-200 dark:border-slate-700 ml-4">
-            <button
-              onClick={() => setIsEditMode(!isEditMode)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
-                isEditMode
-                  ? "bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border-amber-200 shadow-sm"
-                  : "bg-white dark:bg-slate-800 text-content-muted border-slate-200 dark:border-slate-700 hover:bg-slate-50"
-              }`}
-              title={isEditMode ? "Disable Drag & Drop" : "Enable Drag & Drop"}
-            >
-              {isEditMode ? <Unlock size={14} /> : <Lock size={14} />}
-              {isEditMode ? "Disable Edit" : "Enable Edit"}
-            </button>
-          </div>
-
-          {/* Search */}
-          <div className="relative w-48 ml-auto">
-            <Search
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-content-muted"
-              size={14}
-            />
+        <div className="flex items-center gap-2 border-l border-edge pl-4">
+          <div className="flex items-center gap-1.5">
+            <span className="text-2xs text-content-muted">Staff/stream</span>
             <input
-              placeholder="Search exams..."
-              className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              type="number"
+              value={minInv}
+              onChange={(e) => setMinInv(Math.max(1, Math.min(8, parseInt(e.target.value) || 1)))}
+              className={`${controlClass} h-8 w-12 px-1 text-center`}
+              min={1}
+              max={8}
+              aria-label="Minimum invigilators per stream per exam day"
+            />
+            <span className="text-content-muted">–</span>
+            <input
+              type="number"
+              value={maxInv}
+              onChange={(e) =>
+                setMaxInv(Math.max(minInv, Math.min(8, parseInt(e.target.value) || minInv)))
+              }
+              className={`${controlClass} h-8 w-12 px-1 text-center`}
+              min={minInv}
+              max={8}
+              aria-label="Maximum invigilators per stream per exam day"
             />
           </div>
+          <button
+            type="button"
+            onClick={handleAutoAssignInvigilators}
+            className={quietButtonClass}
+            title="Assign staff per stream; the same team covers all sessions that day"
+          >
+            Assign staff
+          </button>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg border mr-2">
-            <div className="px-2 py-1 text-2xs font-bold text-content-muted uppercase">
-              Staff / stream
-            </div>
-            <div className="flex items-center gap-1">
-              <input
-                type="number"
-                value={minInv}
-                onChange={(e) => setMinInv(Math.max(1, Math.min(8, parseInt(e.target.value) || 1)))}
-                className="w-10 h-7 text-center text-xs font-bold rounded border border-slate-200 dark:border-slate-700"
-                min={1}
-                max={8}
-                title="Minimum invigilators per stream per exam day"
-                aria-label="Minimum invigilators per stream per exam day"
-              />
-              <span className="text-content-muted text-xs">–</span>
-              <input
-                type="number"
-                value={maxInv}
-                onChange={(e) =>
-                  setMaxInv(Math.max(minInv, Math.min(8, parseInt(e.target.value) || minInv)))
-                }
-                className="w-10 h-7 text-center text-xs font-bold rounded border border-slate-200 dark:border-slate-700"
-                min={minInv}
-                max={8}
-                title="Maximum invigilators per stream per exam day"
-              />
-            </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              className="h-7 text-2xs px-2 bg-white dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-amber-900/30 text-amber-800 dark:text-amber-200 font-bold"
-              onClick={handleAutoAssignInvigilators}
-              title="Assign min–max staff per stream; same team covers all sessions that day"
-              aria-label="Assign min–max staff per stream; same team covers all sessions that day"
-            >
-              Assign Staff
-            </Button>
-          </div>
-
-          <Button onClick={() => setAutoModalOpen(true)} size="md" icon={<Wand2 size={16} />}>
-            Auto Schedule
-          </Button>
-          <Button
-            onClick={handleExcelExport}
-            icon={<FileSpreadsheet size={16} />}
-            title="Export to Excel"
-          />
-          <Button
-            onClick={handlePrint}
-            icon={<Printer size={16} />}
-            title="Print PDF"
-            aria-label="Print PDF"
-          />
-        </div>
+        <Button onClick={() => setAutoModalOpen(true)} icon={<Wand2 size={16} />}>
+          Auto Schedule
+        </Button>
+        <button
+          type="button"
+          onClick={handleExcelExport}
+          className={`${quietButtonClass} w-9 justify-center px-0`}
+          title="Export to Excel"
+          aria-label="Export to Excel"
+        >
+          <FileSpreadsheet size={15} aria-hidden />
+        </button>
+        <button
+          type="button"
+          onClick={handlePrint}
+          className={`${quietButtonClass} w-9 justify-center px-0`}
+          title="Print PDF"
+          aria-label="Print PDF"
+        >
+          <Printer size={15} aria-hidden />
+        </button>
       </div>
 
       {/* WORKSPACE AREA */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* SIDEBAR 1: HISTORY (Timetables) */}
-        <div className="w-48 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 flex flex-col h-full shrink-0 shadow-[inset_-1px_0_0_rgba(0,0,0,0.05)]">
-          <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-100/50 dark:bg-slate-800/50">
-            <div className="flex items-center gap-2">
-              <History size={16} className="text-content-muted" />
-              <span className="text-2xs font-black text-content-muted uppercase tracking-wider">
-                Timetables
-              </span>
-            </div>
+      <div className="flex flex-1 overflow-hidden">
+        {/* SIDEBAR 1: ROSTERS */}
+        <div className="flex h-full w-48 shrink-0 flex-col border-r border-edge bg-canvas">
+          <div className="flex items-center justify-between border-b border-edge px-3 py-2.5">
+            <span className="text-2xs uppercase tracking-wide text-content-muted">Timetables</span>
             <button
+              type="button"
               onClick={createNewRoster}
-              className="p-1 bg-white dark:bg-slate-800 text-accent-ink rounded border border-slate-200 dark:border-slate-700 hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-all shadow-sm"
-              title="New Timetable"
-              aria-label="New Timetable"
+              className="grid h-6 w-6 place-items-center rounded text-content-muted transition-colors
+                         hover:bg-surface-inset hover:text-content focus-visible:outline-none
+                         focus-visible:ring-2 focus-visible:ring-accent"
+              title="New timetable"
+              aria-label="New timetable"
             >
-              <Plus size={14} />
+              <Plus size={14} aria-hidden />
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
-            {data.examRosters?.map((r) => (
-              <div
-                key={r.id}
-                onClick={() => setActiveRosterId(r.id)}
-                className={`group relative p-3 rounded-xl border transition-all cursor-pointer ${
-                  activeRosterId === r.id
-                    ? "bg-white dark:bg-slate-800 border-amber-200 shadow-md ring-1 ring-amber-100"
-                    : "bg-transparent border-transparent hover:bg-white hover:border-slate-200"
-                }`}
-              >
-                <div className="flex flex-col gap-0.5 pr-6">
-                  <span
-                    className={`text-[11px] font-black truncate ${activeRosterId === r.id ? "text-amber-800 dark:text-amber-200" : "text-slate-600 dark:text-slate-300"}`}
-                  >
-                    {r.name}
-                  </span>
-                  <span className="text-2xs font-bold text-content-muted">
-                    {r.exams.length} Sessions
-                  </span>
-                </div>
-
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteRoster(r.id);
-                  }}
-                  aria-label="Delete exam roster"
-                  className="absolute top-3 right-2 text-slate-300 hover:text-danger-ink opacity-0 group-hover:opacity-100 transition-all"
+          <div className="custom-scrollbar flex-1 space-y-0.5 overflow-y-auto p-2">
+            {data.examRosters?.map((r) => {
+              const isActive = activeRosterId === r.id;
+              return (
+                <div
+                  key={r.id}
+                  onClick={() => setActiveRosterId(r.id)}
+                  className={`group relative cursor-pointer rounded-md border-l-2 px-2.5 py-2 transition-colors ${
+                    isActive
+                      ? "border-l-accent bg-surface"
+                      : "border-l-transparent hover:bg-surface/60"
+                  }`}
                 >
-                  <Trash2 size={12} />
-                </button>
-              </div>
-            ))}
+                  <div className="pr-5">
+                    <div
+                      className={`truncate text-xs ${isActive ? "font-medium text-content" : "text-content-secondary"}`}
+                    >
+                      {r.name}
+                    </div>
+                    <div className="text-2xs tabular-nums text-content-muted">
+                      {r.exams.length} {r.exams.length === 1 ? "session" : "sessions"}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteRoster(r.id);
+                    }}
+                    aria-label={`Delete ${r.name}`}
+                    className="absolute right-1.5 top-2 grid h-5 w-5 place-items-center rounded text-content-muted
+                               opacity-0 transition-colors hover:text-danger-ink group-hover:opacity-100
+                               focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2
+                               focus-visible:ring-accent"
+                  >
+                    <Trash2 size={12} aria-hidden />
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        {/* SIDEBAR 2: CLASS FILTERS */}
-        <div className="w-48 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col h-full shrink-0 z-10">
-          <div className="p-4 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 sticky top-0 z-20">
-            <div className="flex items-center gap-2">
-              <Users size={16} className="text-content-muted" />
-              <span className="text-2xs font-black text-content-muted uppercase tracking-wider">
-                Class Filter
-              </span>
-            </div>
+        {/* SIDEBAR 2: CLASS FILTER */}
+        <div className="flex h-full w-44 shrink-0 flex-col border-r border-edge bg-surface">
+          <div className="border-b border-edge px-3 py-2.5">
+            <span className="text-2xs uppercase tracking-wide text-content-muted">
+              Class filter
+            </span>
           </div>
-          <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
+          <div className="custom-scrollbar flex-1 space-y-0.5 overflow-y-auto p-2">
             <button
+              type="button"
               onClick={() => setActiveId("ALL")}
-              className={`w-full text-left px-3 py-2 rounded-lg text-[11px] font-black transition-all flex items-center gap-2 border ${
+              className={`flex w-full items-center rounded-md border-l-2 px-2.5 py-1.5 text-left text-xs transition-colors ${
                 activeId === "ALL"
-                  ? "bg-amber-50 dark:bg-amber-900/30 border-amber-200 text-amber-800 dark:text-amber-200 shadow-sm"
-                  : "bg-white dark:bg-slate-800 border-transparent text-content-muted hover:bg-slate-50 hover:border-slate-100"
+                  ? "border-l-accent bg-surface-muted font-medium text-content"
+                  : "border-l-transparent text-content-muted hover:text-content"
               }`}
             >
-              <div
-                className={`w-1.5 h-1.5 rounded-full ${activeId === "ALL" ? "bg-amber-500" : "bg-slate-300"}`}
-              />
-              Show All Classes
+              All classes
             </button>
-            <div className="h-px bg-slate-100 dark:bg-slate-800 my-2 mx-2" />
-            {sortedClasses.map((cls) => (
-              <button
-                key={cls.id}
-                onClick={() => setActiveId(cls.id === activeId ? "ALL" : cls.id)}
-                className={`w-full text-left px-3 py-2 rounded-lg text-[11px] font-bold transition-all flex items-center gap-2 border ${
-                  activeId === cls.id
-                    ? "bg-slate-900 border-slate-900 text-white shadow-lg shadow-slate-200"
-                    : "bg-white dark:bg-slate-800 border-transparent text-slate-600 dark:text-slate-300 hover:bg-slate-50 hover:border-slate-100"
-                }`}
-              >
-                <div
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    activeId === cls.id ? "bg-amber-400" : "bg-slate-300"
+            {sortedClasses.map((cls) => {
+              const isActive = activeId === cls.id;
+              return (
+                <button
+                  key={cls.id}
+                  type="button"
+                  onClick={() => setActiveId(cls.id === activeId ? "ALL" : cls.id)}
+                  className={`flex w-full items-center rounded-md border-l-2 px-2.5 py-1.5 text-left text-xs transition-colors ${
+                    isActive
+                      ? "border-l-accent bg-surface-muted font-medium text-content"
+                      : "border-l-transparent text-content-secondary hover:text-content"
                   }`}
-                />
-                <span className="truncate">{cls.name}</span>
-              </button>
-            ))}
+                >
+                  <span className="truncate">{cls.name}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
         {/* CONTENT AREA */}
-        <div className="flex-1 overflow-auto bg-white dark:bg-slate-800 relative custom-scrollbar shadow-inner">
+        <div className="custom-scrollbar relative flex-1 overflow-auto bg-canvas">
           {/* GRID VIEW */}
           {viewMode === "GRID" && (
-            <div className="p-6 h-full min-w-full inline-block">
+            <div className="inline-block min-w-full p-6">
               <ExamGrid
                 data={activeData}
                 exams={filteredExams}
+                dates={displayDates}
                 activeId={activeId}
                 onEdit={handleEditClick}
                 onAddCell={handleCellClick}
+                onAddDay={handleAddDay}
                 checkConflicts={(exam) => validateExam(exam)}
                 checkMoveConflicts={checkMoveConflicts}
                 onSwap={swapExams}
@@ -554,14 +556,14 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
             </div>
           )}
 
-          {/* EMPTY STATE */}
-          {filteredExams.length === 0 && (
-            <div className="h-full flex flex-col items-center justify-center text-content-muted">
-              <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-full mb-4 shadow-inner border border-slate-100 dark:border-slate-700">
-                <FileText size={64} className="text-slate-200" />
-              </div>
-              <p className="font-bold text-xl text-slate-600 dark:text-slate-300">No exams found</p>
-              <p className="text-sm">Modify your filters or add a new exam to get started.</p>
+          {/* EMPTY STATE — grid stays visible so days and cells can still be
+              added; only the list views have nothing to show. */}
+          {filteredExams.length === 0 && viewMode !== "GRID" && (
+            <div className="flex h-full flex-col items-center justify-center px-6 text-center">
+              <p className="text-sm font-medium text-content">No exams found</p>
+              <p className="mt-1 text-xs text-content-muted">
+                Auto Schedule to build a timetable, or switch to the grid to add exams by hand.
+              </p>
             </div>
           )}
         </div>

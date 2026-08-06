@@ -45,7 +45,7 @@ describe("ExamsView", () => {
 
   it("should switch to card view", () => {
     render(<ExamsView data={testData} onUpdate={mockOnUpdate} />);
-    const cardViewBtn = screen.getByTitle("Card List View");
+    const cardViewBtn = screen.getByRole("tab", { name: "Cards" });
     fireEvent.click(cardViewBtn);
     // In card view, the subject name should be visible
     expect(screen.getByText("Math")).toBeInTheDocument();
@@ -54,12 +54,12 @@ describe("ExamsView", () => {
   it("should filter exams by search query", () => {
     render(<ExamsView data={testData} onUpdate={mockOnUpdate} />);
     // Switch to card view to easily see the exam cards
-    const cardViewBtn = screen.getByTitle("Card List View");
+    const cardViewBtn = screen.getByRole("tab", { name: "Cards" });
     fireEvent.click(cardViewBtn);
 
     expect(screen.getByText("Math")).toBeInTheDocument();
 
-    const searchInput = screen.getByPlaceholderText("Search exams...");
+    const searchInput = screen.getByPlaceholderText("Search exams");
     fireEvent.change(searchInput, { target: { value: "Science" } });
 
     expect(screen.queryByText("Math")).not.toBeInTheDocument();
@@ -75,15 +75,15 @@ describe("ExamsView", () => {
 
   it("should open the invigilator assignment modal", () => {
     render(<ExamsView data={testData} onUpdate={mockOnUpdate} />);
-    const assignBtn = screen.getByText("Assign Staff");
+    const assignBtn = screen.getByText("Assign staff");
     fireEvent.click(assignBtn);
     expect(screen.getByText("Manage Staff Availability")).toBeInTheDocument();
   });
 
   it("should enable edit mode", () => {
     render(<ExamsView data={testData} onUpdate={mockOnUpdate} />);
-    const editBtn = screen.getByText("Enable Edit");
+    const editBtn = screen.getByRole("button", { name: "Edit" });
     fireEvent.click(editBtn);
-    expect(screen.getByText("Disable Edit")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Editing" })).toBeInTheDocument();
   });
 });

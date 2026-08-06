@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { AppData, ExamSession } from "../../../types";
 import { ExamConflict } from "../logic/examValidation";
-import { AlertTriangle, Clock, GripVertical, CalendarDays, Users, Lock } from "lucide-react";
+import { AlertTriangle, GripVertical, Lock, Plus, Users } from "lucide-react";
 import { getExamGridDefaults, getSessionIndexForStartTime } from "../logic/examUtils";
 import {
   DndContext,
@@ -16,8 +16,6 @@ import {
   DragStartEvent,
   DragOverEvent,
 } from "@dnd-kit/core";
-
-// --- COMPONENTS ---
 
 const DraggableExamCard = ({
   exams,
@@ -71,133 +69,126 @@ const DraggableExamCard = ({
     return (
       <div
         ref={setRefs}
-        className="opacity-30 bg-slate-200 dark:bg-slate-700 border-2 border-dashed border-slate-400 rounded-xl min-h-[120px] w-full"
+        className="min-h-[96px] w-full rounded-md border border-dashed border-edge-strong bg-surface-muted"
       />
     );
   }
 
-  const renderExamStack = (stack: ExamSession[]) => {
-    return (
-      <div className="flex flex-col gap-2 h-full">
-        {stack.map((exam, index) => {
-          const conflicts = checkConflicts(exam);
-          const classNames = exam.classIds
-            .map((cid) => data.classes.find((c) => c.id === cid)?.name)
-            .join(", ");
+  const renderExamStack = (stack: ExamSession[]) => (
+    <div className="flex h-full flex-col gap-2">
+      {stack.map((exam, index) => {
+        const conflicts = checkConflicts(exam);
+        const classNames = exam.classIds
+          .map((cid) => data.classes.find((c) => c.id === cid)?.name)
+          .join(", ");
+        const invigilatorNames = (exam.invigilatorIds || [])
+          .map((id) => data.teachers.find((t) => t.id === id)?.name)
+          .filter(Boolean)
+          .join(", ");
+        const showHeader = index === 0;
 
-          const invigilatorNames = (exam.invigilatorIds || [])
-            .map((id) => data.teachers.find((t) => t.id === id)?.name)
-            .filter(Boolean)
-            .join(", ");
-
-          const showHeader = index === 0;
-
-          return (
-            <div
-              key={exam.id}
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(exam);
-              }}
-              className={`
-                relative flex-1 flex flex-col bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all p-4 cursor-pointer group/card
-                ${conflicts.length > 0 ? "ring-2 ring-red-500 bg-red-50/10" : ""}
-              `}
-            >
-              <div
-                className="absolute top-0 left-0 w-full h-1.5 rounded-t-xl"
-                style={{ backgroundColor: subject?.color || "#cbd5e1" }}
-              />
-
-              <div className="flex flex-col h-full gap-3">
-                {showHeader && (
-                  <div className="flex justify-between items-start">
-                    <div className="flex flex-col gap-1">
-                      <div
-                        className="font-black text-slate-900 text-sm leading-tight uppercase tracking-tight"
-                        title={subject?.name}
-                      >
-                        {subject?.name}
-                      </div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-2xs font-bold text-content-muted bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded flex items-center gap-1 border border-slate-200 dark:border-slate-700">
-                          <Clock size={10} /> {exam.startTime}
-                        </span>
-                        {exam.status && exam.status !== "DRAFT" && (
-                          <span className="text-2xs font-bold uppercase px-1.5 py-0.5 rounded bg-slate-800 text-white">
-                            {exam.status}
-                          </span>
-                        )}
-                        {exam.locked && <Lock size={10} className="text-accent-ink" />}
-                      </div>
-                    </div>
-                    {onToggleLock && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onToggleLock(exam);
-                        }}
-                        className={`p-1 rounded ${
-                          exam.locked
-                            ? "text-accent-ink bg-amber-50 dark:bg-amber-900/30"
-                            : "text-slate-300 hover:text-slate-500"
+        return (
+          <button
+            key={exam.id}
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(exam);
+            }}
+            className={`group/card relative flex flex-1 flex-col gap-2 overflow-hidden rounded-md border
+                        border-l-2 bg-surface px-3 py-2.5 text-left transition-colors hover:border-edge-strong
+                        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent
+                        focus-visible:ring-offset-1 focus-visible:ring-offset-surface ${
+                          conflicts.length > 0
+                            ? "border-edge border-l-danger"
+                            : "border-edge border-l-transparent"
                         }`}
-                        title={
-                          exam.locked
-                            ? "Unlock invigilator assignments"
-                            : "Lock invigilator assignments"
-                        }
-                      >
-                        <Lock size={12} />
-                      </button>
+            style={{
+              borderLeftColor: conflicts.length > 0 ? undefined : subject?.color || undefined,
+            }}
+          >
+            {showHeader && (
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-medium text-content" title={subject?.name}>
+                    {subject?.name}
+                  </div>
+                  <div className="mt-0.5 flex items-center gap-1.5 text-2xs tabular-nums text-content-muted">
+                    <span>{exam.startTime}</span>
+                    {exam.status && exam.status !== "DRAFT" && (
+                      <span className="rounded bg-surface-inset px-1 py-px text-content-secondary">
+                        {exam.status}
+                      </span>
                     )}
                   </div>
-                )}
-
-                <div className="flex flex-col gap-2 flex-1 justify-center">
-                  <div className="text-xs font-black text-slate-700 dark:text-slate-200 bg-amber-50 dark:bg-amber-900/30 border border-amber-100 px-2 py-1 rounded-md text-center">
-                    {classNames}
-                  </div>
-                  <div className="flex items-center gap-2 text-[11px] font-bold text-content-muted p-1 rounded-lg bg-slate-50/50 dark:bg-slate-900/50 border border-transparent group-hover/card:border-slate-100 group-hover/card:bg-white transition-all">
-                    <Users size={11} className="text-content-muted" />
-                    <span className="truncate">{invigilatorNames || "NO STAFF ASSIGNED"}</span>
-                  </div>
                 </div>
+                {onToggleLock && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleLock(exam);
+                    }}
+                    className={`grid h-6 w-6 shrink-0 place-items-center rounded transition-colors ${
+                      exam.locked
+                        ? "text-accent-ink"
+                        : "text-content-muted opacity-0 hover:text-content group-hover/card:opacity-100"
+                    }`}
+                    title={
+                      exam.locked
+                        ? "Unlock invigilator assignments"
+                        : "Lock invigilator assignments"
+                    }
+                    aria-label={
+                      exam.locked
+                        ? "Unlock invigilator assignments"
+                        : "Lock invigilator assignments"
+                    }
+                  >
+                    <Lock size={13} aria-hidden />
+                  </button>
+                )}
               </div>
+            )}
+
+            <div className="text-xs text-content-secondary">{classNames}</div>
+            <div className="flex items-center gap-1.5 text-2xs text-content-muted">
+              <Users size={11} className="shrink-0" aria-hidden />
+              <span className="truncate">
+                {invigilatorNames || <span className="text-accent-ink">No staff assigned</span>}
+              </span>
             </div>
-          );
-        })}
-      </div>
-    );
-  };
+          </button>
+        );
+      })}
+    </div>
+  );
 
   return (
     <div
       ref={setRefs}
-      className={`relative group flex flex-col gap-1 h-full w-full transition-all duration-200
-        ${
-          isOver && isEditMode
-            ? "ring-4 ring-amber-400 rounded-2xl z-10 scale-[1.02] shadow-2xl"
-            : ""
-        }
-      `}
+      className={`group relative flex h-full w-full flex-col gap-1 rounded-md transition-shadow ${
+        isOver && isEditMode ? "ring-2 ring-accent ring-offset-1 ring-offset-canvas" : ""
+      }`}
     >
       {isEditMode && (
         <div
           {...listeners}
           {...attributes}
-          className="absolute -top-3 -right-3 cursor-grab active:cursor-grabbing text-accent-ink hover:text-amber-800 dark:hover:text-amber-200 z-30 p-2 bg-white dark:bg-slate-800 border-2 border-amber-100 rounded-full shadow-xl opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
+          className="absolute right-1 top-1 z-20 grid h-6 w-6 cursor-grab place-items-center rounded
+                     border border-edge bg-surface text-content-muted opacity-0 transition-opacity
+                     hover:text-content active:cursor-grabbing group-hover:opacity-100"
+          aria-label="Drag to reschedule"
         >
-          <GripVertical size={16} />
+          <GripVertical size={13} aria-hidden />
         </div>
       )}
 
       {isSplitView ? (
-        <div className="grid grid-cols-2 gap-2 h-full">
+        <div className="grid h-full grid-cols-2 gap-2">
           {paperNumbers.map((pNum) => (
-            <div key={pNum} className="flex flex-col gap-2 min-w-0">
-              <div className="text-2xs font-black text-white uppercase text-center bg-slate-800 rounded-lg py-1 shadow-sm mb-1 tracking-wider">
+            <div key={pNum} className="flex min-w-0 flex-col gap-1">
+              <div className="rounded bg-surface-inset py-0.5 text-center text-2xs font-medium text-content-secondary">
                 Paper {pNum}
               </div>
               {renderExamStack(paperGroups[pNum])}
@@ -216,6 +207,7 @@ const DroppableGridCell = ({
   startTime,
   children,
   isEditMode,
+  isEmpty,
   onClick,
   activeConflicts = [],
 }: {
@@ -223,6 +215,7 @@ const DroppableGridCell = ({
   startTime: string;
   children: React.ReactNode;
   isEditMode: boolean;
+  isEmpty: boolean;
   onClick?: () => void;
   activeConflicts?: ExamConflict[];
 }) => {
@@ -233,42 +226,46 @@ const DroppableGridCell = ({
   });
 
   const hasCritical = activeConflicts.some((c) => c.severity === "CRITICAL");
-  const hasWarning = activeConflicts.some((c) => c.severity === "WARNING");
+  const dropTone =
+    isOver && isEditMode
+      ? hasCritical
+        ? "bg-danger/10 ring-2 ring-inset ring-danger/40"
+        : "bg-success/10 ring-2 ring-inset ring-success/40"
+      : "";
 
   return (
     <td
       ref={setNodeRef}
       onClick={onClick}
-      className={`p-3 border-r border-slate-100 dark:border-slate-700 align-top min-h-[150px] transition-all duration-200
-        ${
-          isOver && isEditMode
-            ? hasCritical
-              ? "bg-red-50 dark:bg-red-900/30 ring-inset ring-2 ring-red-300"
-              : hasWarning
-                ? "bg-amber-50 dark:bg-amber-900/30 ring-inset ring-2 ring-amber-300"
-                : "bg-emerald-50 dark:bg-emerald-900/30 ring-inset ring-2 ring-emerald-300"
-            : "bg-white dark:bg-slate-800 hover:bg-slate-50/30 dark:bg-slate-900/30"
-        }
-        ${!children ? "cursor-pointer" : ""}
-      `}
+      className={`min-h-[120px] border-b border-r border-edge-subtle p-2 align-top transition-colors ${dropTone} ${
+        isEmpty ? "cursor-pointer hover:bg-surface-muted" : ""
+      }`}
     >
-      <div className="h-full w-full relative min-h-[100px]">
+      <div className="relative h-full min-h-[96px] w-full">
         {isOver && activeConflicts.length > 0 && (
-          <div className="absolute -top-1 -left-1 z-50 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl rounded-lg p-2 min-w-[200px] pointer-events-none animate-in fade-in zoom-in duration-200">
-            <div className="flex flex-col gap-1.5">
+          <div className="pointer-events-none absolute -left-1 -top-1 z-30 min-w-[12rem] rounded-md border border-edge bg-surface p-2 shadow-lg">
+            <ul className="space-y-1">
               {activeConflicts.map((c, i) => (
-                <div
+                <li
                   key={i}
-                  className={`flex items-start gap-1.5 text-2xs font-bold ${c.severity === "CRITICAL" ? "text-danger-ink" : "text-accent-ink"}`}
+                  className={`flex items-start gap-1.5 text-2xs ${
+                    c.severity === "CRITICAL" ? "text-danger-ink" : "text-accent-ink"
+                  }`}
                 >
-                  <AlertTriangle size={12} className="shrink-0" />
+                  <AlertTriangle size={11} className="mt-px shrink-0" aria-hidden />
                   <span>{c.message}</span>
-                </div>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         )}
-        {children}
+        {isEmpty && !isOver ? (
+          <div className="flex h-full min-h-[96px] items-center justify-center text-content-muted opacity-0 transition-opacity hover:opacity-100">
+            <Plus size={16} aria-hidden />
+          </div>
+        ) : (
+          children
+        )}
       </div>
     </td>
   );
@@ -277,9 +274,12 @@ const DroppableGridCell = ({
 interface Props {
   data: AppData;
   exams: ExamSession[];
+  /** Rows to render, in order. Includes empty days the user has added. */
+  dates: string[];
   activeId?: string;
   onEdit: (exam: ExamSession) => void;
   onAddCell?: (date: string, time: string) => void;
+  onAddDay?: () => void;
   checkConflicts: (exam: ExamSession) => string[];
   checkMoveConflicts: (
     ids: string[],
@@ -296,8 +296,10 @@ interface Props {
 export const ExamGrid: React.FC<Props> = ({
   data,
   exams,
+  dates,
   onEdit,
   onAddCell,
+  onAddDay,
   checkConflicts,
   checkMoveConflicts,
   onSwap,
@@ -313,17 +315,7 @@ export const ExamGrid: React.FC<Props> = ({
   const [currentConflicts, setCurrentConflicts] = useState<ExamConflict[]>([]);
   const [overCell, setOverCell] = useState<{ date: string; time: string } | null>(null);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-  );
-
-  const uniqueDates = useMemo(() => {
-    return Array.from(new Set(exams.map((e) => e.date))).sort();
-  }, [exams]);
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveDragId(event.active.id as string);
@@ -331,13 +323,7 @@ export const ExamGrid: React.FC<Props> = ({
 
   const handleDragOver = (event: DragOverEvent) => {
     const { over, active } = event;
-    if (!over || !active.data.current) {
-      setOverCell(null);
-      setCurrentConflicts([]);
-      return;
-    }
-
-    const overData = over.data.current;
+    const overData = over?.data.current;
     const activeData = active.data.current;
     if (!overData || !activeData) {
       setOverCell(null);
@@ -349,19 +335,19 @@ export const ExamGrid: React.FC<Props> = ({
 
     if (overData.type === "CELL_TARGET") {
       setOverCell({ date: overData.date, time: overData.startTime });
-      const conflicts = checkMoveConflicts(activeIds, overData.date, overData.startTime, activeIds);
-      setCurrentConflicts(conflicts);
-    } else if (overData.type === "EXAM_TARGET") {
+      setCurrentConflicts(
+        checkMoveConflicts(activeIds, overData.date, overData.startTime, activeIds),
+      );
+    } else if (overData.type === "EXAM_TARGET" && overData.exam) {
       const targetExam = overData.exam;
-      if (targetExam) {
-        setOverCell({ date: targetExam.date, time: targetExam.startTime });
-        const overIds = overData.allExams.map((e: ExamSession) => e.id);
-        const conflicts = checkMoveConflicts(activeIds, targetExam.date, targetExam.startTime, [
+      setOverCell({ date: targetExam.date, time: targetExam.startTime });
+      const overIds = overData.allExams.map((e: ExamSession) => e.id);
+      setCurrentConflicts(
+        checkMoveConflicts(activeIds, targetExam.date, targetExam.startTime, [
           ...activeIds,
           ...overIds,
-        ]);
-        setCurrentConflicts(conflicts);
-      }
+        ]),
+      );
     } else {
       setOverCell(null);
       setCurrentConflicts([]);
@@ -378,16 +364,16 @@ export const ExamGrid: React.FC<Props> = ({
 
     const activeData = active.data.current;
     const overData = over.data.current;
-
     if (!activeData || !overData) return;
 
     const activeIds = activeData.allExams.map((e: ExamSession) => e.id);
 
     if (overData.type === "EXAM_TARGET") {
-      const targetExam = overData.exam;
-      if (active.id === targetExam.id) return;
-      const overIds = overData.allExams.map((e: ExamSession) => e.id);
-      onSwap(activeIds, overIds);
+      if (active.id === overData.exam.id) return;
+      onSwap(
+        activeIds,
+        overData.allExams.map((e: ExamSession) => e.id),
+      );
     } else if (overData.type === "CELL_TARGET") {
       onMoveToSlot(activeIds, overData.date, overData.startTime);
     }
@@ -396,7 +382,6 @@ export const ExamGrid: React.FC<Props> = ({
   const getStacks = (sessions: ExamSession[]) => {
     const stacks: ExamSession[][] = [];
     const processedIds = new Set<string>();
-
     sessions.forEach((s) => {
       if (processedIds.has(s.id)) return;
       const siblings = sessions.filter(
@@ -414,6 +399,13 @@ export const ExamGrid: React.FC<Props> = ({
     return stacks;
   };
 
+  const draggedExam = activeDragId ? exams.find((e) => e.id === activeDragId) : undefined;
+  const draggedSubject = draggedExam
+    ? data.subjects.find((s) => s.id === draggedExam.subjectId)
+    : undefined;
+
+  const colCount = sessionColumns.length + 1;
+
   return (
     <DndContext
       sensors={sensors}
@@ -422,56 +414,40 @@ export const ExamGrid: React.FC<Props> = ({
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="h-full border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-slate-800">
-        <table className="w-full border-collapse table-fixed">
+      <div className="overflow-hidden rounded-lg border border-edge bg-surface">
+        <table className="w-full table-fixed border-collapse">
           <thead>
-            <tr className="bg-slate-900 text-white">
-              <th className="p-4 border-r border-slate-800 text-left text-[11px] font-black text-slate-300 uppercase tracking-widest w-[140px] sticky left-0 z-40 bg-slate-900 shadow-md">
-                Date / Day
+            <tr className="border-b border-edge bg-surface-muted">
+              <th className="sticky left-0 z-20 w-[110px] border-r border-edge bg-surface-muted px-3 py-2.5 text-left text-2xs font-medium uppercase tracking-wide text-content-muted">
+                Day
               </th>
               {sessionColumns.map((col) => (
                 <th
                   key={col.index}
-                  className="p-4 border-r border-slate-800 text-center min-w-[300px] sticky top-0 z-20 shadow-md"
+                  className="min-w-[280px] border-r border-edge px-3 py-2.5 text-left"
                 >
-                  <div className="flex flex-col gap-1">
-                    <span className="font-black text-sm uppercase tracking-widest">
-                      {col.label}
-                    </span>
-                    <span className="text-2xs text-slate-300 font-bold tracking-widest">
-                      {col.headerHint}
-                    </span>
-                  </div>
+                  <div className="text-sm font-medium text-content">{col.label}</div>
+                  <div className="text-2xs text-content-muted">{col.headerHint}</div>
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {uniqueDates.map((date) => {
+            {dates.map((date) => {
               const examsOnDate = exams.filter((e) => e.date === date);
+              const parsed = new Date(date + "T12:00:00");
 
               return (
-                <tr
-                  key={date}
-                  className="group border-b border-slate-100 dark:border-slate-700 min-h-[220px]"
-                >
-                  <td className="p-4 border-r border-slate-200 dark:border-slate-700 text-center w-[140px] sticky left-0 z-30 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] bg-slate-50 dark:bg-slate-900">
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span className="text-2xs font-black text-content-muted uppercase tracking-widest">
-                        {new Date(date).toLocaleDateString("en-GB", {
-                          weekday: "short",
-                        })}
-                      </span>
-                      <span className="text-2xl font-black text-slate-800 dark:text-slate-100">
-                        {new Date(date).toLocaleDateString("en-GB", {
-                          day: "numeric",
-                        })}
-                      </span>
-                      <span className="text-2xs font-bold text-content-muted uppercase">
-                        {new Date(date).toLocaleDateString("en-GB", {
-                          month: "short",
-                        })}
-                      </span>
+                <tr key={date} className="group">
+                  <td className="sticky left-0 z-10 w-[110px] border-b border-r border-edge bg-canvas px-3 py-3 align-top">
+                    <div className="text-2xs uppercase tracking-wide text-content-muted">
+                      {parsed.toLocaleDateString("en-GB", { weekday: "short" })}
+                    </div>
+                    <div className="text-lg font-semibold tabular-nums text-content">
+                      {parsed.toLocaleDateString("en-GB", { day: "numeric" })}
+                    </div>
+                    <div className="text-2xs text-content-muted">
+                      {parsed.toLocaleDateString("en-GB", { month: "short" })}
                     </div>
                   </td>
 
@@ -487,6 +463,7 @@ export const ExamGrid: React.FC<Props> = ({
                         date={date}
                         startTime={dropTime}
                         isEditMode={isEditMode}
+                        isEmpty={cellExams.length === 0}
                         onClick={() => !cellExams.length && onAddCell?.(date, dropTime)}
                         activeConflicts={
                           overCell?.date === date && overCell?.time === dropTime
@@ -494,7 +471,7 @@ export const ExamGrid: React.FC<Props> = ({
                             : []
                         }
                       >
-                        <div className="flex flex-col h-full gap-3">
+                        <div className="flex h-full flex-col gap-2">
                           {getStacks(cellExams).map((stack) => (
                             <DraggableExamCard
                               key={stack[0].id}
@@ -513,24 +490,39 @@ export const ExamGrid: React.FC<Props> = ({
                 </tr>
               );
             })}
+
+            {onAddDay && (
+              <tr>
+                <td colSpan={colCount} className="border-t border-edge p-0">
+                  <button
+                    type="button"
+                    onClick={onAddDay}
+                    className="flex w-full items-center justify-center gap-1.5 py-2.5 text-xs
+                               text-content-muted transition-colors hover:bg-surface-muted
+                               hover:text-content focus-visible:outline-none focus-visible:ring-2
+                               focus-visible:ring-inset focus-visible:ring-accent"
+                  >
+                    <Plus size={14} aria-hidden />
+                    Add another day
+                  </button>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
 
       <DragOverlay>
-        {activeDragId ? (
-          <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-2xl border-2 border-amber-400 w-72 rotate-3 cursor-grabbing opacity-90 scale-105 pointer-events-none ring-4 ring-black/5">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-amber-100 dark:bg-amber-900/40 text-accent-ink rounded-lg">
-                <CalendarDays size={20} />
-              </div>
-              <div className="flex flex-col">
-                <div className="font-black text-slate-800 dark:text-slate-100 text-sm uppercase">
-                  Rescheduling...
-                </div>
-                <div className="text-2xs text-content-muted font-bold">Release to drop</div>
-              </div>
+        {draggedExam ? (
+          <div className="w-64 rounded-md border border-edge bg-surface px-3 py-2.5 shadow-lg">
+            <div
+              className="mb-1 h-1 w-8 rounded-full"
+              style={{ backgroundColor: draggedSubject?.color || undefined }}
+            />
+            <div className="truncate text-sm font-medium text-content">
+              {draggedSubject?.name ?? "Exam"}
             </div>
+            <div className="text-2xs text-content-muted">Release to reschedule</div>
           </div>
         ) : null}
       </DragOverlay>
