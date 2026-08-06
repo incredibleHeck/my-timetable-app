@@ -1,6 +1,5 @@
 import React, { useMemo } from "react";
 import { AppData, ExamSession } from "../../../types";
-import { Users } from "lucide-react";
 import { getClassDayInvigilationTeam } from "../logic/examUtils";
 
 interface Props {
@@ -11,77 +10,64 @@ interface Props {
 export const InvigilatorRoster: React.FC<Props> = ({ data, exams }) => {
   const { classes, teachers } = data;
 
-  // 1. Get Unique Sorted Dates
-  const uniqueDates = useMemo(() => {
-    return Array.from(new Set(exams.map((e) => e.date))).sort();
-  }, [exams]);
+  const uniqueDates = useMemo(() => Array.from(new Set(exams.map((e) => e.date))).sort(), [exams]);
 
-  // 2. Get Sorted Classes
-  const sortedClasses = useMemo(() => {
-    return [...classes].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
-  }, [classes]);
+  const sortedClasses = useMemo(
+    () => [...classes].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true })),
+    [classes],
+  );
 
-  const getInvigilatorsForCell = (classId: string, date: string) => {
+  const getInvigilatorsForCell = (classId: string, date: string): string[] | null => {
     const hasExams = exams.some((e) => e.date === date && e.classIds.includes(classId));
     if (!hasExams) return null;
-
     const teamIds = getClassDayInvigilationTeam(exams, classId, date);
-    if (teamIds.length === 0) return null;
-
+    if (teamIds.length === 0) return [];
     return teamIds.map((id) => teachers.find((t) => t.id === id)?.name).filter(Boolean) as string[];
   };
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col h-full">
-      <div className="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
+    <div className="flex h-full flex-col overflow-hidden rounded-lg border border-edge bg-surface">
+      <div className="flex shrink-0 items-center justify-between gap-4 border-b border-edge px-4 py-3">
         <div>
-          <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <Users size={18} className="text-accent-ink" />
-            Master Invigilation Roster
-          </h3>
-          <p className="text-2xs text-content-muted uppercase font-bold tracking-wider mt-0.5">
-            Invigilation team per stream per day (all sessions)
+          <h3 className="text-sm font-medium text-content">Invigilation roster</h3>
+          <p className="mt-0.5 text-xs text-content-muted">
+            One team per class per day, covering every session.
           </p>
         </div>
-        <div className="text-2xs bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 px-2 py-1 rounded font-bold uppercase">
-          {uniqueDates.length} Exam Days
-        </div>
+        <span className="text-xs tabular-nums text-content-muted">
+          {uniqueDates.length} {uniqueDates.length === 1 ? "exam day" : "exam days"}
+        </span>
       </div>
 
-      <div className="flex-1 overflow-auto custom-scrollbar">
+      <div className="custom-scrollbar flex-1 overflow-auto">
         <table className="w-full border-collapse">
-          <thead className="sticky top-0 z-20 bg-slate-50 dark:bg-slate-900 shadow-sm">
+          <thead className="sticky top-0 z-20 bg-surface-muted">
             <tr>
-              <th className="p-3 border-b border-r border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-left text-2xs font-bold text-content-muted uppercase tracking-widest min-w-[120px] sticky left-0 z-30">
-                Class / Date
+              <th className="sticky left-0 z-30 min-w-[7rem] border-b border-r border-edge bg-surface-muted px-3 py-2.5 text-left text-2xs font-medium uppercase tracking-wide text-content-muted">
+                Class
               </th>
-              {uniqueDates.map((date) => (
-                <th
-                  key={date}
-                  className="p-3 border-b border-r border-slate-200 dark:border-slate-700 text-center bg-slate-50 dark:bg-slate-900 min-w-[140px]"
-                >
-                  <div className="flex flex-col items-center">
-                    <span className="text-2xs font-black text-content-muted uppercase tracking-widest leading-none mb-1">
-                      {new Date(date).toLocaleDateString("en-GB", { weekday: "short" })}
-                    </span>
-                    <span className="text-sm font-black text-slate-800 dark:text-slate-100 leading-none">
-                      {new Date(date).toLocaleDateString("en-GB", {
-                        day: "numeric",
-                        month: "short",
-                      })}
-                    </span>
-                  </div>
-                </th>
-              ))}
+              {uniqueDates.map((date) => {
+                const parsed = new Date(date + "T12:00:00");
+                return (
+                  <th
+                    key={date}
+                    className="min-w-[8.5rem] border-b border-r border-edge px-3 py-2 text-center"
+                  >
+                    <div className="text-2xs uppercase tracking-wide text-content-muted">
+                      {parsed.toLocaleDateString("en-GB", { weekday: "short" })}
+                    </div>
+                    <div className="text-xs font-medium tabular-nums text-content">
+                      {parsed.toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                    </div>
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody>
             {sortedClasses.map((cls) => (
-              <tr
-                key={cls.id}
-                className="group hover:bg-slate-50/50 dark:bg-slate-900/50 transition-colors"
-              >
-                <td className="p-3 border-b border-r border-slate-200 dark:border-slate-700 font-bold text-xs text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 sticky left-0 z-10 group-hover:bg-slate-50">
+              <tr key={cls.id}>
+                <td className="sticky left-0 z-10 border-b border-r border-edge bg-canvas px-3 py-2 text-xs font-medium text-content-secondary">
                   {cls.name}
                 </td>
                 {uniqueDates.map((date) => {
@@ -89,25 +75,25 @@ export const InvigilatorRoster: React.FC<Props> = ({ data, exams }) => {
                   return (
                     <td
                       key={date}
-                      className={`p-2 border-b border-r border-slate-200 dark:border-slate-700 text-center align-middle h-20 ${
-                        !names
-                          ? "bg-slate-50/30 dark:bg-slate-900/30"
-                          : "bg-white dark:bg-slate-800"
-                      }`}
+                      className="border-b border-r border-edge-subtle px-2 py-2 align-top"
                     >
-                      {names ? (
-                        <div className="flex flex-col items-center gap-1 w-full">
+                      {names === null ? (
+                        <span className="block text-center text-2xs text-content-muted">—</span>
+                      ) : names.length === 0 ? (
+                        <span className="block text-center text-2xs text-accent-ink">
+                          Unassigned
+                        </span>
+                      ) : (
+                        <ul className="space-y-1">
                           {names.map((name, idx) => (
-                            <span
+                            <li
                               key={idx}
-                              className="px-2 py-1 bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border border-amber-100 rounded text-2xs font-bold shadow-sm w-full"
+                              className="rounded border border-edge bg-surface-muted px-1.5 py-0.5 text-center text-2xs text-content-secondary"
                             >
                               {name}
-                            </span>
+                            </li>
                           ))}
-                        </div>
-                      ) : (
-                        <span className="text-2xs text-slate-300 italic">No Exams</span>
+                        </ul>
                       )}
                     </td>
                   );

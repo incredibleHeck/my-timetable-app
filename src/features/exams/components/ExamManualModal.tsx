@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { AppData, ExamSession } from "../../../types";
-import { Modal, Button, Select, Input } from "../../../components/ui";
-import { Layers, Users, BookOpen, Clock } from "lucide-react";
+import { Modal, Button, Select, controlClass } from "../../../components/ui";
 import { generateId } from "../../../utils/utils";
 import { useToast } from "../../../components/ui/Toast";
 import { toLocalDateString } from "../logic/examUtils";
@@ -17,6 +16,19 @@ interface Props {
   onSave: (exam: ExamSession | ExamSession[]) => void;
 }
 
+const Field: React.FC<{ id: string; label: string; children: React.ReactNode }> = ({
+  id,
+  label,
+  children,
+}) => (
+  <div className="min-w-0">
+    <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-content">
+      {label}
+    </label>
+    {children}
+  </div>
+);
+
 export const ExamManualModal: React.FC<Props> = ({
   isOpen,
   onClose,
@@ -26,7 +38,6 @@ export const ExamManualModal: React.FC<Props> = ({
   onSave,
 }) => {
   const { showToast } = useToast();
-  // --- FORM STATE ---
   const [examSubjectId, setExamSubjectId] = useState("");
   const [examClassIds, setExamClassIds] = useState<string[]>([]);
   const [examDate, setExamDate] = useState("");
@@ -35,7 +46,6 @@ export const ExamManualModal: React.FC<Props> = ({
   const [examInvigilatorIds, setExamInvigilatorIds] = useState<string[]>([]);
   const [examRoomId, setExamRoomId] = useState("");
 
-  // Multi-Paper Fields
   const [paperNumber, setPaperNumber] = useState("1");
   const [paperLabel, setPaperLabel] = useState("Paper 1");
   const [hasTwoPapers, setHasTwoPapers] = useState(false);
@@ -43,10 +53,8 @@ export const ExamManualModal: React.FC<Props> = ({
   const [examLocked, setExamLocked] = useState(false);
   const [examStatus, setExamStatus] = useState<ExamStatus>("DRAFT");
 
-  // --- INITIALIZATION ---
   useEffect(() => {
     if (editingExam) {
-      // EDIT MODE
       setExamSubjectId(editingExam.subjectId);
       setExamClassIds(editingExam.classIds);
       setExamDate(editingExam.date);
@@ -59,8 +67,6 @@ export const ExamManualModal: React.FC<Props> = ({
       setExamLocked(!!editingExam.locked);
       setExamStatus(editingExam.status || "DRAFT");
 
-      // Smart Detection: Does a "Paper 2" already exist for this group?
-      // We look for same Subject + Date + At least one overlapping class
       const potentialPaper2 = data.exams?.find(
         (e) =>
           e.subjectId === editingExam.subjectId &&
@@ -74,17 +80,11 @@ export const ExamManualModal: React.FC<Props> = ({
         setHasTwoPapers(true);
         setPaper2StartTime(potentialPaper2.startTime);
       } else {
-        // Fallback: If current exam IS paper 2, maybe Paper 1 is the sibling?
-        // For now, simpler to just assume we are editing the primary record.
         setHasTwoPapers(editingExam.paperNumber === 2);
       }
     } else {
-      // CREATE MODE
       setExamSubjectId(data.subjects[0]?.id || "");
-
-      // If a specific class filter is active in the grid, auto-select it
       setExamClassIds(activeId !== "ALL" ? [activeId] : []);
-
       setExamDate(toLocalDateString(new Date()));
       setExamStartTime("09:00");
       setPaper2StartTime("14:00");
@@ -113,8 +113,6 @@ export const ExamManualModal: React.FC<Props> = ({
     return true;
   };
 
-  // --- HANDLERS ---
-
   const handleClassToggle = (clsId: string) => {
     setExamClassIds((prev) =>
       prev.includes(clsId) ? prev.filter((id) => id !== clsId) : [...prev, clsId],
@@ -129,11 +127,11 @@ export const ExamManualModal: React.FC<Props> = ({
 
   const handleSave = () => {
     if (!examSubjectId || !examDate) {
-      showToast("Please select a Subject and Date.", "error");
+      showToast("Choose a subject and a date.", "error");
       return;
     }
     if (examClassIds.length === 0) {
-      showToast("Please select at least one Class.", "error");
+      showToast("Choose at least one class.", "error");
       return;
     }
 
@@ -147,21 +145,19 @@ export const ExamManualModal: React.FC<Props> = ({
       invigilatorIds: examInvigilatorIds,
       roomId: examRoomId || undefined,
       paperNumber: parseInt(paperNumber) || 1,
-      paperLabel: paperLabel,
+      paperLabel,
       status: examStatus,
       locked: examLocked,
     };
 
     if (hasTwoPapers) {
-      // 1. Prepare Paper 1
       const paper1 = {
         ...baseExam,
         paperNumber: 1,
         paperLabel: "Paper 1",
-        startTime: examStartTime, // User-defined P1 time
+        startTime: examStartTime,
       };
 
-      // 2. Prepare Paper 2
       let existingP2: ExamSession | undefined;
       if (editingExam) {
         existingP2 = data.exams?.find(
@@ -185,7 +181,6 @@ export const ExamManualModal: React.FC<Props> = ({
 
       const excludeIds = [paper1.id, paper2.id];
       if (!validateSessions([paper1, paper2], excludeIds)) return;
-
       onSave([paper1, paper2]);
     } else {
       const excludeIds = [baseExam.id].filter(Boolean);
@@ -196,7 +191,6 @@ export const ExamManualModal: React.FC<Props> = ({
     onClose();
   };
 
-  // Sorted Lists for UI
   const sortedTeachers = useMemo(
     () => [...data.teachers].sort((a, b) => a.name.localeCompare(b.name)),
     [data.teachers],
@@ -213,18 +207,52 @@ export const ExamManualModal: React.FC<Props> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={editingExam ? "Edit Exam Session" : "Schedule New Exam"}
+      maxWidth="max-w-2xl"
       footer={
-        <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={onClose}>
+        <div className="flex w-full justify-end gap-2">
+          <Button variant="secondary" onClick={onClose}>
             Cancel
           </Button>
           <Button onClick={handleSave}>{editingExam ? "Save Changes" : "Create Exam"}</Button>
         </div>
       }
     >
-      <div className="space-y-5 max-h-[75vh] overflow-y-auto px-1 custom-scrollbar">
-        {/* SECTION 1: CORE DETAILS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="custom-scrollbar max-h-[75vh] space-y-5 overflow-y-auto px-1">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <Field id="exam-subject" label="Subject">
+              <select
+                id="exam-subject"
+                className={`${controlClass} w-full cursor-pointer`}
+                value={examSubjectId}
+                onChange={(e) => setExamSubjectId(e.target.value)}
+              >
+                {data.subjects.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+          <Field id="exam-date" label="Date">
+            <input
+              id="exam-date"
+              type="date"
+              className={`${controlClass} w-full`}
+              value={examDate}
+              onChange={(e) => setExamDate(e.target.value)}
+            />
+          </Field>
+          <Field id="exam-duration" label="Duration (min)">
+            <input
+              id="exam-duration"
+              type="number"
+              className={`${controlClass} w-full`}
+              value={examDuration}
+              onChange={(e) => setExamDuration(e.target.value)}
+            />
+          </Field>
           <Select
             label="Status"
             value={examStatus}
@@ -235,190 +263,122 @@ export const ExamManualModal: React.FC<Props> = ({
               { value: "COMPLETED", label: "Completed" },
             ]}
           />
-          <div className="md:col-span-2">
-            <Select
-              label="Subject"
-              value={examSubjectId}
-              onChange={(e) => setExamSubjectId(e.target.value)}
-              options={data.subjects.map((s) => ({
-                value: s.id,
-                label: s.name,
-              }))}
-            />
-          </div>
-
-          <Input
-            label="Date"
-            type="date"
-            value={examDate}
-            onChange={(e) => setExamDate(e.target.value)}
-          />
-
-          <Input
-            label="Duration (minutes)"
-            type="number"
-            value={examDuration}
-            onChange={(e) => setExamDuration(e.target.value)}
-          />
         </div>
 
-        {/* SECTION 2: PAPER CONFIGURATION */}
-        <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="text-xs font-bold text-content-muted uppercase flex items-center gap-2">
-              <Layers size={14} /> Session Configuration
-            </h4>
-            <label className="flex items-center gap-2 text-sm font-medium cursor-pointer text-slate-700 dark:text-slate-200">
+        <div className="rounded-md border border-edge bg-surface p-3">
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-content">
+            <input
+              type="checkbox"
+              checked={hasTwoPapers}
+              onChange={(e) => setHasTwoPapers(e.target.checked)}
+              className="h-4 w-4 rounded border-edge-strong text-accent focus:ring-accent"
+            />
+            Schedule two papers
+          </label>
+          <div className="mt-3 grid grid-cols-2 gap-4">
+            <Field id="exam-p1-start" label="Paper 1 start">
               <input
-                type="checkbox"
-                checked={hasTwoPapers}
-                onChange={(e) => setHasTwoPapers(e.target.checked)}
-                className="rounded text-accent-ink focus:ring-amber-500"
+                id="exam-p1-start"
+                type="time"
+                className={`${controlClass} w-full`}
+                value={examStartTime}
+                onChange={(e) => setExamStartTime(e.target.value)}
               />
-              Schedule Two Papers
-            </label>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            {/* Paper 1 Config */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-content-muted">Paper 1 Start</label>
-              <div className="flex items-center gap-2">
-                <Clock size={16} className="text-content-muted" />
-                <input
-                  type="time"
-                  value={examStartTime}
-                  onChange={(e) => setExamStartTime(e.target.value)}
-                  className="flex-1 text-sm border-slate-200 dark:border-slate-700 rounded-md shadow-sm"
-                />
-              </div>
-            </div>
-
-            {/* Paper 2 Config (Conditional) */}
+            </Field>
             {hasTwoPapers && (
-              <div className="space-y-2 animate-in fade-in">
-                <label className="text-xs font-bold text-content-muted">Paper 2 Start</label>
-                <div className="flex items-center gap-2">
-                  <Clock size={16} className="text-accent-ink" />
-                  <input
-                    type="time"
-                    value={paper2StartTime}
-                    onChange={(e) => setPaper2StartTime(e.target.value)}
-                    className="flex-1 text-sm border-amber-200 ring-1 ring-amber-100 rounded-md shadow-sm bg-amber-50/50"
-                  />
-                </div>
-              </div>
+              <Field id="exam-p2-start" label="Paper 2 start">
+                <input
+                  id="exam-p2-start"
+                  type="time"
+                  className={`${controlClass} w-full`}
+                  value={paper2StartTime}
+                  onChange={(e) => setPaper2StartTime(e.target.value)}
+                />
+              </Field>
             )}
           </div>
         </div>
 
-        {/* SECTION 3: CLASSES */}
         <div>
-          <h4 className="text-xs font-bold text-content-muted uppercase mb-2 flex items-center gap-2">
-            <BookOpen size={14} /> Participating Classes
-          </h4>
-          <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 shadow-sm">
-            {sortedClasses.map((cls) => (
-              <label
-                key={cls.id}
-                className={`
-                  flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-medium cursor-pointer select-none transition-all border
-                  ${
-                    examClassIds.includes(cls.id)
-                      ? "bg-amber-50 dark:bg-amber-900/30 border-amber-300 text-amber-800 dark:text-amber-200 shadow-sm"
-                      : "bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-700 text-content-muted hover:bg-slate-100"
-                  }
-                `}
-              >
-                <input
-                  type="checkbox"
-                  className="hidden"
-                  checked={examClassIds.includes(cls.id)}
-                  onChange={() => handleClassToggle(cls.id)}
-                />
-                <div
-                  className={`w-2 h-2 rounded-full ${
-                    examClassIds.includes(cls.id) ? "bg-amber-500" : "bg-slate-300"
-                  }`}
-                />
-                {cls.name}
-              </label>
-            ))}
+          <div className="mb-2 flex items-baseline justify-between">
+            <h4 className="text-sm font-medium text-content">Participating Classes</h4>
+            {examClassIds.length === 0 && (
+              <span className="text-2xs text-danger-ink">Pick at least one</span>
+            )}
           </div>
-          {examClassIds.length === 0 && (
-            <p className="text-2xs text-danger-ink mt-1 font-bold">* Required</p>
-          )}
+          <div className="flex flex-wrap gap-1.5">
+            {sortedClasses.map((cls) => {
+              const isOn = examClassIds.includes(cls.id);
+              return (
+                <button
+                  key={cls.id}
+                  type="button"
+                  aria-pressed={isOn}
+                  onClick={() => handleClassToggle(cls.id)}
+                  className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${
+                    isOn
+                      ? "border-accent bg-accent/15 font-medium text-content"
+                      : "border-edge text-content-secondary hover:border-edge-strong"
+                  }`}
+                >
+                  {cls.name}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* SECTION 4: RESOURCES (Invigilators & Room) */}
-        <div className="grid grid-cols-1 gap-4 pt-2 border-t border-slate-100 dark:border-slate-700">
-          {/* Room Select */}
-          <Select
-            label="Location / Room"
+        <Field id="exam-room" label="Room">
+          <select
+            id="exam-room"
+            className={`${controlClass} w-full cursor-pointer`}
             value={examRoomId}
             onChange={(e) => setExamRoomId(e.target.value)}
-            options={[
-              { value: "", label: "TBD - Allocate Later" },
-              ...data.rooms.map((r) => ({ value: r.id, label: r.name })),
-            ]}
-          />
+          >
+            <option value="">Each class in its own home room</option>
+            {data.rooms.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.name}
+              </option>
+            ))}
+          </select>
+        </Field>
 
-          {/* Invigilator Select */}
-          <div>
-            <div className="flex justify-between items-end mb-2">
-              <h4 className="text-xs font-bold text-content-muted uppercase flex items-center gap-2">
-                <Users size={14} /> Invigilators
-              </h4>
-              <span className="text-2xs text-content-muted bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
-                {examInvigilatorIds.length} Selected
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50/50 dark:bg-slate-900/50">
-              {sortedTeachers.map((t) => {
-                const isSelected = examInvigilatorIds.includes(t.id);
-                return (
-                  <label
-                    key={t.id}
-                    className={`
-                        flex items-center gap-2 px-2 py-1.5 rounded border text-xs cursor-pointer select-none transition-all
-                        ${
-                          isSelected
-                            ? "bg-white dark:bg-slate-800 border-amber-300 text-amber-800 dark:text-amber-200 shadow-sm ring-1 ring-amber-100"
-                            : "border-transparent hover:bg-white hover:border-slate-200 text-slate-600 dark:text-slate-300"
-                        }
-                      `}
-                  >
+        <div>
+          <div className="mb-2 flex items-baseline justify-between">
+            <h4 className="text-sm font-medium text-content">Invigilators</h4>
+            <span className="text-2xs tabular-nums text-content-muted">
+              {examInvigilatorIds.length} selected
+            </span>
+          </div>
+          <div className="custom-scrollbar max-h-40 overflow-y-auto rounded-md border border-edge">
+            <ul className="grid grid-cols-2">
+              {sortedTeachers.map((t) => (
+                <li key={t.id}>
+                  <label className="flex cursor-pointer items-center gap-2 border-b border-edge-subtle px-2.5 py-1.5 text-xs hover:bg-surface-muted">
                     <input
                       type="checkbox"
-                      className="hidden"
-                      checked={isSelected}
+                      checked={examInvigilatorIds.includes(t.id)}
                       onChange={() => handleInvigilatorToggle(t.id)}
+                      className="h-3.5 w-3.5 rounded border-edge-strong text-accent focus:ring-accent"
                     />
-                    <div
-                      className={`w-1.5 h-1.5 rounded-full ${
-                        isSelected ? "bg-amber-500" : "bg-slate-300"
-                      }`}
-                    />
-                    <span className="truncate">{t.name}</span>
+                    <span className="truncate text-content-secondary">{t.name}</span>
                   </label>
-                );
-              })}
-            </div>
+                </li>
+              ))}
+            </ul>
           </div>
-
-          <label className="flex items-center gap-2 cursor-pointer select-none pt-2">
-            <input
-              type="checkbox"
-              checked={examLocked}
-              onChange={(e) => setExamLocked(e.target.checked)}
-              className="rounded border-slate-300 text-accent-ink focus:ring-amber-500"
-            />
-            <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
-              Lock invigilator assignments (skipped when re-running Assign Staff)
-            </span>
-          </label>
         </div>
+
+        <label className="flex cursor-pointer items-center gap-2 text-xs text-content-secondary">
+          <input
+            type="checkbox"
+            checked={examLocked}
+            onChange={(e) => setExamLocked(e.target.checked)}
+            className="h-4 w-4 rounded border-edge-strong text-accent focus:ring-accent"
+          />
+          Lock invigilators (kept when re-running Assign staff)
+        </label>
       </div>
     </Modal>
   );

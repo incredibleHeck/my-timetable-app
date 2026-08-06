@@ -88,14 +88,25 @@ const DraggableExamCard = ({
         const showHeader = index === 0;
 
         return (
-          <button
+          // A div, not a button: it holds the lock button, and a button cannot
+          // nest inside a button. role/tabIndex/onKeyDown keep it operable by
+          // keyboard.
+          <div
             key={exam.id}
-            type="button"
+            role="button"
+            tabIndex={0}
             onClick={(e) => {
               e.stopPropagation();
               onEdit(exam);
             }}
-            className={`group/card relative flex flex-1 flex-col gap-2 overflow-hidden rounded-md border
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                e.stopPropagation();
+                onEdit(exam);
+              }
+            }}
+            className={`group/card relative flex flex-1 cursor-pointer flex-col gap-2 overflow-hidden rounded-md border
                         border-l-2 bg-surface px-3 py-2.5 text-left transition-colors hover:border-edge-strong
                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent
                         focus-visible:ring-offset-1 focus-visible:ring-offset-surface ${
@@ -158,7 +169,7 @@ const DraggableExamCard = ({
                 {invigilatorNames || <span className="text-accent-ink">No staff assigned</span>}
               </span>
             </div>
-          </button>
+          </div>
         );
       })}
     </div>

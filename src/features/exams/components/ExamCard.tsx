@@ -1,7 +1,6 @@
 import React from "react";
-import { Calendar, Clock, Users, Trash2, Edit2, Lock, FileText, AlertTriangle } from "lucide-react";
+import { AlertTriangle, Lock, Pencil, Trash2, Users } from "lucide-react";
 import { ExamSession, AppData } from "../../../types";
-import { Card } from "../../../components/ui";
 import { validateExamMove } from "../logic/examValidation";
 
 interface Props {
@@ -13,6 +12,11 @@ interface Props {
   onToggleLock?: () => void;
 }
 
+const iconButton =
+  "grid h-7 w-7 place-items-center rounded text-content-muted transition-colors " +
+  "hover:bg-surface-inset hover:text-content focus-visible:outline-none focus-visible:ring-2 " +
+  "focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-surface";
+
 export const ExamCard: React.FC<Props> = ({
   exam,
   data,
@@ -22,162 +26,113 @@ export const ExamCard: React.FC<Props> = ({
   onToggleLock,
 }) => {
   const subject = data.subjects.find((s) => s.id === exam.subjectId);
-  const teachers = data.teachers;
-  const classes = data.classes;
-
   const conflicts = validateExamMove(exam, allExams, data);
   const hasCritical = conflicts.some((c) => c.severity === "CRITICAL");
-  const hasWarning = conflicts.some((c) => c.severity === "WARNING");
 
-  // Format class names for display (e.g. "10A, 10B")
-  const classNames = classes
+  const classNames = data.classes
     .filter((c) => exam.classIds.includes(c.id))
     .map((c) => c.name)
     .join(", ");
 
-  const isLocked = exam.locked;
-
-  // Resolve invigilator names
   const invigilatorNames = (exam.invigilatorIds || [])
-    .map((id) => teachers.find((t) => t.id === id)?.name)
+    .map((id) => data.teachers.find((t) => t.id === id)?.name)
     .filter(Boolean)
     .join(", ");
 
   return (
-    <Card
-      className={`p-4 flex flex-col gap-3 hover:shadow-md transition-shadow relative overflow-hidden group border-l-4 ${
-        hasCritical
-          ? "border-l-red-500 bg-red-50/10"
-          : hasWarning
-            ? "border-l-amber-500 bg-amber-50/10"
-            : "border-l-transparent"
-      }`}
+    <div
+      className="group flex flex-col gap-2.5 rounded-lg border border-edge border-l-2 bg-surface p-3"
+      style={{ borderLeftColor: hasCritical ? undefined : subject?.color || undefined }}
     >
-      {/* Subject Color Strip (if no critical conflict) */}
-      {!hasCritical && (
-        <div
-          className="absolute top-0 left-0 w-1 h-full"
-          style={{ backgroundColor: subject?.color || "#cbd5e1" }}
-        />
-      )}
-
-      {/* Header: Subject Name & Paper Label */}
-      <div className="flex justify-between items-start pl-2">
-        <div className="space-y-1">
-          <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-tight">
-            {subject?.name || "Unknown Subject"}
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <h3 className="truncate text-sm font-medium text-content">
+            {subject?.name || "Unknown subject"}
           </h3>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center px-2 py-0.5 rounded text-2xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-2xs text-content-muted">
+            <span className="rounded bg-surface-inset px-1.5 py-0.5 text-content-secondary">
               {exam.paperLabel || `Paper ${exam.paperNumber}`}
             </span>
-            {isLocked && <Lock size={12} className="text-content-muted" />}
-            {exam.status && exam.status !== "DRAFT" && (
-              <span className="text-2xs font-bold uppercase px-1.5 py-0.5 rounded bg-slate-700 text-white">
-                {exam.status}
-              </span>
-            )}
+            {exam.status && exam.status !== "DRAFT" && <span>{exam.status}</span>}
+            {exam.locked && <Lock size={11} className="text-accent-ink" aria-hidden />}
           </div>
         </div>
 
-        {/* Action Buttons (Visible on Hover) */}
-        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex shrink-0 gap-0.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
           {onToggleLock && (
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleLock();
-              }}
-              className={`p-1.5 rounded transition-colors ${
-                isLocked
-                  ? "bg-amber-50 dark:bg-amber-900/30 text-accent-ink hover:bg-amber-100 dark:hover:bg-amber-900/40"
-                  : "hover:bg-slate-100 text-content-muted hover:text-slate-600"
-              }`}
-              title={isLocked ? "Unlock invigilator assignments" : "Lock invigilator assignments"}
+              type="button"
+              onClick={onToggleLock}
+              className={`${iconButton} ${exam.locked ? "text-accent-ink" : ""}`}
+              title={
+                exam.locked ? "Unlock invigilator assignments" : "Lock invigilator assignments"
+              }
+              aria-label={
+                exam.locked ? "Unlock invigilator assignments" : "Lock invigilator assignments"
+              }
             >
-              <Lock size={14} />
+              <Lock size={13} aria-hidden />
             </button>
           )}
           <button
+            type="button"
             onClick={onEdit}
-            className="p-1.5 hover:bg-slate-100 text-content-muted hover:text-accent-ink rounded transition-colors"
-            title="Edit Exam"
-            aria-label="Edit Exam"
+            className={iconButton}
+            title="Edit exam"
+            aria-label="Edit exam"
           >
-            <Edit2 size={14} />
+            <Pencil size={13} aria-hidden />
           </button>
           <button
+            type="button"
             onClick={onDelete}
-            className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/30 text-content-muted hover:text-danger-ink rounded transition-colors"
-            title="Delete Exam"
-            aria-label="Delete Exam"
+            className={`${iconButton} hover:text-danger-ink`}
+            title="Delete exam"
+            aria-label="Delete exam"
           >
-            <Trash2 size={14} />
+            <Trash2 size={13} aria-hidden />
           </button>
         </div>
       </div>
 
-      {/* Meta Information Grid */}
-      <div className="grid grid-cols-2 gap-y-2 text-xs pl-2">
-        {/* Date */}
-        <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-          <Calendar size={14} className="text-content-muted" />
-          <span className="font-medium">{new Date(exam.date).toLocaleDateString()}</span>
-        </div>
-
-        {/* Time & Duration */}
-        <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-          <Clock size={14} className="text-content-muted" />
-          <span className="font-medium">
-            {exam.startTime} <span className="text-content-muted">({exam.duration}m)</span>
-          </span>
-        </div>
-
-        {/* Invigilator Assignment */}
-        <div className="flex items-start gap-2 col-span-2">
-          <Users
-            size={14}
-            className={invigilatorNames ? "text-content-muted mt-0.5" : "text-amber-400 mt-0.5"}
-          />
-          <span
-            className={`text-[11px] leading-tight ${
-              !invigilatorNames
-                ? "text-accent-ink italic"
-                : "text-slate-600 dark:text-slate-300 font-medium"
-            }`}
-          >
-            {invigilatorNames || "Unassigned Invigilators"}
-          </span>
-        </div>
-
-        {/* Participating Classes */}
-        {classNames && (
-          <div className="col-span-2 mt-1 pt-2 border-t border-slate-100 dark:border-slate-700 flex items-start gap-2">
-            <FileText size={14} className="text-slate-300 mt-0.5 shrink-0" />
-            <span className="text-content-muted leading-tight line-clamp-1" title={classNames}>
-              {classNames}
-            </span>
-          </div>
-        )}
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs tabular-nums text-content-secondary">
+        <span>{new Date(exam.date + "T12:00:00").toLocaleDateString("en-GB")}</span>
+        <span>
+          {exam.startTime} <span className="text-content-muted">· {exam.duration} min</span>
+        </span>
       </div>
 
-      {/* Conflict Display */}
-      {conflicts.length > 0 && (
+      <div className="flex items-center gap-1.5 text-xs">
+        <Users size={12} className="shrink-0 text-content-muted" aria-hidden />
+        <span className={invigilatorNames ? "text-content-secondary" : "text-accent-ink"}>
+          {invigilatorNames || "No invigilators assigned"}
+        </span>
+      </div>
+
+      {classNames && (
         <div
-          className={`mt-1 p-2 rounded flex flex-col gap-1 text-2xs ml-2 border ${
-            hasCritical
-              ? "bg-red-50 dark:bg-red-900/30 border-red-100 text-red-800 dark:text-red-200"
-              : "bg-amber-50 dark:bg-amber-900/30 border-amber-100 text-amber-800 dark:text-amber-200"
-          }`}
+          className="border-t border-edge-subtle pt-2 text-2xs text-content-muted"
+          title={classNames}
         >
-          {conflicts.map((c, i) => (
-            <div key={i} className="flex items-start gap-1">
-              <AlertTriangle size={10} className="mt-0.5 shrink-0" />
-              <span className="leading-tight font-bold">{c.message}</span>
-            </div>
-          ))}
+          <span className="line-clamp-1">{classNames}</span>
         </div>
       )}
-    </Card>
+
+      {conflicts.length > 0 && (
+        <ul className="space-y-1 border-t border-edge-subtle pt-2">
+          {conflicts.map((c, i) => (
+            <li
+              key={i}
+              className={`flex items-start gap-1.5 text-2xs ${
+                c.severity === "CRITICAL" ? "text-danger-ink" : "text-accent-ink"
+              }`}
+            >
+              <AlertTriangle size={11} className="mt-px shrink-0" aria-hidden />
+              <span>{c.message}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 };

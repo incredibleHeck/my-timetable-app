@@ -77,7 +77,7 @@ describe("ExamsView", () => {
     render(<ExamsView data={testData} onUpdate={mockOnUpdate} />);
     const assignBtn = screen.getByText("Assign staff");
     fireEvent.click(assignBtn);
-    expect(screen.getByText("Manage Staff Availability")).toBeInTheDocument();
+    expect(screen.getByText("Who can invigilate")).toBeInTheDocument();
   });
 
   it("should enable edit mode", () => {

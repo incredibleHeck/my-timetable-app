@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { AppData, ExamSession, Subject } from "../../../types";
-import { Modal, Button, Input } from "../../../components/ui";
-import { Plus, Minus, Check, Users, Shuffle, Link as LinkIcon } from "lucide-react";
-
-// Import the Logic Engine
+import { Modal, Button, controlClass } from "../../../components/ui";
+import { Check, Minus, Plus } from "lucide-react";
 import { generateExams, ScheduleMode } from "../logic/examGeneratorAlgorithms";
 import { useToast } from "../../../components/ui/Toast";
 
@@ -21,6 +19,29 @@ interface SubjectConfig {
   duration: number;
 }
 
+const Field: React.FC<{ id: string; label: string; children: React.ReactNode }> = ({
+  id,
+  label,
+  children,
+}) => (
+  <div className="min-w-0">
+    <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-content">
+      {label}
+    </label>
+    {children}
+  </div>
+);
+
+const SectionTitle: React.FC<{ children: React.ReactNode; action?: React.ReactNode }> = ({
+  children,
+  action,
+}) => (
+  <div className="mb-2 flex items-center justify-between">
+    <h4 className="text-sm font-medium text-content">{children}</h4>
+    {action}
+  </div>
+);
+
 export const ExamSchoolAutoModal: React.FC<Props> = ({
   isOpen,
   onClose,
@@ -29,32 +50,23 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
   onSessionsPerDayChange,
 }) => {
   const { showToast } = useToast();
-  // --- STATE ---
   const [selectedConfigs, setSelectedConfigs] = useState<Record<string, SubjectConfig>>({});
   const [selectedClassIds, setSelectedClassIds] = useState<string[]>([]);
   const [mode, setMode] = useState<ScheduleMode>("UNIFORM");
 
-  // Auto-populate examinable subjects and classes
   useEffect(() => {
     if (isOpen) {
       const initialConfigs: Record<string, SubjectConfig> = {};
       data.subjects.forEach((s) => {
-        // Default to examinable if not explicitly false
         if (s.isExaminable !== false) {
-          initialConfigs[s.id] = {
-            id: s.id,
-            papers: s.examPaperCount || 1,
-            duration: 120,
-          };
+          initialConfigs[s.id] = { id: s.id, papers: s.examPaperCount || 1, duration: 120 };
         }
       });
       setSelectedConfigs(initialConfigs);
-      // Default to all classes selected
       setSelectedClassIds(data.classes.map((c) => c.id));
     }
   }, [isOpen, data.subjects, data.classes]);
 
-  // Settings
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [startTime, setStartTime] = useState("09:00");
   const [maxPerDay, setMaxPerDay] = useState("2");
@@ -66,12 +78,9 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
   );
 
   useEffect(() => {
-    if (isOpen) {
-      setSessionsPerDay(data.settings.examGrid?.sessionsPerDay ?? 2);
-    }
+    if (isOpen) setSessionsPerDay(data.settings.examGrid?.sessionsPerDay ?? 2);
   }, [isOpen, data.settings.examGrid?.sessionsPerDay]);
 
-  // --- HANDLERS ---
   const toggleSubject = (subject: Subject) => {
     setSelectedConfigs((prev) => {
       if (prev[subject.id]) {
@@ -81,11 +90,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
       }
       return {
         ...prev,
-        [subject.id]: {
-          id: subject.id,
-          papers: subject.examPaperCount || 1,
-          duration: 120,
-        },
+        [subject.id]: { id: subject.id, papers: subject.examPaperCount || 1, duration: 120 },
       };
     });
   };
@@ -129,7 +134,7 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
         .join(", ");
       const more = unscheduled.length > 5 ? ` (+${unscheduled.length - 5} more)` : "";
       showToast(
-        `Warning: ${unscheduled.length} exam unit(s) could not be scheduled within 60 days: ${names}${more}.`,
+        `${unscheduled.length} exam unit(s) could not be scheduled within 60 days: ${names}${more}.`,
         "error",
       );
     }
@@ -138,255 +143,275 @@ export const ExamSchoolAutoModal: React.FC<Props> = ({
     onClose();
   };
 
+  const modeButton = (id: ScheduleMode, title: string, hint: string) => {
+    const isActive = mode === id;
+    return (
+      <button
+        type="button"
+        onClick={() => setMode(id)}
+        aria-pressed={isActive}
+        className={`flex-1 rounded-md border px-3 py-2.5 text-left transition-colors
+                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                      isActive
+                        ? "border-accent bg-accent/15"
+                        : "border-edge bg-surface hover:border-edge-strong"
+                    }`}
+      >
+        <div className="text-sm font-medium text-content">{title}</div>
+        <div className="mt-0.5 text-2xs text-content-muted">{hint}</div>
+      </button>
+    );
+  };
+
+  const toggleRow = (checked: boolean, onToggle: () => void, title: string, hint: string) => (
+    <label className="flex cursor-pointer items-start gap-2.5 rounded-md border border-edge bg-surface px-3 py-2.5">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={onToggle}
+        className="mt-0.5 h-4 w-4 rounded border-edge-strong text-accent focus:ring-accent"
+      />
+      <span>
+        <span className="block text-sm text-content">{title}</span>
+        <span className="block text-xs leading-relaxed text-content-muted">{hint}</span>
+      </span>
+    </label>
+  );
+
+  const canGenerate = Object.keys(selectedConfigs).length > 0 && selectedClassIds.length > 0;
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Auto-Generate Timetable">
-      <div className="space-y-6 max-h-[75vh] overflow-y-auto pr-2">
-        {/* 1. STRATEGY SELECTOR */}
-        <div className="grid grid-cols-2 gap-4 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
-          <button
-            onClick={() => setMode("UNIFORM")}
-            className={`flex flex-col items-center p-3 rounded-md transition-all ${
-              mode === "UNIFORM"
-                ? "bg-white dark:bg-slate-800 text-accent-ink shadow-sm ring-1 ring-amber-200"
-                : "text-content-muted hover:bg-slate-200"
-            }`}
-          >
-            <Users size={20} className="mb-2" />
-            <span className="text-xs font-bold">Uniform (Cohorts)</span>
-            <span className="text-2xs opacity-70">All classes write together</span>
-          </button>
-
-          <button
-            onClick={() => setMode("RANDOM")}
-            className={`flex flex-col items-center p-3 rounded-md transition-all ${
-              mode === "RANDOM"
-                ? "bg-white dark:bg-slate-800 text-accent-ink shadow-sm ring-1 ring-amber-200"
-                : "text-content-muted hover:bg-slate-200"
-            }`}
-          >
-            <Shuffle size={20} className="mb-2" />
-            <span className="text-xs font-bold">Random / Staggered</span>
-            <span className="text-2xs opacity-70">Optimized slot filling</span>
-          </button>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Auto-Generate Timetable"
+      maxWidth="max-w-3xl"
+      footer={
+        <div className="flex w-full justify-end gap-2">
+          <Button variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleGenerate} disabled={!canGenerate}>
+            Generate Schedule
+          </Button>
         </div>
-
-        {/* 2. DOUBLE STREAM OPTION (Only for Random) */}
-        {mode === "RANDOM" && (
-          <div
-            onClick={() => setSyncStreams(!syncStreams)}
-            className={`flex items-center gap-3 p-3 rounded border cursor-pointer transition-colors ${
-              syncStreams
-                ? "bg-amber-50 dark:bg-amber-900/30 border-amber-200"
-                : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
-            }`}
-          >
-            <div
-              className={`p-1.5 rounded-full ${
-                syncStreams
-                  ? "bg-amber-500 text-white"
-                  : "bg-slate-200 dark:bg-slate-700 text-content-muted"
-              }`}
-            >
-              <LinkIcon size={14} />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-bold text-slate-800 dark:text-slate-100">
-                Sync Parallel Streams
-              </p>
-              <p className="text-xs text-content-muted">
-                Ensure classes in the same level (e.g. 10A & 10B) always write the same exam at the
-                same time.
-              </p>
-            </div>
-            {syncStreams && <Check size={16} className="text-accent-ink" />}
-          </div>
-        )}
-
-        <div
-          onClick={() => setDeterministic(!deterministic)}
-          className={`flex items-center gap-3 p-3 rounded border cursor-pointer transition-colors ${
-            deterministic
-              ? "bg-amber-50 dark:bg-amber-900/30 border-amber-200"
-              : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
-          }`}
-        >
-          <div className="flex-1">
-            <p className="text-sm font-bold text-slate-800 dark:text-slate-100">
-              Fixed generation order
-            </p>
-            <p className="text-xs text-content-muted">
-              Use a deterministic shuffle so the same inputs produce the same timetable.
-            </p>
-          </div>
-          {deterministic && <Check size={16} className="text-accent-ink" />}
-        </div>
-
-        {/* Sessions per day (grid columns) */}
-        <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
-          <h4 className="text-xs font-bold text-content-muted uppercase mb-3">
-            Exam sessions per day
-          </h4>
-          <p className="text-xs text-content-muted mb-3">
-            Choose how many session columns the timetable uses. Exams are placed into the matching
-            session column (Session 1 or Session 2).
-          </p>
+      }
+    >
+      <div className="custom-scrollbar max-h-[75vh] space-y-5 overflow-y-auto pr-1">
+        <div>
+          <SectionTitle>Strategy</SectionTitle>
           <div className="flex gap-2">
-            {[1, 2].map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => {
-                  setSessionsPerDay(n);
-                  if (parseInt(maxPerDay, 10) < n) {
-                    setMaxPerDay(String(n));
-                  }
-                }}
-                className={`flex-1 py-2.5 rounded-lg border text-sm font-bold transition-all ${
-                  sessionsPerDay === n
-                    ? "bg-amber-50 dark:bg-amber-900/30 border-amber-300 text-amber-800 dark:text-amber-200 shadow-sm"
-                    : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-content-muted hover:border-slate-300"
-                }`}
-              >
-                {n} session{n > 1 ? "s" : ""}
-              </button>
-            ))}
+            {modeButton("UNIFORM", "Uniform (Cohorts)", "All classes write together")}
+            {modeButton("RANDOM", "Random / Staggered", "Fill sessions to spread exams out")}
           </div>
         </div>
 
-        {/* 3. SETTINGS GRID */}
-        <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-700 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Start Date"
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-            />
-            <Input
-              label="Start Time"
-              type="time"
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Max Exams/Day"
-              type="number"
-              value={maxPerDay}
-              onChange={(e) => setMaxPerDay(e.target.value)}
-            />
-            <Input
-              label="Gap (Mins)"
-              type="number"
-              value={gapMinutes}
-              onChange={(e) => setGapMinutes(e.target.value)}
-            />
-          </div>
+        <div className="space-y-2">
+          {mode === "RANDOM" &&
+            toggleRow(
+              syncStreams,
+              () => setSyncStreams(!syncStreams),
+              "Keep parallel streams together",
+              "Classes in the same level (e.g. 10A and 10B) always sit the same paper at the same time.",
+            )}
+          {toggleRow(
+            deterministic,
+            () => setDeterministic(!deterministic),
+            "Fixed generation order",
+            "The same inputs produce the same timetable every run.",
+          )}
         </div>
 
-        {/* 4. CLASS SELECTION */}
         <div>
-          <div className="flex justify-between items-center mb-2">
-            <h4 className="text-xs font-bold text-content-muted uppercase">Select Classes</h4>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setSelectedClassIds(data.classes.map((c) => c.id))}
-                className="text-2xs font-bold text-accent-ink hover:underline"
-              >
-                Select All
-              </button>
-              <span className="text-slate-300">|</span>
-              <button
-                onClick={() => setSelectedClassIds([])}
-                className="text-2xs font-bold text-content-muted hover:underline"
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-            {data.classes.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => toggleClass(c.id)}
-                className={`px-3 py-1.5 rounded-md text-[11px] font-bold border transition-all ${
-                  selectedClassIds.includes(c.id)
-                    ? "bg-amber-50 dark:bg-amber-900/30 border-amber-300 text-amber-800 dark:text-amber-200 shadow-sm"
-                    : "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-content-muted hover:border-slate-200"
-                }`}
-              >
-                {c.name}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* 5. SUBJECT SELECTION */}
-        <div>
-          <h4 className="text-xs font-bold text-content-muted uppercase mb-2">Select Subjects</h4>
-          <div className="grid grid-cols-1 gap-2">
-            {data.subjects.map((s) => {
-              const config = selectedConfigs[s.id];
+          <SectionTitle>Sessions per day</SectionTitle>
+          <p className="mb-2 text-xs text-content-muted">
+            How many session columns the grid uses. Exams land in the matching column.
+          </p>
+          <div
+            role="group"
+            aria-label="Sessions per day"
+            className="inline-flex h-9 items-center rounded-md border border-edge bg-surface p-0.5"
+          >
+            {[1, 2].map((n) => {
+              const isActive = sessionsPerDay === n;
               return (
-                <div
-                  key={s.id}
-                  className={`flex justify-between items-center p-2 rounded border ${
-                    config
-                      ? "bg-amber-50 dark:bg-amber-900/30 border-amber-300"
-                      : "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700"
-                  }`}
+                <button
+                  key={n}
+                  type="button"
+                  aria-pressed={isActive}
+                  onClick={() => {
+                    setSessionsPerDay(n);
+                    if (parseInt(maxPerDay, 10) < n) setMaxPerDay(String(n));
+                  }}
+                  className={`h-8 rounded px-3 text-sm transition-colors focus-visible:outline-none
+                              focus-visible:ring-2 focus-visible:ring-accent ${
+                                isActive
+                                  ? "bg-surface-inset font-medium text-content dark:bg-slate-700"
+                                  : "text-content-muted hover:text-content"
+                              }`}
                 >
-                  <button
-                    onClick={() => toggleSubject(s)}
-                    className="flex items-center gap-3 flex-1 text-left"
-                  >
-                    <div
-                      className={`w-4 h-4 rounded border flex items-center justify-center ${
-                        config ? "bg-amber-500 border-amber-500" : "border-slate-300"
-                      }`}
-                    >
-                      {config && <Check size={10} className="text-white" />}
-                    </div>
-                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: s.color }} />
-                    <span className="text-sm text-slate-700 dark:text-slate-200">{s.name}</span>
-                  </button>
-                  {config && (
-                    <div className="flex items-center border rounded bg-white dark:bg-slate-800 h-7">
-                      <button
-                        onClick={() => updatePaper(s.id, -1)}
-                        className="px-2 border-r hover:bg-slate-50"
-                      >
-                        <Minus size={10} />
-                      </button>
-                      <span className="px-2 text-xs font-mono">{config.papers} Papers</span>
-                      <button
-                        onClick={() => updatePaper(s.id, 1)}
-                        className="px-2 border-l hover:bg-slate-50"
-                      >
-                        <Plus size={10} />
-                      </button>
-                    </div>
-                  )}
-                </div>
+                  {n} session{n > 1 ? "s" : ""}
+                </button>
               );
             })}
           </div>
         </div>
 
-        {/* FOOTER */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
-          <Button variant="ghost" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleGenerate}
-            disabled={Object.keys(selectedConfigs).length === 0 || selectedClassIds.length === 0}
-            className="bg-amber-500 hover:bg-amber-600 text-white"
-          >
-            Generate Schedule
-          </Button>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <Field id="gen-start-date" label="Start date">
+            <input
+              id="gen-start-date"
+              type="date"
+              className={`${controlClass} w-full`}
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+          </Field>
+          <Field id="gen-start-time" label="Start time">
+            <input
+              id="gen-start-time"
+              type="time"
+              className={`${controlClass} w-full`}
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+            />
+          </Field>
+          <Field id="gen-max-day" label="Max exams/day">
+            <input
+              id="gen-max-day"
+              type="number"
+              className={`${controlClass} w-full`}
+              value={maxPerDay}
+              onChange={(e) => setMaxPerDay(e.target.value)}
+            />
+          </Field>
+          <Field id="gen-gap" label="Gap (min)">
+            <input
+              id="gen-gap"
+              type="number"
+              className={`${controlClass} w-full`}
+              value={gapMinutes}
+              onChange={(e) => setGapMinutes(e.target.value)}
+            />
+          </Field>
         </div>
+
+        <div>
+          <SectionTitle
+            action={
+              <div className="flex items-center gap-2 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setSelectedClassIds(data.classes.map((c) => c.id))}
+                  className="text-accent-ink underline-offset-4 hover:underline"
+                >
+                  Select All
+                </button>
+                <span className="text-edge-strong">·</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedClassIds([])}
+                  className="text-content-muted underline-offset-4 hover:underline"
+                >
+                  Clear
+                </button>
+              </div>
+            }
+          >
+            Classes
+          </SectionTitle>
+          <div className="flex flex-wrap gap-1.5">
+            {data.classes.map((c) => {
+              const isOn = selectedClassIds.includes(c.id);
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  aria-pressed={isOn}
+                  onClick={() => toggleClass(c.id)}
+                  className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${
+                    isOn
+                      ? "border-accent bg-accent/15 font-medium text-content"
+                      : "border-edge text-content-secondary hover:border-edge-strong"
+                  }`}
+                >
+                  {c.name}
+                </button>
+              );
+            })}
+            {data.classes.length === 0 && (
+              <span className="text-xs text-content-muted">No classes defined.</span>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <SectionTitle>Subjects</SectionTitle>
+          <ul className="space-y-1.5">
+            {data.subjects.map((s) => {
+              const config = selectedConfigs[s.id];
+              return (
+                <li
+                  key={s.id}
+                  className={`flex items-center justify-between gap-2 rounded-md border px-2.5 py-2 ${
+                    config ? "border-edge bg-surface" : "border-edge-subtle bg-canvas"
+                  }`}
+                >
+                  <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(config)}
+                      onChange={() => toggleSubject(s)}
+                      className="h-4 w-4 rounded border-edge-strong text-accent focus:ring-accent"
+                    />
+                    <span
+                      aria-hidden
+                      className="h-2 w-2 shrink-0 rounded-full ring-1 ring-black/10"
+                      style={{ backgroundColor: s.color }}
+                    />
+                    <span className="truncate text-sm text-content">{s.name}</span>
+                  </label>
+                  {config && (
+                    <div className="inline-flex h-7 shrink-0 items-center overflow-hidden rounded border border-edge bg-surface">
+                      <button
+                        type="button"
+                        onClick={() => updatePaper(s.id, -1)}
+                        disabled={config.papers <= 1}
+                        aria-label={`One fewer paper of ${s.name}`}
+                        className="grid h-full w-7 place-items-center text-content-muted hover:bg-surface-inset hover:text-content disabled:opacity-40"
+                      >
+                        <Minus size={11} aria-hidden />
+                      </button>
+                      <span className="w-16 border-x border-edge text-center text-2xs tabular-nums text-content">
+                        {config.papers} {config.papers === 1 ? "paper" : "papers"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => updatePaper(s.id, 1)}
+                        aria-label={`One more paper of ${s.name}`}
+                        className="grid h-full w-7 place-items-center text-content-muted hover:bg-surface-inset hover:text-content"
+                      >
+                        <Plus size={11} aria-hidden />
+                      </button>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+            {data.subjects.length === 0 && (
+              <li className="rounded-md border border-dashed border-edge px-3 py-6 text-center text-xs text-content-muted">
+                No subjects defined yet.
+              </li>
+            )}
+          </ul>
+        </div>
+
+        {canGenerate && (
+          <p className="flex items-center gap-1.5 text-2xs text-content-muted">
+            <Check size={12} className="text-success-ink" aria-hidden />
+            {Object.keys(selectedConfigs).length} subjects across {selectedClassIds.length} classes.
+          </p>
+        )}
       </div>
     </Modal>
   );
