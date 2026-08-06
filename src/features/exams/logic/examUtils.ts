@@ -1,4 +1,4 @@
-import { AppData, ClassGroup, ExamSession, Room, Settings, TimeSlot } from "../../../types";
+import { ClassGroup, ExamSession, Room, Settings, TimeSlot } from "../../../types";
 
 export const parseTime = (t: string): number => {
   const [h, m] = t.split(":").map(Number);
@@ -306,30 +306,6 @@ export const pickExamRoom = (
     .filter((r) => !r.capacity || students <= r.capacity)
     .sort((a, b) => (a.capacity || 9999) - (b.capacity || 9999));
   return fitting[0]?.id;
-};
-
-export const isTeacherBusyInClassSchedule = (
-  teacherId: string,
-  exam: ExamSession,
-  data: AppData,
-): boolean => {
-  const dayIdx = getConstraintDayIndex(exam.date);
-  if (dayIdx === null || !data.schedule) return false;
-
-  const { start, end } = getExamTimeRange(exam);
-  const periodIndices = getPeriodIndicesOverlapping(data.settings.timeSlots, start, end);
-
-  for (const classSchedule of Object.values(data.schedule)) {
-    const daySchedule = classSchedule[dayIdx];
-    if (!daySchedule) continue;
-
-    for (const periodIdx of periodIndices) {
-      const slot = daySchedule[periodIdx];
-      if (slot?.teacherId === teacherId) return true;
-    }
-  }
-
-  return false;
 };
 
 /**
