@@ -7,12 +7,19 @@ import {
   getStreamLevel,
   getWeekKey,
   isOverlapping,
+  seededShuffle,
 } from "./examUtils";
 
 export interface AllocationConfig {
   minInvigilators: number;
   maxInvigilators: number;
   excludedTeacherIds?: string[];
+  /**
+   * Varies the tie-break order. Allocation is reproducible for a given seed, so
+   * re-running on unchanged input returns the same roster; pass a new seed to
+   * deliberately draw a different one.
+   */
+  seed?: number;
 }
 
 export interface AllocationResult {
@@ -20,14 +27,8 @@ export interface AllocationResult {
   warnings: string[];
 }
 
-const shuffleArray = <T>(array: T[]): T[] => {
-  const result = [...array];
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-  return result;
-};
+/** Matches the exam generator's default, so both are reproducible by default. */
+const DEFAULT_SEED = 42;
 
 type DaySlotRange = {
   start: number;
@@ -101,6 +102,7 @@ const pickTeachersForClass = (
     timeSlots: AppData["settings"]["timeSlots"];
     targetCount: number;
     existingTeam: string[];
+    seed: number;
   },
 ): string[] => {
   const selectedIds = [...ctx.existingTeam];
@@ -127,7 +129,7 @@ const pickTeachersForClass = (
 
     if (availableTeachers.length === 0) break;
 
-    const randomizedPool = shuffleArray(availableTeachers);
+    const randomizedPool = seededShuffle(availableTeachers, ctx.seed);
     randomizedPool.sort((a, b) => ctx.teacherLoad[a.id] - ctx.teacherLoad[b.id]);
     const selectedId = randomizedPool[0].id;
 
@@ -152,6 +154,7 @@ export const allocateInvigilators = (data: AppData, config: AllocationConfig): A
 
   const minTeam = Math.max(1, config.minInvigilators);
   const maxTeam = Math.max(minTeam, config.maxInvigilators);
+  const seed = config.seed ?? DEFAULT_SEED;
 
   const teacherLoad: Record<string, number> = {};
   teachers.forEach((t) => (teacherLoad[t.id] = 0));
@@ -203,7 +206,7 @@ export const allocateInvigilators = (data: AppData, config: AllocationConfig): A
 
     const classesOnDate = Array.from(new Set(unlockedExams.flatMap((e) => e.classIds)));
     const classTeams: Record<string, string[]> = {};
-    const shuffledClasses = shuffleArray(classesOnDate);
+    const shuffledClasses = seededShuffle(classesOnDate, seed);
     const dayIdx = getConstraintDayIndex(date);
 
     const formatClass = (classId: string) => classes.find((c) => c.id === classId)?.name || classId;
@@ -229,6 +232,7 @@ export const allocateInvigilators = (data: AppData, config: AllocationConfig): A
         timeSlots: settings.timeSlots,
         targetCount: 0,
         existingTeam: [] as string[],
+        seed,
       };
 
       const team = pickTeachersForClass(teachers, config, {
@@ -248,24 +252,21 @@ export const allocateInvigilators = (data: AppData, config: AllocationConfig): A
 
       classTeams[classId] = finalTeam;
 
-      if (finalTeam.length < minTeam) {
-        warnings.push(
-          `Under-staffed: ${formatClass(classId)} on ${date} needs at least ${minTeam} invigilators but only ${finalTeam.length} assigned.`,
-        );
-      }
+      // One line per class per day. A short-staffed class used to raise up to
+      // three overlapping warnings — under-staffed, none assigned, and one more
+      // per sitting — so a handful of gaps read as a wall of text.
       if (finalTeam.length === 0) {
-        warnings.push(`No invigilators assigned: ${formatClass(classId)} on ${date}.`);
+        warnings.push(`${formatClass(classId)} on ${date}: no invigilator available.`);
+      } else if (finalTeam.length < minTeam) {
+        warnings.push(
+          `${formatClass(classId)} on ${date}: ${finalTeam.length} of ${minTeam} invigilators assigned.`,
+        );
       }
     });
 
     unlockedExams.forEach((originalExam) => {
       originalExam.classIds.forEach((cid) => {
         const team = classTeams[cid] || [];
-        if (team.length === 0) {
-          warnings.push(
-            `No invigilators for ${formatClass(cid)} — ${originalExam.startTime} on ${date}.`,
-          );
-        }
         resultExams.push({
           ...originalExam,
           id: getInvigilationSplitId(originalExam.id, cid),

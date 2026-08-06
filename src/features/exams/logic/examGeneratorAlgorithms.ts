@@ -4,7 +4,6 @@ import {
   ExamSessionColumn,
   examFitsInSession,
   formatTime,
-  getDayEndMinutes,
   getExamSessionColumns,
   parseTime,
   pickExamRoom,
@@ -54,7 +53,6 @@ export const generateExams = (data: AppData, config: GeneratorConfig): GenerateE
   const newSessions: ExamSession[] = [];
   const unscheduled: UnscheduledUnit[] = [];
   const GLOBAL_MAX_DAYS = 60;
-  const dayEndLimit = getDayEndMinutes(data.settings.timeSlots);
   const settingsForColumns = {
     ...data.settings,
     examGrid: {
@@ -102,7 +100,6 @@ export const generateExams = (data: AppData, config: GeneratorConfig): GenerateE
           baseDate,
           startMin,
           GLOBAL_MAX_DAYS,
-          dayEndLimit,
           unscheduled,
           sessionColumns,
         );
@@ -150,7 +147,6 @@ export const generateExams = (data: AppData, config: GeneratorConfig): GenerateE
           baseDate,
           startMin,
           GLOBAL_MAX_DAYS,
-          dayEndLimit,
           unscheduled,
           sessionColumns,
         );
@@ -182,7 +178,6 @@ const attemptSchedule = (
   baseDate: Date,
   startMin: number,
   maxDays: number,
-  dayEndLimit: number,
   unscheduled: UnscheduledUnit[],
   sessionColumns: ExamSessionColumn[],
 ) => {
@@ -237,6 +232,8 @@ const attemptSchedule = (
               s.classIds.some((c) => groupClassIds.includes(c)),
           );
 
+          // No room constraint: teaching is suspended, so every room is free and
+          // each class sits in its own. A home room cannot be contended for.
           if (
             allFree &&
             underDayLimit &&

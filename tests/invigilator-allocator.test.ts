@@ -187,7 +187,8 @@ describe("allocateInvigilators", () => {
   it("warns when understaffed", () => {
     const { warnings } = allocateInvigilators({ ...data, teachers: [teachers[0]] }, defaultConfig);
 
-    expect(warnings.some((w) => w.includes("Under-staffed"))).toBe(true);
+    // One line per short-staffed class-day: "<class> on <date>: N of M invigilators assigned."
+    expect(warnings.some((w) => /\d+ of \d+ invigilators assigned/.test(w))).toBe(true);
   });
 
   it("does not apply teacher constraints on weekend exam dates", () => {
@@ -320,5 +321,46 @@ describe("allocateInvigilators", () => {
 
     expect(exams[0]?.invigilatorIds).toContain("t1");
     expect(exams[0]?.invigilatorIds?.length).toBe(2);
+  });
+
+  // Allocation runs on its own previous output. Blind concatenation grew the
+  // split id every pass (e1__c1 -> e1__c1__c1), churning React keys and
+  // orphaning references.
+  it("keeps split ids stable when run on its own output", () => {
+    const pass1 = allocateInvigilators(data, defaultConfig);
+    const pass2 = allocateInvigilators({ ...data, exams: pass1.exams }, defaultConfig);
+    const pass3 = allocateInvigilators({ ...data, exams: pass2.exams }, defaultConfig);
+
+    expect(pass1.exams.map((e) => e.id).sort()).toEqual(["e1__c1", "e1__c2"]);
+    expect(pass2.exams.map((e) => e.id).sort()).toEqual(["e1__c1", "e1__c2"]);
+    expect(pass3.exams.map((e) => e.id).sort()).toEqual(["e1__c1", "e1__c2"]);
+  });
+
+  // The allocator used to shuffle with Math.random, so re-running on identical
+  // input produced a different roster every time and "regenerate" was a gamble.
+  it("is reproducible for a given seed and varies with a new one", () => {
+    const roster = (r: ReturnType<typeof allocateInvigilators>) =>
+      r.exams
+        .map((e) => `${e.id}:${(e.invigilatorIds || []).join(",")}`)
+        .sort()
+        .join("|");
+
+    const a = allocateInvigilators(data, defaultConfig);
+    const b = allocateInvigilators(data, defaultConfig);
+    expect(roster(a)).toBe(roster(b));
+
+    const seeded = allocateInvigilators(data, { ...defaultConfig, seed: 7 });
+    expect(roster(seeded)).toBe(roster(allocateInvigilators(data, { ...defaultConfig, seed: 7 })));
+  });
+
+  it("emits one warning per short-staffed class-day, not several", () => {
+    const { warnings } = allocateInvigilators(data, {
+      minInvigilators: 99,
+      maxInvigilators: 99,
+    });
+
+    // Two classes, one day — two lines, not the six the old paths produced.
+    expect(warnings).toHaveLength(2);
+    expect(warnings.every((w) => /on \d{4}-\d{2}-\d{2}:/.test(w))).toBe(true);
   });
 });

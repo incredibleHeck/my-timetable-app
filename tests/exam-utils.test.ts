@@ -29,15 +29,43 @@ describe("examUtils", () => {
     expect(getWeekKey("2026-06-03")).not.toBe(getWeekKey("2026-06-10"));
   });
 
-  it("picks a room that fits student count", () => {
+  it("seats a class in its own home room", () => {
     const classes = [
       { id: "c1", name: "10A", defaultRoomId: "r1", studentCount: 25, curriculum: [] },
     ];
     const rooms = [
-      { id: "r1", name: "Hall", capacity: 30, type: "HALL" },
-      { id: "r2", name: "Small", capacity: 10, type: "CLASS" },
+      { id: "r1", name: "10A Classroom", capacity: 30, type: "Classroom", isHomeRoom: true },
+      { id: "r2", name: "Small", capacity: 10, type: "Classroom" },
     ];
     expect(pickExamRoom(["c1"], classes as any, rooms as any)).toBe("r1");
+  });
+
+  // Teaching is suspended during exams, so a class always sits in its own home
+  // room even when its cohort would outgrow it — the picker no longer reaches
+  // for a smaller "fitting" room and stops sending two cohorts to the same one.
+  it("keeps the home room even when the cohort exceeds its capacity", () => {
+    const classes = [
+      { id: "c1", name: "10A", defaultRoomId: "r1", studentCount: 40, curriculum: [] },
+    ];
+    const rooms = [
+      { id: "r1", name: "10A Classroom", capacity: 30, type: "Classroom", isHomeRoom: true },
+      { id: "hall", name: "Main Hall", capacity: 200, type: "Hall" },
+    ];
+    expect(pickExamRoom(["c1"], classes as any, rooms as any)).toBe("r1");
+  });
+
+  // A multi-class sitting has no single venue — each class stays in its own
+  // room, resolved per class after invigilation splits the exam.
+  it("returns no shared room for a multi-class sitting", () => {
+    const classes = [
+      { id: "c1", name: "10A", defaultRoomId: "r1", studentCount: 25, curriculum: [] },
+      { id: "c2", name: "10B", defaultRoomId: "r2", studentCount: 25, curriculum: [] },
+    ];
+    const rooms = [
+      { id: "r1", name: "10A Classroom", capacity: 30, type: "Classroom", isHomeRoom: true },
+      { id: "r2", name: "10B Classroom", capacity: 30, type: "Classroom", isHomeRoom: true },
+    ];
+    expect(pickExamRoom(["c1", "c2"], classes as any, rooms as any)).toBeUndefined();
   });
 
   it("derives exam grid defaults from settings", () => {

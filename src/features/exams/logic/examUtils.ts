@@ -260,6 +260,20 @@ export const getClassDayInvigilationTeam = (
   return Array.from(ids);
 };
 
+/**
+ * Venue for one exam sitting: a class writes in its own home classroom.
+ *
+ * Teaching is suspended during exams, so every room is free and there is no
+ * contention to resolve — a home room can only ever host the class it belongs
+ * to, and a class cannot sit two papers at once. The picker used to ignore home
+ * rooms whenever the cohort outgrew one and hand back the smallest fitting room
+ * in the school instead, which put two year groups in the same hall at the same
+ * hour while a second hall stood empty.
+ *
+ * A sitting spanning several classes has no single room: each class stays in
+ * its own. That is left undefined here and resolved per class, which is the
+ * shape invigilation already splits exams into.
+ */
 export const pickExamRoom = (
   classIds: string[],
   classes: ClassGroup[],
@@ -267,32 +281,22 @@ export const pickExamRoom = (
 ): string | undefined => {
   if (classIds.length === 0 || rooms.length === 0) return undefined;
 
-  const totalStudents = classIds.reduce((sum, cid) => {
-    const cls = classes.find((c) => c.id === cid);
-    return sum + (cls?.studentCount || 0);
-  }, 0);
+  const homeRooms = classIds.map((cid) => classes.find((c) => c.id === cid)?.defaultRoomId);
+  const known = homeRooms.filter(Boolean) as string[];
 
-  const defaultRooms = classIds
-    .map((cid) => classes.find((c) => c.id === cid)?.defaultRoomId)
-    .filter(Boolean) as string[];
-
-  const sharedDefault =
-    defaultRooms.length > 0 && defaultRooms.every((r) => r === defaultRooms[0])
-      ? defaultRooms[0]
-      : undefined;
-
-  if (sharedDefault) {
-    const room = rooms.find((r) => r.id === sharedDefault);
-    if (room && (!room.capacity || totalStudents <= room.capacity)) {
-      return sharedDefault;
-    }
+  if (known.length === classIds.length && known.every((r) => r === known[0])) {
+    if (rooms.some((r) => r.id === known[0])) return known[0];
   }
 
-  const fitting = rooms
-    .filter((r) => !r.capacity || totalStudents <= r.capacity)
-    .sort((a, b) => (a.capacity || 9999) - (b.capacity || 9999));
+  // Several classes, each with their own room — no single venue to name.
+  if (classIds.length > 1) return undefined;
 
-  return fitting[0]?.id || sharedDefault || rooms[0]?.id;
+  // A class with no home room on record: fall back to a room that fits it.
+  const students = classes.find((c) => c.id === classIds[0])?.studentCount || 0;
+  const fitting = [...rooms]
+    .filter((r) => !r.capacity || students <= r.capacity)
+    .sort((a, b) => (a.capacity || 9999) - (b.capacity || 9999));
+  return fitting[0]?.id;
 };
 
 export const isTeacherBusyInClassSchedule = (
@@ -319,8 +323,17 @@ export const isTeacherBusyInClassSchedule = (
   return false;
 };
 
-export const getInvigilationSplitId = (originalExamId: string, classId: string): string =>
-  `${originalExamId}__${classId}`;
+/**
+ * Id for the per-class copy of an exam that invigilation splits out.
+ *
+ * Idempotent on purpose: allocation runs on its own previous output, and a
+ * blind concatenation grew the id by one suffix every pass — `x__c1`, then
+ * `x__c1__c1` — churning React keys and breaking anything holding a reference.
+ */
+export const getInvigilationSplitId = (originalExamId: string, classId: string): string => {
+  const suffix = `__${classId}`;
+  return originalExamId.endsWith(suffix) ? originalExamId : `${originalExamId}${suffix}`;
+};
 
 /** Deterministic shuffle for reproducible auto-schedule. */
 export const seededShuffle = <T>(array: T[], seed = 42): T[] => {
