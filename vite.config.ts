@@ -50,10 +50,13 @@ export default defineConfig({
         "src/features/activation/**",
       ],
       thresholds: {
-        lines: 64,
-        functions: 48,
-        statements: 62,
-        branches: 48,
+        // Raised to just under the measured numbers after the Phase 1/4 test
+        // work, so the coverage gained there cannot quietly regress. Leave ~1-2
+        // points of headroom for normal run-to-run drift.
+        lines: 77,
+        functions: 62,
+        statements: 74,
+        branches: 59,
         "src/features/generator/scheduler/validation/**": {
           lines: 75,
           functions: 75,
