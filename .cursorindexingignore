@@ -1,0 +1,5 @@
+# Excluded from the background index, but still readable when @-tagged by hand.
+# Use this (rather than .cursorignore) for files that are too large to index
+# but occasionally worth reading deliberately.
+
+package-lock.json

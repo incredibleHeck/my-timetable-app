@@ -12,6 +12,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Guard against tracked secret/log files
+        run: |
+          # .gitignore is the single source of truth: anything it excludes must
+          # not also be tracked. Self-maintaining — new ignore rules are covered
+          # automatically, and committed templates stay legal as long as the
+          # ignore rules do not cover them.
+          TRACKED=$(git ls-files --cached --ignored --exclude-standard)
+          if [ -n "$TRACKED" ]; then
+            echo "Error: these files are gitignored but still tracked:"
+            echo "$TRACKED"
+            echo "Fix with: git rm --cached <file>"
+            exit 1
+          fi
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
