@@ -1,5 +1,10 @@
 {
   "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // The E2E suite runs in Node, not the browser: real-world-scale.spec.ts
+    // reads its fixture off disk with node:fs / node:path.
+    "types": ["node"]
+  },
   "include": ["e2e"],
   "exclude": []
 }

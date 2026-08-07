@@ -186,7 +186,10 @@ export const DutyView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =>
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-900 overflow-hidden">
+    <div
+      data-testid="duty-view"
+      className="flex flex-col h-full bg-slate-50 dark:bg-slate-900 overflow-hidden"
+    >
       {/* HEADER TOOLBAR */}
       <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-4 flex items-center justify-between gap-4 z-10 shrink-0 shadow-sm">
         <div className="flex items-center gap-2 flex-1">

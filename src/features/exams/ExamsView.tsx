@@ -292,7 +292,7 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
   ];
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-canvas">
+    <div data-testid="exams-view" className="flex h-full flex-col overflow-hidden bg-canvas">
       {/* HEADER TOOLBAR */}
       <div className="z-10 flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-edge bg-surface px-4 py-3">
         <button

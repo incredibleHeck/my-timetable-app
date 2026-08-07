@@ -84,7 +84,7 @@ export const RoomsView: React.FC<ViewProps> = ({ data, onUpdate: _onUpdate }) =>
   const pinnedSubjects = roomToDelete ? getUsage(roomToDelete.id).requiredBySubjects : [];
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 p-6 pb-16 md:p-8">
+    <div data-testid="rooms-view" className="mx-auto max-w-7xl space-y-6 p-6 pb-16 md:p-8">
       <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
         <div>
           <h2 className="text-lg font-semibold tracking-tight text-content">Rooms</h2>

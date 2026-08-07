@@ -433,7 +433,7 @@ export const GeneratorView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate 
   const hasSchedule = Object.keys(data.schedule).length > 0;
 
   return (
-    <div className="flex h-full min-h-0 flex-col p-6">
+    <div data-testid="generator-view" className="flex h-full min-h-0 flex-col p-6">
       <GeneratorToolbar
         data={data}
         mode={mode}

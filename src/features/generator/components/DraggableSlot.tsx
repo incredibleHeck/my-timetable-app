@@ -36,6 +36,7 @@ export const DraggableSlot: React.FC<Props> = memo(
         ref={setNodeRef}
         {...listeners}
         {...attributes}
+        data-testid={`schedule-slot-${day}-${period}`}
         style={{
           ...style,
           borderLeftColor: subject?.color || "#cbd5e1",

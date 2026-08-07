@@ -49,6 +49,7 @@ export const DroppableCell: React.FC<DroppableCellProps> = ({
   return (
     <div
       ref={setNodeRef}
+      data-testid={`schedule-cell-${day}-${period}`}
       className={`transition-colors duration-150 ${className} ${dragFeedbackClass}`}
     >
       {children}
