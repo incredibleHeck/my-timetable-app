@@ -157,4 +157,28 @@ describe("useExamRosters", () => {
     const updateCall = mockOnUpdate.mock.calls[0][0] as AppData;
     expect(updateCall.examRosters?.length).toBe(0);
   });
+
+  // Deleting the only roster used to regenerate a default one the instant the
+  // emptied data flowed back through the parent, so delete appeared to do
+  // nothing. The seed must run once, not every time the list is empty.
+  it("does not regenerate a roster after the last one is deleted", () => {
+    const mockOnUpdate = vi.fn();
+    const existingRoster: ExamRoster = {
+      id: "r1",
+      name: "Only Timetable",
+      exams: [],
+      createdAt: new Date().toISOString(),
+    };
+
+    const { rerender } = renderHook(
+      ({ appData }: { appData: AppData }) => useExamRosters(appData, mockOnUpdate),
+      { initialProps: { appData: { ...DEFAULT_DATA, examRosters: [existingRoster], exams: [] } } },
+    );
+
+    // The parent applies the deletion and re-renders with an empty list.
+    rerender({ appData: { ...DEFAULT_DATA, examRosters: [], exams: [] } });
+
+    // The hook must leave it empty rather than seeding a replacement.
+    expect(mockOnUpdate).not.toHaveBeenCalled();
+  });
 });

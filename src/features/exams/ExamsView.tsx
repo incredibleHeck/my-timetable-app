@@ -256,7 +256,34 @@ export const ExamsView: React.FC<ViewProps> = ({ data, onUpdate, onNavigate }) =
     }
   };
 
-  if (!activeRoster) return null;
+  // No timetables left — e.g. the last one was just deleted. Offer a way back
+  // in rather than blanking the screen (which is how it read before, since a
+  // deleted last roster used to be silently regenerated).
+  if (!activeRoster) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-3 bg-canvas p-6 text-center">
+        <div>
+          <p className="text-sm font-medium text-content">No exam timetables</p>
+          <p className="mt-1 text-xs text-content-muted">
+            Create one to schedule exams and assign invigilators.
+          </p>
+        </div>
+        <Button onClick={createNewRoster} icon={<Plus size={16} />}>
+          New Timetable
+        </Button>
+        {onNavigate && (
+          <button
+            type="button"
+            onClick={() => onNavigate("DASHBOARD")}
+            className="text-xs text-accent-ink underline-offset-4 hover:underline
+                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            Back to Dashboard
+          </button>
+        )}
+      </div>
+    );
+  }
 
   const viewTabs = [
     { id: "GRID" as const, label: "Grid", icon: LayoutGrid },

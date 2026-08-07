@@ -1,15 +1,20 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { AppData, ExamRoster } from "../../../types";
 import { generateId } from "../../../utils/utils";
 
 export const useExamRosters = (data: AppData, onUpdate: (newData: AppData) => void) => {
   const [activeRosterId, setActiveRosterId] = useState<string | null>(null);
+  // Seed a starter roster once per mount. Without this guard the effect could
+  // not tell "brand-new profile" from "user just deleted the last timetable",
+  // so deleting the only roster silently regenerated a default and delete
+  // appeared to do nothing.
+  const seededRef = useRef(false);
 
   useEffect(() => {
-    let updated = false;
     let rosters = [...(data.examRosters || [])];
 
-    if (data.exams?.length > 0 && rosters.length === 0) {
+    // One-time migration of a legacy flat exam list into a roster.
+    if (data.exams?.length > 0 && rosters.length === 0 && !seededRef.current) {
       const legacyRoster: ExamRoster = {
         id: generateId(),
         name: "Imported Timetable",
@@ -17,30 +22,32 @@ export const useExamRosters = (data: AppData, onUpdate: (newData: AppData) => vo
         createdAt: new Date().toISOString(),
       };
       rosters = [legacyRoster];
-      updated = true;
+      seededRef.current = true;
+      onUpdate({ ...data, examRosters: rosters, exams: [] });
+      setActiveRosterId(legacyRoster.id);
+      return;
     }
 
-    if (rosters.length === 0) {
+    // Give a profile that has never had a roster a starting point — but only
+    // once, so a deliberate delete of the last roster is respected.
+    if (rosters.length === 0 && !seededRef.current) {
       const defaultRoster: ExamRoster = {
         id: generateId(),
         name: "Standard Timetable",
         exams: [],
         createdAt: new Date().toISOString(),
       };
-      rosters = [defaultRoster];
-      updated = true;
+      seededRef.current = true;
+      onUpdate({ ...data, examRosters: [defaultRoster], exams: [] });
+      setActiveRosterId(defaultRoster.id);
+      return;
     }
 
-    if (updated) {
-      onUpdate({
-        ...data,
-        examRosters: rosters,
-        exams: [],
-      });
-    }
-
-    if (!activeRosterId && rosters.length > 0) {
-      setActiveRosterId(rosters[0].id);
+    if (rosters.length > 0) {
+      seededRef.current = true;
+      if (!activeRosterId || !rosters.some((r) => r.id === activeRosterId)) {
+        setActiveRosterId(rosters[0].id);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data.examRosters, data.exams]);
