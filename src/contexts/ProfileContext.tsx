@@ -7,10 +7,11 @@ import React, {
   useCallback,
   ReactNode,
 } from "react";
-import { Profile, ProfileManifest } from "../types/profile";
+import { Profile, ProfileManifest, CURRENT_SCHEMA_VERSION } from "../types/profile";
 import { AppData, Activity, ActivityType } from "../types";
 import * as ProfileStorage from "../services/profile/profileStorage";
 import * as Migration from "../services/profile/migration";
+import { ProfileSchemaTooNewError } from "../services/profile/migrations";
 import { generateId, deepClone, mergeWithDefaults } from "../utils/utils";
 import { DEFAULT_DATA } from "../utils/constants";
 import { notify } from "../components/ui/Toast";
@@ -174,7 +175,17 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
 
   const loadActiveProfile = async (id: string) => {
     setIsLoading(true);
-    const profile = await ProfileStorage.loadProfile(id);
+    let profile: Profile | null;
+    try {
+      profile = await ProfileStorage.loadProfile(id);
+    } catch (error) {
+      if (error instanceof ProfileSchemaTooNewError) {
+        notify(error.message, "error");
+        setIsLoading(false);
+        return;
+      }
+      throw error;
+    }
     if (profile) {
       profile.data = mergeWithDefaults(profile.data, DEFAULT_DATA);
 
@@ -224,6 +235,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   const createNewProfile = async (name: string, templateData?: AppData) => {
     try {
       const newProfile: Profile = {
+        schemaVersion: CURRENT_SCHEMA_VERSION,
         id: generateId(),
         name,
         created: Date.now(),

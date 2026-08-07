@@ -10,6 +10,7 @@ export const profileMetadataSchema = z
   .passthrough();
 
 export const profileSchema = z.object({
+  schemaVersion: z.number().optional(),
   id: z.string().min(1),
   name: z.string().min(1),
   created: z.number(),
@@ -33,6 +34,10 @@ export const parseProfile = (raw: unknown): Profile => {
   const parsed = result.data;
   return {
     ...parsed,
+    // Default to 0 (legacy), never to CURRENT: parsing is not migrating. A
+    // profile that reaches here without runProfileMigrations must stay visibly
+    // un-migrated rather than be falsely stamped as up to date.
+    schemaVersion: parsed.schemaVersion ?? 0,
     data: normalizeAppData(parsed.data),
     meta: parsed.meta as ProfileMetadata,
   };

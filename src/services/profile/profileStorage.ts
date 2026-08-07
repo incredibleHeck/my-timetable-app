@@ -1,7 +1,8 @@
 import * as NativeAdapter from "../fileSystem/nativeAdapter";
 import * as WebDb from "./webDb";
-import { Profile, ProfileManifest } from "../../types/profile";
+import { Profile, ProfileManifest, CURRENT_SCHEMA_VERSION } from "../../types/profile";
 import { parseProfile } from "../../schemas/profile";
+import { runProfileMigrations, ProfileSchemaTooNewError } from "./migrations";
 import { isTauriEnv, getTauriPath } from "../../utils/platform";
 
 const MANIFEST_FILE = "manifest.json";
@@ -24,7 +25,9 @@ const migrateLocalStorageToIdb = async (): Promise<void> => {
         const profileRaw = localStorage.getItem(`${WEB_PROFILE_PREFIX}${entry.id}`);
         if (!profileRaw) continue;
         try {
-          await WebDb.putProfile(parseProfile(JSON.parse(profileRaw)));
+          // Must run the chain: these are legacy localStorage profiles, so they
+          // are v0 by definition and parseProfile alone would not migrate them.
+          await WebDb.putProfile(parseProfile(runProfileMigrations(JSON.parse(profileRaw))));
         } catch (err) {
           console.error(`Skipped migrating profile ${entry.id}:`, err);
         }
@@ -52,7 +55,7 @@ const reconcilePendingFlush = async (): Promise<void> => {
   const raw = localStorage.getItem(WEB_PENDING_FLUSH_KEY);
   if (!raw) return;
   try {
-    await WebDb.putProfile(parseProfile(JSON.parse(raw)));
+    await WebDb.putProfile(parseProfile(runProfileMigrations(JSON.parse(raw))));
   } catch (err) {
     console.error("Failed to reconcile pending profile flush:", err);
   } finally {
@@ -131,21 +134,26 @@ export const listProfiles = async (): Promise<ProfileManifest["profiles"]> => {
 
 export const saveProfile = async (profile: Profile): Promise<void> => {
   try {
+    const profileToSave: Profile = {
+      ...profile,
+      schemaVersion: CURRENT_SCHEMA_VERSION,
+    };
+
     if (isTauriEnv()) {
       // 1. Write Profile File
-      const profilePath = await getProfilePath(profile.id);
-      await NativeAdapter.writeFile(profilePath, JSON.stringify(profile));
+      const profilePath = await getProfilePath(profileToSave.id);
+      await NativeAdapter.writeFile(profilePath, JSON.stringify(profileToSave));
 
       // 2. Update Manifest
       const manifestPath = await getManifestPath();
       const content = await NativeAdapter.readFile(manifestPath);
       const manifest: ProfileManifest = JSON.parse(content);
 
-      const existingIndex = manifest.profiles.findIndex((p) => p.id === profile.id);
+      const existingIndex = manifest.profiles.findIndex((p) => p.id === profileToSave.id);
       const entry = {
-        id: profile.id,
-        name: profile.name,
-        lastModified: profile.lastModified,
+        id: profileToSave.id,
+        name: profileToSave.name,
+        lastModified: profileToSave.lastModified,
       };
 
       if (existingIndex >= 0) {
@@ -155,15 +163,15 @@ export const saveProfile = async (profile: Profile): Promise<void> => {
       }
 
       if (!manifest.activeProfileId) {
-        manifest.activeProfileId = profile.id;
+        manifest.activeProfileId = profileToSave.id;
       }
 
       await NativeAdapter.writeFile(manifestPath, JSON.stringify(manifest));
     } else {
       // Web Save (IndexedDB) — manifest is derived from the profiles store.
-      await WebDb.putProfile(profile);
+      await WebDb.putProfile(profileToSave);
       if (!(await WebDb.getMeta<string | null>(WEB_ACTIVE_META))) {
-        await WebDb.setMeta(WEB_ACTIVE_META, profile.id);
+        await WebDb.setMeta(WEB_ACTIVE_META, profileToSave.id);
       }
     }
   } catch (error) {
@@ -191,12 +199,19 @@ export const loadProfile = async (id: string): Promise<Profile | null> => {
     if (isTauriEnv()) {
       const path = await getProfilePath(id);
       const content = await NativeAdapter.readFile(path);
-      return parseProfile(JSON.parse(content));
+      const raw = JSON.parse(content);
+      const migrated = runProfileMigrations(raw);
+      return parseProfile(migrated);
     } else {
       const profile = await WebDb.getProfile(id);
-      return profile ? parseProfile(profile) : null;
+      if (!profile) return null;
+      const migrated = runProfileMigrations(profile);
+      return parseProfile(migrated);
     }
   } catch (error) {
+    // A too-new profile is a message the user must see, not a missing file.
+    // Returning null here would make the profile silently fail to open.
+    if (error instanceof ProfileSchemaTooNewError) throw error;
     console.error(`Failed to load profile ${id}:`, error);
     return null;
   }

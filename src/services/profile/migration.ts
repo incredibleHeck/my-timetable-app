@@ -1,6 +1,8 @@
 import { Profile } from "../../types/profile";
 import { STORAGE_KEY } from "../../utils/constants";
 import { init, saveProfile } from "./profileStorage";
+import { runProfileMigrations } from "./migrations";
+import { parseProfile } from "../../schemas/profile";
 
 interface LegacyStoredProfile {
   id: string;
@@ -35,7 +37,11 @@ export const migrateFromLocalStorage = async (): Promise<boolean> => {
     await init();
 
     for (const oldP of profilesToMigrate) {
-      const newP: Profile = {
+      // Deliberately built WITHOUT schemaVersion. This payload predates
+      // versioning, so it is v0 by definition and the chain decides what it
+      // becomes. Hardcoding the current version here would stamp un-migrated
+      // data as up to date, and every later read would then skip it.
+      const legacyShaped = {
         id: oldP.id,
         name: oldP.name,
         data: oldP.data,
@@ -46,7 +52,13 @@ export const migrateFromLocalStorage = async (): Promise<boolean> => {
           academicYear: oldP.data?.settings?.academicYear,
         },
       };
-      await saveProfile(newP);
+
+      try {
+        await saveProfile(parseProfile(runProfileMigrations(legacyShaped)));
+      } catch (err) {
+        // One malformed profile must not abort the rest of the migration.
+        console.error(`Skipped migrating profile ${oldP.id}:`, err);
+      }
     }
 
     localStorage.setItem(`${STORAGE_KEY}_MIGRATED`, saved);

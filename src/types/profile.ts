@@ -14,7 +14,10 @@ export interface ProfileManifest {
   activeProfileId: string | null;
 }
 
+export const CURRENT_SCHEMA_VERSION = 1;
+
 export interface Profile {
+  schemaVersion: number;
   id: string;
   name: string;
   created: number;
