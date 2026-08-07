@@ -29,8 +29,7 @@
         { "path": "$DOWNLOAD" },
         { "path": "$DOWNLOAD/**" },
         { "path": "$DESKTOP" },
-        { "path": "$DESKTOP/**" },
-        { "path": "C:\\Users\\**" }
+        { "path": "$DESKTOP/**" }
       ]
     },
     "dialog:default",
