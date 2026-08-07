@@ -143,6 +143,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
           currentView={view}
           onClick={setView}
         />
+        <NavItem
+          id="SUBSTITUTES"
+          icon={<UserX size={18} />}
+          label="Cover Planner"
+          currentView={view}
+          onClick={setView}
+        />
 
         <SidebarSection label="Operations" />
         <NavItem
@@ -157,13 +164,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           id="DUTY"
           icon={<Shield size={18} />}
           label="Duty Roster"
-          currentView={view}
-          onClick={setView}
-        />
-        <NavItem
-          id="SUBSTITUTES"
-          icon={<UserX size={18} />}
-          label="Cover Planner"
           currentView={view}
           onClick={setView}
         />

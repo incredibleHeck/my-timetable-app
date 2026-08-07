@@ -6,9 +6,6 @@ import { DataTable, DataTableColumn, EntityChip } from "../../../components/ui";
 import { WorkloadStat } from "../../workload/hooks/useWorkloadStats";
 import { LoadMeter } from "./LoadMeter";
 
-/** Two keeps every row one line tall; the rest are named in the overflow tooltip. */
-const MAX_VISIBLE_SUBJECTS = 2;
-
 const rowActionClass =
   "grid h-7 w-7 place-items-center rounded text-content-muted transition-colors " +
   "hover:bg-surface-inset hover:text-content focus-visible:outline-none focus-visible:ring-2 " +
@@ -64,27 +61,14 @@ export const TeacherDirectory: React.FC<TeacherDirectoryProps> = ({
         if (t.specialtyIds.length === 0) {
           return <span className="text-xs text-content-muted">None</span>;
         }
-        const hidden = t.specialtyIds.length - MAX_VISIBLE_SUBJECTS;
         return (
-          <div className="flex items-center gap-1 overflow-hidden">
-            {t.specialtyIds.slice(0, MAX_VISIBLE_SUBJECTS).map((sid) => {
+          <div className="flex flex-wrap items-center gap-1 py-1">
+            {t.specialtyIds.map((sid) => {
               const s = subjectById.get(sid);
               return s ? (
                 <EntityChip key={sid} color={s.color} label={s.name} className="min-w-0" />
               ) : null;
             })}
-            {hidden > 0 && (
-              <span
-                className="shrink-0 whitespace-nowrap text-2xs text-content-muted"
-                title={t.specialtyIds
-                  .slice(MAX_VISIBLE_SUBJECTS)
-                  .map((sid) => subjectById.get(sid)?.name)
-                  .filter(Boolean)
-                  .join(", ")}
-              >
-                +{hidden}
-              </span>
-            )}
           </div>
         );
       },
