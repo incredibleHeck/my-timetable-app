@@ -2,24 +2,22 @@ import React from "react";
 import { Loader2 } from "lucide-react";
 import { ViewState } from "../../types";
 import { isTauriEnv } from "../../utils/platform";
-import { useI18n } from "../../contexts/I18nContext";
-import { TranslationKey } from "../../i18n/dictionaries";
 import { UndoRedoControls } from "./UndoRedoControls";
 import { ProfileSwitcher } from "./header/ProfileSwitcher";
 import { ThemeToggle } from "./header/ThemeToggle";
 
-const VIEW_TITLE_KEYS: Record<ViewState, TranslationKey> = {
-  DASHBOARD: "nav.dashboard",
-  CONFIG: "nav.configuration",
-  SUBJECTS: "nav.subjects",
-  TEACHERS: "nav.teachers",
-  ROOMS: "nav.rooms",
-  CLASSES: "nav.classes",
-  WORKLOAD: "nav.workload",
-  GENERATOR: "nav.generator",
-  EXAMS: "nav.exams",
-  DUTY: "nav.duty",
-  SUBSTITUTES: "nav.substitutes",
+const VIEW_TITLES: Record<ViewState, string> = {
+  DASHBOARD: "Dashboard",
+  CONFIG: "Configuration",
+  SUBJECTS: "Subjects",
+  TEACHERS: "Teachers",
+  ROOMS: "Rooms",
+  CLASSES: "Classes",
+  WORKLOAD: "Workload Analysis",
+  GENERATOR: "Auto-Generator",
+  EXAMS: "Exam Timetable",
+  DUTY: "Duty Roster",
+  SUBSTITUTES: "Cover Planner",
 };
 
 interface HeaderProps {
@@ -45,17 +43,14 @@ export const Header: React.FC<HeaderProps> = ({
   onSwitchProfile,
 }) => {
   const isTauri = isTauriEnv();
-  const { t } = useI18n();
 
-  const title = t(VIEW_TITLE_KEYS[view] ?? "nav.dashboard");
+  const title = VIEW_TITLES[view] ?? VIEW_TITLES.DASHBOARD;
 
   return (
     <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-edge bg-surface px-6">
       <div className="flex min-w-0 items-baseline gap-2">
         <span className="truncate text-sm font-medium text-content">{title}</span>
-        {!isTauri && (
-          <span className="shrink-0 text-2xs text-content-muted">{t("common.webMode")}</span>
-        )}
+        {!isTauri && <span className="shrink-0 text-2xs text-content-muted">Web Mode</span>}
       </div>
 
       <div className="flex items-center gap-1">
@@ -66,10 +61,10 @@ export const Header: React.FC<HeaderProps> = ({
           {autoSaveStatus === "SAVING" ? (
             <>
               <Loader2 size={13} className="animate-spin" aria-hidden />
-              {t("common.saving")}
+              Saving...
             </>
           ) : (
-            t("common.saved")
+            "Saved"
           )}
         </span>
 

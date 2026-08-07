@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import { AppData, ViewState } from "../../types";
 import { FileService } from "../../services/fileSystem";
-import { useI18n } from "../../contexts/I18nContext";
 import { SidebarSection } from "./sidebar/SidebarSection";
 import { NavItem } from "./sidebar/NavItem";
 
@@ -45,7 +44,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onCreateProfile,
   data,
 }) => {
-  const { t } = useI18n();
   const teacherCount = data?.teachers.length ?? 0;
   const classCount = data?.classes.length ?? 0;
   const subjectCount = data?.subjects.length ?? 0;
@@ -76,29 +74,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
         className="flex-1 overflow-y-auto custom-scrollbar py-4"
         aria-label="Application sections"
       >
-        <SidebarSection label={t("section.general")} isFirst />
+        <SidebarSection label="General" isFirst />
         <NavItem
           id="DASHBOARD"
           icon={<LayoutDashboard size={18} />}
-          label={t("nav.dashboard")}
+          label="Dashboard"
           currentView={view}
           onClick={setView}
         />
 
-        <SidebarSection label={t("section.system")} />
+        <SidebarSection label="System" />
         <NavItem
           id="CONFIG"
           icon={<Sliders size={18} />}
-          label={t("nav.configuration")}
+          label="Configuration"
           currentView={view}
           onClick={setView}
         />
 
-        <SidebarSection label={t("section.academicData")} />
+        <SidebarSection label="Academic Data" />
         <NavItem
           id="TEACHERS"
           icon={<Users size={18} />}
-          label={t("nav.teachers")}
+          label="Teachers"
           currentView={view}
           onClick={setView}
           badge={teacherCount || undefined}
@@ -106,7 +104,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <NavItem
           id="ROOMS"
           icon={<Building2 size={18} />}
-          label={t("nav.rooms")}
+          label="Rooms"
           currentView={view}
           onClick={setView}
           badge={roomCount || undefined}
@@ -114,7 +112,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <NavItem
           id="SUBJECTS"
           icon={<Library size={18} />}
-          label={t("nav.subjects")}
+          label="Subjects"
           currentView={view}
           onClick={setView}
           badge={subjectCount || undefined}
@@ -122,17 +120,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <NavItem
           id="CLASSES"
           icon={<BookOpen size={18} />}
-          label={t("nav.classes")}
+          label="Classes"
           currentView={view}
           onClick={setView}
           badge={classCount || undefined}
         />
 
-        <SidebarSection label={t("section.scheduling")} />
+        <SidebarSection label="Scheduling" />
         <NavItem
           id="GENERATOR"
           icon={<Zap size={18} />}
-          label={t("nav.generator")}
+          label="Auto-Generator"
           currentView={view}
           onClick={setView}
           badge={conflictCount || undefined}
@@ -141,16 +139,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <NavItem
           id="WORKLOAD"
           icon={<BarChart3 size={18} />}
-          label={t("nav.workload")}
+          label="Workload Analysis"
           currentView={view}
           onClick={setView}
         />
 
-        <SidebarSection label={t("section.operations")} />
+        <SidebarSection label="Operations" />
         <NavItem
           id="EXAMS"
           icon={<FileText size={18} />}
-          label={t("nav.exams")}
+          label="Exam Timetable"
           currentView={view}
           onClick={setView}
           badge={examCount || undefined}
@@ -158,20 +156,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <NavItem
           id="DUTY"
           icon={<Shield size={18} />}
-          label={t("nav.duty")}
+          label="Duty Roster"
           currentView={view}
           onClick={setView}
         />
         <NavItem
           id="SUBSTITUTES"
           icon={<UserX size={18} />}
-          label={t("nav.substitutes")}
+          label="Cover Planner"
           currentView={view}
           onClick={setView}
         />
 
         {/* Profiles Section */}
-        <SidebarSection label={t("section.profiles")} />
+        <SidebarSection label="Profiles" />
         <div className="px-4 mb-2 space-y-1">
           {profiles.map((p) => (
             <button
@@ -189,7 +187,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <span className="truncate">{p.name}</span>
               {activeProfile?.id === p.id && (
                 <span className="ml-auto text-2xs font-black uppercase tracking-widest opacity-70">
-                  {t("common.active")}
+                  Active
                 </span>
               )}
             </button>
@@ -200,7 +198,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               className="w-full text-left px-3 py-2 text-xs rounded-lg transition-all text-slate-400 hover:text-amber-400 hover:bg-slate-800 flex items-center gap-2"
             >
               <Plus size={12} />
-              {t("nav.newProfile")}
+              New Profile
             </button>
           )}
         </div>
@@ -213,15 +211,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
           className="w-full flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-amber-400 py-3 rounded-xl transition-all shadow-lg text-sm font-bold active:scale-95 group"
         >
           <HardDrive size={18} className="mr-2 group-hover:animate-bounce" />
-          {FileService.isTauri
-            ? activeFilePath
-              ? t("common.save")
-              : t("common.saveAs")
-            : t("common.saveToDevice")}
+          {FileService.isTauri ? (activeFilePath ? "Save" : "Save As...") : "Save to Device"}
         </button>
         {hasUnsavedChanges && (
           <p className="text-center text-2xs text-amber-500 mt-2 font-bold animate-pulse">
-            ● {t("common.unsavedChanges")}
+            ● Unsaved Changes
           </p>
         )}
       </div>

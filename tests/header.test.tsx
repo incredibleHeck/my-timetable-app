@@ -3,7 +3,6 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { Header } from "../src/components/layout/Header";
 import { ThemeProvider } from "../src/contexts/ThemeContext";
-import { I18nProvider } from "../src/contexts/I18nContext";
 import { ViewState } from "../src/types";
 
 // Mock UndoRedoControls as it depends on ProfileContext
@@ -12,9 +11,7 @@ vi.mock("../src/components/layout/UndoRedoControls", () => ({
 }));
 
 const Providers = ({ children }: { children: React.ReactNode }) => (
-  <ThemeProvider>
-    <I18nProvider>{children}</I18nProvider>
-  </ThemeProvider>
+  <ThemeProvider>{children}</ThemeProvider>
 );
 
 describe("Header", () => {
