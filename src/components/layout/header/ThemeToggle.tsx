@@ -10,12 +10,15 @@ export const ThemeToggle: React.FC = () => {
 
   return (
     <button
+      type="button"
       onClick={toggle}
       aria-label={t("theme.toggle")}
       title={t("theme.toggle")}
-      className="p-2 rounded-lg text-content-muted hover:text-accent-ink hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+      className="grid h-8 w-8 place-items-center rounded-md text-content-muted transition-colors
+                 hover:bg-surface-inset hover:text-content focus-visible:outline-none
+                 focus-visible:ring-2 focus-visible:ring-accent"
     >
-      {isDark ? <Sun size={16} /> : <Moon size={16} />}
+      {isDark ? <Sun size={16} aria-hidden /> : <Moon size={16} aria-hidden />}
     </button>
   );
 };

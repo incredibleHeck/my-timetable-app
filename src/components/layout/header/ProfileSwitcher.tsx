@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 
 interface ProfileSwitcherProps {
   activeProfile: { id: string; name: string };
@@ -17,42 +17,55 @@ export const ProfileSwitcher: React.FC<ProfileSwitcherProps> = ({
   return (
     <div className="relative">
       <button
+        type="button"
         onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className="flex items-center gap-2 hover:bg-slate-50 px-3 py-1.5 rounded-lg transition-colors"
+        aria-haspopup="menu"
+        aria-expanded={isMenuOpen}
+        className="flex h-8 max-w-[12rem] items-center gap-1.5 rounded-md px-2 text-sm text-content
+                   transition-colors hover:bg-surface-inset focus-visible:outline-none
+                   focus-visible:ring-2 focus-visible:ring-accent"
       >
-        <div className="text-right">
-          <p className="text-xs text-content-muted font-bold uppercase tracking-wider">
-            Current Profile
-          </p>
-          <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
-            {activeProfile.name}
-          </p>
-        </div>
-        <ChevronDown size={16} className="text-content-muted" />
+        <span className="truncate font-medium">{activeProfile.name}</span>
+        <ChevronDown size={14} className="shrink-0 text-content-muted" aria-hidden />
       </button>
 
-      {/* Dropdown */}
       {isMenuOpen && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setIsMenuOpen(false)} />
-          <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 p-2 z-20 animate-in fade-in zoom-in-95 duration-200">
-            <div className="max-h-60 overflow-y-auto custom-scrollbar mb-2">
-              {profiles.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => {
-                    onSwitchProfile(p.id);
-                    setIsMenuOpen(false);
-                  }}
-                  className={`w-full text-left px-4 py-3 text-sm rounded-lg mb-1 font-medium transition-colors ${
-                    activeProfile.id === p.id
-                      ? "bg-slate-900 text-white"
-                      : "text-slate-600 dark:text-slate-300 hover:bg-slate-50"
-                  }`}
-                >
-                  {p.name}
-                </button>
-              ))}
+          <div
+            role="menu"
+            className="absolute right-0 top-full z-20 mt-1.5 w-60 rounded-md border border-edge bg-surface p-1 shadow-lg"
+          >
+            <p className="px-2 py-1.5 text-2xs uppercase tracking-wide text-content-muted">
+              Switch profile
+            </p>
+            <div className="custom-scrollbar max-h-60 overflow-y-auto">
+              {profiles.map((p) => {
+                const isActive = activeProfile.id === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      onSwitchProfile(p.id);
+                      setIsMenuOpen(false);
+                    }}
+                    className={`flex w-full items-center justify-between gap-2 rounded px-2 py-1.5 text-left
+                                text-sm transition-colors focus-visible:outline-none focus-visible:ring-2
+                                focus-visible:ring-accent ${
+                                  isActive
+                                    ? "font-medium text-content"
+                                    : "text-content-secondary hover:bg-surface-muted hover:text-content"
+                                }`}
+                  >
+                    <span className="truncate">{p.name}</span>
+                    {isActive && (
+                      <Check size={14} className="shrink-0 text-accent-ink" aria-hidden />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </>

@@ -25,33 +25,32 @@ export const UndoRedoControls: React.FC = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [undo, redo]);
 
+  const button =
+    "grid h-8 w-8 place-items-center rounded-md text-content-muted transition-colors " +
+    "hover:bg-surface-inset hover:text-content disabled:pointer-events-none disabled:opacity-40 " +
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent";
+
   return (
-    <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700">
+    <div className="flex items-center">
       <button
+        type="button"
         onClick={undo}
         disabled={!canUndo}
-        className={`p-1.5 rounded-md transition-all ${
-          canUndo
-            ? "text-slate-700 dark:text-slate-200 hover:bg-white hover:shadow-sm active:scale-95"
-            : "text-slate-300 cursor-not-allowed opacity-50"
-        }`}
+        className={button}
         aria-label="Undo"
         title="Undo (Ctrl+Z)"
       >
-        <Undo2 size={16} />
+        <Undo2 size={16} aria-hidden />
       </button>
       <button
+        type="button"
         onClick={redo}
         disabled={!canRedo}
-        className={`p-1.5 rounded-md transition-all ${
-          canRedo
-            ? "text-slate-700 dark:text-slate-200 hover:bg-white hover:shadow-sm active:scale-95"
-            : "text-slate-300 cursor-not-allowed opacity-50"
-        }`}
+        className={button}
         aria-label="Redo"
         title="Redo (Ctrl+Y)"
       >
-        <Redo2 size={16} />
+        <Redo2 size={16} aria-hidden />
       </button>
     </div>
   );
