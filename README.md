@@ -14,7 +14,6 @@ A desktop and web application for school timetable management — class scheduli
 git clone <repo-url>
 cd my-timetable-app    # repo folder name may differ
 npm ci                 # always use ci — do not copy node_modules across OS/WSL
-cp .env.example .env   # optional — only needed for external tooling keys
 ```
 
 If you see an esbuild platform error after cloning or switching machines, delete `node_modules` and run `npm ci` again.
@@ -79,7 +78,7 @@ src/
   contexts/       # React context (profiles, undo/redo)
   services/       # File system, export, profile storage
   types/          # Shared TypeScript types
-tests/            # Vitest test suite (88 files, 318 tests)
+tests/            # Vitest test suite
 src-tauri/        # Tauri desktop shell (Rust)
 conductor/        # Internal planning docs (not required to run the app)
 ```
@@ -98,7 +97,3 @@ conductor/        # Internal planning docs (not required to run the app)
 | esbuild platform mismatch | Delete `node_modules`, run `npm ci` on the current OS (don't copy node_modules from WSL/Docker) |
 | Tests fail after dependency update | `npm ci` then `npm test` |
 | Blank screen in Tauri dev | Ensure Vite is running on port 5173 before the Tauri window opens |
-
-## Environment variables
-
-Copy `.env.example` to `.env` and fill in values as needed. Never commit `.env` to version control.
